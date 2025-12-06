@@ -73,22 +73,177 @@ def coveringBand (s : ℂ) (hs_lower : 1/2 < s.re) (hs_upper : s.re ≤ 1) : Rec
   { base := dyadicInterval k m
     params := defaultRecognizerParams }
 
-/-- Key lemma: the σ-coordinate lies in the band's range.
-    This is the core of the interior coverage proof. -/
+/-- Auxiliary: 3 * (σ - 1/2) > 0 for σ > 1/2. -/
+private lemma three_sigma_pos (σ : ℝ) (hσ : 1/2 < σ) : 0 < 3 * (σ - 1/2) := by linarith
+
+/-- Auxiliary: 3 * (σ - 1/2) ≤ 3/2 for σ ≤ 1. -/
+private lemma three_sigma_le (σ : ℝ) (hσ : σ ≤ 1) : 3 * (σ - 1/2) ≤ 3/2 := by linarith
+
+/-- The key scale lemma: if k = ⌈-log₂(3(σ - 1/2))⌉ and L = 2^(-k),
+    then L/3 ≤ σ - 1/2 < 2L/3, which places σ in the interior of the band. -/
+private lemma scale_basic_bounds (σ : ℝ) (hσ_lower : 1/2 < σ) (hσ_upper : σ ≤ 1) :
+    let k := findScale σ hσ_lower hσ_upper
+    let L := (2 : ℝ)^(-k)
+    L / 3 ≤ σ - 1/2 ∧ σ - 1/2 < 2 * L / 3 := by
+  intro k L
+
+  -- Set x = 3 * (σ - 1/2), so x > 0 and x ≤ 3/2
+  set x := 3 * (σ - 1/2) with hx_def
+  have hx_pos : 0 < x := three_sigma_pos σ hσ_lower
+
+  -- k = ⌈-log₂(x)⌉, so we have:
+  -- (1) -log₂(x) ≤ k    (ceiling property: t ≤ ⌈t⌉)
+  -- (2) k < -log₂(x) + 1 (ceiling property: ⌈t⌉ < t + 1)
+  have h_ceil_lower : -Real.logb 2 x ≤ k := Int.le_ceil (-Real.logb 2 x)
+  have h_ceil_upper : (k : ℝ) < -Real.logb 2 x + 1 := Int.ceil_lt_add_one (-Real.logb 2 x)
+
+  have hL_pos : 0 < L := zpow_pos (by norm_num : (0 : ℝ) < 2) (-k)
+  have two_pos : (0 : ℝ) < 2 := by norm_num
+  have two_ne_zero : (2 : ℝ) ≠ 0 := by norm_num
+  have one_lt_two : (1 : ℝ) < 2 := by norm_num
+
+  -- From (1): -log₂(x) ≤ k means log₂(x) ≥ -k
+  -- This gives: x ≥ 2^(-k) = L
+  have h_x_lower : L ≤ x := by
+    have h1 : Real.logb 2 x ≥ -(k : ℝ) := by linarith
+    -- logb 2 x ≥ -k ↔ x ≥ 2^(-k) when 1 < 2 and x > 0
+    have h2 := @Real.le_logb_iff_rpow_le 2 (-(k : ℝ)) x one_lt_two hx_pos
+    -- h2 : -(k : ℝ) ≤ logb 2 x ↔ 2^(-(k:ℝ)) ≤ x
+    rw [ge_iff_le, h2] at h1
+    -- Now h1 : 2^(-(k : ℝ)) ≤ x
+    -- We need L = 2^(-k : ℤ) ≤ x
+    -- The key is that 2^(-(k : ℝ)) = 2^(-k : ℤ)
+    -- Note: -(k : ℝ) is the same as ((-k) : ℤ) : ℝ when cast properly
+    have h3 : (2 : ℝ) ^ (-(k : ℝ)) = (2 : ℝ) ^ (-k : ℤ) := by
+      have : (-(k : ℝ)) = ((-k : ℤ) : ℝ) := by simp [Int.cast_neg]
+      rw [this, Real.rpow_intCast]
+    rw [h3] at h1
+    exact h1
+
+  -- From (2): k < -log₂(x) + 1 means log₂(x) < 1 - k
+  -- This gives: x < 2^(1-k) = 2 · 2^(-k) = 2L
+  have h_x_upper : x < 2 * L := by
+    have h1 : Real.logb 2 x < 1 - (k : ℝ) := by linarith
+    -- logb 2 x < 1-k ↔ x < 2^(1-k) when 1 < 2 and x > 0
+    have h2 := @Real.logb_lt_iff_lt_rpow 2 x (1 - (k : ℝ)) one_lt_two hx_pos
+    rw [h2] at h1
+    -- h1 : x < 2^(1 - (k : ℝ))
+    -- 2^(1-k) = 2^1 * 2^(-k) = 2 * 2^(-k) = 2 * L
+    have h3 : (2 : ℝ) ^ (1 - (k : ℝ)) = 2 * (2 : ℝ) ^ (-k : ℤ) := by
+      have h4 : (2 : ℝ) ^ (1 - (k : ℝ)) = (2 : ℝ) ^ (1 : ℝ) * (2 : ℝ) ^ (-(k : ℝ)) := by
+        rw [← Real.rpow_add two_pos]
+        ring_nf
+      have h5 : (-(k : ℝ)) = ((-k : ℤ) : ℝ) := by simp [Int.cast_neg]
+      rw [h4, Real.rpow_one, h5, Real.rpow_intCast]
+    rw [h3] at h1
+    exact h1
+
+  -- Translate to σ - 1/2 bounds using x = 3(σ - 1/2)
+  constructor
+  · -- From L ≤ 3(σ - 1/2): L/3 ≤ σ - 1/2
+    linarith
+  · -- From 3(σ - 1/2) < 2L: σ - 1/2 < 2L/3
+    linarith
+
+/-- Key lemma: the σ-coordinate lies in the band's range with margin.
+    This is the core of the interior coverage proof.
+
+    The band has:
+    - len = L/2 where L = 2^(-k)
+    - σ_lower = 1/2 + (1/3) * (L/2) = 1/2 + L/6
+    - σ_upper = 1/2 + (3/2) * (L/2) = 1/2 + 3L/4
+    - thickness = (3/2 - 1/3) * (L/2) = 7L/12
+    - margin = thickness/8 = 7L/96
+
+    From scale selection: L/3 ≤ σ - 1/2 < 2L/3
+
+    We verify:
+    - Lower: L/6 + 7L/96 = 23L/96 ≤ L/3 = 32L/96 ✓
+    - Upper: 2L/3 = 64L/96 < 3L/4 - 7L/96 = 65L/96 ✓ -/
 lemma σ_in_band_range (s : ℂ) (hs_lower : 1/2 < s.re) (hs_upper : s.re ≤ 1) :
     let B := coveringBand s hs_lower hs_upper
     B.σ_lower + B.thickness / 8 ≤ s.re ∧ s.re ≤ B.σ_upper - B.thickness / 8 := by
-  -- The proof requires showing that the scale selection places σ in the interior
-  -- This involves arithmetic with logarithms and dyadic scales
-  sorry -- PROOF_GOAL: Dyadic arithmetic (~100 lines)
+  -- Get the basic bounds from scale selection
+  have ⟨h_basic_lower, h_basic_upper⟩ := scale_basic_bounds s.re hs_lower hs_upper
+
+  -- Unfold definitions
+  simp only [coveringBand, RecognizerBand.σ_lower, RecognizerBand.σ_upper,
+             RecognizerBand.thickness, defaultRecognizerParams, dyadicInterval]
+
+  set k := findScale s.re hs_lower hs_upper
+  set L := (2 : ℝ)^(-k)
+
+  have hL_pos : 0 < L := zpow_pos (by norm_num : (0 : ℝ) < 2) (-k)
+
+  -- The half-length is L/2
+  -- σ_lower = 1/2 + (1/3) * (L/2) = 1/2 + L/6
+  -- σ_upper = 1/2 + (3/2) * (L/2) = 1/2 + 3L/4
+  -- thickness = (3/2 - 1/3) * (L/2) = 7L/12
+  -- margin = 7L/96
+
+  -- Need to show:
+  -- (1) 1/2 + L/6 + 7L/96 ≤ s.re, i.e., 1/2 + 23L/96 ≤ s.re
+  -- (2) s.re ≤ 1/2 + 3L/4 - 7L/96, i.e., s.re ≤ 1/2 + 65L/96
+
+  -- From h_basic_lower: L/3 ≤ s.re - 1/2, so s.re ≥ 1/2 + L/3 = 1/2 + 32L/96
+  -- Since 32L/96 > 23L/96, we have s.re ≥ 1/2 + 23L/96 ✓
+
+  -- From h_basic_upper: s.re - 1/2 < 2L/3, so s.re < 1/2 + 64L/96
+  -- Since 64L/96 < 65L/96, we have s.re ≤ 1/2 + 65L/96 ✓
+
+  constructor
+  · -- Lower bound: 1/2 + L/6 + 7L/96 ≤ s.re
+    -- Simplify: 1/2 + L/6 + 7L/96 = 1/2 + 16L/96 + 7L/96 = 1/2 + 23L/96
+    -- We have s.re - 1/2 ≥ L/3 = 32L/96 > 23L/96
+    have h1 : 1 / 3 * (L / 2) + (3 / 2 - 1 / 3) * (L / 2) / 8 = 23 * L / 96 := by ring
+    have h2 : L / 3 = 32 * L / 96 := by ring
+    have h3 : (23 : ℝ) * L / 96 < 32 * L / 96 := by nlinarith
+    linarith
+  · -- Upper bound: s.re ≤ 1/2 + 3L/4 - 7L/96
+    -- Simplify: 1/2 + 3L/4 - 7L/96 = 1/2 + 72L/96 - 7L/96 = 1/2 + 65L/96
+    -- We have s.re - 1/2 < 2L/3 = 64L/96 < 65L/96
+    have h1 : 3 / 2 * (L / 2) - (3 / 2 - 1 / 3) * (L / 2) / 8 = 65 * L / 96 := by ring
+    have h2 : 2 * L / 3 = 64 * L / 96 := by ring
+    have h3 : (64 : ℝ) * L / 96 < 65 * L / 96 := by nlinarith
+    linarith
 
 /-- Key lemma: the t-coordinate lies in the band's interval.
     This follows from the floor function properties. -/
 lemma t_in_band_interval (s : ℂ) (hs_lower : 1/2 < s.re) (hs_upper : s.re ≤ 1) :
     let B := coveringBand s hs_lower hs_upper
     s.im ∈ B.base.interval := by
-  -- The proof uses properties of the floor function
-  sorry -- PROOF_GOAL: Floor function arithmetic (~50 lines)
+  -- Unfold all definitions
+  simp only [coveringBand, WhitneyInterval.interval, dyadicInterval, Set.mem_Icc]
+  -- The interval is [m * 2^(-k) + 2^(-k)/2 - 2^(-k)/2, m * 2^(-k) + 2^(-k)/2 + 2^(-k)/2]
+  -- which simplifies to [m * 2^(-k), (m+1) * 2^(-k)]
+  set k := findScale s.re hs_lower hs_upper
+  set L := (2 : ℝ)^(-k)
+  set m := findIndex s.im k
+
+  -- L = 2^(-k) > 0
+  have hL_pos : 0 < L := zpow_pos (by norm_num : (0 : ℝ) < 2) (-k)
+
+  -- By definition of findIndex, m = ⌊t / L⌋
+  -- So m ≤ t / L < m + 1
+  -- Thus m * L ≤ t < (m + 1) * L
+  have h_floor_le : ↑m ≤ s.im / L := Int.floor_le (s.im / L)
+  have h_lt_floor_succ : s.im / L < ↑m + 1 := Int.lt_floor_add_one (s.im / L)
+
+  -- Multiply by L (positive) to get: m * L ≤ t ∧ t < (m+1) * L
+  have h_lower : (m : ℝ) * L ≤ s.im := by
+    have := mul_le_mul_of_nonneg_right h_floor_le (le_of_lt hL_pos)
+    rwa [div_mul_cancel₀] at this
+    exact ne_of_gt hL_pos
+  have h_upper : s.im < ((m : ℝ) + 1) * L := by
+    have := mul_lt_mul_of_pos_right h_lt_floor_succ hL_pos
+    rwa [div_mul_cancel₀] at this
+    exact ne_of_gt hL_pos
+
+  constructor
+  · -- Lower bound: m * L + L/2 - L/2 = m * L ≤ t
+    linarith
+  · -- Upper bound: t < (m+1) * L = m * L + L = m * L + L/2 + L/2
+    linarith
 
 /-- **THEOREM**: Interior Coverage (eliminates axiom)
 
