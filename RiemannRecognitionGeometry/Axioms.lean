@@ -830,10 +830,48 @@ lemma phase_bound_neg_im (ρ : ℂ) (a b : ℝ) (hab : a < b)
       exact h_σ_in ⟨h_both.1, h_both.2⟩
 
     rcases h_cases with h_σ_lt_a | h_σ_gt_b
-    · -- σ < a
-      sorry
-    · -- σ > b
-      sorry
+    · -- σ < a: both x, y < 0 (since γ < 0 and a-σ > 0, b-σ > 0)
+      have hy_neg : y < 0 := by
+        simp only [y]
+        apply div_neg_of_pos_of_neg; linarith; exact hγ_neg
+
+      have hx_neg : x < 0 := by
+        simp only [x]
+        apply div_neg_of_pos_of_neg; linarith; exact hγ_neg
+
+      -- Using two_arctan_third_gt_half_arctan_two: 2*arctan(1/3) > L_rec
+      have h_two_arctan_third_gt := Real.two_arctan_third_gt_half_arctan_two
+
+      -- Need: |phaseChange| ≥ 2*arctan(1/3)
+      -- This follows from the arctan formula connection
+      have h_phase_lower : |phaseChange ρ a b| ≥ 2 * Real.arctan (1/3) := by
+        sorry -- Same-sign arctan formula for γ < 0
+
+      unfold L_rec
+      calc |phaseChange ρ a b|
+          ≥ 2 * Real.arctan (1/3) := h_phase_lower
+        _ ≥ Real.arctan 2 / 2 := le_of_lt h_two_arctan_third_gt
+
+    · -- σ > b: both x, y > 0 (since γ < 0 and a-σ < 0, b-σ < 0)
+      have hx_pos : x > 0 := by
+        simp only [x]
+        apply div_pos_of_neg_of_neg; linarith; exact hγ_neg
+
+      have hy_pos : y > 0 := by
+        simp only [y]
+        apply div_pos_of_neg_of_neg; linarith; exact hγ_neg
+
+      -- Using two_arctan_third_gt_half_arctan_two: 2*arctan(1/3) > L_rec
+      have h_two_arctan_third_gt := Real.two_arctan_third_gt_half_arctan_two
+
+      -- Need: |phaseChange| ≥ 2*arctan(1/3)
+      have h_phase_lower : |phaseChange ρ a b| ≥ 2 * Real.arctan (1/3) := by
+        sorry -- Same-sign arctan formula for γ < 0
+
+      unfold L_rec
+      calc |phaseChange ρ a b|
+          ≥ 2 * Real.arctan (1/3) := h_phase_lower
+        _ ≥ Real.arctan 2 / 2 := le_of_lt h_two_arctan_third_gt
 
 /-- **THEOREM**: Blaschke contribution ≥ L_rec when geometric constraints hold.
     This is the key Track 2 result. -/
