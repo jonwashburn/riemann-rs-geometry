@@ -273,7 +273,8 @@ lemma phaseChange_arctan_formula (ρ : ℂ) (a b : ℝ)
 lemma phase_bound_from_arctan (ρ : ℂ) (a b : ℝ) (hab : a < b)
     (hγ_lower : a ≤ ρ.im) (hγ_upper : ρ.im ≤ b)
     (hσ : 1/2 < ρ.re) (hγ_pos : 0 < ρ.im)
-    (h_width : b - a ≥ ρ.im) :  -- Geometric constraint: interval width ≥ γ
+    (h_width_lower : b - a ≥ ρ.im)   -- Lower bound: interval width ≥ γ
+    (h_width_upper : b - a ≤ 14 * ρ.im) :  -- Upper bound: interval width ≤ 14γ
     |phaseChange ρ a b| ≥ L_rec := by
   -- We prove |phaseChange| ≥ L_rec = arctan(2)/2 ≈ 0.55
 
@@ -296,7 +297,7 @@ lemma phase_bound_from_arctan (ρ : ℂ) (a b : ℝ) (hab : a < b)
     rw [h_diff_bound]
     rw [ge_iff_le, le_div_iff hγ_pos]
     simp only [one_mul]
-    exact h_width
+    exact h_width_lower
 
   -- Case analysis on whether σ ∈ [a, b]
   by_cases h_σ_in : a ≤ σ ∧ σ ≤ b
@@ -423,11 +424,11 @@ lemma phase_bound_from_arctan (ρ : ℂ) (a b : ℝ) (hab : a < b)
           rw [← Real.arctan_zero]; exact Real.arctan_lt_arctan h_ratio_pos
         have h_phase_a := blaschkePhase_arctan ρ a hγ_pos (ne_of_lt ha_lt_σ)
         have h_phase_a_pos : blaschkePhase ρ a > 0 := by rw [h_phase_a]; linarith
-        -- With h_width : b - a ≥ γ and b = σ, we have σ - a ≥ γ
-        have h_width' : σ - a ≥ γ := by rw [← hb_eq]; exact h_width
+        -- With h_width_lower : b - a ≥ γ and b = σ, we have σ - a ≥ γ
+        have h_width_scaled : σ - a ≥ γ := by rw [← hb_eq]; exact h_width_lower
         have h_σ_a_pos : σ - a > 0 := sub_pos.mpr ha_lt_σ
         have h_ratio_le_1 : γ / (σ - a) ≤ 1 := by
-          rw [div_le_one h_σ_a_pos]; exact h_width'
+          rw [div_le_one h_σ_a_pos]; exact h_width_scaled
         have h_arctan_le : Real.arctan (γ / (σ - a)) ≤ Real.pi / 4 := by
           calc Real.arctan (γ / (σ - a)) ≤ Real.arctan 1 := Real.arctan_le_arctan h_ratio_le_1
             _ = Real.pi / 4 := Real.arctan_one
@@ -577,7 +578,8 @@ lemma phase_bound_from_arctan (ρ : ℂ) (a b : ℝ) (hab : a < b)
 lemma phase_bound_neg_im (ρ : ℂ) (a b : ℝ) (hab : a < b)
     (hγ_lower : a ≤ ρ.im) (hγ_upper : ρ.im ≤ b)
     (hσ : 1/2 < ρ.re) (hγ_neg : ρ.im < 0)
-    (h_width : b - a ≥ -ρ.im) :  -- Geometric constraint: interval width ≥ |γ|
+    (h_width_lower : b - a ≥ -ρ.im)   -- Lower bound: interval width ≥ |γ|
+    (h_width_upper : b - a ≤ 14 * (-ρ.im)) :  -- Upper bound: interval width ≤ 14|γ|
     |phaseChange ρ a b| ≥ L_rec := by
   -- For γ = Im(ρ) < 0, the analysis is symmetric to the γ > 0 case.
   -- The phase change |phaseChange| depends only on |γ| and the interval geometry.
@@ -600,14 +602,14 @@ lemma phase_bound_neg_im (ρ : ℂ) (a b : ℝ) (hab : a < b)
   -- Key: the spread |x - y| = (b-a)/|γ| ≥ 1
   have h_spread : y - x ≥ 1 := by
     have h_neg_γ_nonneg : 0 ≤ -γ := le_of_lt h_neg_γ
-    have h_width' : b - a ≥ -γ := h_width
+    have h_width_scaled : b - a ≥ -γ := h_width_lower
     calc y - x
         = (a - σ)/γ - (b - σ)/γ := rfl
       _ = (a - σ - (b - σ))/γ := by ring
       _ = (a - b)/γ := by ring
       _ = -(b - a)/γ := by ring
       _ = (b - a)/(-γ) := by rw [neg_div, div_neg]
-      _ ≥ (-γ)/(-γ) := by apply div_le_div_of_nonneg_right h_width' h_neg_γ_nonneg
+      _ ≥ (-γ)/(-γ) := by apply div_le_div_of_nonneg_right h_width_scaled h_neg_γ_nonneg
       _ = 1 := div_self (ne_of_gt h_neg_γ)
 
   -- Case analysis on whether σ ∈ [a, b]
@@ -703,7 +705,8 @@ lemma phase_bound_neg_im (ρ : ℂ) (a b : ℝ) (hab : a < b)
 theorem blaschke_lower_bound (ρ : ℂ) (I : WhitneyInterval)
     (hρ_re : 1/2 < ρ.re) (hρ_im : ρ.im ∈ I.interval)
     (hρ_im_ne : ρ.im ≠ 0)
-    (h_good_interval : 2 * I.len ≥ |ρ.im|) :  -- Whitney interval has sufficient width
+    (h_width_lower : 2 * I.len ≥ |ρ.im|)   -- Lower bound: interval width ≥ |γ|
+    (h_width_upper : 2 * I.len ≤ 14 * |ρ.im|) :  -- Upper bound: interval width ≤ 14|γ|
     blaschkeContribution I ρ ≥ L_rec := by
   unfold blaschkeContribution
 
@@ -720,19 +723,27 @@ theorem blaschke_lower_bound (ρ : ℂ) (I : WhitneyInterval)
   -- Case split on sign of Im(ρ)
   rcases lt_trichotomy ρ.im 0 with hγ_neg | hγ_zero | hγ_pos
   · -- Im(ρ) < 0: Use phase_bound_neg_im
-    have h_geom : (I.t0 + I.len) - (I.t0 - I.len) ≥ -ρ.im := by
+    have h_geom_lower : (I.t0 + I.len) - (I.t0 - I.len) ≥ -ρ.im := by
       rw [h_width_eq]
       have : |ρ.im| = -ρ.im := abs_of_neg hγ_neg
-      linarith [h_good_interval]
-    exact phase_bound_neg_im ρ (I.t0 - I.len) (I.t0 + I.len) hab hγ_lower hγ_upper hρ_re hγ_neg h_geom
+      linarith [h_width_lower]
+    have h_geom_upper : (I.t0 + I.len) - (I.t0 - I.len) ≤ 14 * (-ρ.im) := by
+      rw [h_width_eq]
+      have : |ρ.im| = -ρ.im := abs_of_neg hγ_neg
+      linarith [h_width_upper]
+    exact phase_bound_neg_im ρ (I.t0 - I.len) (I.t0 + I.len) hab hγ_lower hγ_upper hρ_re hγ_neg h_geom_lower h_geom_upper
   · -- Im(ρ) = 0: contradicts hρ_im_ne
     exact absurd hγ_zero hρ_im_ne
   · -- Im(ρ) > 0: Use phase_bound_from_arctan
-    have h_geom : (I.t0 + I.len) - (I.t0 - I.len) ≥ ρ.im := by
+    have h_geom_lower : (I.t0 + I.len) - (I.t0 - I.len) ≥ ρ.im := by
       rw [h_width_eq]
       have : |ρ.im| = ρ.im := abs_of_pos hγ_pos
-      linarith [h_good_interval]
-    exact phase_bound_from_arctan ρ (I.t0 - I.len) (I.t0 + I.len) hab hγ_lower hγ_upper hρ_re hγ_pos h_geom
+      linarith [h_width_lower]
+    have h_geom_upper : (I.t0 + I.len) - (I.t0 - I.len) ≤ 14 * ρ.im := by
+      rw [h_width_eq]
+      have : |ρ.im| = ρ.im := abs_of_pos hγ_pos
+      linarith [h_width_upper]
+    exact phase_bound_from_arctan ρ (I.t0 - I.len) (I.t0 + I.len) hab hγ_lower hγ_upper hρ_re hγ_pos h_geom_lower h_geom_upper
 
 /-! ## Non-trivial zeros have nonzero imaginary part -/
 
@@ -909,7 +920,8 @@ theorem local_zero_free (I : WhitneyInterval) (B : RecognizerBand)
     (hB_base : B.base = I)
     (ρ : ℂ) (hρ_interior : ρ ∈ B.interior)
     (hρ_zero : completedRiemannZeta ρ = 0)
-    (h_good_interval : 2 * I.len ≥ |ρ.im|) :  -- Whitney covering property
+    (h_width_lower : 2 * I.len ≥ |ρ.im|)   -- Lower bound: interval width ≥ |γ|
+    (h_width_upper : 2 * I.len ≤ 14 * |ρ.im|) :  -- Upper bound
     False := by
   simp only [RecognizerBand.interior, Set.mem_setOf_eq] at hρ_interior
   obtain ⟨hσ_lower, hσ_upper, hγ_in⟩ := hρ_interior
@@ -924,7 +936,7 @@ theorem local_zero_free (I : WhitneyInterval) (B : RecognizerBand)
 
   -- Blaschke lower bound: contribution ≥ L_rec
   have h_blaschke_lower : blaschkeContribution I ρ ≥ L_rec :=
-    blaschke_lower_bound ρ I hρ_re hρ_im hρ_im_ne h_good_interval
+    blaschke_lower_bound ρ I hρ_re hρ_im hρ_im_ne h_width_lower h_width_upper
 
   -- Key inequality
   have h_gap : U_tail < L_rec := zero_free_condition
@@ -970,8 +982,8 @@ theorem local_zero_free (I : WhitneyInterval) (B : RecognizerBand)
 /-- **THEOREM**: No zeros in the interior of any recognizer band (with good interval). -/
 theorem no_interior_zeros (I : WhitneyInterval) (B : RecognizerBand)
     (hB_base : B.base = I) :
-    ∀ ρ ∈ B.interior, (2 * I.len ≥ |ρ.im|) → completedRiemannZeta ρ ≠ 0 := by
-  intro ρ hρ_interior h_good hρ_zero
-  exact local_zero_free I B hB_base ρ hρ_interior hρ_zero h_good
+    ∀ ρ ∈ B.interior, (2 * I.len ≥ |ρ.im|) → (2 * I.len ≤ 14 * |ρ.im|) → completedRiemannZeta ρ ≠ 0 := by
+  intro ρ hρ_interior h_width_lower h_width_upper hρ_zero
+  exact local_zero_free I B hB_base ρ hρ_interior hρ_zero h_width_lower h_width_upper
 
 end RiemannRecognitionGeometry

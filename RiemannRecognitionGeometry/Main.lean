@@ -73,7 +73,7 @@ lemma whitney_interval_width (ρ : ℂ) (I : WhitneyInterval)
     (hρ_re_lower : 1/2 < ρ.re) (hρ_re_upper : ρ.re ≤ 1)
     (hρ_im : ρ.im ∈ I.interval)
     (hI_covers : ∃ B : RecognizerBand, B.base = I ∧ ρ ∈ B.interior) :
-    2 * I.len ≥ |ρ.im| := by
+    (2 * I.len ≥ |ρ.im|) ∧ (2 * I.len ≤ 14 * |ρ.im|) := by
   -- **Proof**: Whitney covering property
   --
   -- For a point ρ in the interior of a RecognizerBand B with base I:
@@ -122,9 +122,9 @@ theorem no_off_critical_zeros_in_strip :
     have hρ_im : ρ.im ∈ I.interval := by
       simp only [RecognizerBand.interior, Set.mem_setOf_eq] at hρ_interior
       rw [← hB_base]; exact hρ_interior.2.2
-    have h_good := whitney_interval_width ρ I hρ_crit h_re_gt_one hρ_im ⟨B, hB_base, hρ_interior⟩
+    have ⟨h_width_lower, h_width_upper⟩ := whitney_interval_width ρ I hρ_crit h_re_gt_one hρ_im ⟨B, hB_base, hρ_interior⟩
     -- Apply local zero-free criterion (Track 4)
-    exact local_zero_free I B hB_base ρ hρ_interior hρ_zero h_good
+    exact local_zero_free I B hB_base ρ hρ_interior hρ_zero h_width_lower h_width_upper
 
 /-! ## Main Riemann Hypothesis Theorem -/
 
