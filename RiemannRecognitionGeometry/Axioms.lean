@@ -156,6 +156,7 @@ lemma arctan_args_opposite_signs (σ γ a b : ℝ) (hγ_pos : 0 < γ)
     phaseChange = 2·(arctan((b-σ)/γ) - arctan((a-σ)/γ))
 -/
 lemma phaseChange_arctan_formula (ρ : ℂ) (a b : ℝ)
+    (hab : a < b)  -- Interval is well-ordered
     (hγ_pos : 0 < ρ.im)
     (ha_ne : a ≠ ρ.re) (hb_ne : b ≠ ρ.re) :  -- t ≠ σ to avoid singularities
     let σ := ρ.re
@@ -222,12 +223,15 @@ lemma phaseChange_arctan_formula (ρ : ℂ) (a b : ℝ)
                     Real.arctan ((b - σ) / γ) - Real.arctan ((a - σ) / γ) := by
         rw [h_recip_a, h_recip_b]; ring
       rw [h_eq, h_diff, abs_mul, abs_of_pos (by norm_num : (0:ℝ) < 2)]
-    · -- a-σ > 0, b-σ ≤ 0 - mixed sign (vacuous when a < b)
+    · -- a-σ > 0, b-σ ≤ 0 - mixed sign (vacuous since a < b)
       push_neg at hb_pos
       have hb_neg : b - σ < 0 := lt_of_le_of_ne hb_pos hb_ne'
-      -- This case can't happen when a < b (requires σ ∈ (b, a))
-      -- For now, use sorry (this case is excluded in applications)
-      sorry
+      -- This case requires σ ∈ (b, a), i.e., b < σ < a
+      -- But hab : a < b, so this is impossible
+      exfalso
+      have h1 : σ < a := by linarith [ha_pos]
+      have h2 : σ > b := by linarith [hb_neg]
+      linarith
   · -- a-σ ≤ 0
     push_neg at ha_pos
     by_cases ha_zero : a - σ = 0
@@ -447,7 +451,7 @@ lemma phase_bound_from_arctan (ρ : ℂ) (a b : ℝ) (hab : a < b)
           · exact hγ_pos
 
         -- Apply the arctan formula
-        have h_formula := phaseChange_arctan_formula ρ a b hγ_pos ha_eq hb_eq
+        have h_formula := phaseChange_arctan_formula ρ a b hab hγ_pos ha_eq hb_eq
 
         -- The arctan difference is positive since x ≥ 0 > y (mixed signs)
         have h_arctan_diff_pos : Real.arctan x - Real.arctan y > 0 := by
@@ -542,7 +546,7 @@ lemma phase_bound_from_arctan (ρ : ℂ) (a b : ℝ) (hab : a < b)
       --
       -- Technical: requires detailed Whitney interval analysis
       -- The formula connection gives |phaseChange| = 2*|arctan(x) - arctan(y)|
-      have h_formula := phaseChange_arctan_formula ρ a b hγ_pos (by linarith : a ≠ σ) (by linarith : b ≠ σ)
+      have h_formula := phaseChange_arctan_formula ρ a b hab hγ_pos (by linarith : a ≠ σ) (by linarith : b ≠ σ)
       sorry -- Requires Whitney interval geometric constraints
 
     · -- σ > b: both x, y < 0
@@ -563,7 +567,7 @@ lemma phase_bound_from_arctan (ρ : ℂ) (a b : ℝ) (hab : a < b)
       -- |phaseChange| = 2*|arctan(x) - arctan(y)| = 2*(arctan(x) - arctan(y))
       --
       -- The bound requires geometric constraints from Whitney interval structure
-      have h_formula := phaseChange_arctan_formula ρ a b hγ_pos (by linarith : a ≠ σ) (by linarith : b ≠ σ)
+      have h_formula := phaseChange_arctan_formula ρ a b hab hγ_pos (by linarith : a ≠ σ) (by linarith : b ≠ σ)
       sorry -- Requires Whitney interval geometric constraints
 
 /-- **LEMMA**: Phase bound for negative imaginary part.
