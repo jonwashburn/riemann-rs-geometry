@@ -60,16 +60,16 @@ noncomputable def blaschkeContribution (I : WhitneyInterval) (ρ : ℂ) : ℝ :=
 
 /-- The phase derivative of ξ along the critical line.
     This is d/dt[arg(ξ(1/2 + it))].
-    
+
     **Mathematical definition**:
     For the completed Riemann zeta function ξ(s), the phase derivative is:
     d/dt[arg(ξ(1/2 + it))] = Im(ξ'(1/2+it)/ξ(1/2+it))
-    
+
     This is well-defined away from zeros of ξ. Near a zero ρ:
     - ξ(s) = (s - ρ) · g(s) where g is analytic and g(ρ) ≠ 0
     - arg(ξ) = arg(s - ρ) + arg(g)
     - The Blaschke factor (s-ρ)/(s-conj(ρ)) captures arg(s-ρ) contribution
-    
+
     For the formal proof, we treat the phase integral abstractly.
     The key bounds are proven as separate theorems. -/
 noncomputable def xiPhaseDerivative (t : ℝ) : ℝ :=
@@ -127,6 +127,20 @@ lemma arctan_args_opposite_signs (σ γ a b : ℝ) (hγ_pos : 0 < γ)
     linarith
   · apply div_le_div_of_nonneg_right _ (le_of_lt hγ_pos)
     linarith
+
+/-- **SYMMETRY LEMMA**: Phase change magnitude is symmetric under conjugation.
+    |phaseChange (conj ρ) a b| = |phaseChange ρ a b|
+
+    **Mathematical proof**:
+    - blaschkeFactor (conj ρ) t = (t - conj ρ)/(t - ρ) = 1/blaschkeFactor ρ t
+    - For unimodular B: arg(1/B) = -arg(B)
+    - So phaseChange (conj ρ) a b = -phaseChange ρ a b
+    - Therefore |phaseChange (conj ρ) a b| = |phaseChange ρ a b| -/
+lemma phaseChange_abs_conj (ρ : ℂ) (a b : ℝ) :
+    |phaseChange (starRingEnd ℂ ρ) a b| = |phaseChange ρ a b| := by
+  -- The phase change for conj(ρ) equals the negative of phase change for ρ
+  -- |x| = |-x| gives the result
+  sorry -- Phase conjugation symmetry
 
 /-- **LEMMA**: Phase change equals twice the arctan difference.
 
@@ -186,31 +200,31 @@ lemma phaseChange_arctan_formula (ρ : ℂ) (a b : ℝ)
   -- For the Recognition Geometry setting (γ > 0, a < b real), the Blaschke
   -- factor B(t) stays in the upper/lower half plane (never crosses negative real axis)
   -- so the branch cut analysis is manageable.
-  
+
   set σ := ρ.re
   set γ := ρ.im
   have hγ_ne : γ ≠ 0 := ne_of_gt hγ_pos
-  
+
   -- Step 1: Get phase formulas for each endpoint
   have h_phase_a := blaschkePhase_arctan ρ a hγ_pos ha_ne
   have h_phase_b := blaschkePhase_arctan ρ b hγ_pos hb_ne
-  
+
   -- Step 2: Compute phaseChange
   have h_phase_eq : phaseChange ρ a b = 2 * Real.arctan (-γ / (b - σ)) - 2 * Real.arctan (-γ / (a - σ)) := by
     unfold phaseChange; rw [h_phase_b, h_phase_a]
-  
+
   -- Step 3: Use arctan(-x) = -arctan(x)
   have h_eq : phaseChange ρ a b = 2 * (Real.arctan (γ / (a - σ)) - Real.arctan (γ / (b - σ))) := by
     rw [h_phase_eq]
     have h1 : Real.arctan (-γ / (b - σ)) = -Real.arctan (γ / (b - σ)) := by rw [neg_div, Real.arctan_neg]
     have h2 : Real.arctan (-γ / (a - σ)) = -Real.arctan (γ / (a - σ)) := by rw [neg_div, Real.arctan_neg]
     rw [h1, h2]; ring
-  
+
   -- Step 4: Use arctan reciprocal identity for same-sign cases
   -- arctan(γ/u) = sgn(u)·π/2 - arctan(u/γ) when γ > 0
   have ha_ne' : a - σ ≠ 0 := sub_ne_zero.mpr ha_ne
   have hb_ne' : b - σ ≠ 0 := sub_ne_zero.mpr hb_ne
-  
+
   by_cases ha_pos : 0 < a - σ
   · by_cases hb_pos : 0 < b - σ
     · -- Both positive
@@ -646,31 +660,21 @@ lemma phase_bound_from_arctan (ρ : ℂ) (a b : ℝ) (hab : a < b)
         _ ≥ L_rec := le_of_lt h_two_arctan_third_gt_L_rec
 
     · -- σ > b: both x, y < 0
-      have hx_neg : x < 0 := by
-        simp only [x]
-        apply div_neg_of_neg_of_pos; linarith; exact hγ_pos
-
-      have hy_neg : y < 0 := by
-        simp only [y]
-        apply div_neg_of_neg_of_pos
-        · have : a < b := hab; linarith
-        · exact hγ_pos
-
-      -- arctan(x) - arctan(y) where y < x < 0 (since x - y > 0 implies x > y)
-      -- So arctan(y) < arctan(x) < 0, and arctan(x) - arctan(y) > 0
+      -- This case applies when Re(ρ) = σ > b, which means σ > Im(ρ) = γ.
+      -- This only happens for zeros with small imaginary parts (γ < σ ≤ 1).
       --
-      -- Similar to σ < a case: use arctan subtraction formula
-      -- |phaseChange| = 2*|arctan(x) - arctan(y)| = 2*(arctan(x) - arctan(y))
+      -- For this case, the phase bound |phaseChange| ≥ L_rec follows from:
+      -- 1. arctan(x) - arctan(y) = arctan((x-y)/(1+xy)) for x, y < 0
+      -- 2. With x - y = (b-a)/γ ≥ 1 and bounded xy
+      -- 3. The arctan difference is ≥ arctan(1/3) when xy is appropriately bounded
       --
-      -- The bound requires geometric constraints from Whitney interval structure
-      -- Both (a-σ) and (b-σ) are negative since a < b < σ
-      have h_same_sign : (a - σ < 0 ∧ b - σ < 0) ∨ (a - σ > 0 ∧ b - σ > 0) := by
-        left
-        constructor
-        · linarith
-        · linarith
-      have h_formula := phaseChange_arctan_formula ρ a b hab hγ_pos (by linarith : a ≠ σ) (by linarith : b ≠ σ) h_same_sign
-      sorry -- Requires Whitney interval geometric constraints
+      -- The key geometric constraint is that for zeros in the critical strip,
+      -- the phase contribution remains bounded below by L_rec.
+      --
+      -- **NOTE**: This case requires careful analysis of when σ > b can occur
+      -- for zeros with 1/2 < σ < 1 and γ ∈ [a,b]. Since γ ≤ b, this requires
+      -- small imaginary parts where the Whitney geometry gives specific bounds.
+      sorry -- σ > b case: requires Whitney geometry analysis for small Im(ρ)
 
 /-- **LEMMA**: Phase bound for negative imaginary part.
     By symmetry of the Blaschke factor, the phase bound holds for γ < 0 as well.
@@ -732,14 +736,14 @@ lemma phase_bound_neg_im (ρ : ℂ) (a b : ℝ) (hab : a < b)
 
     -- arctan(y) ≥ 0 and arctan(x) ≤ 0
     -- |arctan(x) - arctan(y)| = arctan(y) - arctan(x) = arctan(y) + |arctan(x)|
-    
+
     -- By symmetry with γ > 0 case (roles of x, y swapped):
     -- We have y ≥ 0 ≥ x, and y - x ≥ 1
     -- So max(y, -x) ≥ (y - x)/2 ≥ 1/2
     -- arctan(y) + arctan(-x) ≥ arctan(max(y,-x)) ≥ arctan(1/2)
     -- |arctan(x) - arctan(y)| = arctan(y) - arctan(x) ≥ arctan(1/2)
     -- |phaseChange| = 2 * |arctan diff| ≥ 2 * arctan(1/2) > L_rec
-    
+
     have h_max_ge_half : max y (-x) ≥ 1/2 := by
       have h1 : y - x ≥ 1 := h_spread
       -- max(y, -x) ≥ (y + (-x))/2 = (y - x)/2 ≥ 1/2
@@ -750,10 +754,10 @@ lemma phase_bound_neg_im (ρ : ℂ) (a b : ℝ) (hab : a < b)
       calc max y (-x) ≥ (y + (-x)) / 2 := h2
         _ = (y - x) / 2 := by ring
         _ ≥ 1 / 2 := by linarith
-    
+
     have h_arctan_max : Real.arctan (max y (-x)) ≥ Real.arctan (1/2) :=
       Real.arctan_le_arctan h_max_ge_half
-    
+
     have h_arctan_sum_ge : Real.arctan y + Real.arctan (-x) ≥ Real.arctan (max y (-x)) := by
       have hy_nn : 0 ≤ y := hy_nonneg
       have hx_nn : 0 ≤ -x := by linarith [hx_nonpos]
@@ -773,7 +777,7 @@ lemma phase_bound_neg_im (ρ : ℂ) (a b : ℝ) (hab : a < b)
       · -- max = y, need arctan y + arctan(-x) ≥ arctan(y)
         simp only [max_eq_left (le_of_lt hgt)]
         linarith
-    
+
     have h_diff_bound' : Real.arctan y - Real.arctan x ≥ Real.arctan (1/2) := by
       have h1 : Real.arctan y - Real.arctan x = Real.arctan y + Real.arctan (-x) := by
         have := Real.arctan_neg x
@@ -782,9 +786,9 @@ lemma phase_bound_neg_im (ρ : ℂ) (a b : ℝ) (hab : a < b)
       calc Real.arctan y + Real.arctan (-x)
           ≥ Real.arctan (max y (-x)) := h_arctan_sum_ge
         _ ≥ Real.arctan (1/2) := h_arctan_max
-    
+
     have h_arctan_half_lower : Real.arctan (1/2) > 2/5 := Real.arctan_half_gt_two_fifths
-    
+
     -- Connect to phaseChange via formula
     -- For γ < 0: phaseChange ρ a b = 2*(arctan(x) - arctan(y)) where
     -- x = (b-σ)/γ ≤ 0 and y = (a-σ)/γ ≥ 0
@@ -861,12 +865,64 @@ lemma phase_bound_neg_im (ρ : ℂ) (a b : ℝ) (hab : a < b)
         simp only [y]
         apply div_pos_of_neg_of_neg; linarith; exact hγ_neg
 
+      -- Key: y > x since a < b, and dividing by negative γ reverses inequality
+      have hy_gt_x : y > x := by
+        simp only [x, y]
+        -- (a - σ)/γ > (b - σ)/γ because a - σ < b - σ and γ < 0
+        have h_ab : a - σ < b - σ := by linarith [hab]
+        -- Dividing by negative reverses: for c < d and e < 0, c/e > d/e
+        have hγ_inv_neg : γ⁻¹ < 0 := by
+          rw [inv_lt_zero]; exact hγ_neg
+        calc (a - σ) / γ = (a - σ) * γ⁻¹ := div_eq_mul_inv _ _
+          _ > (b - σ) * γ⁻¹ := mul_lt_mul_of_neg_right h_ab hγ_inv_neg
+          _ = (b - σ) / γ := (div_eq_mul_inv _ _).symm
+
+      -- y - x = (b - a) / (-γ) ≥ 1
+      have h_spread'' : y - x ≥ 1 := by
+        have h1 : y - x = (b - a) / (-γ) := by
+          simp only [x, y]
+          have hγ_ne : γ ≠ 0 := ne_of_lt hγ_neg
+          field_simp [hγ_ne]
+          ring
+        rw [h1]
+        have h2 : -γ > 0 := neg_pos.mpr hγ_neg
+        rw [ge_iff_le, le_div_iff h2]
+        have h3 : b - a ≥ -γ := h_width_lower
+        linarith
+
+      -- Key bound: x < 1 using the geometry
+      -- Since σ > b ≥ γ (from hγ_upper: γ ≤ b), and γ < 0, we have σ > b ≥ γ
+      -- x = (b - σ)/γ where b - σ < 0 and γ < 0, so x > 0
+      -- Need σ - b < -γ for x < 1: (b - σ)/γ < 1 ⟺ b - σ > γ ⟺ σ - b < -γ
+      -- From h_width_upper: b - a ≤ 10*(-γ) and σ > b, so σ - a > b - a ≤ 10*(-γ)
+      -- This doesn't directly give σ - b < -γ...
+
+      -- Alternative approach: use that |phaseChange| ≥ 2*arctan(y - x) / (1 + xy) somehow
+      -- Or use the direct bound from the phase magnitude
+
       -- Using two_arctan_third_gt_half_arctan_two: 2*arctan(1/3) > L_rec
       have h_two_arctan_third_gt := Real.two_arctan_third_gt_half_arctan_two
 
-      -- Need: |phaseChange| ≥ 2*arctan(1/3)
+      -- The phase change magnitude: |phaseChange| = 2|arctan(x) - arctan(y)|
+      -- = 2(arctan(y) - arctan(x)) since y > x
+      -- = 2*arctan((y - x)/(1 + xy)) by arctan subtraction
+      --
+      -- With y - x ≥ 1 and both x, y > 0:
+      -- If xy is bounded, then (y-x)/(1+xy) ≥ 1/3
+
+      -- For this case, we use that the phase change is bounded below
+      -- by the geometry. The proof follows the same pattern as γ > 0.
       have h_phase_lower : |phaseChange ρ a b| ≥ 2 * Real.arctan (1/3) := by
-        sorry -- Same-sign arctan formula for γ < 0
+        -- The phase change for same-sign case with y - x ≥ 1
+        -- gives |phaseChange| ≥ 2*arctan((y-x)/(1+xy)) ≥ 2*arctan(1/3)
+        -- when xy is bounded appropriately.
+        --
+        -- This requires connecting phaseChange to the arctan formula for γ < 0,
+        -- which follows by symmetry from the γ > 0 case (conjugation).
+        --
+        -- The mathematical fact is that |phaseChange ρ a b| = |phaseChange (conj ρ) a b|
+        -- and conj ρ has positive imaginary part, so we can apply the γ > 0 formula.
+        sorry -- Same-sign arctan formula for γ < 0 (symmetry with γ > 0)
 
       unfold L_rec
       calc |phaseChange ρ a b|
@@ -1083,6 +1139,50 @@ The proof by contradiction:
 5. But Carleson bound: |totalPhaseSignal| ≤ U_tail
 6. Contradiction!
 -/
+
+/-- **CORE THEOREM**: Zero-free with interval (simplified, no band required).
+    If ρ is a zero with Re(ρ) > 1/2 and we have an interval containing Im(ρ)
+    with proper width bounds, we get a contradiction. -/
+theorem zero_free_with_interval (ρ : ℂ) (I : WhitneyInterval)
+    (hρ_re : 1/2 < ρ.re)
+    (hρ_im : ρ.im ∈ I.interval)
+    (hρ_zero : completedRiemannZeta ρ = 0)
+    (h_width_lower : 2 * I.len ≥ |ρ.im|)
+    (h_width_upper : 2 * I.len ≤ 10 * |ρ.im|) :
+    False := by
+  have hρ_im_ne : ρ.im ≠ 0 := zero_has_nonzero_im ρ hρ_zero hρ_re
+  -- Blaschke lower bound: contribution ≥ L_rec
+  have h_blaschke_lower : blaschkeContribution I ρ ≥ L_rec :=
+    blaschke_lower_bound ρ I hρ_re hρ_im hρ_im_ne h_width_lower h_width_upper
+  -- Key inequality
+  have h_gap : U_tail < L_rec := zero_free_condition
+  -- Blaschke dominates total phase
+  have h_dominance := blaschke_dominates_total I ρ hρ_zero hρ_re hρ_im hρ_im_ne
+  -- Carleson upper bound on total
+  have h_carleson := totalPhaseSignal_bound I
+  -- From h_dominance: |totalPhaseSignal I| ≥ blaschkeContribution - U_tail
+  -- From h_blaschke_lower: blaschkeContribution ≥ L_rec
+  -- So: |totalPhaseSignal I| ≥ L_rec - U_tail
+  -- From h_carleson: |totalPhaseSignal I| ≤ U_tail
+  -- Combined: U_tail ≥ |totalPhaseSignal I| ≥ L_rec - U_tail
+  -- So: 2 * U_tail ≥ L_rec, but L_rec > 2 * U_tail by zero_free_condition
+  have h_l_rec_large : L_rec > 2 * U_tail := by
+    unfold L_rec U_tail C_geom K_tail
+    have h_arctan : Real.arctan 2 > 1.1 := Real.arctan_two_gt_one_point_one
+    have h_sqrt : Real.sqrt 0.05 < 0.23 := by
+      rw [Real.sqrt_lt' (by norm_num : (0:ℝ) < 0.23)]
+      norm_num
+    calc Real.arctan 2 / 2
+        > 1.1 / 2 := by linarith
+      _ = 0.55 := by norm_num
+      _ > 2 * (0.6 * 0.23) := by norm_num
+      _ > 2 * (0.6 * Real.sqrt 0.05) := by nlinarith
+  -- Derive the contradiction
+  have h1 : |totalPhaseSignal I| ≥ L_rec - U_tail := by linarith
+  have h2 : L_rec - U_tail > U_tail := by linarith
+  have h3 : |totalPhaseSignal I| > U_tail := by linarith
+  -- But h_carleson says |totalPhaseSignal I| ≤ U_tail
+  linarith
 
 /-- **MAIN THEOREM**: Local zero-free criterion (UNCONDITIONAL).
     If ρ is in the interior of band B and ξ(ρ) = 0, we get a contradiction.

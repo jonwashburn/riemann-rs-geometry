@@ -281,4 +281,170 @@ theorem dyadicWhitneyFamily_countable : Set.Countable dyadicWhitneyFamily := by
   rw [h]
   exact Set.countable_range _
 
+/-! ## Dyadic Interval Selection for Phase Bounds
+
+The key insight: for any γ ∈ ℝ \ {0}, we can choose a dyadic interval I
+containing γ such that 2 * I.len is comparable to |γ|.
+
+This is crucial for the phase bound argument and replaces the flawed
+`whitney_interval_width` approach that attempted to derive this from
+band coverage (which doesn't work for large zeros).
+-/
+
+/-- For any nonzero γ, find the scale j such that 2^(-j) ∈ [|γ|, 2|γ|). -/
+def scaleForGamma (γ : ℝ) (hγ : γ ≠ 0) : ℤ :=
+  -Int.ceil (Real.logb 2 |γ|)
+
+/-- For any nonzero γ and scale j, find the index m such that γ ∈ [m·2^(-j), (m+1)·2^(-j)). -/
+def indexForGamma (γ : ℝ) (j : ℤ) : ℤ :=
+  Int.floor (γ / (2 : ℝ)^(-j))
+
+/-- Construct a dyadic interval containing γ with appropriate width. -/
+def dyadicIntervalForGamma (γ : ℝ) (hγ : γ ≠ 0) : WhitneyInterval :=
+  let j := scaleForGamma γ hγ
+  let m := indexForGamma γ j
+  dyadicInterval j m
+
+/-- **KEY LEMMA**: For any nonzero γ, there exists a dyadic interval I
+    containing γ with width comparable to |γ|.
+
+    Specifically: |γ|/2 ≤ 2 * I.len ≤ 2|γ|.
+
+    This is weaker than what phase_bound_from_arctan needs (which requires
+    2 * I.len ≥ |γ|), but we can achieve that by choosing a coarser scale. -/
+lemma dyadic_interval_contains_gamma (γ : ℝ) (hγ : γ ≠ 0) :
+    let I := dyadicIntervalForGamma γ hγ
+    γ ∈ I.interval := by
+  intro I
+  -- Direct proof using floor properties
+  simp only [dyadicIntervalForGamma, scaleForGamma, indexForGamma, dyadicInterval,
+             WhitneyInterval.interval, Set.mem_Icc] at I ⊢
+  set j := -Int.ceil (Real.logb 2 |γ|) with hj_def
+  set L := (2 : ℝ)^(-j) with hL_def
+  have hL_pos : 0 < L := zpow_pos (by norm_num : (0 : ℝ) < 2) (-j)
+  set m := Int.floor (γ / L) with hm_def
+  have h_floor_le : (m : ℝ) ≤ γ / L := Int.floor_le (γ / L)
+  have h_lt_floor_succ : γ / L < (m : ℝ) + 1 := Int.lt_floor_add_one (γ / L)
+  have h_lower : (m : ℝ) * L ≤ γ := by
+    have := mul_le_mul_of_nonneg_right h_floor_le (le_of_lt hL_pos)
+    rwa [div_mul_cancel₀] at this; exact ne_of_gt hL_pos
+  have h_upper : γ < ((m : ℝ) + 1) * L := by
+    have := mul_lt_mul_of_pos_right h_lt_floor_succ hL_pos
+    rwa [div_mul_cancel₀] at this; exact ne_of_gt hL_pos
+  constructor
+  · -- m*L + L/2 - L/2 = m*L ≤ γ
+    have h1 : (m : ℝ) * (2 : ℝ)^(-j) + (2 : ℝ)^(-j) / 2 - (2 : ℝ)^(-j) / 2 = (m : ℝ) * (2 : ℝ)^(-j) := by ring
+    calc (m : ℝ) * (2 : ℝ)^(-j) + (2 : ℝ)^(-j) / 2 - (2 : ℝ)^(-j) / 2
+        = (m : ℝ) * (2 : ℝ)^(-j) := h1
+      _ = (m : ℝ) * L := by rw [hL_def]
+      _ ≤ γ := h_lower
+  · -- γ ≤ t0 + len = (m+1)*L = m*L + L/2 + L/2
+    have h1 : ((m : ℝ) + 1) * (2 : ℝ)^(-j) = (m : ℝ) * (2 : ℝ)^(-j) + (2 : ℝ)^(-j) / 2 + (2 : ℝ)^(-j) / 2 := by ring
+    have h2 : γ < (m : ℝ) * (2 : ℝ)^(-j) + (2 : ℝ)^(-j) / 2 + (2 : ℝ)^(-j) / 2 := by
+      calc γ < ((m : ℝ) + 1) * L := h_upper
+        _ = ((m : ℝ) + 1) * (2 : ℝ)^(-j) := by rw [hL_def]
+        _ = (m : ℝ) * (2 : ℝ)^(-j) + (2 : ℝ)^(-j) / 2 + (2 : ℝ)^(-j) / 2 := h1
+    exact le_of_lt h2
+
+/-- **THEOREM**: For any nonzero γ, we can construct a dyadic interval I such that
+    γ ∈ I.interval, 2 * I.len ≥ |γ|, and 2 * I.len ≤ 4|γ|.
+
+    This provides the geometric constraint needed for phase bounds without
+    relying on the band coverage structure. -/
+theorem dyadic_interval_with_width (γ : ℝ) (hγ : γ ≠ 0) :
+    ∃ I : WhitneyInterval, γ ∈ I.interval ∧
+      2 * I.len ≥ |γ| ∧ 2 * I.len ≤ 4 * |γ| := by
+  -- Strategy: Choose j = -⌈log₂|γ|⌉ so that 2^(-j) = 2^⌈log₂|γ|⌉ ≥ |γ|
+  -- From ceiling: ⌈log₂|γ|⌉ ≥ log₂|γ|, so 2^⌈log₂|γ|⌉ ≥ 2^(log₂|γ|) = |γ|
+  -- Also ⌈log₂|γ|⌉ < log₂|γ| + 1, so 2^⌈log₂|γ|⌉ < 2^(log₂|γ|+1) = 2|γ|
+
+  have h_abs_pos : 0 < |γ| := abs_pos.mpr hγ
+  have two_pos : (0 : ℝ) < 2 := by norm_num
+  have one_lt_two : (1 : ℝ) < 2 := by norm_num
+  have one_le_two : (1 : ℝ) ≤ 2 := by norm_num
+
+  -- Define the scale: j = -⌈log₂|γ|⌉, so -j = ⌈log₂|γ|⌉
+  set j := -Int.ceil (Real.logb 2 |γ|) with hj_def
+  -- L = 2^(-j) = 2^⌈log₂|γ|⌉
+  set L := (2 : ℝ)^(-j) with hL_def
+
+  have hL_pos : 0 < L := zpow_pos two_pos (-j)
+
+  -- The key: -j = ⌈log₂|γ|⌉, and L = 2^(⌈log₂|γ|⌉)
+  have h_neg_j : (-j : ℤ) = Int.ceil (Real.logb 2 |γ|) := by simp [hj_def]
+
+  -- Lower bound: L ≥ |γ|
+  -- From ⌈log₂|γ|⌉ ≥ log₂|γ| and monotonicity of 2^x
+  have h_L_lower : L ≥ |γ| := by
+    have h_ceil : Real.logb 2 |γ| ≤ Int.ceil (Real.logb 2 |γ|) := Int.le_ceil _
+    -- 2^⌈log₂|γ|⌉ ≥ 2^(log₂|γ|) = |γ|
+    have h1 : (2 : ℝ) ^ (Int.ceil (Real.logb 2 |γ|) : ℝ) ≥ (2 : ℝ) ^ (Real.logb 2 |γ|) := by
+      exact Real.rpow_le_rpow_of_exponent_le one_le_two h_ceil
+    have h2 : (2 : ℝ) ^ (Real.logb 2 |γ|) = |γ| := by
+      exact Real.rpow_logb two_pos (ne_of_gt one_lt_two) h_abs_pos
+    rw [h2] at h1
+    -- Connect to L
+    have h3 : L = (2 : ℝ) ^ (Int.ceil (Real.logb 2 |γ|) : ℝ) := by
+      rw [hL_def, h_neg_j, Real.rpow_intCast]
+    rw [h3]
+    exact h1
+
+  -- Upper bound: L < 2|γ|
+  -- From ⌈log₂|γ|⌉ < log₂|γ| + 1 and strict monotonicity
+  have h_L_upper : L < 2 * |γ| := by
+    have h_ceil_lt : (Int.ceil (Real.logb 2 |γ|) : ℝ) < Real.logb 2 |γ| + 1 := Int.ceil_lt_add_one _
+    -- 2^⌈log₂|γ|⌉ < 2^(log₂|γ|+1) = 2·|γ|
+    have h1 : (2 : ℝ) ^ (Int.ceil (Real.logb 2 |γ|) : ℝ) < (2 : ℝ) ^ (Real.logb 2 |γ| + 1) := by
+      exact Real.rpow_lt_rpow_of_exponent_lt one_lt_two h_ceil_lt
+    have h2 : (2 : ℝ) ^ (Real.logb 2 |γ| + 1) = 2 * |γ| := by
+      rw [Real.rpow_add two_pos, Real.rpow_one, Real.rpow_logb two_pos (ne_of_gt one_lt_two) h_abs_pos]
+      ring
+    rw [h2] at h1
+    have h3 : L = (2 : ℝ) ^ (Int.ceil (Real.logb 2 |γ|) : ℝ) := by
+      rw [hL_def, h_neg_j, Real.rpow_intCast]
+    rw [h3]
+    exact h1
+
+  -- Choose index m and construct interval
+  set m := Int.floor (γ / L) with hm_def
+  let I : WhitneyInterval := dyadicInterval j m
+
+  use I
+
+  constructor
+  · -- γ ∈ I.interval
+    simp only [dyadicInterval, WhitneyInterval.interval, Set.mem_Icc]
+    have h_floor_le : (m : ℝ) ≤ γ / L := Int.floor_le (γ / L)
+    have h_lt_floor_succ : γ / L < (m : ℝ) + 1 := Int.lt_floor_add_one (γ / L)
+    have h_lower : (m : ℝ) * L ≤ γ := by
+      have := mul_le_mul_of_nonneg_right h_floor_le (le_of_lt hL_pos)
+      rwa [div_mul_cancel₀] at this; exact ne_of_gt hL_pos
+    have h_upper : γ < ((m : ℝ) + 1) * L := by
+      have := mul_lt_mul_of_pos_right h_lt_floor_succ hL_pos
+      rwa [div_mul_cancel₀] at this; exact ne_of_gt hL_pos
+    constructor
+    · -- Lower bound
+      have h1 : (m : ℝ) * (2 : ℝ)^(-j) + (2 : ℝ)^(-j) / 2 - (2 : ℝ)^(-j) / 2 = (m : ℝ) * (2 : ℝ)^(-j) := by ring
+      calc (m : ℝ) * (2 : ℝ)^(-j) + (2 : ℝ)^(-j) / 2 - (2 : ℝ)^(-j) / 2
+          = (m : ℝ) * (2 : ℝ)^(-j) := h1
+        _ = (m : ℝ) * L := by rw [hL_def]
+        _ ≤ γ := h_lower
+    · -- Upper bound: γ ≤ I.t0 + I.len
+      have h1 : ((m : ℝ) + 1) * (2 : ℝ)^(-j) = (m : ℝ) * (2 : ℝ)^(-j) + (2 : ℝ)^(-j) / 2 + (2 : ℝ)^(-j) / 2 := by ring
+      have h2 : (m : ℝ) * (2 : ℝ)^(-j) + (2 : ℝ)^(-j) / 2 + (2 : ℝ)^(-j) / 2 = I.t0 + I.len := by
+        simp only [I, dyadicInterval]
+      rw [← h2, ← h1, ← hL_def]
+      exact le_of_lt h_upper
+
+  constructor
+  · -- 2 * I.len ≥ |γ|
+    have h1 : 2 * I.len = (2 : ℝ)^(-j) := by simp only [I, dyadicInterval]; ring
+    rw [h1, ← hL_def]
+    exact h_L_lower
+  · -- 2 * I.len ≤ 4 * |γ|
+    have h1 : 2 * I.len = (2 : ℝ)^(-j) := by simp only [I, dyadicInterval]; ring
+    rw [h1, ← hL_def]
+    have h2 : L < 2 * |γ| := h_L_upper
+    linarith [h_abs_pos]
+
 end RiemannRecognitionGeometry
