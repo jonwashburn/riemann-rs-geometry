@@ -322,17 +322,53 @@ lemma phase_bound_from_arctan (ρ : ℂ) (a b : ℝ) (hab : a < b)
 
     -- For the mixed-sign case with σ strictly inside (a, b):
     by_cases ha_eq : a = σ
-    · -- a = σ: edge case
-      -- When a = σ, arctan((a-σ)/γ) = arctan(0) = 0
-      -- phaseChange = 2*arctan((b-σ)/γ) = 2*arctan((b-a)/γ) ≥ 2*π/4 = π/2 > L_rec
-      -- Requires phaseChange_arctan_formula to complete
-      sorry
+    · -- a = σ: edge case - blaschkePhase ρ σ = π, so |phaseChange| ≥ π > L_rec
+      have h_phase_σ := blaschkePhase_at_re ρ hγ_pos
+      have hb_gt_σ : b > σ := by rw [← ha_eq]; exact hab
+      unfold phaseChange
+      rw [ha_eq, h_phase_σ]
+      -- blaschkePhase ρ b = 2*arctan(-γ/(b-σ)) < 0 since -γ/(b-σ) < 0
+      have h_ratio_neg : -γ / (b - σ) < 0 := div_neg_of_neg_of_pos (neg_neg_of_pos hγ_pos) (sub_pos.mpr hb_gt_σ)
+      have h_arctan_neg : Real.arctan (-γ / (b - σ)) < 0 := by
+        rw [← Real.arctan_zero]; exact Real.arctan_lt_arctan h_ratio_neg
+      have h_phase_b := blaschkePhase_arctan ρ b hγ_pos (ne_of_gt hb_gt_σ)
+      have h_phase_b_neg : blaschkePhase ρ b < 0 := by rw [h_phase_b]; linarith
+      have h_diff_neg : blaschkePhase ρ b - Real.pi < 0 := by linarith [Real.pi_pos]
+      rw [abs_of_neg h_diff_neg, neg_sub]
+      have h_pi_gt_L : Real.pi > L_rec := by
+        unfold L_rec; have := Real.arctan_lt_pi_div_two 2; linarith [Real.pi_gt_three]
+      linarith
     · by_cases hb_eq : b = σ
-      · -- b = σ: edge case
-        -- When b = σ, arctan((b-σ)/γ) = arctan(0) = 0
-        -- |phaseChange| = 2*arctan((σ-a)/γ) = 2*arctan((b-a)/γ) ≥ 2*π/4 = π/2 > L_rec
-        -- Requires phaseChange_arctan_formula to complete
-        sorry
+      · -- b = σ: edge case - blaschkePhase ρ σ = π, |phaseChange| = π - phase_a ≥ π/2 > L_rec
+        have h_phase_σ := blaschkePhase_at_re ρ hγ_pos
+        have ha_lt_σ : a < σ := by rw [← hb_eq]; exact hab
+        unfold phaseChange
+        rw [hb_eq, h_phase_σ]
+        -- -γ / (a - σ) = γ / (σ - a) > 0
+        have h_a_sub_neg : a - σ < 0 := sub_neg.mpr ha_lt_σ
+        have h_ratio_eq : -γ / (a - σ) = γ / (σ - a) := by
+          calc -γ / (a - σ) = -γ / -(σ - a) := by ring_nf
+            _ = γ / (σ - a) := neg_div_neg_eq γ (σ - a)
+        have h_ratio_pos : -γ / (a - σ) > 0 := by rw [h_ratio_eq]; exact div_pos hγ_pos (sub_pos.mpr ha_lt_σ)
+        have h_arctan_pos : Real.arctan (-γ / (a - σ)) > 0 := by
+          rw [← Real.arctan_zero]; exact Real.arctan_lt_arctan h_ratio_pos
+        have h_phase_a := blaschkePhase_arctan ρ a hγ_pos (ne_of_lt ha_lt_σ)
+        have h_phase_a_pos : blaschkePhase ρ a > 0 := by rw [h_phase_a]; linarith
+        -- With h_width : b - a ≥ γ and b = σ, we have σ - a ≥ γ
+        have h_width' : σ - a ≥ γ := by rw [← hb_eq]; exact h_width
+        have h_σ_a_pos : σ - a > 0 := sub_pos.mpr ha_lt_σ
+        have h_ratio_le_1 : γ / (σ - a) ≤ 1 := by
+          rw [div_le_one h_σ_a_pos]; exact h_width'
+        have h_arctan_le : Real.arctan (γ / (σ - a)) ≤ Real.pi / 4 := by
+          calc Real.arctan (γ / (σ - a)) ≤ Real.arctan 1 := Real.arctan_le_arctan h_ratio_le_1
+            _ = Real.pi / 4 := Real.arctan_one
+        have h_phase_a_le : blaschkePhase ρ a ≤ Real.pi / 2 := by
+          rw [h_phase_a, h_ratio_eq]; linarith
+        have h_diff_pos : Real.pi - blaschkePhase ρ a > 0 := by linarith [Real.pi_pos]
+        rw [abs_of_pos h_diff_pos]
+        have h_pi_half_gt_L : Real.pi / 2 > L_rec := by
+          unfold L_rec; have := Real.arctan_lt_pi_div_two 2; linarith [Real.pi_gt_three]
+        linarith
       · -- General case: a ≠ σ and b ≠ σ
         -- Since a ≠ σ and a ≤ σ, we have a < σ, so y < 0
         have h_a_lt_σ : a < σ := by
