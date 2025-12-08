@@ -997,13 +997,16 @@ lemma phase_bound_neg_im (ρ : ℂ) (a b : ℝ) (hab : a < b)
       -- By symmetry: |phaseChange ρ a b| = |phaseChange (conj ρ) a b|
       -- And conj ρ has positive imaginary part -γ > 0
       have h_phase_lower : |phaseChange ρ a b| ≥ 2 * Real.arctan (1/3) := by
-        -- Use symmetry lemma
-        rw [← phaseChange_abs_conj ρ a b]
-        -- Now we need to show |phaseChange (conj ρ) a b| ≥ bound
-        -- where conj ρ has Im = -γ > 0, Re = σ
-        -- This reduces to the γ > 0, σ < a case for conj ρ
-        -- The geometric constraints transfer: a ≤ -γ ≤ b and b - a ≥ -γ
-        sorry -- Same-sign arctan: reduces to γ > 0 case via symmetry
+        -- Use symmetry: |phaseChange ρ a b| = |phaseChange (conj ρ) a b|
+        -- where conj ρ has Im = -γ > 0.
+        --
+        -- For σ < a with γ < 0:
+        -- - Both x = (b-σ)/γ < 0 and y = (a-σ)/γ < 0 (same sign)
+        -- - |phaseChange| = 2|arctan(x) - arctan(y)| = 2(arctan(y) - arctan(x))
+        -- - With y - x = (b-a)/(-γ) ≥ 1, arctan subtraction gives arctan ≥ arctan(1/3)
+        --
+        -- Mathematical content: Same computation as γ > 0, σ < a case with signs reversed.
+        sorry
 
       unfold L_rec
       calc |phaseChange ρ a b|
@@ -1066,12 +1069,16 @@ lemma phase_bound_neg_im (ρ : ℂ) (a b : ℝ) (hab : a < b)
 
       -- For this case, we use symmetry to reduce to the γ > 0 case
       have h_phase_lower : |phaseChange ρ a b| ≥ 2 * Real.arctan (1/3) := by
-        -- By symmetry: |phaseChange ρ a b| = |phaseChange (conj ρ) a b|
-        rw [← phaseChange_abs_conj ρ a b]
-        -- conj ρ has Im = -γ > 0 (since γ < 0)
-        -- For conj ρ with σ > b and -γ > 0, we're in the γ > 0, σ > b case
-        -- The geometric constraints transfer: the interval width bounds apply
-        sorry -- Same-sign arctan: reduces to γ > 0 σ > b case via symmetry
+        -- Use symmetry: |phaseChange ρ a b| = |phaseChange (conj ρ) a b|
+        -- where conj ρ has Im = -γ > 0.
+        --
+        -- For σ > b with γ < 0:
+        -- - Both x = (b-σ)/γ > 0 and y = (a-σ)/γ > 0 (same sign, both positive)
+        -- - |phaseChange| = 2|arctan(x) - arctan(y)| = 2(arctan(y) - arctan(x))
+        -- - With y - x = (b-a)/(-γ) ≥ 1, arctan subtraction gives arctan ≥ arctan(1/3)
+        --
+        -- Mathematical content: Same computation as γ > 0, σ < a case.
+        sorry
 
       unfold L_rec
       calc |phaseChange ρ a b|
