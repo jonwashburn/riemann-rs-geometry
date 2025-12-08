@@ -79,15 +79,81 @@ lemma meanOscillation_nonneg (f : ℝ → ℝ) (a b : ℝ) : meanOscillation f a
 lemma avg_in_osc_ball (f : ℝ → ℝ) (a b : ℝ) (hab : a < b) (t : ℝ) (ht : t ∈ Set.Icc a b)
     (M : ℝ) (hM : ∀ x y, x ∈ Set.Icc a b → y ∈ Set.Icc a b → |f x - f y| ≤ M) :
     |f t - intervalAverage f a b| ≤ M := by
-  -- The average f_I lies in [f(t) - M, f(t) + M] since:
-  -- For all s ∈ [a,b]: |f(t) - f(s)| ≤ M, so f(t) - M ≤ f(s) ≤ f(t) + M
-  -- Integrating: (f(t) - M)(b-a) ≤ ∫f ≤ (f(t) + M)(b-a)
-  -- Dividing by (b-a): f(t) - M ≤ f_I ≤ f(t) + M
-  -- So |f(t) - f_I| ≤ M
-  --
-  -- Note: The formal proof requires handling integral bound variable names
-  -- which creates syntactic (not semantic) complications in Lean.
-  sorry
+  -- Unfold intervalAverage
+  unfold intervalAverage
+  simp only [if_pos hab]
+
+  -- The bound |f(t) - f(s)| ≤ M gives: f(t) - M ≤ f(s) ≤ f(t) + M for all s ∈ [a,b]
+  have h_pointwise : ∀ s ∈ Set.Icc a b, f s ∈ Set.Icc (f t - M) (f t + M) := by
+    intro s hs
+    have h1 : |f t - f s| ≤ M := hM t s ht hs
+    constructor <;> linarith [abs_le.mp h1]
+
+  -- Get integrability from our axiom
+  have hf_int : IntegrableOn f (Set.Icc a b) := bounded_integrableOn f a b hab M hM
+
+  have h_len_pos : (0 : ℝ) < b - a := sub_pos.mpr hab
+
+  -- Key facts about the integral of bounded functions
+  -- ∫ f ∈ [(f(t)-M)(b-a), (f(t)+M)(b-a)]
+  have h_int_in_range :
+      (f t - M) * (b - a) ≤ ∫ s in Set.Icc a b, f s ∧
+      ∫ s in Set.Icc a b, f s ≤ (f t + M) * (b - a) := by
+    constructor
+    · -- Lower bound
+      have h_meas_finite : MeasureTheory.volume (Set.Icc a b) < ⊤ := by
+        rw [Real.volume_Icc]; exact ENNReal.ofReal_lt_top
+      have hconst_int : IntegrableOn (fun _ => f t - M) (Set.Icc a b) := by
+        rw [integrableOn_const]; right; exact h_meas_finite
+      have h1 : ∫ _ in Set.Icc a b, (f t - M) ≤ ∫ s in Set.Icc a b, f s := by
+        apply MeasureTheory.setIntegral_mono_on hconst_int hf_int measurableSet_Icc
+        intro s hs; exact (h_pointwise s hs).1
+      have h2 : ∫ _ in Set.Icc a b, (f t - M) = (f t - M) * (b - a) := by
+        rw [MeasureTheory.setIntegral_const, smul_eq_mul, Real.volume_Icc]
+        simp only [ENNReal.toReal_ofReal (le_of_lt h_len_pos)]
+        ring
+      linarith
+    · -- Upper bound
+      have h_meas_finite : MeasureTheory.volume (Set.Icc a b) < ⊤ := by
+        rw [Real.volume_Icc]; exact ENNReal.ofReal_lt_top
+      have hconst_int : IntegrableOn (fun _ => f t + M) (Set.Icc a b) := by
+        rw [integrableOn_const]; right; exact h_meas_finite
+      have h1 : ∫ s in Set.Icc a b, f s ≤ ∫ _ in Set.Icc a b, (f t + M) := by
+        apply MeasureTheory.setIntegral_mono_on hf_int hconst_int measurableSet_Icc
+        intro s hs; exact (h_pointwise s hs).2
+      have h2 : ∫ _ in Set.Icc a b, (f t + M) = (f t + M) * (b - a) := by
+        rw [MeasureTheory.setIntegral_const, smul_eq_mul, Real.volume_Icc]
+        simp only [ENNReal.toReal_ofReal (le_of_lt h_len_pos)]
+        ring
+      linarith
+
+  -- Divide by (b - a) to get average bounds
+  have h_avg : (1 / (b - a)) * ∫ s in Set.Icc a b, f s ∈ Set.Icc (f t - M) (f t + M) := by
+    obtain ⟨h_lo, h_hi⟩ := h_int_in_range
+    have h_ne : b - a ≠ 0 := ne_of_gt h_len_pos
+    have h_inv_pos : (b - a)⁻¹ > 0 := inv_pos.mpr h_len_pos
+    have h_inv_nonneg : (b - a)⁻¹ ≥ 0 := le_of_lt h_inv_pos
+    rw [one_div]
+    constructor
+    · -- (f t - M) ≤ avg = (b-a)⁻¹ * ∫f
+      have h1 : (f t - M) * (b - a) * (b - a)⁻¹ ≤ (b - a)⁻¹ * ∫ s in Set.Icc a b, f s := by
+        calc (f t - M) * (b - a) * (b - a)⁻¹
+            ≤ (∫ s in Set.Icc a b, f s) * (b - a)⁻¹ := mul_le_mul_of_nonneg_right h_lo h_inv_nonneg
+          _ = (b - a)⁻¹ * ∫ s in Set.Icc a b, f s := mul_comm _ _
+      have h2 : (f t - M) * (b - a) * (b - a)⁻¹ = f t - M := by field_simp
+      linarith
+    · -- avg = (b-a)⁻¹ * ∫f ≤ (f t + M)
+      have h1 : (b - a)⁻¹ * ∫ s in Set.Icc a b, f s ≤ (f t + M) * (b - a) * (b - a)⁻¹ := by
+        calc (b - a)⁻¹ * ∫ s in Set.Icc a b, f s
+            = (∫ s in Set.Icc a b, f s) * (b - a)⁻¹ := mul_comm _ _
+          _ ≤ (f t + M) * (b - a) * (b - a)⁻¹ := mul_le_mul_of_nonneg_right h_hi h_inv_nonneg
+      have h2 : (f t + M) * (b - a) * (b - a)⁻¹ = f t + M := by field_simp
+      linarith
+
+  -- |f t - avg| ≤ M
+  obtain ⟨h_lo, h_hi⟩ := h_avg
+  rw [abs_le]
+  constructor <;> linarith
 
 /-- Mean oscillation ≤ supremum oscillation. Standard BMO result.
 
@@ -100,9 +166,51 @@ lemma meanOscillation_le_sup_osc (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
     (M : ℝ) (hM_pos : M ≥ 0)
     (hM : ∀ x y, x ∈ Set.Icc a b → y ∈ Set.Icc a b → |f x - f y| ≤ M) :
     meanOscillation f a b ≤ M := by
-  -- Pointwise bound: |f(t) - f_I| ≤ M from avg_in_osc_ball
-  -- Integrating: (1/(b-a))∫|f - f_I| ≤ (1/(b-a)) * M(b-a) = M
-  sorry
+  unfold meanOscillation
+  simp only [if_pos hab]
+
+  -- Pointwise bound: |f(t) - f_I| ≤ M for all t ∈ [a,b]
+  have h_pointwise : ∀ t ∈ Set.Icc a b, |f t - intervalAverage f a b| ≤ M := by
+    intro t ht
+    exact avg_in_osc_ball f a b hab t ht M hM
+
+  have h_len_pos : (0 : ℝ) < b - a := sub_pos.mpr hab
+  have h_ne : b - a ≠ 0 := ne_of_gt h_len_pos
+
+  -- The function |f - f_I| is bounded by M
+  have h_meas_finite : MeasureTheory.volume (Set.Icc a b) < ⊤ := by
+    rw [Real.volume_Icc]; exact ENNReal.ofReal_lt_top
+
+  -- ∫|f - f_I| ≤ ∫M = M(b-a)
+  have h_int_bound : ∫ t in Set.Icc a b, |f t - intervalAverage f a b| ≤ M * (b - a) := by
+    have hconst_int : IntegrableOn (fun _ => M) (Set.Icc a b) := by
+      rw [integrableOn_const]; right; exact h_meas_finite
+    -- Need integrability of |f - f_I|
+    have hf_int : IntegrableOn f (Set.Icc a b) := bounded_integrableOn f a b hab M hM
+    have havg_int : IntegrableOn (fun _ => intervalAverage f a b) (Set.Icc a b) := by
+      rw [integrableOn_const]; right; exact h_meas_finite
+    have hf_sub_int : IntegrableOn (fun t => f t - intervalAverage f a b) (Set.Icc a b) :=
+      hf_int.sub havg_int
+    have hf_abs_int : IntegrableOn (fun t => |f t - intervalAverage f a b|) (Set.Icc a b) :=
+      hf_sub_int.norm
+    have h1 : ∫ t in Set.Icc a b, |f t - intervalAverage f a b| ≤ ∫ _ in Set.Icc a b, M := by
+      apply MeasureTheory.setIntegral_mono_on hf_abs_int hconst_int measurableSet_Icc
+      intro t ht
+      exact h_pointwise t ht
+    have h2 : ∫ _ in Set.Icc a b, M = M * (b - a) := by
+      rw [MeasureTheory.setIntegral_const, smul_eq_mul, Real.volume_Icc]
+      simp only [ENNReal.toReal_ofReal (le_of_lt h_len_pos)]
+      ring
+    linarith
+
+  -- (1/(b-a)) * ∫|f - f_I| ≤ (1/(b-a)) * M(b-a) = M
+  have h_inv_pos : (b - a)⁻¹ > 0 := inv_pos.mpr h_len_pos
+  have h_inv_nonneg : (b - a)⁻¹ ≥ 0 := le_of_lt h_inv_pos
+  rw [one_div]
+  calc (b - a)⁻¹ * ∫ t in Set.Icc a b, |f t - intervalAverage f a b|
+      ≤ (b - a)⁻¹ * (M * (b - a)) := by
+        apply mul_le_mul_of_nonneg_left h_int_bound h_inv_nonneg
+    _ = M := by field_simp
 
 /-! ## The Completed Zeta Function -/
 
