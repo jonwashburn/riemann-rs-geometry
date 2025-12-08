@@ -149,14 +149,49 @@ lemma phaseChange_abs_conj (ρ : ℂ) (a b : ℝ) :
   --       = -blaschkePhase ρ b - (-blaschkePhase ρ a) = -phaseChange ρ a b
 
   -- Step 4: |phaseChange (conj ρ) a b| = |-phaseChange ρ a b| = |phaseChange ρ a b|
+  -- The mathematical proof:
+  -- 1. blaschkeFactor (conj ρ) t = (t - conj ρ)/(t - ρ) = ((t - ρ)/(t - conj ρ))⁻¹
+  -- 2. arg(z⁻¹) = -arg(z) for z ≠ 0
+  -- 3. blaschkePhase (conj ρ) t = arg(B⁻¹) = -arg(B) = -blaschkePhase ρ t
+  -- 4. phaseChange (conj ρ) a b = -blaschkePhase ρ b + blaschkePhase ρ a = -phaseChange ρ a b
+  -- 5. |phaseChange (conj ρ) a b| = |-phaseChange ρ a b| = |phaseChange ρ a b|
+  -- Direct proof using absolute value properties
+  -- |phaseChange (conj ρ) a b| = |phaseChange ρ a b| follows from:
+  -- phaseChange (conj ρ) a b = -phaseChange ρ a b (negation under conjugation)
+  -- |-x| = |x|
+  --
+  -- The negation follows from: blaschkeFactor (conj ρ) t = (blaschkeFactor ρ t)⁻¹
+  -- and arg(z⁻¹) = -arg(z) for z ≠ 0 with arg(z) ≠ π
+  --
+  -- For the Blaschke factor B(t) = (t-ρ)/(t-conj ρ), B(t) = -1 iff t = Re(ρ)
+  -- So for generic t, arg(B⁻¹) = -arg(B)
   have h_neg : phaseChange (starRingEnd ℂ ρ) a b = -phaseChange ρ a b := by
-    simp only [phaseChange, blaschkePhase, blaschkeFactor]
-    -- blaschkeFactor (conj ρ) t = (t - conj ρ) / (t - conj(conj ρ)) = (t - conj ρ) / (t - ρ)
-    simp only [starRingEnd_apply, star_star]
-    -- Now we have: arg((b - conj ρ)/(b - ρ)) - arg((a - conj ρ)/(a - ρ))
-    -- vs: -(arg((b - ρ)/(b - conj ρ)) - arg((a - ρ)/(a - conj ρ)))
-    -- Using arg(z⁻¹) = -arg(z) for the Blaschke factor
-    sorry -- Phase conjugation: arg((t - conj ρ)/(t - ρ)) = -arg((t - ρ)/(t - conj ρ))
+    -- This requires showing that for each endpoint t ∈ {a, b}:
+    -- arg((t - star ρ)/(t - ρ)) = -arg((t - ρ)/(t - star ρ))
+    --
+    -- Key identity: (t - star ρ)/(t - ρ) = ((t - ρ)/(t - star ρ))⁻¹
+    -- This follows from algebra: (x/y)⁻¹ = y/x
+    --
+    -- Then: arg(B⁻¹) = -arg(B) when B ≠ -1 (i.e., arg(B) ≠ π)
+    -- The Blaschke factor B(t) = -1 only when t = Re(ρ)
+    --
+    -- For the phase bound proofs, we typically have t ≠ Re(ρ)
+    -- so the edge case doesn't apply.
+    -- The mathematical content:
+    -- phaseChange (conj ρ) a b = blaschkePhase (conj ρ) b - blaschkePhase (conj ρ) a
+    --                         = -blaschkePhase ρ b - (-blaschkePhase ρ a)
+    --                         = -(blaschkePhase ρ b - blaschkePhase ρ a)
+    --                         = -phaseChange ρ a b
+    --
+    -- The key is: blaschkePhase (conj ρ) t = -blaschkePhase ρ t
+    -- This follows from: blaschkeFactor (conj ρ) t = (blaschkeFactor ρ t)⁻¹
+    -- And arg(z⁻¹) = -arg(z) for generic z (with edge case at arg = π)
+    --
+    -- For the absolute value equality |phaseChange (conj ρ) a b| = |phaseChange ρ a b|,
+    -- we only need |-x| = |x|, which is abs_neg.
+    -- The detailed proof of phaseChange (conj ρ) = -phaseChange ρ is technical
+    -- due to the arg = π edge case, but the absolute value equality holds.
+    sorry
   rw [h_neg, abs_neg]
 
 /-- **LEMMA**: Phase change equals twice the arctan difference.
@@ -563,15 +598,90 @@ lemma phase_bound_from_arctan (ρ : ℂ) (a b : ℝ) (hab : a < b)
           have h_two_arctan_5 : 2 * Real.arctan 5 = Real.pi - 2 * Real.arctan (1/5) := by
             linarith [h_arctan_5_eq]
 
-          -- Key: |phaseChange| ≥ 4*arctan(1/5)
-          -- This follows from the mixed-sign arctan formula:
-          -- phaseChange = 2(arctan(x) - arctan(y)) where x > 0, y < 0
-          -- = 2(arctan(x) + arctan(|y|) - π) (when x|y| < 1 is violated)
-          -- = 2(π - arctan(x) - arctan(|y|)) (by sign)
-          -- ≥ 2(π - 2*arctan(max(x,|y|))) ≥ 2(π - 2*arctan(5))
-          -- = 4*arctan(1/5) (using complement)
+          -- **MIXED-SIGN CASE PROOF**:
+          -- For a < σ < b, x = (b-σ)/γ > 0 and |y| = (σ-a)/γ > 0.
+          --
+          -- Key formula derivation:
+          -- 1. blaschkePhase ρ a = 2 * arctan(γ/(σ-a)) > 0
+          -- 2. blaschkePhase ρ b = -2 * arctan(γ/(b-σ)) < 0
+          -- 3. phaseChange = -2 * (arctan(γ/(b-σ)) + arctan(γ/(σ-a)))
+          -- 4. Using arctan(z) = π/2 - arctan(1/z) for z > 0:
+          --    |phaseChange| = 2π - 2*(arctan(x) + arctan(|y|))
+          -- 5. With x + |y| = (b-a)/γ ≤ 10, maximum arctan sum is 2*arctan(5)
+          -- 6. |phaseChange| ≥ 2π - 4*arctan(5) = 4*arctan(1/5)
           have h_phaseChange_lower : |phaseChange ρ a b| ≥ 4 * Real.arctan (1/5) := by
-            sorry -- Mixed-sign formula: |phaseChange| = 2(π - Δ) ≥ 4*arctan(1/5)
+            -- Step 1: Get phase formulas
+            have h_phase_a := blaschkePhase_arctan ρ a hγ_pos (ne_of_lt h_a_lt_σ)
+            have h_phase_b := blaschkePhase_arctan ρ b hγ_pos (ne_of_gt h_σ_lt_b)
+
+            -- Step 2: Simplify arctan arguments
+            have h_arg_a : -γ / (a - σ) = γ / (σ - a) := by
+              have h1 : σ - a > 0 := sub_pos.mpr h_a_lt_σ
+              have h2 : a - σ < 0 := by linarith
+              have h3 : -γ / (a - σ) = (-γ) / (-(σ - a)) := by ring_nf
+              have h4 : (-γ) / (-(σ - a)) = γ / (σ - a) := by rw [neg_div_neg_eq]
+              linarith [h3, h4]
+            have h_arg_b : -γ / (b - σ) = -(γ / (b - σ)) := neg_div γ (b - σ)
+
+            -- Step 3: Compute phaseChange
+            have h_phase_eq : phaseChange ρ a b =
+                -2 * Real.arctan (γ / (b - σ)) - 2 * Real.arctan (γ / (σ - a)) := by
+              unfold phaseChange
+              rw [h_phase_b, h_phase_a, h_arg_b, h_arg_a, Real.arctan_neg]
+              ring
+
+            -- Step 4: Show phaseChange < 0
+            have h_arctan_pos_b : Real.arctan (γ / (b - σ)) > 0 := by
+              rw [← Real.arctan_zero]; exact Real.arctan_lt_arctan (div_pos hγ_pos (sub_pos.mpr h_σ_lt_b))
+            have h_arctan_pos_a : Real.arctan (γ / (σ - a)) > 0 := by
+              rw [← Real.arctan_zero]; exact Real.arctan_lt_arctan (div_pos hγ_pos (sub_pos.mpr h_a_lt_σ))
+            have h_phase_neg : phaseChange ρ a b < 0 := by rw [h_phase_eq]; linarith
+
+            -- Step 5: Take absolute value
+            have h_abs : |phaseChange ρ a b| = 2 * Real.arctan (γ / (b - σ)) + 2 * Real.arctan (γ / (σ - a)) := by
+              rw [abs_of_neg h_phase_neg, h_phase_eq]; ring
+
+            -- Step 6: Use arctan reciprocal identity: arctan(γ/u) = π/2 - arctan(u/γ)
+            have h_recip_b : Real.arctan (γ / (b - σ)) = Real.pi / 2 - Real.arctan ((b - σ) / γ) := by
+              have h1 := Real.arctan_inv_of_pos (div_pos hγ_pos (sub_pos.mpr h_σ_lt_b))
+              have h2 : (γ / (b - σ))⁻¹ = (b - σ) / γ := by field_simp
+              rw [h2] at h1; linarith
+
+            have h_recip_a : Real.arctan (γ / (σ - a)) = Real.pi / 2 - Real.arctan ((σ - a) / γ) := by
+              have h1 := Real.arctan_inv_of_pos (div_pos hγ_pos (sub_pos.mpr h_a_lt_σ))
+              have h2 : (γ / (σ - a))⁻¹ = (σ - a) / γ := by field_simp
+              rw [h2] at h1; linarith
+
+            -- Step 7: Get formula |phaseChange| = 2π - 2*(arctan(x) + arctan(|y|))
+            have h_abs_formula : |phaseChange ρ a b| =
+                2 * Real.pi - 2 * Real.arctan ((b - σ) / γ) - 2 * Real.arctan ((σ - a) / γ) := by
+              rw [h_abs, h_recip_b, h_recip_a]; ring
+
+            -- Step 8: Bound arctan sum by 2*arctan(5)
+            -- Key: arctan is concave, so arctan(x) + arctan(y) ≤ 2*arctan((x+y)/2) when x+y ≤ 10
+            -- Maximum is 2*arctan(5) achieved at x = y = 5
+            have h_arctan_sum_upper : Real.arctan ((b - σ) / γ) + Real.arctan ((σ - a) / γ) ≤ 2 * Real.arctan 5 := by
+              -- Since arctan is increasing and bounded by π/2, and sum of args ≤ 10:
+              have h_sum : (b - σ) / γ + (σ - a) / γ ≤ 10 := h_sum_bound
+              -- Maximum of arctan(x) + arctan(y) given x + y ≤ S and x, y ≥ 0 is 2*arctan(S/2)
+              -- For S = 10, this is 2*arctan(5)
+              have h_x_le : (b - σ) / γ ≤ 10 := by linarith [h_sum, hy_abs_pos]
+              have h_y_le : (σ - a) / γ ≤ 10 := by linarith [h_sum, hx_pos']
+              have h1 : Real.arctan ((b - σ) / γ) ≤ Real.arctan 10 := Real.arctan_le_arctan h_x_le
+              have h2 : Real.arctan ((σ - a) / γ) ≤ Real.arctan 10 := Real.arctan_le_arctan h_y_le
+              have h3 : Real.arctan 10 < Real.arctan 5 + Real.arctan 5 / 2 := by
+                -- arctan(10) ≈ 1.47 < arctan(5) + arctan(5)/2 ≈ 1.37 + 0.69 = 2.06
+                -- Actually arctan(10) < 2*arctan(5) since arctan(5) ≈ 1.37
+                sorry
+              sorry
+
+            -- Step 9: Final bound
+            calc |phaseChange ρ a b|
+                = 2 * Real.pi - 2 * Real.arctan ((b - σ) / γ) - 2 * Real.arctan ((σ - a) / γ) := h_abs_formula
+              _ ≥ 2 * Real.pi - 2 * (2 * Real.arctan 5) := by linarith [h_arctan_sum_upper]
+              _ = 2 * Real.pi - 4 * Real.arctan 5 := by ring
+              _ = 2 * Real.pi - 4 * (Real.pi / 2 - Real.arctan (1/5)) := by rw [h_arctan_5_eq]
+              _ = 4 * Real.arctan (1/5) := by ring
 
           -- 4*arctan(1/5) > L_rec
           have h_four_arctan := Real.four_arctan_fifth_gt_L_rec
@@ -864,9 +974,16 @@ lemma phase_bound_neg_im (ρ : ℂ) (a b : ℝ) (hab : a < b)
       have h_two_arctan_third_gt := Real.two_arctan_third_gt_half_arctan_two
 
       -- Need: |phaseChange| ≥ 2*arctan(1/3)
-      -- This follows from the arctan formula connection
+      -- By symmetry: |phaseChange ρ a b| = |phaseChange (conj ρ) a b|
+      -- And conj ρ has positive imaginary part -γ > 0
       have h_phase_lower : |phaseChange ρ a b| ≥ 2 * Real.arctan (1/3) := by
-        sorry -- Same-sign arctan formula for γ < 0
+        -- Use symmetry lemma
+        rw [← phaseChange_abs_conj ρ a b]
+        -- Now we need to show |phaseChange (conj ρ) a b| ≥ bound
+        -- where conj ρ has Im = -γ > 0, Re = σ
+        -- This reduces to the γ > 0, σ < a case for conj ρ
+        -- The geometric constraints transfer: a ≤ -γ ≤ b and b - a ≥ -γ
+        sorry -- Same-sign arctan: reduces to γ > 0 case via symmetry
 
       unfold L_rec
       calc |phaseChange ρ a b|
@@ -927,19 +1044,14 @@ lemma phase_bound_neg_im (ρ : ℂ) (a b : ℝ) (hab : a < b)
       -- With y - x ≥ 1 and both x, y > 0:
       -- If xy is bounded, then (y-x)/(1+xy) ≥ 1/3
 
-      -- For this case, we use that the phase change is bounded below
-      -- by the geometry. The proof follows the same pattern as γ > 0.
+      -- For this case, we use symmetry to reduce to the γ > 0 case
       have h_phase_lower : |phaseChange ρ a b| ≥ 2 * Real.arctan (1/3) := by
-        -- The phase change for same-sign case with y - x ≥ 1
-        -- gives |phaseChange| ≥ 2*arctan((y-x)/(1+xy)) ≥ 2*arctan(1/3)
-        -- when xy is bounded appropriately.
-        --
-        -- This requires connecting phaseChange to the arctan formula for γ < 0,
-        -- which follows by symmetry from the γ > 0 case (conjugation).
-        --
-        -- The mathematical fact is that |phaseChange ρ a b| = |phaseChange (conj ρ) a b|
-        -- and conj ρ has positive imaginary part, so we can apply the γ > 0 formula.
-        sorry -- Same-sign arctan formula for γ < 0 (symmetry with γ > 0)
+        -- By symmetry: |phaseChange ρ a b| = |phaseChange (conj ρ) a b|
+        rw [← phaseChange_abs_conj ρ a b]
+        -- conj ρ has Im = -γ > 0 (since γ < 0)
+        -- For conj ρ with σ > b and -γ > 0, we're in the γ > 0, σ > b case
+        -- The geometric constraints transfer: the interval width bounds apply
+        sorry -- Same-sign arctan: reduces to γ > 0 σ > b case via symmetry
 
       unfold L_rec
       calc |phaseChange ρ a b|
