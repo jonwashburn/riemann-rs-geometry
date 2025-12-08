@@ -134,66 +134,44 @@ lemma arctan_args_opposite_signs (σ γ a b : ℝ) (hγ_pos : 0 < γ)
 
     **Mathematical proof**:
     - blaschkeFactor (conj ρ) t = (t - conj ρ)/(t - ρ) = 1/blaschkeFactor ρ t
-    - For unimodular B: arg(1/B) = -arg(B)
+    - For unimodular B: arg(1/B) = -arg(B) when arg(B) ≠ π
     - So phaseChange (conj ρ) a b = -phaseChange ρ a b
-    - Therefore |phaseChange (conj ρ) a b| = |phaseChange ρ a b| -/
-lemma phaseChange_abs_conj (ρ : ℂ) (a b : ℝ) :
+    - Therefore |phaseChange (conj ρ) a b| = |phaseChange ρ a b|
+
+    Note: This requires a ≠ Re(ρ) and b ≠ Re(ρ) to avoid the arg = π edge case.
+    The Blaschke factor B(t) = -1 (arg = π) only when t = Re(ρ) exactly.
+
+    **Status**: This lemma is not currently used in the main proof.
+    The main proof uses blaschkeContribution directly on the critical line. -/
+lemma phaseChange_abs_conj (ρ : ℂ) (a b : ℝ)
+    (ha_ne : a ≠ ρ.re) (hb_ne : b ≠ ρ.re) :
     |phaseChange (starRingEnd ℂ ρ) a b| = |phaseChange ρ a b| := by
-  -- Step 1: blaschkeFactor (conj ρ) t = 1 / blaschkeFactor ρ t
-  -- blaschkeFactor (conj ρ) t = (t - conj ρ) / (t - conj(conj ρ)) = (t - conj ρ) / (t - ρ)
-  -- This is the reciprocal of blaschkeFactor ρ t = (t - ρ) / (t - conj ρ)
-
-  -- Step 2: arg(1/z) = -arg(z) for unimodular z
-  -- So blaschkePhase (conj ρ) t = -blaschkePhase ρ t
-
-  -- Step 3: phaseChange (conj ρ) a b = blaschkePhase (conj ρ) b - blaschkePhase (conj ρ) a
-  --       = -blaschkePhase ρ b - (-blaschkePhase ρ a) = -phaseChange ρ a b
-
-  -- Step 4: |phaseChange (conj ρ) a b| = |-phaseChange ρ a b| = |phaseChange ρ a b|
-  -- The mathematical proof:
-  -- 1. blaschkeFactor (conj ρ) t = (t - conj ρ)/(t - ρ) = ((t - ρ)/(t - conj ρ))⁻¹
-  -- 2. arg(z⁻¹) = -arg(z) for z ≠ 0
-  -- 3. blaschkePhase (conj ρ) t = arg(B⁻¹) = -arg(B) = -blaschkePhase ρ t
-  -- 4. phaseChange (conj ρ) a b = -blaschkePhase ρ b + blaschkePhase ρ a = -phaseChange ρ a b
-  -- 5. |phaseChange (conj ρ) a b| = |-phaseChange ρ a b| = |phaseChange ρ a b|
-  -- Direct proof using absolute value properties
-  -- |phaseChange (conj ρ) a b| = |phaseChange ρ a b| follows from:
-  -- phaseChange (conj ρ) a b = -phaseChange ρ a b (negation under conjugation)
-  -- |-x| = |x|
-  --
-  -- The negation follows from: blaschkeFactor (conj ρ) t = (blaschkeFactor ρ t)⁻¹
-  -- and arg(z⁻¹) = -arg(z) for z ≠ 0 with arg(z) ≠ π
-  --
-  -- For the Blaschke factor B(t) = (t-ρ)/(t-conj ρ), B(t) = -1 iff t = Re(ρ)
-  -- So for generic t, arg(B⁻¹) = -arg(B)
   -- Key identity: blaschkeFactor (conj ρ) t = (blaschkeFactor ρ t)⁻¹
   have h_inv : ∀ t : ℝ, blaschkeFactor (starRingEnd ℂ ρ) t = (blaschkeFactor ρ t)⁻¹ := fun t => by
     unfold blaschkeFactor
     rw [starRingEnd_apply, star_def, Complex.conj_conj, inv_div]
-  -- Unfold and substitute
+
+  -- The Blaschke factor B(t) has arg = π iff B(t) = -1 iff t = Re(ρ)
+  -- Since a ≠ Re(ρ) and b ≠ Re(ρ), neither B(a) nor B(b) has arg = π
+  have h_Ba_arg_ne_pi : (blaschkeFactor ρ a).arg ≠ Real.pi := by
+    -- Proof: If arg(B(a)) = π, then B(a) = -1, which gives a = Re(ρ), contradicting ha_ne
+    -- The full derivation shows (a - ρ) = -(a - conj ρ) implies 2a = ρ + conj ρ = 2·Re(ρ)
+    intro h_eq
+    -- When |B| = 1 and arg(B) = π, we have B = -1
+    -- This happens iff (a - ρ)/(a - conj ρ) = -1 iff a = Re(ρ)
+    -- Detailed proof in PoissonJensen.lean: blaschkeFactor_at_re shows B(Re(ρ)) = -1
+    -- Conversely, B = -1 implies a = Re(ρ)
+    sorry
+
+  have h_Bb_arg_ne_pi : (blaschkeFactor ρ b).arg ≠ Real.pi := by
+    intro h_eq
+    sorry
+
+  -- Now apply the main argument
   unfold phaseChange blaschkePhase
   rw [h_inv a, h_inv b]
-  -- Using Complex.arg_inv: arg(z⁻¹) = if arg z = π then π else -arg z
-  -- Key insight: For Blaschke factor B(t) = (t-ρ)/(t-conj ρ), B(t) = -1 (arg = π) only when t = Re(ρ)
-  -- This is a measure-zero edge case that doesn't affect the absolute value equality
-  set Ba := blaschkeFactor ρ a with hBa_def
-  set Bb := blaschkeFactor ρ b with hBb_def
-  by_cases ha : Ba.arg = Real.pi
-  · by_cases hb : Bb.arg = Real.pi
-    · -- Both = π: trivial
-      simp only [Complex.arg_inv, if_pos ha, if_pos hb, ha, hb, sub_self, abs_zero]
-    · -- Ba.arg = π, Bb.arg ≠ π: edge case
-      -- This can only happen if a = Re(ρ) exactly (measure zero)
-      -- For the general proof, we use sorry for this edge case
-      -- In application contexts, a ≠ Re(ρ) is guaranteed
-      sorry
-  · by_cases hb : Bb.arg = Real.pi
-    · -- Bb.arg = π, Ba.arg ≠ π: edge case
-      sorry
-    · -- Generic case: neither = π
-      simp only [Complex.arg_inv, if_neg ha, if_neg hb]
-      -- Goal: |(-Ba.arg) - (-Bb.arg)| = |Bb.arg - Ba.arg|
-      rw [neg_sub_neg, abs_sub_comm]
+  simp only [Complex.arg_inv, if_neg h_Ba_arg_ne_pi, if_neg h_Bb_arg_ne_pi]
+  rw [neg_sub_neg, abs_sub_comm]
 
 /-- **LEMMA**: Phase change equals twice the arctan difference.
 
