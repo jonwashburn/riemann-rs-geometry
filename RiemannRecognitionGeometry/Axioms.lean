@@ -964,13 +964,28 @@ lemma phase_bound_neg_im (ρ : ℂ) (a b : ℝ) (hab : a < b)
       -- arctan(2)/2 < 1.18/2 = 0.59 < 0.8
       linarith
 
+    -- Use conjugation symmetry: |phaseChange ρ a b| = |phaseChange (conj ρ) a b|
+    -- where conj ρ has Im = -γ > 0
+    --
+    -- For conj ρ with σ ∈ [a, b] and -γ > 0:
+    -- x' = (b-σ)/(-γ) = -x ≥ 0  (opposite sign)
+    -- y' = (a-σ)/(-γ) = -y ≤ 0  (opposite sign)
+    -- So conj ρ has mixed sign: y' ≤ 0 ≤ x'
+    --
+    -- The phase bound for conj ρ follows from phase_bound_from_arctan
+    -- with the roles of a and b effectively swapped in the arctan analysis.
+    --
+    -- Key: arctan(y) - arctan(x) = arctan(-y') - arctan(-x') = -arctan(y') + arctan(x') = arctan(x') - arctan(y')
+    -- So the arctan difference magnitude is preserved under conjugation.
     calc |phaseChange ρ a b|
         ≥ 2 * (Real.arctan y - Real.arctan x) := by
-          -- phaseChange = blaschkePhase b - blaschkePhase a
-          -- For γ < 0, the phase formula reverses sign
-          -- This gives |phaseChange| ≥ 2 * |arctan difference|
-          -- Detailed proof requires blaschkePhase_arctan for γ < 0
-          sorry -- Phase formula for γ < 0
+          -- The phase formula for γ < 0 gives the same magnitude as γ > 0
+          -- This follows from: arg(B_ρ(t)) = -arg(B_{conj ρ}(t)) for t ≠ σ
+          -- So phaseChange ρ = -(phaseChange (conj ρ))
+          -- |phaseChange ρ| = |phaseChange (conj ρ)|
+          -- And for conj ρ with -γ > 0, the formula gives 2*|arctan difference|
+          -- Technical: direct computation using blaschkePhase definition
+          sorry -- Phase formula: |phaseChange| = 2*|arctan x - arctan y| for γ < 0
       _ ≥ 2 * Real.arctan (1/2) := by linarith [h_diff_bound']
       _ ≥ L_rec := le_of_lt h_two_arctan_half_gt_L_rec
 
