@@ -8,17 +8,23 @@ Complete a fully unconditional Lean 4 proof of the Riemann Hypothesis using Reco
 - **Sorries**: 9 sorry calls in 6 declarations
 - **Architecture**: Sound - correct Recognition Geometry argument
 
+## Recent Progress
+
+### Proven Lemmas
+- `arctan_sub_of_neg`: Arctan subtraction formula for negative arguments
+- Restructured γ > 0, σ > b case with clear proof outline
+
 ## Remaining Sorries (9 sorry calls, 6 declarations)
 
 ### Axioms.lean (6 sorry calls, 3 declarations)
 
-| Line | Declaration | Content | Notes |
-|------|-------------|---------|-------|
+| Line | Declaration | Content | Analysis |
+|------|-------------|---------|----------|
 | 165, 169 | `phaseChange_abs_conj` | Im(B)=0 implies t=Re(ρ) | Low priority (unused) |
-| 802 | `phase_bound_from_arctan` | σ > b, γ > 0 | Whitney geometry |
-| 996 | `phase_bound_neg_im` | mixed-sign, γ < 0 | Symmetric to γ > 0 |
-| 1032 | `phase_bound_neg_im` | σ < a, γ < 0 | Both x,y < 0 |
-| 1104 | `phase_bound_neg_im` | σ > b, γ < 0 | Both x,y > 0 |
+| 850 | `phase_bound_from_arctan` | σ > b, γ > 0 | Needs Whitney bound on xy |
+| 1048 | `phase_bound_neg_im` | mixed-sign, γ < 0 | Symmetric to γ > 0 |
+| 1084 | `phase_bound_neg_im` | σ < a, γ < 0 | Both x,y < 0, y > x |
+| 1156 | `phase_bound_neg_im` | σ > b, γ < 0 | Both x,y > 0, y > x |
 
 ### FeffermanStein.lean (3 sorry calls, 3 declarations)
 
@@ -28,41 +34,35 @@ Complete a fully unconditional Lean 4 proof of the Riemann Hypothesis using Reco
 | 361 | `actualPhaseSignal_bound` | Carleson chain | High priority |
 | 404 | `phase_decomposition` | Weierstrass tail | High priority |
 
-## Proof Structure
+## Key Mathematical Analysis
 
+### Phase Bound Cases
+
+The arctan subtraction formula gives:
 ```
-IF zero ρ exists with Re(ρ) > 1/2:
-  │
-  ├── Blaschke contribution B(I,ρ) ≥ L_rec ≈ 0.55
-  │   └── From phase_bound_from_arctan (mostly proven, needs 4 cases)
-  │
-  ├── Total phase signal |R(I)| ≤ U_tail ≈ 0.13  
-  │   └── actualPhaseSignal_bound + phase_decomposition (needs work)
-  │
-  ├── Key inequality: L_rec > 4 * U_tail ✅ PROVEN
-  │
-  └── Contradiction!
+arctan(a) - arctan(b) = arctan((a-b)/(1+ab))
 ```
 
-## Key Mathematical Insight for Phase Bounds
+For |phaseChange| = 2|arctan(x) - arctan(y)| ≥ 2*arctan(1/3) ≥ L_rec, we need:
+```
+|x - y|/(1 + xy) ≥ 1/3
+```
 
-All 4 remaining phase bound sorries follow the same pattern:
+With |x - y| ≥ 1 (proven from width constraints), we need xy ≤ 2 + |x-y|.
 
-**Setup:**
-- x = (b-σ)/γ, y = (a-σ)/γ where σ = Re(ρ), γ = Im(ρ)
-- Interval spread: |x - y| = (b-a)/|γ| ≥ 1
+**Proven case (γ > 0, σ < a):**
+- Both x, y > 0, x > y
+- Key: y = (a-σ)/γ < 1 from a - σ < a ≤ γ
+- This bounds xy and gives the result
 
-**Cases:**
-1. **γ > 0, σ > b**: x < 0, y < 0 (both negative)
-2. **γ < 0, mixed-sign**: y ≥ 0 ≥ x
-3. **γ < 0, σ < a**: x < 0, y < 0 (both negative)
-4. **γ < 0, σ > b**: x > 0, y > 0 (both positive)
+**Remaining cases need similar geometric bounds:**
+- γ > 0, σ > b: Need -x < 1 or -y < 1 (both negative)
+- γ < 0 cases: Mirror images via conjugation symmetry
 
-**Goal:** |phaseChange| = 2|arctan(x) - arctan(y)| ≥ L_rec
+### Critical Strip Constraint
 
-**Approach:** For same-sign cases, use arctan subtraction:
-arctan(y) - arctan(x) = arctan((y-x)/(1+xy))
-With |y-x| ≥ 1 and bounded xy, get ≥ arctan(1/3) > L_rec/2
+For zeros of ζ(s) in the critical strip: 0 < Re(ρ) < 1.
+Adding σ < 1 as a hypothesis might help bound xy in the σ > b cases.
 
 ## Build Commands
 
@@ -73,9 +73,9 @@ grep -n "sorry" RiemannRecognitionGeometry/Axioms.lean RiemannRecognitionGeometr
 
 ## Next Steps
 
-1. **Phase bounds** - Prove the arctan subtraction formulas for remaining 4 cases
-2. **Carleson chain** - actualPhaseSignal_bound via Fefferman-Stein
-3. **Weierstrass tail** - phase_decomposition bound
+1. **Phase bounds** - Investigate adding σ < 1 constraint or alternative bounds
+2. **Conjugation symmetry** - Use |phaseChange ρ| = |phaseChange (conj ρ)|
+3. **FeffermanStein** - Focus on actualPhaseSignal_bound and phase_decomposition
 
 ## Notes
 
