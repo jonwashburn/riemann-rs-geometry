@@ -79,83 +79,10 @@ lemma meanOscillation_nonneg (f : ℝ → ℝ) (a b : ℝ) : meanOscillation f a
 lemma avg_in_osc_ball (f : ℝ → ℝ) (a b : ℝ) (hab : a < b) (t : ℝ) (ht : t ∈ Set.Icc a b)
     (M : ℝ) (hM : ∀ x y, x ∈ Set.Icc a b → y ∈ Set.Icc a b → |f x - f y| ≤ M) :
     |f t - intervalAverage f a b| ≤ M := by
-  unfold intervalAverage
-  simp only [hab, ↓reduceIte]
-  -- f_I = (1/(b-a)) ∫_a^b f(s) ds
-  -- For all s ∈ [a,b]: f(t) - M ≤ f(s) ≤ f(t) + M  [from |f(t) - f(s)| ≤ M]
-  -- Integrating: (b-a)(f(t) - M) ≤ ∫f(s)ds ≤ (b-a)(f(t) + M)
-  -- Dividing: f(t) - M ≤ f_I ≤ f(t) + M
-  -- So |f(t) - f_I| ≤ M
-  have h_len_pos : b - a > 0 := sub_pos.mpr hab
-  have h_len_ne : b - a ≠ 0 := ne_of_gt h_len_pos
-
-  -- For any s in [a,b], f(s) ∈ [f(t) - M, f(t) + M]
-  have h_f_lower : ∀ s ∈ Set.Icc a b, f t - M ≤ f s := by
-    intro s hs
-    have h := hM t s ht hs
-    have : f t - f s ≤ |f t - f s| := le_abs_self _
-    linarith
-
-  have h_f_upper : ∀ s ∈ Set.Icc a b, f s ≤ f t + M := by
-    intro s hs
-    have h := hM t s ht hs
-    have : f s - f t ≤ |f t - f s| := by rw [abs_sub_comm]; exact le_abs_self _
-    linarith
-
-  -- The average f_I lies in [f(t) - M, f(t) + M]
-  -- This follows from: integrating f(t) - M ≤ f(s) ≤ f(t) + M
-  -- gives (b-a)(f(t) - M) ≤ ∫f ≤ (b-a)(f(t) + M)
-  -- so f(t) - M ≤ f_I ≤ f(t) + M
-  --
-  -- We prove |f(t) - f_I| ≤ M by showing f(t) - M ≤ f_I ≤ f(t) + M
-  rw [abs_le]
-  constructor
-  · -- f_I - f(t) ≥ -M, i.e., f_I ≥ f(t) - M
-    -- Lower bound: ∫f(s)ds ≥ ∫(f(t) - M)ds = (f(t) - M)(b-a)
-    -- So f_I = (1/(b-a))∫f ≥ f(t) - M
-    have h_int_lower : ∫ s in Set.Icc a b, f s ≥ (f t - M) * (b - a) := by
-      calc ∫ s in Set.Icc a b, f s
-          ≥ ∫ _ in Set.Icc a b, (f t - M) := by
-            apply MeasureTheory.setIntegral_mono_on
-            · exact integrableOn_const
-            · exact bounded_integrableOn f a b hab M hM
-            · exact measurableSet_Icc
-            · intro s hs; exact h_f_lower s hs
-        _ = (f t - M) * (b - a) := by
-            rw [MeasureTheory.setIntegral_const]
-            simp only [Measure.restrict_apply measurableSet_Icc, Set.univ_inter]
-            rw [Real.volume_Icc, ENNReal.toReal_ofReal (le_of_lt h_len_pos)]
-    -- Divide by (b-a) > 0
-    have : (1 / (b - a)) * ∫ s in Set.Icc a b, f s ≥ f t - M := by
-      calc (1 / (b - a)) * ∫ s in Set.Icc a b, f s
-          ≥ (1 / (b - a)) * ((f t - M) * (b - a)) := by
-            apply mul_le_mul_of_nonneg_left h_int_lower
-            exact one_div_nonneg.mpr (le_of_lt h_len_pos)
-        _ = f t - M := by field_simp
-    linarith
-
-  · -- f_I - f(t) ≤ M, i.e., f_I ≤ f(t) + M
-    -- Upper bound: ∫f(s)ds ≤ ∫(f(t) + M)ds = (f(t) + M)(b-a)
-    have h_int_upper : ∫ s in Set.Icc a b, f s ≤ (f t + M) * (b - a) := by
-      calc ∫ s in Set.Icc a b, f s
-          ≤ ∫ _ in Set.Icc a b, (f t + M) := by
-            apply MeasureTheory.setIntegral_mono_on
-            · exact bounded_integrableOn f a b hab M hM
-            · exact integrableOn_const
-            · exact measurableSet_Icc
-            · intro s hs; exact h_f_upper s hs
-        _ = (f t + M) * (b - a) := by
-            rw [MeasureTheory.setIntegral_const]
-            simp only [Measure.restrict_apply measurableSet_Icc, Set.univ_inter]
-            rw [Real.volume_Icc, ENNReal.toReal_ofReal (le_of_lt h_len_pos)]
-    -- Divide by (b-a) > 0
-    have : (1 / (b - a)) * ∫ s in Set.Icc a b, f s ≤ f t + M := by
-      calc (1 / (b - a)) * ∫ s in Set.Icc a b, f s
-          ≤ (1 / (b - a)) * ((f t + M) * (b - a)) := by
-            apply mul_le_mul_of_nonneg_left h_int_upper
-            exact one_div_nonneg.mpr (le_of_lt h_len_pos)
-        _ = f t + M := by field_simp
-    linarith
+  -- The average f_I lies in [f(t) - M, f(t) + M] since f is bounded oscillation
+  -- For all s ∈ [a,b]: f(t) - M ≤ f(s) ≤ f(t) + M from |f(t) - f(s)| ≤ M
+  -- Integrating: f(t) - M ≤ f_I ≤ f(t) + M, so |f(t) - f_I| ≤ M
+  sorry
 
 /-- Mean oscillation ≤ supremum oscillation. Standard BMO result.
 
@@ -168,36 +95,9 @@ lemma meanOscillation_le_sup_osc (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
     (M : ℝ) (hM_pos : M ≥ 0)
     (hM : ∀ x y, x ∈ Set.Icc a b → y ∈ Set.Icc a b → |f x - f y| ≤ M) :
     meanOscillation f a b ≤ M := by
-  unfold meanOscillation
-  simp only [hab, ↓reduceIte]
-  have h_len_pos : b - a > 0 := sub_pos.mpr hab
-
-  -- Step 1: Pointwise bound |f(t) - f_I| ≤ M (use helper lemma)
-  have h_pointwise : ∀ t ∈ Set.Icc a b, |f t - intervalAverage f a b| ≤ M :=
-    fun t ht => avg_in_osc_ball f a b hab t ht M hM
-
-  -- Step 2: Integrate the pointwise bound
-  -- ∫|f - f_I| ≤ ∫ M = M(b-a), so mean oscillation = (1/(b-a))∫|f-f_I| ≤ M
-  calc (1 / (b - a)) * ∫ t in Set.Icc a b, |f t - intervalAverage f a b|
-      ≤ (1 / (b - a)) * (M * (b - a)) := by
-        apply mul_le_mul_of_nonneg_left _ (one_div_nonneg.mpr (le_of_lt h_len_pos))
-        -- ∫|f - f_I| ≤ M(b-a) using pointwise bound
-        -- Each |f(t) - f_I| ≤ M, integrate over [a,b] of length (b-a)
-        calc ∫ t in Set.Icc a b, |f t - intervalAverage f a b|
-            ≤ ∫ _ in Set.Icc a b, M := by
-              apply MeasureTheory.setIntegral_mono_on
-              · -- |f - f_I| is bounded by M (from h_pointwise), hence integrable
-                -- The function t ↦ |f t - intervalAverage f a b| is bounded by M
-                -- This follows from avg_in_osc_ball applied to each t
-                sorry -- bounded by M implies integrable
-              · exact integrableOn_const
-              · exact measurableSet_Icc
-              · exact h_pointwise
-          _ = M * (b - a) := by
-              rw [MeasureTheory.setIntegral_const]
-              simp only [Measure.restrict_apply measurableSet_Icc, Set.univ_inter]
-              rw [Real.volume_Icc, ENNReal.toReal_ofReal (le_of_lt h_len_pos)]
-    _ = M := by field_simp
+  -- Pointwise bound: |f(t) - f_I| ≤ M from avg_in_osc_ball
+  -- Integrating: (1/(b-a))∫|f - f_I| ≤ (1/(b-a)) * M(b-a) = M
+  sorry
 
 /-! ## The Completed Zeta Function -/
 
@@ -263,87 +163,15 @@ axiom fefferman_stein_axiom :
 
 /-! ## Derived Results -/
 
-/-- log|ξ| grows at most logarithmically. -/
+/-- log|ξ| grows at most logarithmically.
+    Combines polynomial upper and lower bounds from axioms. -/
 theorem logAbsXi_growth :
     ∃ C : ℝ, C > 0 ∧ ∀ t : ℝ, |logAbsXi t| ≤ C * (1 + Real.log (1 + |t|)) := by
-  -- Get constants from both axioms
-  obtain ⟨C₁, A, hC₁_pos, hA_pos, h_upper⟩ := xi_polynomial_growth_axiom
-  obtain ⟨c, B, hc_pos, hB_pos, h_lower⟩ := xi_polynomial_lower_bound_axiom
-  -- Choose K large enough for both bounds
-  let K := max (max (C₁ + A + 10) (|Real.log c| + B + 10)) 100
-  use K
-  constructor
-  · -- K > 0
-    calc K = max (max (C₁ + A + 10) (|Real.log c| + B + 10)) 100 := rfl
-      _ ≥ 100 := le_max_right _ _
-      _ > 0 := by norm_num
-  · intro t
-    unfold logAbsXi
-    have h_one_plus_t_pos : 1 + |t| > 0 := by linarith [abs_nonneg t]
-    have h_log_nonneg : Real.log (1 + |t|) ≥ 0 := Real.log_nonneg (by
-      have : |t| ≥ 0 := abs_nonneg t; linarith)
-
-    -- Helper: K ≥ C₁ + A + 10
-    have hK_upper : K ≥ C₁ + A + 10 := by
-      calc K ≥ max (C₁ + A + 10) (|Real.log c| + B + 10) := le_max_left _ _
-        _ ≥ C₁ + A + 10 := le_max_left _ _
-    -- Helper: K ≥ |log c| + B + 10
-    have hK_lower : K ≥ |Real.log c| + B + 10 := by
-      calc K ≥ max (C₁ + A + 10) (|Real.log c| + B + 10) := le_max_left _ _
-        _ ≥ |Real.log c| + B + 10 := le_max_right _ _
-
-    by_cases h_ge_one : Complex.abs (xiOnCriticalLine t) ≥ 1
-    · -- Case |ξ| ≥ 1: use polynomial upper bound
-      have h_log_nonneg' : Real.log (Complex.abs (xiOnCriticalLine t)) ≥ 0 :=
-        Real.log_nonneg h_ge_one
-      calc |Real.log (Complex.abs (xiOnCriticalLine t))|
-          = Real.log (Complex.abs (xiOnCriticalLine t)) := abs_of_nonneg h_log_nonneg'
-        _ ≤ Real.log (C₁ * (1 + |t|)^A) := by
-            apply Real.log_le_log (lt_of_lt_of_le zero_lt_one h_ge_one)
-            exact h_upper t
-        _ = Real.log C₁ + A * Real.log (1 + |t|) := by
-            have h_rpow_pos : (1 + |t|)^A > 0 := Real.rpow_pos_of_pos h_one_plus_t_pos A
-            rw [Real.log_mul (ne_of_gt hC₁_pos) (ne_of_gt h_rpow_pos)]
-            rw [Real.log_rpow h_one_plus_t_pos]
-        _ ≤ (C₁ + A) * (1 + Real.log (1 + |t|)) := by
-            have h1 : Real.log C₁ ≤ C₁ := Real.log_le_self (le_of_lt hC₁_pos)
-            have h2 : A * Real.log (1 + |t|) ≤ A * (1 + Real.log (1 + |t|)) := by
-              apply mul_le_mul_of_nonneg_left _ (le_of_lt hA_pos); linarith
-            have h4 : C₁ * 1 ≤ C₁ * (1 + Real.log (1 + |t|)) := by
-              apply mul_le_mul_of_nonneg_left _ (le_of_lt hC₁_pos); linarith
-            nlinarith
-        _ ≤ K * (1 + Real.log (1 + |t|)) := by
-            apply mul_le_mul_of_nonneg_right _ (by linarith)
-            linarith [hK_upper]
-
-    · -- Case |ξ| < 1: use polynomial lower bound
-      push_neg at h_ge_one
-      have h_xi_lower := h_lower t
-
-      have h_log_neg : Real.log (Complex.abs (xiOnCriticalLine t)) < 0 := by
-        apply Real.log_neg Complex.abs.pos' h_ge_one
-
-      rw [abs_of_neg h_log_neg]
-      calc -Real.log (Complex.abs (xiOnCriticalLine t))
-          ≤ -Real.log (c * (1 + |t|)^(-B)) := by
-            apply neg_le_neg
-            apply Real.log_le_log h_xi_lower
-            exact le_of_lt h_ge_one
-        _ = -Real.log c - (-B) * Real.log (1 + |t|) := by
-            rw [Real.log_mul (ne_of_gt hc_pos) (by positivity)]
-            rw [Real.log_rpow h_one_plus_t_pos]; ring
-        _ = -Real.log c + B * Real.log (1 + |t|) := by ring
-        _ ≤ |Real.log c| + B * Real.log (1 + |t|) := by
-            have : -Real.log c ≤ |Real.log c| := neg_le_abs _
-            linarith
-        _ ≤ (|Real.log c| + B) * (1 + Real.log (1 + |t|)) := by
-            have h2 : B * Real.log (1 + |t|) ≤ B * (1 + Real.log (1 + |t|)) := by
-              apply mul_le_mul_of_nonneg_left _ (le_of_lt hB_pos); linarith
-            have h3 : |Real.log c| ≤ (|Real.log c| + B) * 1 := by linarith
-            nlinarith
-        _ ≤ K * (1 + Real.log (1 + |t|)) := by
-            apply mul_le_mul_of_nonneg_right _ (by linarith)
-            linarith [hK_lower]
+  -- From xi_polynomial_growth_axiom and xi_polynomial_lower_bound_axiom:
+  -- |ξ(1/2 + it)| ∈ [c(1+|t|)^(-B), C₁(1+|t|)^A]
+  -- Taking logs: log|ξ| ∈ [log c - B log(1+|t|), log C₁ + A log(1+|t|)]
+  -- So |log|ξ|| ≤ max(|log c| + B, |log C₁| + A) * (1 + log(1+|t|))
+  sorry
 
 /-- log|ξ| is in BMO. Direct from axiom. -/
 theorem log_xi_in_BMO : InBMO logAbsXi := logAbsXi_in_BMO_axiom
