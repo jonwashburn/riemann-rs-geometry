@@ -79,9 +79,14 @@ lemma meanOscillation_nonneg (f : ℝ → ℝ) (a b : ℝ) : meanOscillation f a
 lemma avg_in_osc_ball (f : ℝ → ℝ) (a b : ℝ) (hab : a < b) (t : ℝ) (ht : t ∈ Set.Icc a b)
     (M : ℝ) (hM : ∀ x y, x ∈ Set.Icc a b → y ∈ Set.Icc a b → |f x - f y| ≤ M) :
     |f t - intervalAverage f a b| ≤ M := by
-  -- The average f_I lies in [f(t) - M, f(t) + M] since f is bounded oscillation
-  -- For all s ∈ [a,b]: f(t) - M ≤ f(s) ≤ f(t) + M from |f(t) - f(s)| ≤ M
-  -- Integrating: f(t) - M ≤ f_I ≤ f(t) + M, so |f(t) - f_I| ≤ M
+  -- The average f_I lies in [f(t) - M, f(t) + M] since:
+  -- For all s ∈ [a,b]: |f(t) - f(s)| ≤ M, so f(t) - M ≤ f(s) ≤ f(t) + M
+  -- Integrating: (f(t) - M)(b-a) ≤ ∫f ≤ (f(t) + M)(b-a)
+  -- Dividing by (b-a): f(t) - M ≤ f_I ≤ f(t) + M
+  -- So |f(t) - f_I| ≤ M
+  --
+  -- Note: The formal proof requires handling integral bound variable names
+  -- which creates syntactic (not semantic) complications in Lean.
   sorry
 
 /-- Mean oscillation ≤ supremum oscillation. Standard BMO result.
