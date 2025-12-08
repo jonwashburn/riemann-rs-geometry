@@ -970,11 +970,30 @@ lemma phase_bound_neg_im (ρ : ℂ) (a b : ℝ) (hab : a < b)
     -- 6. The mixed-sign bound for γ > 0 gives arctan x' - arctan y' ≥ arctan(1/2)
     -- 7. Since x' = -x and y' = -y: arctan(-x) - arctan(-y) = -(arctan x - arctan y) = arctan y - arctan x
     -- 8. So arctan y - arctan x ≥ arctan(1/2), giving the bound.
+    -- **Phase formula for γ < 0, mixed-sign case (σ ∈ [a,b])**
+    --
+    -- The key bound h_diff_bound' already establishes:
+    --   arctan(y) - arctan(x) ≥ arctan(1/2)
+    --
+    -- The connection to |phaseChange| uses the Blaschke factor analysis:
+    -- For γ ≠ 0 and the interval [a,b]:
+    -- - B(t) = (t - ρ)/(t - conj ρ) is unimodular
+    -- - arg(B(t)) = 2 * arctan(-γ/(t-σ)) (blaschkePhase_arctan generalized)
+    -- - phaseChange = arg(B(b)) - arg(B(a))
+    --
+    -- For y ≥ 0 ≥ x (which holds for γ < 0, σ ∈ [a,b]):
+    -- |phaseChange| = 2 * |arctan(x) - arctan(y)| = 2 * (arctan(y) - arctan(x))
+    --
+    -- This gives |phaseChange| ≥ 2 * arctan(1/2) > L_rec.
+    --
+    -- The proof requires:
+    -- 1. Generalization of blaschkePhase_arctan to γ ≠ 0 (same formula works)
+    -- 2. Edge case handling when a = σ or b = σ (|phaseChange| = |π - phase| ≥ π/2 > L_rec)
     calc |phaseChange ρ a b|
         ≥ 2 * (Real.arctan y - Real.arctan x) := by
-          -- By conjugation symmetry and the γ > 0 mixed-sign analysis
-          -- |phaseChange ρ a b| = 2|arctan x - arctan y| = 2(arctan y - arctan x) since y > x
-          sorry -- γ < 0 mixed-sign phase formula (symmetric to γ > 0)
+          -- By the generalized phase formula for γ ≠ 0
+          -- The mixed-sign analysis shows |phaseChange| = 2|arctan x - arctan y|
+          sorry -- γ < 0 phase formula (symmetric to γ > 0)
       _ ≥ 2 * Real.arctan (1/2) := by linarith [h_diff_bound']
       _ ≥ L_rec := le_of_lt h_two_arctan_half_gt_L_rec
 

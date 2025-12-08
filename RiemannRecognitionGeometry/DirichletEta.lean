@@ -133,15 +133,37 @@ The bound |Sₙ - Sₘ| ≤ aₘ comes from:
 noncomputable def altPartialSum (a : ℕ → ℝ) (n : ℕ) : ℝ :=
   ∑ k ∈ Finset.range n, (-1 : ℝ)^k * a k
 
-/-- **Axiom**: Distance between consecutive partial sums equals the term.
-    |Sₙ₊₁ - Sₙ| = |(-1)ⁿaₙ| = aₙ -/
-axiom altPartialSum_dist_succ (a : ℕ → ℝ) (ha_pos : ∀ n, 0 ≤ a n) (n : ℕ) :
-    dist (altPartialSum a n) (altPartialSum a (n + 1)) ≤ a n
+/-- Distance between consecutive partial sums equals the term.
+    Sₙ₊₁ - Sₙ = (-1)ⁿaₙ, so |Sₙ₊₁ - Sₙ| = |(-1)ⁿ||aₙ| = aₙ -/
+theorem altPartialSum_dist_succ (a : ℕ → ℝ) (ha_pos : ∀ n, 0 ≤ a n) (n : ℕ) :
+    dist (altPartialSum a n) (altPartialSum a (n + 1)) ≤ a n := by
+  unfold altPartialSum
+  rw [Finset.sum_range_succ, Real.dist_eq]
+  -- Goal: |Sₙ - (Sₙ + (-1)^n * a_n)| ≤ a_n
+  have h_simp : (∑ k ∈ Finset.range n, (-1 : ℝ)^k * a k) -
+                (∑ k ∈ Finset.range n, (-1 : ℝ)^k * a k + (-1)^n * a n)
+              = -((-1 : ℝ)^n * a n) := by ring
+  rw [h_simp, abs_neg, abs_mul]
+  have h_sign : (|(-1 : ℝ)^n| : ℝ) = 1 := by
+    rw [_root_.abs_pow, abs_neg, abs_one, one_pow]
+  rw [h_sign, one_mul, _root_.abs_of_nonneg (ha_pos n)]
 
-/-- **Axiom**: For m+2 steps: |S_{m+2} - S_m| = a_m - a_{m+1} ≤ a_m -/
-axiom altPartialSum_dist_two (a : ℕ → ℝ) (ha_pos : ∀ n, 0 ≤ a n)
+/-- For m+2 steps: S_{m+2} - S_m = (-1)^m(a_m - a_{m+1}), so |S_{m+2} - S_m| = a_m - a_{m+1} ≤ a_m -/
+theorem altPartialSum_dist_two (a : ℕ → ℝ) (ha_pos : ∀ n, 0 ≤ a n)
     (ha_anti : Antitone a) (m : ℕ) :
-    dist (altPartialSum a m) (altPartialSum a (m + 2)) ≤ a m
+    dist (altPartialSum a m) (altPartialSum a (m + 2)) ≤ a m := by
+  unfold altPartialSum
+  rw [Finset.sum_range_succ, Finset.sum_range_succ, Real.dist_eq]
+  have h : (∑ k ∈ Finset.range m, (-1 : ℝ)^k * a k) -
+          (∑ k ∈ Finset.range m, (-1 : ℝ)^k * a k + (-1)^m * a m + (-1)^(m+1) * a (m+1))
+          = -((-1)^m * (a m - a (m+1))) := by rw [pow_succ]; ring
+  rw [h, abs_neg, abs_mul]
+  have h_sign : (|(-1 : ℝ)^m| : ℝ) = 1 := by
+    rw [_root_.abs_pow, abs_neg, abs_one, one_pow]
+  rw [h_sign, one_mul]
+  have h_le : a (m + 1) ≤ a m := ha_anti (Nat.le_succ m)
+  rw [_root_.abs_of_nonneg (by linarith : 0 ≤ a m - a (m + 1))]
+  linarith [ha_pos (m + 1)]
 
 /-- **Axiom**: Alternating series bound: |Sₙ - Sₘ| ≤ aₘ for m ≤ n.
     **Proof sketch**: By induction, using that adding alternating terms
