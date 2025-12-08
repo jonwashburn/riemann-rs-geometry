@@ -1273,15 +1273,15 @@ theorem blaschke_dominates_total (I : WhitneyInterval) (ρ : ℂ)
     (hρ_im_ne : ρ.im ≠ 0) :
     |totalPhaseSignal I| ≥ blaschkeContribution I ρ - U_tail := by
   -- Use phase_decomposition_exists from FeffermanStein
-  obtain ⟨blaschke_fs, tail, h_decomp, h_tail_bound⟩ := phase_decomposition_exists I ρ hρ_zero hρ_im
+  -- The theorem now exposes the exact definition of blaschke
+  let s_hi : ℂ := 1/2 + (I.t0 + I.len) * Complex.I
+  let s_lo : ℂ := 1/2 + (I.t0 - I.len) * Complex.I
+  let blaschke_fs := (s_hi - ρ).arg - (s_lo - ρ).arg
+  obtain ⟨tail, h_decomp, h_tail_bound⟩ := phase_decomposition_exists I ρ hρ_zero hρ_im
 
-  -- The blaschke_fs from phase_decomposition_exists equals the axiom's expression
-  -- Both define blaschke as (s_hi - ρ).arg - (s_lo - ρ).arg
-  have h_blaschke_ge : |blaschke_fs| ≥ blaschkeContribution I ρ := by
-    -- The axiom criticalLine_blaschke_ge_blaschkeContribution gives the bound
-    -- blaschke_fs is (s_hi - ρ).arg - (s_lo - ρ).arg from phase_decomposition_exists
-    -- Direct definitional equality would require unfolding the construction
-    sorry
+  -- Apply the axiom directly since blaschke_fs is exactly (s_hi - ρ).arg - (s_lo - ρ).arg
+  have h_blaschke_ge : |blaschke_fs| ≥ blaschkeContribution I ρ :=
+    criticalLine_blaschke_ge_blaschkeContribution I ρ hρ_im hρ_re
 
   -- From decomposition: actualPhaseSignal I = blaschke_fs + tail
   -- Reverse triangle inequality: |a + b| ≥ |a| - |b|

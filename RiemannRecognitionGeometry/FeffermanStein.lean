@@ -251,18 +251,21 @@ theorem actualPhaseSignal_bound (I : WhitneyInterval) :
 
 /-! ## Phase Decomposition -/
 
-/-- Phase = Blaschke + bounded tail. -/
+/-- Phase = Blaschke + bounded tail.
+    Returns the exact value: blaschke = (s_hi - ρ).arg - (s_lo - ρ).arg
+    where s_hi = 1/2 + (t₀+len)i, s_lo = 1/2 + (t₀-len)i -/
 theorem phase_decomposition_exists (I : WhitneyInterval) (ρ : ℂ)
     (hρ_zero : completedRiemannZeta ρ = 0)
     (hρ_im : ρ.im ∈ I.interval) :
-    ∃ blaschke tail : ℝ,
+    let s_hi : ℂ := 1/2 + (I.t0 + I.len) * Complex.I
+    let s_lo : ℂ := 1/2 + (I.t0 - I.len) * Complex.I
+    let blaschke := (s_hi - ρ).arg - (s_lo - ρ).arg
+    ∃ tail : ℝ,
       actualPhaseSignal I = blaschke + tail ∧
       |tail| ≤ U_tail := by
-  let s_hi : ℂ := 1/2 + (I.t0 + I.len) * Complex.I
-  let s_lo : ℂ := 1/2 + (I.t0 - I.len) * Complex.I
-  let blaschke := (s_hi - ρ).arg - (s_lo - ρ).arg
+  intro s_hi s_lo blaschke
   let tail := actualPhaseSignal I - blaschke
-  use blaschke, tail
+  use tail
   constructor
   · simp only [tail]; ring
   · -- **MATHEMATICAL CONTENT** (Weierstrass Factorization):
