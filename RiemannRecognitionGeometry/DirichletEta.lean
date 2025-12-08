@@ -165,14 +165,99 @@ theorem altPartialSum_dist_two (a : ℕ → ℝ) (ha_pos : ∀ n, 0 ≤ a n)
   rw [_root_.abs_of_nonneg (by linarith : 0 ≤ a m - a (m + 1))]
   linarith [ha_pos (m + 1)]
 
-/-- **Axiom**: Alternating series bound: |Sₙ - Sₘ| ≤ aₘ for m ≤ n.
-    **Proof sketch**: By induction, using that adding alternating terms
-    brings the sum back toward the starting point.
-    - For even k: S_{m+k} is between S_m and S_{m+1}
-    - For odd k: S_{m+k} is between S_{m+1} and S_m -/
-axiom altPartialSum_dist_le (a : ℕ → ℝ) (ha_pos : ∀ n, 0 ≤ a n)
+private lemma neg_one_pow_even' (j : ℕ) : (-1 : ℝ)^(2 * j) = 1 := by
+  rw [pow_mul, neg_one_sq, one_pow]
+
+private lemma neg_one_pow_odd' (j : ℕ) : (-1 : ℝ)^(2 * j + 1) = -1 := by
+  rw [pow_add, pow_mul, neg_one_sq, one_pow, one_mul, pow_one]
+
+/-- For even k, the signed difference is in [0, a_m - a_{m+k}]. -/
+private lemma signed_diff_even (a : ℕ → ℝ) (ha_pos : ∀ n, 0 ≤ a n)
+    (ha_anti : Antitone a) (m j : ℕ) :
+    0 ≤ (-1 : ℝ)^m * (altPartialSum a (m + 2*j) - altPartialSum a m) ∧
+    (-1 : ℝ)^m * (altPartialSum a (m + 2*j) - altPartialSum a m) ≤ a m - a (m + 2*j) := by
+  induction j with
+  | zero =>
+    simp only [Nat.mul_zero, add_zero, sub_self, mul_zero]
+    constructor <;> linarith [ha_pos m]
+  | succ j ih =>
+    obtain ⟨ih_lo, ih_hi⟩ := ih
+    have h_step : altPartialSum a (m + 2*(j+1)) - altPartialSum a m =
+                  (altPartialSum a (m + 2*j) - altPartialSum a m) +
+                  (-1)^(m + 2*j) * a (m + 2*j) + (-1)^(m + 2*j + 1) * a (m + 2*j + 1) := by
+      unfold altPartialSum
+      have h1 : m + 2*(j+1) = (m + 2*j + 1) + 1 := by ring
+      have h2 : m + 2*j + 1 = (m + 2*j) + 1 := by ring
+      rw [h1, Finset.sum_range_succ, h2, Finset.sum_range_succ]; ring
+    have h_pow1 : (-1 : ℝ)^m * (-1)^(m + 2*j) = 1 := by
+      rw [← pow_add]; convert neg_one_pow_even' (m + j) using 1; ring
+    have h_pow2 : (-1 : ℝ)^m * (-1)^(m + 2*j + 1) = -1 := by
+      rw [← pow_add]; convert neg_one_pow_odd' (m + j) using 1; ring
+    have h_eq : (-1 : ℝ)^m * (altPartialSum a (m + 2*(j+1)) - altPartialSum a m) =
+                (-1)^m * (altPartialSum a (m + 2*j) - altPartialSum a m) + a (m + 2*j) - a (m + 2*j + 1) := by
+      rw [h_step, mul_add, mul_add]
+      have eq1 : (-1 : ℝ)^m * ((-1)^(m + 2*j) * a (m + 2*j)) = a (m + 2*j) := by
+        rw [← mul_assoc, h_pow1, one_mul]
+      have eq2 : (-1 : ℝ)^m * ((-1)^(m + 2*j + 1) * a (m + 2*j + 1)) = -a (m + 2*j + 1) := by
+        rw [← mul_assoc, h_pow2, neg_one_mul]
+      rw [eq1, eq2]; ring
+    constructor
+    · rw [h_eq]
+      have h_pair : a (m + 2*j) - a (m + 2*j + 1) ≥ 0 := by
+        have := ha_anti (Nat.le_succ (m + 2*j)); linarith
+      linarith
+    · rw [h_eq]
+      have h_anti_next : a (m + 2*(j+1)) ≤ a (m + 2*j + 1) := ha_anti (by omega)
+      linarith
+
+/-- For odd k, the signed difference is in [a_{m+k}, a_m]. -/
+private lemma signed_diff_odd (a : ℕ → ℝ) (ha_pos : ∀ n, 0 ≤ a n)
+    (ha_anti : Antitone a) (m j : ℕ) :
+    a (m + (2*j + 1)) ≤ (-1 : ℝ)^m * (altPartialSum a (m + (2*j + 1)) - altPartialSum a m) ∧
+    (-1 : ℝ)^m * (altPartialSum a (m + (2*j + 1)) - altPartialSum a m) ≤ a m := by
+  have ⟨h_even_lo, h_even_hi⟩ := signed_diff_even a ha_pos ha_anti m j
+  have h_step : altPartialSum a (m + (2*j + 1)) - altPartialSum a m =
+                (altPartialSum a (m + 2*j) - altPartialSum a m) + (-1)^(m + 2*j) * a (m + 2*j) := by
+    unfold altPartialSum
+    have h1 : m + (2*j + 1) = (m + 2*j) + 1 := by ring
+    rw [h1, Finset.sum_range_succ]; ring
+  have h_pow : (-1 : ℝ)^m * (-1)^(m + 2*j) = 1 := by
+    rw [← pow_add]; convert neg_one_pow_even' (m + j) using 1; ring
+  have h_eq : (-1 : ℝ)^m * (altPartialSum a (m + (2*j + 1)) - altPartialSum a m) =
+              (-1)^m * (altPartialSum a (m + 2*j) - altPartialSum a m) + a (m + 2*j) := by
+    rw [h_step, mul_add, ← mul_assoc, h_pow, one_mul]
+  constructor
+  · rw [h_eq]; have h_anti : a (m + (2*j + 1)) ≤ a (m + 2*j) := ha_anti (by omega); linarith
+  · rw [h_eq]; linarith
+
+/-- Alternating series bound: |Sₙ - Sₘ| ≤ aₘ for m ≤ n.
+    This is the key lemma for proving the Leibniz alternating series test. -/
+theorem altPartialSum_dist_le (a : ℕ → ℝ) (ha_pos : ∀ n, 0 ≤ a n)
     (ha_anti : Antitone a) (m n : ℕ) (hmn : m ≤ n) :
-    dist (altPartialSum a m) (altPartialSum a n) ≤ a m
+    dist (altPartialSum a m) (altPartialSum a n) ≤ a m := by
+  obtain ⟨k, hk⟩ : ∃ k, n = m + k := ⟨n - m, by omega⟩
+  subst hk; clear hmn
+  rw [Real.dist_eq, abs_sub_comm]
+  rcases Nat.even_or_odd k with ⟨j, hj⟩ | ⟨j, hj⟩
+  · -- k = j + j = 2*j (even case)
+    subst hj
+    have ⟨h_lo, h_hi⟩ := signed_diff_even a ha_pos ha_anti m j
+    have h_abs : |altPartialSum a (m + (j + j)) - altPartialSum a m| =
+                 |(-1 : ℝ)^m * (altPartialSum a (m + (j + j)) - altPartialSum a m)| := by
+      rw [abs_mul, _root_.abs_pow, abs_neg, abs_one, one_pow, one_mul]
+    have h_jj : j + j = 2 * j := by ring
+    rw [h_jj] at h_abs ⊢
+    rw [h_abs, _root_.abs_of_nonneg h_lo]
+    linarith [ha_pos (m + 2*j)]
+  · -- k = 2*j + 1 (odd case)
+    subst hj
+    have ⟨h_lo, h_hi⟩ := signed_diff_odd a ha_pos ha_anti m j
+    have h_abs : |altPartialSum a (m + (2*j + 1)) - altPartialSum a m| =
+                 |(-1 : ℝ)^m * (altPartialSum a (m + (2*j + 1)) - altPartialSum a m)| := by
+      rw [abs_mul, _root_.abs_pow, abs_neg, abs_one, one_pow, one_mul]
+    have h_nonneg : 0 ≤ (-1 : ℝ)^m * (altPartialSum a (m + (2*j + 1)) - altPartialSum a m) := by
+      linarith [ha_pos (m + (2*j + 1))]
+    rw [h_abs, _root_.abs_of_nonneg h_nonneg]; exact h_hi
 
 /-- Partial sums of alternating series with decreasing terms → 0 are Cauchy. -/
 theorem altPartialSum_cauchySeq (a : ℕ → ℝ) (ha_pos : ∀ n, 0 < a n)

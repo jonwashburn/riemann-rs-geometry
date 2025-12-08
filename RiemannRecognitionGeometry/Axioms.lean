@@ -336,6 +336,27 @@ lemma arctan_sub_of_pos {x y : ℝ} (hx : 0 < x) (hy : 0 < y) :
     _ = Real.arctan ((x + (-y)) / (1 - x * (-y))) := h1
     _ = Real.arctan ((x - y) / (1 + x * y)) := by rw [h2]
 
+-- Helper: arctan subtraction formula for negative arguments
+-- For x < 0, y < 0: arctan(x) - arctan(y) = arctan((x-y)/(1+xy))
+-- Proof: Use arctan(-u) = -arctan(u) to reduce to arctan_sub_of_pos
+lemma arctan_sub_of_neg {x y : ℝ} (hx : x < 0) (hy : y < 0) :
+    Real.arctan x - Real.arctan y = Real.arctan ((x - y) / (1 + x * y)) := by
+  -- Use that arctan(-u) = -arctan(u) for any u
+  have h_neg_x : Real.arctan x = -Real.arctan (-x) := by simp [Real.arctan_neg]
+  have h_neg_y : Real.arctan y = -Real.arctan (-y) := by simp [Real.arctan_neg]
+  rw [h_neg_x, h_neg_y]
+  -- Now: -arctan(-x) - (-arctan(-y)) = arctan(-y) - arctan(-x)
+  have h1 : -Real.arctan (-x) - -Real.arctan (-y) = Real.arctan (-y) - Real.arctan (-x) := by ring
+  rw [h1]
+  -- Apply arctan_sub_of_pos to (-y) and (-x)
+  have h_neg_y_pos : 0 < -y := neg_pos.mpr hy
+  have h_neg_x_pos : 0 < -x := neg_pos.mpr hx
+  have h_sub := arctan_sub_of_pos h_neg_y_pos h_neg_x_pos
+  rw [h_sub]
+  -- Show the arguments are equal: (-y - (-x))/(1 + (-y)*(-x)) = (x - y)/(1 + xy)
+  have h_eq : (-y - -x) / (1 + -y * -x) = (x - y) / (1 + x * y) := by ring
+  rw [h_eq]
+
 lemma phase_bound_from_arctan (ρ : ℂ) (a b : ℝ) (hab : a < b)
     (hγ_lower : a ≤ ρ.im) (hγ_upper : ρ.im ≤ b)
     (hσ : 1/2 < ρ.re) (hγ_pos : 0 < ρ.im)
@@ -786,20 +807,51 @@ lemma phase_bound_from_arctan (ρ : ℂ) (a b : ℝ) (hab : a < b)
         _ ≥ L_rec := le_of_lt h_two_arctan_third_gt_L_rec
 
     · -- σ > b: both x, y < 0 (since (t - σ)/γ < 0 for t ≤ b < σ and γ > 0)
-      -- This case requires σ > b but γ = Im(ρ) ≤ b < σ = Re(ρ).
-      -- The analysis mirrors the σ < a case with signs reversed.
+      have hx_neg : x < 0 := by
+        simp only [x]
+        apply div_neg_of_neg_of_pos; linarith; exact hγ_pos
+
+      have hy_neg : y < 0 := by
+        simp only [y]
+        apply div_neg_of_neg_of_pos; linarith; exact hγ_pos
+
+      -- x > y since b > a, and dividing by positive γ preserves order
+      have hx_gt_y : x > y := by
+        simp only [x, y]
+        apply div_lt_div_of_pos_right _ hγ_pos
+        linarith
+
+      -- Same-sign case: |phaseChange| = 2|arctan(x) - arctan(y)|
+      have h_same_sign : (a - σ < 0 ∧ b - σ < 0) ∨ (a - σ > 0 ∧ b - σ > 0) := by
+        left; constructor <;> linarith
+      have h_formula := phaseChange_arctan_formula ρ a b hab hγ_pos (by linarith : a ≠ σ) (by linarith : b ≠ σ) h_same_sign
+
+      -- arctan(x) - arctan(y) > 0 since x > y and arctan is increasing
+      have h_diff_pos : Real.arctan x - Real.arctan y > 0 := by
+        have := Real.arctan_lt_arctan hx_gt_y
+        linarith
+
+      -- Apply arctan subtraction formula for negative arguments
+      have h_arctan_sub := arctan_sub_of_neg hx_neg hy_neg
+
+      -- Key bound: we need (x-y)/(1+xy) ≥ 1/3
+      -- With x - y = (b-a)/γ ≥ 1 and xy = (b-σ)(a-σ)/γ² > 0
+      -- For the bound to hold, we need xy ≤ 2 + (x-y), which requires σ - b < γ
       --
-      -- **Proof structure**:
-      -- 1. x = (b-σ)/γ < 0 and y = (a-σ)/γ < 0 (both negative)
-      -- 2. x > y (since b > a and dividing by positive γ)
-      -- 3. Same-sign case: |phaseChange| = 2|arctan(x) - arctan(y)|
-      -- 4. arctan subtraction formula: arctan(x) - arctan(y) = arctan((x-y)/(1+xy))
-      -- 5. Bound (x-y)/(1+xy) ≥ 1/3 using xy > 0 and x - y ≥ 1
-      -- 6. Conclude |phaseChange| ≥ 2*arctan(1/3) > L_rec
-      --
-      -- **Technical note**: The bound xy ≤ constant requires geometric constraints
-      -- from the Whitney interval structure. This is the same style as σ < a case.
-      sorry
+      -- **Mathematical note**: When σ >> b, the bound may fail as both arctan(x)
+      -- and arctan(y) approach -π/2. However, for zeros in the critical strip
+      -- (Re(ρ) < 1), the geometry constrains σ sufficiently.
+      have h_two_arctan_third_gt_L_rec : 2 * Real.arctan (1/3) > L_rec := by
+        unfold L_rec; exact Real.two_arctan_third_gt_half_arctan_two
+
+      -- The bound (x-y)/(1+xy) ≥ 1/3 requires Whitney geometry analysis
+      -- Similar to σ < a case but with both arguments negative
+      have h_phase_bound : |phaseChange ρ a b| ≥ 2 * Real.arctan (1/3) := by
+        sorry -- Whitney geometry bound for σ > b case
+
+      calc |phaseChange ρ a b|
+          ≥ 2 * Real.arctan (1/3) := h_phase_bound
+        _ ≥ L_rec := le_of_lt h_two_arctan_third_gt_L_rec
 
 /-- **LEMMA**: Phase bound for negative imaginary part.
     By symmetry of the Blaschke factor, the phase bound holds for γ < 0 as well.
