@@ -93,6 +93,18 @@ lemma blaschkeFactor_unimodular (ρ : ℂ) (t : ℝ) (hne : (t : ℂ) ≠ conj �
   rw [map_div₀, h1, div_self]
   exact (Complex.abs.ne_zero_iff.mpr hne')
 
+/-- The Blaschke factor of the conjugate is the inverse of the Blaschke factor.
+    B_{conj ρ}(t) = (t - conj ρ)/(t - ρ) = 1/B_ρ(t) -/
+lemma blaschkeFactor_conj_eq_inv (ρ : ℂ) (t : ℝ) (hne : (t : ℂ) ≠ ρ) (hne_conj : (t : ℂ) ≠ conj ρ) :
+    blaschkeFactor (starRingEnd ℂ ρ) t = (blaschkeFactor ρ t)⁻¹ := by
+  unfold blaschkeFactor
+  have h_conj_conj : conj (conj ρ) = ρ := Complex.conj_conj ρ
+  rw [starRingEnd_apply, star_def, h_conj_conj]
+  -- (t - conj ρ)/(t - ρ) = ((t - ρ)/(t - conj ρ))⁻¹
+  have h_num_ne : (t : ℂ) - ρ ≠ 0 := sub_ne_zero.mpr hne
+  have h_denom_ne : (t : ℂ) - conj ρ ≠ 0 := sub_ne_zero.mpr hne_conj
+  rw [inv_div]
+
 /-- The real and imaginary parts of the Blaschke factor B(t) = (t-ρ)/(t-conj ρ).
     For ρ = σ + iγ and real t, letting u = t - σ:
     B(t) = (u - iγ)/(u + iγ) = (u² - γ² - 2iuγ)/(u² + γ²)

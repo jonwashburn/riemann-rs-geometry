@@ -621,7 +621,7 @@ lemma phase_bound_from_arctan (ρ : ℂ) (a b : ℝ) (hab : a < b)
               have h3 : -γ / (a - σ) = (-γ) / (-(σ - a)) := by ring_nf
               have h4 : (-γ) / (-(σ - a)) = γ / (σ - a) := by rw [neg_div_neg_eq]
               linarith [h3, h4]
-            have h_arg_b : -γ / (b - σ) = -(γ / (b - σ)) := neg_div γ (b - σ)
+            have h_arg_b : -γ / (b - σ) = -(γ / (b - σ)) := by ring
 
             -- Step 3: Compute phaseChange
             have h_phase_eq : phaseChange ρ a b =
@@ -669,11 +669,30 @@ lemma phase_bound_from_arctan (ρ : ℂ) (a b : ℝ) (hab : a < b)
               have h_y_le : (σ - a) / γ ≤ 10 := by linarith [h_sum, hx_pos']
               have h1 : Real.arctan ((b - σ) / γ) ≤ Real.arctan 10 := Real.arctan_le_arctan h_x_le
               have h2 : Real.arctan ((σ - a) / γ) ≤ Real.arctan 10 := Real.arctan_le_arctan h_y_le
-              have h3 : Real.arctan 10 < Real.arctan 5 + Real.arctan 5 / 2 := by
-                -- arctan(10) ≈ 1.47 < arctan(5) + arctan(5)/2 ≈ 1.37 + 0.69 = 2.06
-                -- Actually arctan(10) < 2*arctan(5) since arctan(5) ≈ 1.37
-                sorry
-              sorry
+              -- Use concavity of arctan for Jensen's inequality
+              have hx_nn : 0 ≤ (b - σ) / γ := le_of_lt hx_pos'
+              have hy_nn : 0 ≤ (σ - a) / γ := le_of_lt hy_abs_pos
+              have h_mid : ((b - σ) / γ + (σ - a) / γ) / 2 ≤ 5 := by linarith [h_sum]
+              -- arctan is concave on [0, ∞)
+              have h_concave : ConcaveOn ℝ (Set.Ici 0) Real.arctan := by
+                apply AntitoneOn.concaveOn_of_deriv (convex_Ici 0) Real.continuous_arctan.continuousOn
+                · intro x _; exact (Real.differentiable_arctan x).differentiableWithinAt
+                · intro u hu v hv huv
+                  simp only [Real.deriv_arctan, Set.mem_Ici] at hu hv ⊢
+                  have h1 : 0 < 1 + u ^ 2 := by positivity
+                  have h_sq_le : u ^ 2 ≤ v ^ 2 := by
+                    have hu_nn : 0 ≤ u := Set.mem_Ici.mp (interior_subset hu)
+                    nlinarith [sq_nonneg u, sq_nonneg v]
+                  exact one_div_le_one_div_of_le h1 (by linarith : 1 + u ^ 2 ≤ 1 + v ^ 2)
+              have hx_mem : (b - σ) / γ ∈ Set.Ici (0 : ℝ) := Set.mem_Ici.mpr hx_nn
+              have hy_mem : (σ - a) / γ ∈ Set.Ici (0 : ℝ) := Set.mem_Ici.mpr hy_nn
+              have h_jensen' := h_concave.2 hx_mem hy_mem (by norm_num : (0:ℝ) ≤ 1/2) (by norm_num : (0:ℝ) ≤ 1/2) (by norm_num : (1/2 : ℝ) + 1/2 = 1)
+              simp only [smul_eq_mul, one_div] at h_jensen'
+              have h_eq : 2⁻¹ * ((b - σ) / γ) + 2⁻¹ * ((σ - a) / γ) = ((b - σ) / γ + (σ - a) / γ) / 2 := by ring
+              rw [h_eq] at h_jensen'
+              calc Real.arctan ((b - σ) / γ) + Real.arctan ((σ - a) / γ)
+                  ≤ 2 * Real.arctan (((b - σ) / γ + (σ - a) / γ) / 2) := by linarith
+                _ ≤ 2 * Real.arctan 5 := by linarith [Real.arctan_le_arctan h_mid]
 
             -- Step 9: Final bound
             calc |phaseChange ρ a b|
