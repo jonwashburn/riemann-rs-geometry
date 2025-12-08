@@ -846,8 +846,23 @@ lemma phase_bound_from_arctan (ρ : ℂ) (a b : ℝ) (hab : a < b)
 
       -- The bound (x-y)/(1+xy) ≥ 1/3 requires Whitney geometry analysis
       -- Similar to σ < a case but with both arguments negative
+      --
+      -- **Whitney Geometry Argument** (σ > b, γ > 0):
+      -- x = (b-σ)/γ < 0 and y = (a-σ)/γ < 0 with x > y (both negative, x closer to 0)
+      -- |phaseChange| = 2(arctan(x) - arctan(y))
+      --
+      -- Using arctan_sub_of_neg: arctan(x) - arctan(y) = arctan((x-y)/(1+xy))
+      -- Need (x-y)/(1+xy) ≥ 1/3, i.e., x - y ≥ (1 + xy)/3
+      --
+      -- With x - y = (b-a)/γ ≥ 1, we need 1 + xy ≤ 3(x-y) ≤ 3·10 = 30
+      -- xy = (b-σ)(a-σ)/γ² > 0
+      --
+      -- **Key Insight**: The bound xy ≤ 3(x-y) - 1 requires σ to be bounded.
+      -- For zeros in the critical strip (0 < σ < 1), this is satisfied.
+      -- The full proof requires adding σ < 1 as a hypothesis or deriving it
+      -- from the RecognizerBand structure.
       have h_phase_bound : |phaseChange ρ a b| ≥ 2 * Real.arctan (1/3) := by
-        sorry -- Whitney geometry bound for σ > b case
+        sorry -- Whitney geometry: σ > b case needs critical strip constraint
 
       calc |phaseChange ρ a b|
           ≥ 2 * Real.arctan (1/3) := h_phase_bound
