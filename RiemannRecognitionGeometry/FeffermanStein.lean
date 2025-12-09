@@ -1411,23 +1411,38 @@ lemma carlesonEnergy_bound_from_gradient_with_floor (f : ℝ → ℝ) (I : Whitn
   -- ∫∫_{Icc × Icc} C²M²/y dx dy = C²M² · |Icc_x| · ∫_ε^h 1/y dy
   --                               = C²M² · (2·I.len) · log(h/ε)
   have h_bound_integral : ∫ p in box, C^2 * M^2 / p.2 = C^2 * M^2 * (2 * I.len) * Real.log (h / ε) := by
-    -- box = Icc(t0-len, t0+len) ×ˢ Icc(ε, h)
-    -- The function (x,y) ↦ C²M²/y depends only on y
-    --
-    -- Key steps using Fubini:
-    -- 1. ∫_{Icc × Icc} C²M²/y = ∫_x (∫_y C²M²/y dy) dx  [setIntegral_prod]
-    -- 2. Inner integral: ∫_{Icc_y} C²M²/y dy = C²M² · log(h/ε)  [intervalIntegral + h_inner_integral]
-    -- 3. Outer integral: ∫_{Icc_x} (const) dx = const · |Icc_x|  [setIntegral_const]
-    -- 4. |Icc_x| = 2 · I.len  [h_interval_len]
-    --
-    -- Technical details:
-    -- - Need to convert between set integrals and interval integrals
-    -- - Need to show integrability for Fubini application
-    -- - The volume measure on ℝ × ℝ factors as Measure.prod volume volume
-    --
-    -- The proof involves MeasureTheory.setIntegral_prod and careful measure theory.
-    -- For ℝ × ℝ with Lebesgue measure, we use Measure.volume_eq_prod.
-    sorry
+    -- Use h_box_eq: box = Icc_x ×ˢ Icc_y
+    rw [h_box_eq]
+    -- Use volume_eq_prod: volume on ℝ × ℝ is the product measure
+    rw [MeasureTheory.Measure.volume_eq_prod]
+    -- The function factors as 1 * (C²M²/y)
+    -- Use setIntegral_prod_mul: ∫_{s ×ˢ t} f(x)*g(y) = (∫_s f(x) dx) * (∫_t g(y) dy)
+    conv_lhs => rw [show (fun p : ℝ × ℝ => C^2 * M^2 / p.2) =
+                        (fun p : ℝ × ℝ => (fun _ : ℝ => (1 : ℝ)) p.1 * (fun y : ℝ => C^2 * M^2 / y) p.2)
+                    from funext (fun p => by ring)]
+    rw [MeasureTheory.setIntegral_prod_mul (fun _ : ℝ => (1 : ℝ)) (fun y : ℝ => C^2 * M^2 / y)]
+    -- Now: (∫ x in Icc_x, 1) * (∫ y in Icc_y, C²M²/y)
+    -- First integral: ∫ x in Icc_x, 1 = |Icc_x| = 2·I.len
+    have h_x_integral : ∫ _ in Set.Icc (I.t0 - I.len) (I.t0 + I.len), (1 : ℝ) = 2 * I.len := by
+      rw [MeasureTheory.setIntegral_const]
+      simp only [smul_eq_mul, mul_one, Real.volume_Icc]
+      -- Goal: (ENNReal.ofReal (upper - lower)).toReal = 2 * I.len
+      -- where upper - lower = (I.t0 + I.len) - (I.t0 - I.len) = 2 * I.len
+      have h_len_calc : (I.t0 + I.len) - (I.t0 - I.len) = 2 * I.len := by ring
+      rw [h_len_calc, ENNReal.toReal_ofReal (by linarith : 0 ≤ 2 * I.len)]
+    -- Second integral: ∫ y in Icc_y, C²M²/y = C²M² · log(h/ε)
+    have h_y_integral : ∫ y in Set.Icc ε h, C^2 * M^2 / y = C^2 * M^2 * Real.log (h / ε) := by
+      -- Factor out the constant C²M²
+      have h_eq_inv : (fun y => C^2 * M^2 / y) = (fun y => C^2 * M^2 * y⁻¹) := by
+        funext y; ring
+      calc ∫ y in Set.Icc ε h, C^2 * M^2 / y
+          = ∫ y in Set.Icc ε h, C^2 * M^2 * y⁻¹ := by rw [h_eq_inv]
+        _ = C^2 * M^2 * ∫ y in Set.Icc ε h, y⁻¹ := by rw [MeasureTheory.integral_mul_left]
+        _ = C^2 * M^2 * ∫ y in Set.Ioc ε h, y⁻¹ := by rw [MeasureTheory.integral_Icc_eq_integral_Ioc]
+        _ = C^2 * M^2 * ∫ y in ε..h, y⁻¹ := by rw [intervalIntegral.integral_of_le hε_le]
+        _ = C^2 * M^2 * Real.log (h / ε) := by rw [h_inner_integral]
+    rw [h_x_integral, h_y_integral]
+    ring
 
   -- Final: combine the bounds
   calc ∫ p in box, poissonGradientEnergy f p.1 p.2
