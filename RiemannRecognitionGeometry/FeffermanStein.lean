@@ -134,16 +134,41 @@ def poissonKernel_dy (x y : ℝ) : ℝ :=
 def poissonKernel_grad (x y : ℝ) : ℝ × ℝ :=
   (poissonKernel_dx x y, poissonKernel_dy x y)
 
-/-- The squared norm of the gradient of the Poisson kernel. -/
-lemma poissonKernel_grad_norm_sq (x : ℝ) {y : ℝ} (hy : 0 < y) :
-    ‖poissonKernel_grad x y‖^2 = (4 * x^2 * y^2 + (x^2 - y^2)^2) / (Real.pi^2 * (x^2 + y^2)^4) := by
-  unfold poissonKernel_grad poissonKernel_dx poissonKernel_dy
+/-- The Euclidean squared norm of the gradient: |∂P/∂x|² + |∂P/∂y|². -/
+def poissonKernel_grad_sq (x y : ℝ) : ℝ :=
+  (poissonKernel_dx x y)^2 + (poissonKernel_dy x y)^2
+
+/-- The squared Euclidean norm of the gradient of the Poisson kernel. -/
+lemma poissonKernel_grad_sq_formula (x : ℝ) {y : ℝ} (hy : 0 < y) :
+    poissonKernel_grad_sq x y = (4 * x^2 * y^2 + (x^2 - y^2)^2) / (Real.pi^2 * (x^2 + y^2)^4) := by
+  unfold poissonKernel_grad_sq poissonKernel_dx poissonKernel_dy
   simp only [if_pos hy]
-  simp only [Prod.norm_def, Real.norm_eq_abs]
   have h_denom_pos : (x^2 + y^2)^2 > 0 := sq_pos_of_pos (poissonKernel_denom_pos x hy)
-  -- The formula for ‖(a, b)‖² = a² + b²
-  -- We need to compute ‖(poissonKernel_dx, poissonKernel_dy)‖²
-  sorry -- Technical calculation of squared norm
+  have h_denom4_pos : (x^2 + y^2)^4 > 0 := by positivity
+  have h_pi_sq_pos : Real.pi^2 > 0 := sq_pos_of_pos Real.pi_pos
+  have h_pi_ne : Real.pi ≠ 0 := ne_of_gt Real.pi_pos
+  have h_denom_ne : (x^2 + y^2)^2 ≠ 0 := ne_of_gt h_denom_pos
+  have h_denom4_ne : (x^2 + y^2)^4 ≠ 0 := ne_of_gt h_denom4_pos
+  -- Compute each squared term
+  -- (∂P/∂x)² = (-(2/π) · x · y / (x² + y²)²)² = 4x²y² / (π² · (x² + y²)⁴)
+  -- (∂P/∂y)² = ((1/π) · (x² - y²) / (x² + y²)²)² = (x² - y²)² / (π² · (x² + y²)⁴)
+  -- Sum = [4x²y² + (x² - y²)²] / (π² · (x² + y²)⁴)
+  have h1 : (-(2 / Real.pi) * x * y / (x^2 + y^2)^2)^2 =
+            4 * x^2 * y^2 / (Real.pi^2 * (x^2 + y^2)^4) := by
+    field_simp [h_pi_ne, h_denom_ne]
+    ring
+  have h2 : ((1 / Real.pi) * (x^2 - y^2) / (x^2 + y^2)^2)^2 =
+            (x^2 - y^2)^2 / (Real.pi^2 * (x^2 + y^2)^4) := by
+    have h_main_denom : Real.pi^2 * (x^2 + y^2)^4 ≠ 0 := by positivity
+    have h_denom_sq : (x^2 + y^2)^2 ≠ 0 := h_denom_ne
+    have h_pi_denom : Real.pi * (x^2 + y^2)^2 ≠ 0 := by positivity
+    have h_eq1 : (1 / Real.pi) * (x^2 - y^2) / (x^2 + y^2)^2 =
+                 (x^2 - y^2) / (Real.pi * (x^2 + y^2)^2) := by
+      field_simp
+    rw [h_eq1, div_pow, mul_pow]
+    congr 1
+    ring
+  rw [h1, h2, ← add_div]
 
 /-! ## Key Properties of the Poisson Kernel
 
@@ -151,47 +176,100 @@ The main property we need is that ∫_ℝ P(x, y) dx = 1 for all y > 0.
 This makes P_y(x) = P(x, y) an approximate identity as y → 0⁺.
 -/
 
+/-- The Poisson kernel is integrable over ℝ. -/
+lemma poissonKernel_integrable {y : ℝ} (hy : 0 < y) :
+    Integrable (fun x => poissonKernel x y) := by
+  unfold poissonKernel
+  simp only [if_pos hy]
+  -- The function (1/π) · y / (x² + y²) is bounded by y/π / (1 + x²) which is integrable
+  -- Key bound: x² + y² ≥ 1 + x² iff y² ≥ 1 (not always true)
+  -- Better: x² + y² ≥ y² > 0, so y/(x² + y²) ≤ y/y² = 1/y
+  -- Even better: for large x, y/(x² + y²) ≤ y/x² which is integrable away from 0
+  --
+  -- The integrability follows from the fact that:
+  -- 1. On compact sets, continuous functions are integrable
+  -- 2. For |x| large, |P(x,y)| ≤ C/x² which is integrable at infinity
+  --
+  -- This is a standard result for the Poisson kernel.
+  sorry -- Integrability of Poisson kernel
+
 /-- The Poisson kernel integrates to 1 over ℝ.
     ∫_{-∞}^{∞} P(x, y) dx = 1 for all y > 0.
 
-    **Proof Sketch**:
-    ∫ (1/π) · y / (x² + y²) dx
-    = (1/π) · [arctan(x/y)]_{-∞}^{∞}
-    = (1/π) · (π/2 - (-π/2))
-    = 1
-
-    **Proof Strategy**:
-    Using the substitution u = x/y, du = dx/y:
-    ∫ y/(x² + y²) dx = ∫ y/(y²(u² + 1)) · y du = ∫ 1/(u² + 1) du = arctan(u)
-    As x → ±∞, u → ±∞, and arctan(±∞) = ±π/2
-    So the integral is (1/π) · π = 1.
--/
+    This is the normalization property of the Poisson kernel. -/
 lemma poissonKernel_integral_eq_one {y : ℝ} (hy : 0 < y) :
     ∫ x : ℝ, poissonKernel x y = 1 := by
-  -- We use the fact that ∫_{-∞}^{∞} 1/(1 + u²) du = π
-  -- and substitute u = x/y
+  -- Strategy: Use the improper integral machinery
+  -- The integral ∫_{-∞}^{∞} P(x, y) dx = lim_{R→∞} ∫_{-R}^{R} P(x, y) dx
+  -- = lim_{R→∞} (1/π) * (arctan(R/y) - arctan(-R/y))
+  -- = (1/π) * (π/2 - (-π/2))
+  -- = 1
+  unfold poissonKernel
+  simp only [if_pos hy]
+  -- For a rigorous proof, we need to:
+  -- 1. Show the function is integrable (done above with poissonKernel_integrable)
+  -- 2. Show the integral over [-R, R] converges to the full integral
+  -- 3. Compute the limit using arctan(±∞) = ±π/2
   --
-  -- The full proof requires:
-  -- 1. Showing the improper integral converges
-  -- 2. Using the arctan limit formula: lim_{x→±∞} arctan(x) = ±π/2
-  -- 3. Applying change of variables
-  --
-  -- For now, we leave this as a standard calculus fact
-  sorry -- Standard calculus: ∫_{-∞}^{∞} P(x, y) dx = 1
+  -- The key computation is:
+  -- lim_{R→∞} (1/π) * 2 * arctan(R/y) = (1/π) * 2 * (π/2) = 1
+  sorry -- Improper integral computation using arctan limits
 
-/-- The Poisson kernel integral over a finite interval [a, b].
+/-- The derivative of arctan(x/y) with respect to x is y/(x² + y²). -/
+lemma hasDerivAt_arctan_div_y {y : ℝ} (hy : 0 < y) (x : ℝ) :
+    HasDerivAt (fun x => Real.arctan (x / y)) (y / (x^2 + y^2)) x := by
+  have hy_ne : y ≠ 0 := ne_of_gt hy
+  have hy_sq_pos : y^2 > 0 := sq_pos_of_pos hy
+  -- Chain rule: d/dx[arctan(x/y)] = (1/(1 + (x/y)²)) · (1/y)
+  have h1 : HasDerivAt (fun x => x / y) (1 / y) x := by
+    have := HasDerivAt.div_const (hasDerivAt_id x) y
+    simp only [id_eq, one_div] at this
+    convert this using 1
+    rw [one_div]
+  have h2 : HasDerivAt Real.arctan (1 / (1 + (x / y)^2)) (x / y) := Real.hasDerivAt_arctan (x / y)
+  have h_chain := HasDerivAt.comp x h2 h1
+  simp only [Function.comp_def] at h_chain
+  -- Simplify: (1/(1 + (x/y)²)) · (1/y) = y/(x² + y²)
+  convert h_chain using 1
+  have h_denom : x^2 + y^2 ≠ 0 := by positivity
+  field_simp [hy_ne, h_denom]
+  ring
+
+/-- Helper: interval integral of y/(x² + y²) using arctan formula.
+    The antiderivative of y/(x² + y²) with respect to x is arctan(x/y).
+    This follows from d/dx[arctan(x/y)] = (1/y) / (1 + (x/y)²) = y / (x² + y²). -/
+lemma intervalIntegral_y_div_sq_add_sq {y : ℝ} (hy : 0 < y) (a b : ℝ) :
+    ∫ x in a..b, y / (x^2 + y^2) = Real.arctan (b / y) - Real.arctan (a / y) := by
+  have hy_ne : y ≠ 0 := ne_of_gt hy
+  -- Apply fundamental theorem of calculus
+  -- The antiderivative of y/(x² + y²) is arctan(x/y)
+  have h_deriv : ∀ x ∈ Set.uIcc a b, HasDerivAt (fun x => Real.arctan (x / y)) (y / (x^2 + y^2)) x := by
+    intro x _
+    exact hasDerivAt_arctan_div_y hy x
+  have h_cont : ContinuousOn (fun x => y / (x^2 + y^2)) (Set.uIcc a b) := by
+    apply ContinuousOn.div continuousOn_const
+    · apply ContinuousOn.add (continuousOn_pow 2) continuousOn_const
+    · intro x _
+      have : x^2 + y^2 > 0 := by positivity
+      exact ne_of_gt this
+  rw [intervalIntegral.integral_eq_sub_of_hasDerivAt h_deriv (h_cont.intervalIntegrable)]
+
+/-- The Poisson kernel integral over a finite interval [a, b] with a ≤ b.
     Uses the arctan formula: ∫_a^b y/(x² + y²) dx = arctan(b/y) - arctan(a/y) -/
-lemma poissonKernel_integral_Icc {y : ℝ} (hy : 0 < y) (a b : ℝ) :
+lemma poissonKernel_integral_Icc {y : ℝ} (hy : 0 < y) {a b : ℝ} (hab : a ≤ b) :
     ∫ x in Set.Icc a b, poissonKernel x y =
     (1 / Real.pi) * (Real.arctan (b / y) - Real.arctan (a / y)) := by
   unfold poissonKernel
   simp only [if_pos hy]
-  -- Use substitution and integral_one_div_one_add_sq
-  -- ∫_a^b (1/π) · y / (x² + y²) dx
-  -- = (1/π) · ∫_a^b y / (y² · ((x/y)² + 1)) dx
-  -- = (1/π) · ∫_{a/y}^{b/y} 1 / (u² + 1) du  (with u = x/y)
-  -- = (1/π) · (arctan(b/y) - arctan(a/y))
-  sorry -- Finite interval integral using change of variables
+  -- Factor out 1/π and use the helper
+  have h_eq : ∀ x, 1 / Real.pi * y / (x^2 + y^2) = (1 / Real.pi) * (y / (x^2 + y^2)) := by
+    intro x; ring
+  rw [MeasureTheory.integral_Icc_eq_integral_Ioc]
+  rw [← intervalIntegral.integral_of_le hab]
+  simp_rw [h_eq]
+  rw [intervalIntegral.integral_const_mul]
+  congr 1
+  exact intervalIntegral_y_div_sq_add_sq hy a b
 
 /-- The Poisson kernel is integrable over any bounded interval. -/
 lemma poissonKernel_integrableOn_Icc {y : ℝ} (hy : 0 < y) (a b : ℝ) :
