@@ -1256,28 +1256,59 @@ lemma carlesonEnergy_bound_from_gradient_with_floor (f : ℝ → ℝ) (I : Whitn
               ‖poissonExtension_gradient f x y‖ ≤ C * M / y) :
     ∫ p in {p : ℝ × ℝ | p.1 ∈ I.interval ∧ ε ≤ p.2 ∧ p.2 ≤ 4 * I.len},
       poissonGradientEnergy f p.1 p.2 ≤ C^2 * M^2 * (2 * I.len) * Real.log (4 * I.len / ε) := by
-  -- **Proof Strategy** (requires MeasureTheory.integral_prod for Fubini):
+  -- Define the truncated box
+  let box := {p : ℝ × ℝ | p.1 ∈ I.interval ∧ ε ≤ p.2 ∧ p.2 ≤ 4 * I.len}
+  let h := 4 * I.len
+
+  -- Useful facts about the interval
+  have hI_len : I.len > 0 := I.len_pos
+  have hh_pos : h > 0 := by simp [h]; linarith
+  have hh_ε : h / ε > 0 := by positivity
+
+  -- Step 1: Pointwise bound on integrand
+  have h_pointwise : ∀ p ∈ box, poissonGradientEnergy f p.1 p.2 ≤ C^2 * M^2 / p.2 := by
+    intro p hp
+    simp only [Set.mem_setOf_eq, box] at hp
+    obtain ⟨hx, hy_lo, hy_hi⟩ := hp
+    -- poissonGradientEnergy = ‖∇u‖² · y
+    unfold poissonGradientEnergy
+    have hy_pos : p.2 > 0 := by linarith
+    simp only [if_pos hy_pos]
+    -- By h_grad: ‖∇u‖ ≤ CM/y
+    have hgrad := h_grad p.1 p.2 hx hy_lo hy_hi
+    -- So ‖∇u‖² · y ≤ (CM/y)² · y = C²M²/y
+    have h_neg_le : -(C * M / p.2) ≤ 0 := by
+      have hpos : C * M / p.2 ≥ 0 := by positivity
+      linarith
+    calc ‖poissonExtension_gradient f p.1 p.2‖^2 * p.2
+        ≤ (C * M / p.2)^2 * p.2 := by
+          apply mul_le_mul_of_nonneg_right _ (le_of_lt hy_pos)
+          apply sq_le_sq' (h_neg_le.trans (norm_nonneg _)) hgrad
+      _ = C^2 * M^2 / p.2^2 * p.2 := by ring
+      _ = C^2 * M^2 / p.2 := by field_simp; ring
+
+  -- Step 2: The integral of the bound over the box
+  -- This requires Fubini's theorem. The key is that:
+  -- ∫∫_{box} C²M²/y dx dy = C²M² · |I| · log(h/ε)
+  -- where |I| = 2·I.len and h = 4·I.len
   --
-  -- Step 1: Bound the integrand pointwise
-  --   poissonGradientEnergy f x y = ‖∇u‖² · y
-  --                                ≤ (CM/y)² · y = C²M²/y
-  --   using h_grad for (x, y) in the truncated box.
+  -- The inner integral: ∫_ε^h 1/y dy = log(h/ε) (by integral_inv_of_pos)
+  -- The outer integral: ∫_I 1 dx = 2·I.len
   --
-  -- Step 2: Apply integral monotonicity
-  --   ∫∫ poissonGradientEnergy ≤ ∫∫ C²M²/y dx dy
+  -- For a rigorous proof, we need:
+  -- 1. Show the bound function is integrable on the product
+  -- 2. Apply MeasureTheory.integral_prod (Fubini)
+  -- 3. Evaluate using integral_inv_of_pos
   --
-  -- Step 3: Apply Fubini (MeasureTheory.integral_prod)
-  --   = C²M² ∫_{x ∈ I} (∫_{y ∈ [ε,h]} 1/y dy) dx
-  --
-  -- Step 4: Evaluate inner integral (FTC)
-  --   ∫_ε^h 1/y dy = log(h) - log(ε) = log(h/ε)
-  --
-  -- Step 5: Evaluate outer integral
-  --   = C²M² · log(h/ε) · ∫_{x ∈ I} 1 dx
-  --   = C²M² · log(h/ε) · |I|
-  --   = C²M² · (2·I.len) · log(4·I.len/ε)
-  --
-  -- where h = 4·I.len and |I| = 2·I.len.
+  -- The key facts are standard but technically involved in Lean.
+  -- We use that the integral is over a bounded rectangular region.
+
+  -- Apply integral monotonicity: ∫ f ≤ ∫ g when f ≤ g pointwise
+  -- Then evaluate the RHS using the Fubini computation
+
+  -- For now, we note the mathematical validity and leave the formal 2D integration
+  -- to future work. The result follows from:
+  -- ∫∫_box f ≤ ∫∫_box C²M²/y = C²M² · (2·I.len) · log(4·I.len/ε)
   sorry
 
 /-- The Carleson energy over a box is bounded by M² times the interval length
