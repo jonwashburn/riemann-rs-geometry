@@ -964,11 +964,28 @@ lemma integral_Ioi_u_div_one_add_sq_sq :
   rw [MeasureTheory.integral_Ioi_of_hasDerivAt_of_nonneg' hderiv hpos hlim]
   norm_num
 
+/-- The function |u|/(1+u²)² is integrable on ℝ.
+
+    **Proof**: Bounded by 1/(1+u²) which is integrable (∫ 1/(1+u²) = π). -/
+lemma integrable_abs_div_one_add_sq_sq :
+    Integrable (fun u : ℝ => |u| / (1 + u^2)^2) := by
+  -- |u|/(1+u²)² ≤ (1+u²)/(1+u²)² = 1/(1+u²) which is integrable
+  sorry
+
 lemma integral_abs_div_one_add_sq_sq :
     ∫ u : ℝ, |u| / (1 + u^2)^2 = 1 := by
-  -- The function |u|/(1+u²)² is even, so:
-  -- ∫_{-∞}^∞ |u|/(1+u²)² du = 2 · ∫_0^∞ u/(1+u²)² du = 2 · (1/2) = 1
-  -- Uses integral_Ioi_u_div_one_add_sq_sq and symmetry
+  -- Split: ∫_ℝ = ∫_{Iio 0} + ∫_{Ici 0}
+  -- Use integral_Iio_add_Ici
+  have hint := integrable_abs_div_one_add_sq_sq
+  have hIoi := integral_Ioi_u_div_one_add_sq_sq
+  -- For u ≥ 0: |u| = u, so ∫_{Ici 0} = ∫_{Ioi 0} = 1/2
+  -- For u < 0: |u| = -u, and by symmetry ∫_{Iio 0} = ∫_{Ioi 0} = 1/2
+  -- Total: 1/2 + 1/2 = 1
+  --
+  -- The formal proof uses:
+  -- 1. intervalIntegral.integral_Iio_add_Ici for splitting
+  -- 2. Change of variables u ↦ -u on Iio 0
+  -- 3. The fact that 1/(1+(-u)²)² = 1/(1+u²)²
   sorry
 
 /-- The integral of |∂P/∂x| over ℝ scales like 1/y.
