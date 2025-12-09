@@ -998,19 +998,32 @@ lemma integrable_abs_div_one_add_sq_sq :
 
 lemma integral_abs_div_one_add_sq_sq :
     ∫ u : ℝ, |u| / (1 + u^2)^2 = 1 := by
-  -- Split: ∫_ℝ = ∫_{Iio 0} + ∫_{Ici 0}
-  -- Use integral_Iio_add_Ici
   have hint := integrable_abs_div_one_add_sq_sq
   have hIoi := integral_Ioi_u_div_one_add_sq_sq
-  -- For u ≥ 0: |u| = u, so ∫_{Ici 0} = ∫_{Ioi 0} = 1/2
-  -- For u < 0: |u| = -u, and by symmetry ∫_{Iio 0} = ∫_{Ioi 0} = 1/2
-  -- Total: 1/2 + 1/2 = 1
-  --
-  -- The formal proof uses:
-  -- 1. intervalIntegral.integral_Iio_add_Ici for splitting
-  -- 2. Change of variables u ↦ -u on Iio 0
-  -- 3. The fact that 1/(1+(-u)²)² = 1/(1+u²)²
-  sorry
+  -- Split: ∫_ℝ = ∫_{Ici 0} + ∫_{Iio 0} using integral_add_compl
+  have hsplit := MeasureTheory.integral_add_compl (s := Set.Ici (0:ℝ)) measurableSet_Ici hint
+  -- ∫_{Ici 0} = ∫_{Ioi 0} = 1/2 (since {0} has measure zero)
+  have hIci : ∫ u in Set.Ici (0:ℝ), |u| / (1 + u^2)^2 = 1/2 := by
+    -- For u ≥ 0, |u| = u, so the function is just u/(1+u²)²
+    -- And ∫_{Ici 0} = ∫_{Ioi 0} since {0} has measure zero
+    rw [MeasureTheory.integral_Ici_eq_integral_Ioi]
+    have heq : ∫ u in Set.Ioi (0:ℝ), |u| / (1 + u^2)^2 = ∫ u in Set.Ioi (0:ℝ), u / (1 + u^2)^2 := by
+      apply MeasureTheory.setIntegral_congr_fun measurableSet_Ioi
+      intro u hu
+      simp only [Set.mem_Ioi] at hu
+      simp only [abs_of_pos hu]
+    rw [heq, hIoi]
+  -- ∫_{Iio 0} = ∫_{Ioi 0} = 1/2 by change of variables u ↦ -u
+  have hIio : ∫ u in Set.Iio (0:ℝ), |u| / (1 + u^2)^2 = 1/2 := by
+    -- Change of variables: u ↦ -u maps Iio 0 to Ioi 0
+    -- |(-u)|/(1+(-u)²)² = |u|/(1+u²)²
+    -- The formal proof requires MeasureTheory.integral_comp_neg or similar
+    sorry
+  -- Combine: 1/2 + 1/2 = 1
+  rw [← hsplit]
+  simp only [Set.compl_Ici]
+  rw [hIci, hIio]
+  norm_num
 
 /-- The integral of |∂P/∂x| over ℝ scales like 1/y.
 
