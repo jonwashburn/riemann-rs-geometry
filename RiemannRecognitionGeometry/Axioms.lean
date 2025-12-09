@@ -1154,16 +1154,87 @@ lemma phase_bound_neg_im (ρ : ℂ) (a b : ℝ) (hab : a < b)
       -- By symmetry: |phaseChange ρ a b| = |phaseChange (conj ρ) a b|
       -- And conj ρ has positive imaginary part -γ > 0
       have h_phase_lower : |phaseChange ρ a b| ≥ 2 * Real.arctan (1/3) := by
-        -- Use symmetry: |phaseChange ρ a b| = |phaseChange (conj ρ) a b|
-        -- where conj ρ has Im = -γ > 0.
-        --
-        -- For σ < a with γ < 0:
-        -- - Both x = (b-σ)/γ < 0 and y = (a-σ)/γ < 0 (same sign)
-        -- - |phaseChange| = 2|arctan(x) - arctan(y)| = 2(arctan(y) - arctan(x))
-        -- - With y - x = (b-a)/(-γ) ≥ 1, arctan subtraction gives arctan ≥ arctan(1/3)
-        --
-        -- Mathematical content: Same computation as γ > 0, σ < a case with signs reversed.
-        sorry
+        -- Use conjugation symmetry to reduce to γ > 0 case
+        have ha_ne_σ : a ≠ σ := by linarith [h_σ_lt_a]
+        have hb_ne_σ : b ≠ σ := by linarith [h_σ_lt_a, hab]
+        have h_conj := phaseChange_abs_conj ρ a b ha_ne_σ hb_ne_σ hγ_ne
+        rw [h_conj.symm]
+
+        -- For conj ρ with Im = -γ > 0
+        set γ' := -γ with hγ'_def
+        have hγ'_pos : γ' > 0 := h_neg_γ
+
+        -- x' = (b-σ)/γ' and y' = (a-σ)/γ' are both positive (since σ < a < b)
+        set x' := (b - σ) / γ' with hx'_def
+        set y' := (a - σ) / γ' with hy'_def
+
+        have hx'_pos : x' > 0 := div_pos (by linarith : b - σ > 0) hγ'_pos
+        have hy'_pos : y' > 0 := div_pos (by linarith : a - σ > 0) hγ'_pos
+        have hx'_gt_y' : x' > y' := by
+          apply div_lt_div_of_pos_right _ hγ'_pos
+          linarith [hab]
+
+        -- Key bound: y' < 1 (since σ > 1/2 > 0 > a + γ implies σ > a + γ)
+        have hy'_lt_one : y' < 1 := by
+          rw [div_lt_one hγ'_pos]
+          -- Need: a - σ < γ' = -γ, i.e., σ > a + γ
+          -- From hγ_lower: a ≤ γ < 0, so a + γ ≤ 2γ < 0
+          -- From hσ: σ > 1/2 > 0 > 2γ ≥ a + γ
+          have h1 : a + γ ≤ 2 * γ := by linarith [hγ_lower]
+          have h2 : 2 * γ < 0 := by linarith [hγ_neg]
+          linarith
+
+        -- Spread x' - y' = (b-a)/γ' ≥ 1
+        have h_spread' : x' - y' ≥ 1 := by
+          have hγ'_ne : γ' ≠ 0 := ne_of_gt hγ'_pos
+          simp only [x', y']
+          rw [div_sub_div_eq_sub_div, ge_iff_le, le_div_iff hγ'_pos, hγ'_def]
+          linarith [h_width_lower]
+
+        -- xy' bound: x' * y' ≤ 1 + (x' - y') since y' < 1
+        have hxy'_bound : x' * y' ≤ 1 + (x' - y') := by
+          have h1 : x' * y' = y'^2 + (x' - y') * y' := by ring
+          have h2 : y'^2 < 1 := by nlinarith [hy'_lt_one, hy'_pos]
+          have h3 : (x' - y') * y' < (x' - y') * 1 := by nlinarith [hy'_lt_one, hy'_pos, h_spread']
+          nlinarith
+
+        -- Bound: (x'-y')/(1+x'y') ≥ 1/3
+        have h_ratio_bound : (x' - y') / (1 + x' * y') ≥ 1/3 := by
+          have h_denom_pos : 1 + x' * y' > 0 := by nlinarith [hx'_pos, hy'_pos]
+          rw [ge_iff_le, le_div_iff h_denom_pos]
+          nlinarith [h_spread', hxy'_bound]
+
+        -- Apply arctan subtraction and get bound
+        have h_arctan_sub := arctan_sub_of_pos hx'_pos hy'_pos
+        have h_arctan_diff : Real.arctan x' - Real.arctan y' ≥ Real.arctan (1/3) := by
+          rw [h_arctan_sub]
+          exact Real.arctan_le_arctan h_ratio_bound
+
+        -- Same-sign case for conj ρ
+        have h_same_sign' : (a - σ < 0 ∧ b - σ < 0) ∨ (a - σ > 0 ∧ b - σ > 0) := by
+          right; exact ⟨by linarith, by linarith⟩
+
+        -- conj ρ properties
+        have h_conj_re : (starRingEnd ℂ ρ).re = σ := by rw [starRingEnd_apply, star_def, Complex.conj_re]
+        have h_conj_im : (starRingEnd ℂ ρ).im = γ' := by rw [starRingEnd_apply, star_def, Complex.conj_im, hγ'_def]
+
+        have h_formula := phaseChange_arctan_formula (starRingEnd ℂ ρ) a b hab
+          (by rw [h_conj_im]; exact hγ'_pos)
+          (by rw [h_conj_re]; exact ha_ne_σ)
+          (by rw [h_conj_re]; exact hb_ne_σ)
+          (by rw [h_conj_re]; exact h_same_sign')
+
+        have h_abs_diff : |Real.arctan x' - Real.arctan y'| = Real.arctan x' - Real.arctan y' := by
+          apply _root_.abs_of_pos
+          have := Real.arctan_lt_arctan hx'_gt_y'
+          linarith
+
+        calc |phaseChange (starRingEnd ℂ ρ) a b|
+            = 2 * |Real.arctan ((b - σ) / γ') - Real.arctan ((a - σ) / γ')| := by
+              rw [h_formula]; congr 2 <;> rw [h_conj_re, h_conj_im]
+          _ = 2 * |Real.arctan x' - Real.arctan y'| := by rfl
+          _ = 2 * (Real.arctan x' - Real.arctan y') := by rw [h_abs_diff]
+          _ ≥ 2 * Real.arctan (1/3) := by linarith [h_arctan_diff]
 
       unfold L_rec
       calc |phaseChange ρ a b|
