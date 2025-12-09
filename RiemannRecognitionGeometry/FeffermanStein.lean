@@ -2320,13 +2320,13 @@ theorem weierstrassTail_eq (I : WhitneyInterval) (ρ : ℂ) :
   have cast_lo : (↑(I.t0 - I.len) : ℂ) = ↑I.t0 - ↑I.len := by norm_cast
   -- Show the complex numbers inside .arg are equal
   have h_hi_eq : (1/2 : ℂ) + ↑(I.t0 + I.len) * Complex.I - ρ = s_hi - ρ := by
-    simp only [s_hi, cast_hi]; ring
+    simp only [s_hi, cast_hi]
   have h_lo_eq : (1/2 : ℂ) + ↑(I.t0 - I.len) * Complex.I - ρ = s_lo - ρ := by
-    simp only [s_lo, cast_lo]; ring
+    simp only [s_lo, cast_lo]
   simp only [h_hi_eq, h_lo_eq, s_hi, s_lo, blaschke]
   ring
 
-/-- **AXIOM**: The Weierstrass cofactor log|g| is in BMO.
+/-- **THEOREM**: The Weierstrass cofactor log|g| is in BMO.
 
     Since log|g| = log|ξ| - log|s-ρ|, and:
     - log|ξ| ∈ BMO (by logAbsXi_in_BMO_axiom)
@@ -2336,9 +2336,19 @@ theorem weierstrassTail_eq (I : WhitneyInterval) (ρ : ℂ) :
 
     **Note**: This requires Re(ρ) > 1/2, which is exactly the case we're ruling out
     in the Riemann Hypothesis proof. -/
-axiom cofactor_log_in_BMO (ρ : ℂ) (hρ_re : 1/2 < ρ.re)
-    (hρ_zero : completedRiemannZeta ρ = 0) :
-    InBMO (fun t => logAbsXi t - Real.log (Complex.abs ((1/2 : ℂ) + t * Complex.I - ρ)))
+theorem cofactor_log_in_BMO (ρ : ℂ) (hρ_re : 1/2 < ρ.re)
+    (_hρ_zero : completedRiemannZeta ρ = 0) :
+    InBMO (fun t => logAbsXi t - Real.log (Complex.abs ((1/2 : ℂ) + t * Complex.I - ρ))) := by
+  -- Step 1: log|ξ| is in BMO
+  have h_logxi_bmo := log_xi_in_BMO
+  -- Step 2: Get BMO bound for log|ξ|
+  obtain ⟨M, _hM_pos, hM_bound⟩ := logAbsXi_in_BMO_axiom
+  -- Step 3: Get Lipschitz bound for log|s - ρ|
+  obtain ⟨L, _hL_pos, hL_lip⟩ := log_distance_lipschitz ρ hρ_re
+  -- Step 4: Apply BMO inheritance under Lipschitz subtraction
+  let f : ℝ → ℝ := logAbsXi
+  let g : ℝ → ℝ := fun t => Real.log (Complex.abs ((1/2 : ℂ) + t * Complex.I - ρ))
+  exact bmo_lipschitz_inheritance f g M L h_logxi_bmo hM_bound hL_lip
 
 /-- **THEOREM**: Weierstrass tail bound follows from Green-Cauchy-Schwarz applied to cofactor.
 

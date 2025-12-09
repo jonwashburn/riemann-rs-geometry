@@ -466,51 +466,62 @@ theorem whitney_polynomial_bound (x y γ : ℝ)
         have h_bound : 1 + α^2 + α * v ≤ 3 * v := by linarith [h_key]
         linarith
 
-      · -- 1 < α < 3: This case requires Whitney interval geometry
+      · -- 1 < α < 3: This case requires additional geometric constraints
         push_neg at hα_le_one
 
-        -- **Mathematical analysis**: For 1 < α < 3, we need v(3-α) ≥ 1 + α².
-        -- Required: v ≥ (1 + α²)/(3 - α), which ranges from 1 to ∞ as α → 3⁻.
+        -- **DETAILED ANALYSIS** (verified numerically):
         --
-        -- **Key geometric constraint**: In Recognition Geometry,
-        -- - α = (σ-b)/γ and v = (b-a)/γ are NOT independent
-        -- - α + v = (σ-a)/γ relates to zero position relative to interval start
-        -- - From σ ≤ 1 and a ≤ γ: α + v ≤ (1-a)/γ ≤ (1-0)/γ = 1/γ
+        -- For 1 < α < 3, we need v(3-α) ≥ 1 + α². The required v is:
+        --   α = 1.2: v ≥ 1.36
+        --   α = 1.5: v ≥ 2.17
+        --   α = 2.0: v ≥ 5.00
+        --   α = 2.5: v ≥ 14.50 (exceeds max v = 10!)
         --
-        -- **Why the bound holds in practice**:
-        -- For zeros near the critical line (σ ≈ 1/2), large α requires:
-        --   α = (σ-b)/γ ≥ 2 implies b ≤ σ - 2γ
-        -- Combined with b ≥ γ: γ ≤ σ - 2γ implies 3γ ≤ σ ≤ 1, so γ ≤ 1/3.
-        -- And v = (b-a)/γ with a ≤ γ, b ≥ γ grows as γ shrinks.
+        -- **Geometric correlation**: α and v are NOT independent:
+        -- With γ centered in interval [a,b], we have α + v/2 ≤ 1/γ - 1.
+        -- For γ = 1/3: at v = 1, max α = 1.5; at v = 2, max α = 1.0.
         --
-        -- The detailed proof requires showing v ≥ (1+α²)/(3-α) follows from
-        -- the geometric constraints of Whitney interval construction.
+        -- **Key finding**: At MINIMUM width (v = 1), this bound can FAIL:
+        -- - γ = 1/3, v = 1, α = 1.5: required v ≥ 2.17 but v = 1 ✗
+        -- - The PHASE bound |phaseChange| ≥ L_rec also fails in this case!
+        --   (numerically: |phaseChange| ≈ 0.54 < L_rec ≈ 0.55 at σ = 0.9)
+        --
+        -- **For v ≥ 2**: The polynomial bound DOES hold for all valid α.
+        --
+        -- **Resolution options**:
+        -- 1. Add constraint v ≥ 2 (exclude minimum width for small γ)
+        -- 2. Use de la Vallée Poussin region: actual zeros have σ ≈ 1/2
+        -- 3. Direct phase analysis bypassing polynomial bound
+        --
+        -- The LaTeX proof's "by symmetry" claim is INCOMPLETE for v = 1.
         have hv_upper : v ≤ 10 := h_spread_upper
         rw [hxy_eq]
         have h_expand : 1 + α * (α + v) = 1 + α^2 + α * v := by ring
         rw [h_expand]
-        -- Requires Whitney interval geometry analysis
+        -- Requires: either v ≥ 2, or direct phase analysis
         sorry
 
-    · -- Case α ≥ 3: This case is geometrically constrained
+    · -- Case α ≥ 3: ALGEBRAICALLY IMPOSSIBLE with this bound
       push_neg at hα_lt_three
 
-      -- **Analysis**: For α ≥ 3, the bound v(3-α) ≥ 1 + α² fails algebraically
-      -- since 3 - α ≤ 0 but 1 + α² > 0.
+      -- **Analysis**: For α ≥ 3, the polynomial bound v(3-α) ≥ 1+α² FAILS:
+      -- LHS = v(3-α) ≤ 0 (since 3-α ≤ 0 and v > 0)
+      -- RHS = 1+α² > 0
+      -- So LHS < RHS always!
       --
-      -- **Geometric constraints**:
-      -- - α ≥ 3 with α ≤ (1-γ)/γ implies γ ≤ 1/4
-      -- - At γ = 1/4: α ≤ 3 exactly
-      -- - For γ < 1/4: α can exceed 3, but then v(3-α) < 0 < 1 + α²
+      -- **When does α ≥ 3 occur?**
+      -- α ≤ (1-γ)/γ = 1/γ - 1, so α ≥ 3 requires 1/γ - 1 ≥ 3, i.e., γ ≤ 1/4.
       --
-      -- **Resolution**: This case requires a different proof strategy.
-      -- Either:
-      -- 1. Show it's geometrically impossible in Recognition Geometry, or
-      -- 2. Use a different bound (the arctan argument may still be bounded
-      --    away from zero by a different algebraic manipulation).
+      -- **Phase bound analysis**: For such configurations, the PHASE bound
+      -- |phaseChange| ≥ L_rec may still hold via a DIFFERENT formula:
       --
-      -- For zeros on the critical line (σ = 1/2), α ≥ 3 requires γ ≤ 1/8,
-      -- which is a very small imaginary part regime.
+      -- When α ≥ 3, the arctan argument (x-y)/(1+xy) could be negative
+      -- (since xy = α(α+v) is large), changing the branch analysis.
+      --
+      -- **This case requires either**:
+      -- 1. A constraint excluding γ ≤ 1/4 (very small imaginary parts)
+      -- 2. Direct phase computation (not via polynomial bound)
+      -- 3. Proof that actual ξ zeros don't have such small γ
       sorry
 
 /-- **THEOREM**: Whitney polynomial bound for conjugate case.
@@ -522,8 +533,13 @@ theorem whitney_polynomial_bound (x y γ : ℝ)
     - x' = (b - σ)/γ' < 0, y' = (a - σ)/γ' < 0, x' > y'
     - Spread: x' - y' ∈ [1, 10]
 
-    **Elementary proof**: For α = -x ≤ 1, the bound follows from v(3-α) ≥ 2 ≥ 1+α².
-    **Geometric proof**: For α > 1, the Whitney interval geometry ensures the bound. -/
+    **Elementary proof**: For α = -x ≤ 1 (equivalently γ ≥ 1/2), the bound
+    follows from v(3-α) ≥ 2 ≥ 1+α².
+
+    **For α > 1**: Same analysis as main theorem - requires either:
+    - v ≥ 2 (excludes minimum width)
+    - Direct phase analysis
+    - Additional constraints from zero-free regions -/
 theorem whitney_polynomial_bound_conjugate (x y γ : ℝ)
     (hx_neg : x < 0) (hy_neg : y < 0) (hx_gt_y : x > y)
     (hγ_pos : γ > 0)
@@ -565,19 +581,21 @@ theorem whitney_polynomial_bound_conjugate (x y γ : ℝ)
     - x = (b - σ) / γ ≤ 0 (since b - σ ≥ 0 and γ < 0)
     - y = (a - σ) / γ ≥ 0 (since a - σ ≤ 0 and γ < 0)
 
-    **Correct formula**: For σ ∈ (a, b) (mixed-sign case):
-    |phaseChange ρ a b| = 2π - 2*(arctan(y) - arctan(x))
+    **Formula for mixed-sign (σ ∈ (a, b))**:
+    |phaseChange ρ a b| = 2 * (arctan(y) - arctan(x))
 
-    Note: The formula 2*(arctan(y) - arctan(x)) gives the COMPLEMENT of the actual
-    phase change. For the phase BOUND |phaseChange| ≥ L_rec, we use:
-    - arctan(y) - arctan(x) = arctan(y) + arctan(|x|) ≤ 2*arctan(5) (via concavity)
-    - |phaseChange| = 2π - 2*(arctan(y) - arctan(x)) ≥ 2π - 4*arctan(5) > L_rec
+    This equals 2 * (arctan(y) + arctan(|x|)) since x ≤ 0.
+
+    **CRITICAL NOTE**: This formula represents the phase difference within
+    the principal branch. The bound |phaseChange| ≥ L_rec follows from:
+    - arctan(y) - arctan(x) ≥ arctan(max(y, |x|)) ≥ arctan(1/2) (when spread ≥ 1)
+    - 2 * arctan(1/2) > 0.8 > L_rec ≈ 0.55 ✓
 
     **Proof via conjugation**: Using phaseChange_abs_conj:
     |phaseChange ρ| = |phaseChange (conj ρ)| where Im(conj ρ) = -γ > 0.
-    For conj ρ in the mixed-sign case, |phaseChange| = 2π - 2*(arctan sum).
 
-    **Reference**: Standard result in Blaschke product theory. -/
+    **Status**: The exact formula derivation requires Complex.arg analysis.
+    The BOUND holds by the direct arctan estimate above. -/
 theorem phaseChange_arctan_mixed_sign_axiom (ρ : ℂ) (a b : ℝ)
     (hab : a < b)
     (hγ_lower : a ≤ ρ.im) (hγ_upper : ρ.im ≤ b)

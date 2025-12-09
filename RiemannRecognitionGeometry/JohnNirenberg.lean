@@ -803,6 +803,44 @@ lemma bmo_level_set_bound (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
         apply ENNReal.ofReal_le_ofReal
         apply div_le_div_of_nonneg_right h_int_bound (le_of_lt ht_pos)
 
+/-- **Reverse triangle helper**: |a| - |b| ≤ |a + b|.
+    Follows from abs_sub_abs_le_abs_sub by replacing b with -b. -/
+lemma abs_sub_le_abs_add (a b : ℝ) : |a| - |b| ≤ |a + b| := by
+  have h := abs_sub_abs_le_abs_sub a (-b)
+  simp only [abs_neg, sub_neg_eq_add] at h
+  exact h
+
+/-- **Level set inclusion via triangle inequality**.
+    If |f(x) - c₁| > t₁ + t₂ and |c₁ - c₂| ≤ t₂, then |f(x) - c₂| > t₁.
+    This is used in the good-λ argument to transfer level set membership. -/
+lemma level_set_triangle {f : ℝ → ℝ} {c₁ c₂ t₁ t₂ : ℝ}
+    (_ht₁ : t₁ ≥ 0) (_ht₂ : t₂ ≥ 0)
+    (h_centers : |c₁ - c₂| ≤ t₂)
+    (x : ℝ) (hx : |f x - c₁| > t₁ + t₂) :
+    |f x - c₂| > t₁ := by
+  -- Key: |f x - c₁| - |c₁ - c₂| ≤ |f x - c₂|
+  -- Proof: |a| - |b| ≤ |a + b| with a = f x - c₁, b = c₁ - c₂
+  -- gives |f x - c₁| - |c₁ - c₂| ≤ |f x - c₁ + (c₁ - c₂)| = |f x - c₂|
+  have h := abs_sub_le_abs_add (f x - c₁) (c₁ - c₂)
+  have h_simp : f x - c₁ + (c₁ - c₂) = f x - c₂ := by ring
+  rw [h_simp] at h
+  linarith [h_centers, h]
+
+/-- **Level set subset for CZ argument**.
+    For an interval Q with center average c_Q close to the parent average c_I,
+    points where |f - c_I| > t are contained in {|f - c_Q| > t - δ}. -/
+lemma level_set_subset_cz {f : ℝ → ℝ} {c_I c_Q t δ : ℝ}
+    (_hδ : δ ≥ 0) (h_avg_close : |c_I - c_Q| ≤ δ) :
+    {x | |f x - c_I| > t} ⊆ {x | |f x - c_Q| > t - δ} := by
+  intro x hx
+  simp only [mem_setOf_eq] at hx ⊢
+  -- Key: |f x - c_I| ≤ |f x - c_Q| + |c_Q - c_I| (standard triangle inequality)
+  -- Therefore: |f x - c_Q| ≥ |f x - c_I| - |c_Q - c_I| ≥ t - δ > t - δ
+  have h := abs_sub_le (f x) c_Q c_I
+  -- h : |f x - c_I| ≤ |f x - c_Q| + |c_Q - c_I|
+  have h_sym : |c_Q - c_I| ≤ δ := by rwa [abs_sub_comm] at h_avg_close
+  linarith [h, h_sym]
+
 /-- **Axiom**: Good-λ Inequality - The key step in John-Nirenberg.
 
     For f ∈ BMO with oscillation ≤ M, and any level t > M:
