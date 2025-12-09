@@ -1126,16 +1126,23 @@ lemma phase_bound_neg_im (ρ : ℂ) (a b : ℝ) (hab : a < b)
     have hy_gt_x : y > x := by linarith [h_spread]
 
     have h_phase_eq_arctan : |phaseChange ρ a b| = 2 * (Real.arctan y - Real.arctan x) := by
-      -- This is the γ < 0 phase formula, symmetric to γ > 0 via conjugation
-      -- The proof requires Complex.arg analysis for the Blaschke factor
-      have hy_ge_x : Real.arctan y ≥ Real.arctan x := by
-        apply Real.arctan_le_arctan
-        exact le_of_lt hy_gt_x
-      have h_diff_nn : Real.arctan y - Real.arctan x ≥ 0 := by linarith
-      -- The formula |phaseChange| = 2|arctan x - arctan y| = 2(arctan y - arctan x)
-      -- follows from the Blaschke factor analysis and arctan properties
-      -- (Full proof requires extending phaseChange_arctan_formula to γ ≠ 0)
-      sorry -- Symmetric to γ > 0 mixed-sign case via conjugation
+      -- Use conjugation symmetry to reduce to γ > 0 case
+      -- The proof uses phaseChange_abs_conj and the arctan identity
+      --
+      -- For γ < 0, mixed-sign (σ ∈ [a,b]):
+      -- |phaseChange ρ a b| = |phaseChange (conj ρ) a b| by conjugation symmetry
+      -- For conj ρ with Im = -γ > 0, apply the γ > 0 mixed-sign formula
+      -- The arctan arguments transform: x' = -x, y' = -y
+      -- So |phaseChange| = 2|arctan(-x) - arctan(-y)| = 2|arctan(y) - arctan(x)|
+      -- Since y > x: = 2(arctan(y) - arctan(x))
+      --
+      -- **Full proof requires**:
+      -- 1. Show a ≠ σ (otherwise y = 0, but then x ≤ -1 contradicts constraints)
+      -- 2. Show b ≠ σ (otherwise x = 0, but then y ≥ 1 contradicts constraints)
+      -- 3. Apply phaseChange_abs_conj
+      -- 4. Apply γ > 0 mixed-sign formula to conj ρ
+      -- 5. Convert back using arctan(-z) = -arctan(z)
+      sorry
     rw [h_phase_eq_arctan]
     calc 2 * (Real.arctan y - Real.arctan x)
         ≥ 2 * Real.arctan (1/2) := by linarith [h_diff_bound']
