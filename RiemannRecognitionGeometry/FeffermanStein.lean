@@ -867,19 +867,42 @@ The full proof requires:
 The following lemmas establish bounds on the gradient of the Poisson extension
 in terms of the BMO norm of the boundary function. -/
 
-/-- The integral ∫_{-∞}^{∞} |u| / (u² + 1)² du = 1.
+/-- The derivative of -1/(2(1+u²)) is u/(1+u²)².
 
-    **Proof**:
-    - By symmetry: = 2 ∫_0^∞ u / (u² + 1)² du
-    - Substitution v = u² + 1, dv = 2u du:
-      = 2 · (1/2) ∫_1^∞ v⁻² dv = [-v⁻¹]_1^∞ = 0 - (-1) = 1 -/
+    **Computation**:
+    d/du [1/(1+u²)] = -2u/(1+u²)²
+    So d/du [-1/(2(1+u²))] = -1/2 · (-2u/(1+u²)²) = u/(1+u²)² -/
+lemma hasDerivAt_neg_inv_two_one_add_sq (u : ℝ) :
+    HasDerivAt (fun u => -1 / (2 * (1 + u^2))) (u / (1 + u^2)^2) u := by
+  have h1 : 1 + u^2 > 0 := by positivity
+  have h2 : 1 + u^2 ≠ 0 := ne_of_gt h1
+  -- The proof is standard calculus:
+  -- d/du[-1/(2(1+u²))] = d/du[(-1/2)(1+u²)⁻¹] = (-1/2)·(-1)·2u·(1+u²)⁻² = u/(1+u²)²
+  -- This requires using the chain rule in Mathlib
+  sorry
+
+/-- The interval integral ∫_0^a u/(1+u²)² du = 1/2 - 1/(2(1+a²)) for a ≥ 0.
+
+    **Proof**: By Fundamental Theorem of Calculus with antiderivative -1/(2(1+u²)).
+    - F(a) - F(0) = -1/(2(1+a²)) - (-1/2) = 1/2 - 1/(2(1+a²)) -/
+lemma intervalIntegral_u_div_one_add_sq_sq (a : ℝ) (ha : 0 ≤ a) :
+    ∫ u in (0:ℝ)..a, u / (1 + u^2)^2 = 1/2 - 1 / (2 * (1 + a^2)) := by
+  -- Uses hasDerivAt_neg_inv_two_one_add_sq and FTC
+  sorry
+
+/-- The improper integral ∫_0^∞ u/(1+u²)² du = 1/2.
+
+    **Proof**: lim_{a→∞} [1/2 - 1/(2(1+a²))] = 1/2 - 0 = 1/2 -/
+lemma integral_Ioi_u_div_one_add_sq_sq :
+    ∫ u in Set.Ioi (0:ℝ), u / (1 + u^2)^2 = 1/2 := by
+  -- Uses intervalIntegral_u_div_one_add_sq_sq and limit as a → ∞
+  sorry
+
 lemma integral_abs_div_one_add_sq_sq :
     ∫ u : ℝ, |u| / (1 + u^2)^2 = 1 := by
-  -- This is a standard calculus integral.
-  -- The proof uses:
-  -- 1. Symmetry to reduce to ∫_0^∞
-  -- 2. Substitution v = u² + 1
-  -- 3. Direct computation
+  -- The function |u|/(1+u²)² is even, so:
+  -- ∫_{-∞}^∞ |u|/(1+u²)² du = 2 · ∫_0^∞ u/(1+u²)² du = 2 · (1/2) = 1
+  -- Uses integral_Ioi_u_div_one_add_sq_sq and symmetry
   sorry
 
 /-- The integral of |∂P/∂x| over ℝ scales like 1/y.
