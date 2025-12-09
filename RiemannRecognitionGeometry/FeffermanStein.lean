@@ -876,10 +876,29 @@ lemma hasDerivAt_neg_inv_two_one_add_sq (u : ℝ) :
     HasDerivAt (fun u => -1 / (2 * (1 + u^2))) (u / (1 + u^2)^2) u := by
   have h1 : 1 + u^2 > 0 := by positivity
   have h2 : 1 + u^2 ≠ 0 := ne_of_gt h1
-  -- The proof is standard calculus:
-  -- d/du[-1/(2(1+u²))] = d/du[(-1/2)(1+u²)⁻¹] = (-1/2)·(-1)·2u·(1+u²)⁻² = u/(1+u²)²
-  -- This requires using the chain rule in Mathlib
-  sorry
+  have h3 : (1 + u^2)^2 ≠ 0 := by positivity
+  -- Step 1: d/du[u²] = 2u
+  have hu2 : HasDerivAt (fun x : ℝ => x^2) (2 * u) u := by
+    simpa using hasDerivAt_pow 2 u
+  -- Step 2: d/du[1 + u²] = 2u
+  have h1u2 : HasDerivAt (fun x : ℝ => 1 + x^2) (2 * u) u := by
+    simpa using hu2.const_add 1
+  -- Step 3: d/du[(1+u²)⁻¹] = -(2u)/(1+u²)²
+  have hinv : HasDerivAt (fun x : ℝ => (1 + x^2)⁻¹) (-(2 * u) / (1 + u^2)^2) u := by
+    exact h1u2.inv h2
+  -- Step 4: Scale by -1/2
+  have hscale : HasDerivAt (fun x : ℝ => (-1/2) * (1 + x^2)⁻¹) ((-1/2) * (-(2 * u) / (1 + u^2)^2)) u := by
+    exact hinv.const_mul (-1/2)
+  -- Step 5: Simplify the derivative: (-1/2) * (-(2u)/(1+u²)²) = u/(1+u²)²
+  have hderiv_eq : (-1/2 : ℝ) * (-(2 * u) / (1 + u^2)^2) = u / (1 + u^2)^2 := by
+    field_simp [h3]
+  -- Step 6: Show the functions are equal
+  have hfun_eq : (fun x : ℝ => -1 / (2 * (1 + x^2))) = (fun x : ℝ => (-1/2) * (1 + x^2)⁻¹) := by
+    ext x
+    have hx : 1 + x^2 ≠ 0 := by positivity
+    field_simp [hx]
+  rw [hfun_eq]
+  exact hscale.congr_deriv hderiv_eq
 
 /-- The interval integral ∫_0^a u/(1+u²)² du = 1/2 - 1/(2(1+a²)) for a ≥ 0.
 
