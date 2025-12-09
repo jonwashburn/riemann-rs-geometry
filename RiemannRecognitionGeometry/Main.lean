@@ -79,6 +79,7 @@ theorem no_off_critical_zeros_in_strip :
   · -- 1/2 < Re(ρ) ≤ 1: use Recognition Geometry
     push_neg at h_re_gt_one
     have hρ_re : 1/2 < ρ.re := hρ_crit
+    have hρ_re_upper : ρ.re ≤ 1 := h_re_gt_one  -- From ¬(1 < ρ.re)
     -- First: zeros with Re > 1/2 must have Im ≠ 0
     have hρ_im_ne : ρ.im ≠ 0 := zero_has_nonzero_im ρ hρ_zero hρ_re
     -- Use dyadic_interval_with_width to get an interval with proper width bounds
@@ -88,7 +89,7 @@ theorem no_off_critical_zeros_in_strip :
       have h_pos : 0 < |ρ.im| := abs_pos.mpr hρ_im_ne
       linarith
     -- Apply the zero-free criterion
-    exact zero_free_with_interval ρ J hρ_re hJ_contains hρ_zero h_width_lower h_width_upper
+    exact zero_free_with_interval ρ J hρ_re hρ_re_upper hJ_contains hρ_zero h_width_lower h_width_upper
 
 /-! ## Main Riemann Hypothesis Theorem -/
 
