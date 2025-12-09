@@ -1369,20 +1369,20 @@ lemma carlesonEnergy_bound_from_gradient_with_floor (f : ℝ → ℝ) (I : Whitn
     rw [Real.volume_Icc, Real.volume_Icc]
     exact ENNReal.mul_ne_top ENNReal.ofReal_ne_top ENNReal.ofReal_ne_top
 
+  -- The box is compact (product of compact intervals)
+  have h_box_compact : IsCompact box := by
+    rw [h_box_eq]
+    exact IsCompact.prod isCompact_Icc isCompact_Icc
+
   have h_bound_integrable : IntegrableOn (fun p : ℝ × ℝ => C^2 * M^2 / p.2) box := by
-    -- Apply Measure.integrableOn_of_bounded: bounded functions are integrable on finite measure sets
-    apply MeasureTheory.Measure.integrableOn_of_bounded h_box_finite
-    · -- AEStronglyMeasurable: the function (x,y) ↦ C²M²/y is measurable
-      -- Technical: requires showing continuity on the domain where y ≠ 0
-      sorry
-    · -- Boundedness: |C²M²/y| ≤ C²M²/ε on box (since y ≥ ε > 0)
-      apply Filter.eventually_of_mem (MeasureTheory.self_mem_ae_restrict h_box_meas)
-      intro p hp
-      obtain ⟨_, hy_lo, _⟩ := hp
-      have hy_pos : p.2 > 0 := by linarith
-      rw [Real.norm_eq_abs, _root_.abs_of_nonneg (div_nonneg (by positivity) (le_of_lt hy_pos))]
-      apply div_le_div_of_nonneg_left _ (by positivity) hy_lo
-      positivity
+    -- Use ContinuousOn.integrableOn_compact: continuous functions on compact sets are integrable
+    apply ContinuousOn.integrableOn_compact h_box_compact
+    -- ContinuousOn (fun p => C²M²/p.2) box
+    apply ContinuousOn.div continuousOn_const continuousOn_snd
+    intro p hp
+    simp only [Set.mem_setOf_eq, box] at hp
+    obtain ⟨_, hy_lo, _⟩ := hp
+    linarith
 
   -- Step 6: Apply setIntegral_mono (pointwise bound → integral bound)
   -- Since both functions are integrable and f ≤ g pointwise on box,
