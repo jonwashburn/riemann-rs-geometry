@@ -218,14 +218,36 @@ lemma poissonKernel_le_one_div {y : ℝ} (hy : 0 < y) (x : ℝ) :
     and our function is comparable via substitution. -/
 lemma poissonKernel_integrable {y : ℝ} (hy : 0 < y) :
     Integrable (fun x => poissonKernel x y) := by
-  -- The Poisson kernel is (1/π) * y / (x² + y²)
-  -- Using substitution u = x/y, this becomes (1/π) * 1/(u² + 1) * (1/y) * y = (1/π)/(u² + 1)
-  -- The integral of 1/(1+u²) over ℝ is π, which is finite.
-  -- So the Poisson kernel is integrable.
-  --
-  -- The formal proof uses the fact that 1/(1+x²) is integrable over ℝ,
-  -- combined with the scaling property of integrals.
-  sorry -- Integrability via comparison with 1/(1+x²)
+  -- The Poisson kernel is (1/π) * y / (x² + y²) = (1/(π*y)) * (1 + (x/y)²)⁻¹
+  have hy_ne : y ≠ 0 := ne_of_gt hy
+  have hpi_ne : Real.pi ≠ 0 := ne_of_gt Real.pi_pos
+  have hpi_y_ne : Real.pi * y ≠ 0 := mul_ne_zero hpi_ne hy_ne
+  have hy_inv_ne : y⁻¹ ≠ 0 := inv_ne_zero hy_ne
+
+  -- Step 1: (1 + x²)⁻¹ is integrable (from Mathlib)
+  have h1 : Integrable fun x : ℝ => (1 + x^2)⁻¹ := integrable_inv_one_add_sq
+
+  -- Step 2: (1 + (y⁻¹ * x)²)⁻¹ is integrable via composition with scaling
+  have h2 : Integrable fun x : ℝ => (1 + (y⁻¹ * x)^2)⁻¹ := h1.comp_mul_left' hy_inv_ne
+
+  -- Step 3: The Poisson kernel equals (1/(π*y)) * (1 + (y⁻¹ * x)²)⁻¹
+  have h_eq : ∀ x, poissonKernel x y = (1 / (Real.pi * y)) * (1 + (y⁻¹ * x)^2)⁻¹ := by
+    intro x
+    unfold poissonKernel
+    simp only [if_pos hy]
+    have h_denom_ne : x^2 + y^2 ≠ 0 := by positivity
+    -- Algebraically: (1/π) * y / (x² + y²) = (1/(π*y)) / ((x/y)² + 1)
+    have h_factor : x^2 + y^2 = y^2 * ((y⁻¹ * x)^2 + 1) := by
+      field_simp [hy_ne]
+    rw [h_factor]
+    have hy_sq_ne : y^2 ≠ 0 := pow_ne_zero 2 hy_ne
+    have h_denom2_pos : (y⁻¹ * x)^2 + 1 > 0 := by positivity
+    field_simp [hpi_ne, hy_ne, hy_sq_ne, ne_of_gt h_denom2_pos]
+    ring
+
+  -- Step 4: Pull out the constant factor
+  simp_rw [h_eq]
+  exact h2.const_mul (1 / (Real.pi * y))
 
 /-- The Poisson kernel integrates to 1 over ℝ.
     ∫_{-∞}^{∞} P(x, y) dx = 1 for all y > 0.
