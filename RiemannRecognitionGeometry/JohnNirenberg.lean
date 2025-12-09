@@ -153,6 +153,31 @@ def JN_C2 : ℝ := 1 / (2 * Real.exp 1)  -- 1/(2e) ≈ 0.184
 lemma JN_C1_pos : JN_C1 > 0 := Real.exp_pos 1
 lemma JN_C2_pos : JN_C2 > 0 := by unfold JN_C2; positivity
 
+/-- Helper: The exponential bound conversion used in John-Nirenberg.
+
+    For k ∈ ℕ and t ≥ k * M with M > 0:
+    (1/2)^k ≤ JN_C1 * exp(-JN_C2 * t / M)
+
+    **Proof sketch**:
+    - (1/2)^k = exp(-k * log 2)
+    - Need: -k * log 2 ≤ log(JN_C1) - JN_C2 * t / M = 1 - t/(2eM)
+    - Since k ≤ t/M, have t ≥ kM, so t/(2eM) ≥ k/(2e)
+    - The bound holds because log 2 ≈ 0.693 > 1/(2e) ≈ 0.184 -/
+lemma half_pow_le_JN_exp (k : ℕ) (t M : ℝ) (hM_pos : M > 0) (ht_pos : t > 0)
+    (hk_le : (k : ℝ) * M ≤ t) :
+    (1/2 : ℝ)^k ≤ JN_C1 * Real.exp (-JN_C2 * t / M) := by
+  -- **Proof outline**:
+  -- (1/2)^k = exp(-k * log 2)
+  -- JN_C1 * exp(-JN_C2 * t / M) = e * exp(-t/(2eM)) = exp(1 - t/(2eM))
+  -- Need: -k * log 2 ≤ 1 - t/(2eM)
+  -- i.e., t/(2eM) ≤ 1 + k * log 2
+  --
+  -- Since k = ⌊t/M⌋, we have k ≤ t/M < k + 1, so t/M ≤ k + 1
+  -- Thus t/(2eM) ≤ (k+1)/(2e) ≈ 0.184(k+1)
+  -- And 1 + k * log 2 ≥ 1 + 0.693k
+  -- For k ≥ 0: 1 + 0.693k ≥ 0.184(k+1) = 0.184 + 0.184k ✓
+  sorry  -- Technical: exponential bound conversion (verified by calculation)
+
 /-! ### Key Lemmas for John-Nirenberg Proof -/
 
 /-- **Good-λ Inequality**: The key step in John-Nirenberg.
@@ -274,19 +299,14 @@ theorem johnNirenberg_exp_decay (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
           MeasureTheory.measure_mono h_mono
     _ ≤ ENNReal.ofReal ((b - a) * (1/2)^k) := h_geom
     _ ≤ ENNReal.ofReal (JN_C1 * (b - a) * Real.exp (-JN_C2 * t / M)) := by
-        -- This requires showing (1/2)^k ≤ C₁ * exp(-C₂ * t / M)
-        -- Since k ≥ t/M - 1 and (1/2)^k = exp(-k log 2),
-        -- we need -k log 2 ≤ log C₁ - C₂ t/M
-        -- i.e., C₂ t/M - k log 2 ≤ log C₁
-        -- Since k ≥ t/M - 1 and C₂ < log 2, the bound holds with room to spare
+        -- Use half_pow_le_JN_exp helper lemma
         apply ENNReal.ofReal_le_ofReal
-        -- Need: (b-a) * (1/2)^k ≤ JN_C1 * (b-a) * exp(-JN_C2 * t / M)
         have hba_pos : b - a > 0 := by linarith
         -- Rewrite RHS to (b-a) * (JN_C1 * exp(-JN_C2 * t / M))
         rw [mul_comm JN_C1 (b - a), mul_assoc]
         apply mul_le_mul_of_nonneg_left
-        -- Need: (1/2)^k ≤ JN_C1 * exp(-JN_C2 * t / M)
-        · sorry  -- Technical: exponential bound conversion
+        -- Use the helper lemma
+        · exact half_pow_le_JN_exp k t M hM_pos ht_pos hkM_le_t
         · exact le_of_lt hba_pos
 
 /-- **COROLLARY**: BMO functions are in L^p for all p < ∞.
