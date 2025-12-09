@@ -197,16 +197,35 @@ theorem johnNirenberg_exp_decay (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
     **Proof**: Integrate the distribution function bound from John-Nirenberg.
     |{|f - f_I| > t}| ≤ C·|I|·exp(-c·t/M) implies the L^p bound via:
     ∫|f - f_I|^p = p ∫_0^∞ t^{p-1} |{|f - f_I| > t}| dt
--/
+
+    The integral ∫_0^∞ t^{p-1} C₁|I|exp(-C₂t/M) dt = C₁|I| · (M/C₂)^p · Γ(p)
+    which gives C_p = C₁ · (1/C₂)^p · Γ(p) for the normalized bound. -/
 theorem bmo_Lp_bound (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
     (M : ℝ) (hM_pos : M > 0)
     (h_bmo : ∀ a' b' : ℝ, a' < b' → meanOscillation f a' b' ≤ M)
     (p : ℝ) (hp : 1 ≤ p) :
     ∃ C_p : ℝ, C_p > 0 ∧
     (b - a)⁻¹ * ∫ x in Icc a b, |f x - intervalAverage f a b|^p ≤ C_p * M^p := by
-  -- Use John-Nirenberg and integrate the distribution function
-  -- The integral ∫_0^∞ t^{p-1} exp(-ct/M) dt = C_p · M^p where C_p depends on p
-  sorry
+  -- The constant depends on p through the gamma function integral
+  -- C_p = C₁ · (1/C₂)^p · Γ(p) where C₁ = e, C₂ = 1/(2e)
+  -- So (1/C₂)^p = (2e)^p and Γ(p) ≤ p! for integer p
+  --
+  -- For the proof:
+  -- 1. Use the layer cake formula: ∫|f-f_I|^p = p ∫_0^∞ t^{p-1} μ({|f-f_I|>t}) dt
+  -- 2. Apply johnNirenberg_exp_decay: μ({|f-f_I|>t}) ≤ C₁|I|exp(-C₂t/M)
+  -- 3. Compute: p ∫_0^∞ t^{p-1} exp(-C₂t/M) dt = p · (M/C₂)^p · Γ(p)/p = (M/C₂)^p · Γ(p)
+  -- 4. Divide by |I| to get the normalized bound
+  use JN_C1 * (2 * Real.exp 1)^p * Real.Gamma (p + 1) / p
+  constructor
+  · -- Positivity of the constant
+    apply div_pos
+    · apply mul_pos
+      apply mul_pos JN_C1_pos
+      apply Real.rpow_pos_of_pos (by positivity : 2 * Real.exp 1 > 0)
+      exact Real.Gamma_pos_of_pos (by linarith : p + 1 > 0)
+    · linarith
+  · -- The actual bound (uses johnNirenberg_exp_decay as black box)
+    sorry
 
 /-- **APPLICATION**: The pointwise bound for BMO functions against smooth kernels.
 
@@ -214,7 +233,15 @@ theorem bmo_Lp_bound (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
     |∫ K(t) · (f(t) - c) dt| ≤ C · M · ∫|K|
 
     This is used in the Fefferman-Stein proof to bound Poisson extension gradients.
--/
+
+    **Proof outline**:
+    1. For kernel K supported on interval I, use Hölder:
+       |∫_I K(f-c)| ≤ ‖K‖_{L^q(I)} · ‖f-c‖_{L^p(I)}
+    2. Take q close to 1, p large (using BMO ⊂ L^p from John-Nirenberg)
+    3. The L^p bound gives ‖f-c‖_p ≤ C_p · M · |I|^{1/p}
+    4. As p → ∞, ‖K‖_q → ‖K‖_1, giving the result
+
+    For kernels on all of ℝ, split into dyadic shells and sum. -/
 theorem bmo_kernel_bound (f : ℝ → ℝ) (K : ℝ → ℝ)
     (M : ℝ) (hM_pos : M > 0)
     (h_bmo : ∀ a b : ℝ, a < b → meanOscillation f a b ≤ M)
@@ -222,10 +249,17 @@ theorem bmo_kernel_bound (f : ℝ → ℝ) (K : ℝ → ℝ)
     (c : ℝ) :
     ∃ C : ℝ, C > 0 ∧
     |∫ t, K t * (f t - c)| ≤ C * M * ∫ t, |K t| := by
-  -- This follows from the L^p bound for BMO combined with Hölder's inequality:
-  -- |∫ K(f - c)| ≤ ‖K‖_q · ‖f - c‖_p for conjugate exponents p, q
-  -- Taking p large enough (using the L^p bound from John-Nirenberg) gives the result.
-  sorry
+  -- The constant C comes from the BMO-to-L^p constant as p → ∞
+  -- and the geometry of dyadic shell summation
+  use 2 * JN_C1  -- Universal constant depending only on JN constants
+  constructor
+  · exact mul_pos (by norm_num : (0:ℝ) < 2) JN_C1_pos
+  · -- The proof uses:
+    -- 1. Split ℝ into dyadic intervals around the support of K
+    -- 2. On each interval, apply Hölder with large p
+    -- 3. Use bmo_Lp_bound to control ‖f - c‖_p
+    -- 4. Sum the geometric series (exponential decay from JN)
+    sorry
 
 /-! ## Connection to Fefferman-Stein
 
@@ -236,19 +270,36 @@ measure condition.
 
 /-- Using John-Nirenberg, we can prove the gradient bound from oscillation.
     This is the key lemma that `poissonExtension_gradient_bound_from_oscillation`
-    in FeffermanStein.lean needs. -/
+    in FeffermanStein.lean needs.
+
+    **Proof**:
+    1. Let I = [x - y, x + y] be the natural interval for the Poisson kernel
+    2. Write ∂u/∂x = ∫ ∂P/∂x(x-t, y) · (f(t) - f_I) dt
+       (Since ∫ ∂P/∂x dt = 0, adding f_I doesn't change the integral)
+    3. Apply bmo_kernel_bound with K(t) = ∂P/∂x(x-t, y):
+       |∂u/∂x| ≤ C · M · ∫|∂P/∂x(x-t, y)| dt
+    4. Use poissonKernel_dx_integral_bound: ∫|∂P/∂x| ≤ 2/(πy)
+    5. Combine: |∂u/∂x| ≤ C · M · 2/(πy) = O(M/y)
+
+    Similar argument for ∂u/∂y gives the full gradient bound. -/
 theorem poisson_gradient_bound_via_JN (f : ℝ → ℝ) (x : ℝ) {y : ℝ} (hy : 0 < y)
     (M : ℝ) (hM_pos : M > 0)
     (h_bmo : ∀ a b : ℝ, a < b → meanOscillation f a b ≤ M) :
     ∃ C : ℝ, C > 0 ∧ ‖poissonExtension_gradient f x y‖ ≤ C * M / y := by
-  -- The proof uses:
-  -- 1. Write ∂u/∂x = ∫ ∂P/∂x(x-t, y) · (f(t) - f_I) dt where I is centered at x with radius y
-  -- 2. Apply bmo_kernel_bound with K = ∂P/∂x
-  -- 3. Use poissonKernel_dx_integral_bound: ∫|∂P/∂x| ≤ 2/(πy)
-  --
-  -- The key insight from John-Nirenberg is that we don't need |f - f_I| ≤ M pointwise,
-  -- only the mean oscillation bound. The exponential integrability from JN makes
-  -- the convolution with the Poisson kernel well-behaved.
-  sorry
+  -- Use bmo_kernel_bound with the Poisson kernel derivative as K
+  -- The constant C = 2 * JN_C1 * (2/π) from the composition
+  let I := Icc (x - y) (x + y)
+  let f_I := intervalAverage f (x - y) (x + y)
+  -- Apply bmo_kernel_bound for the x-derivative
+  have hK_int : Integrable (fun t => poissonKernel_dx (x - t) y) := by
+    sorry  -- Integrability of Poisson kernel derivative (standard)
+  obtain ⟨C_kernel, hC_pos, h_bound⟩ := bmo_kernel_bound f (fun t => poissonKernel_dx (x - t) y)
+    M hM_pos h_bmo hK_int f_I
+  -- The gradient norm is bounded by the sum of partial derivative bounds
+  use 2 * C_kernel * (2 / Real.pi)
+  constructor
+  · positivity
+  · -- Combine the kernel bound with poissonKernel_dx_integral_bound
+    sorry
 
 end RiemannRecognitionGeometry
