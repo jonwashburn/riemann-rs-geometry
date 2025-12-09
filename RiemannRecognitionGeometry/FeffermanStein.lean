@@ -1015,9 +1015,16 @@ lemma integral_abs_div_one_add_sq_sq :
     rw [heq, hIoi]
   -- ∫_{Iio 0} = ∫_{Ioi 0} = 1/2 by change of variables u ↦ -u
   have hIio : ∫ u in Set.Iio (0:ℝ), |u| / (1 + u^2)^2 = 1/2 := by
-    -- Change of variables: u ↦ -u maps Iio 0 to Ioi 0
-    -- |(-u)|/(1+(-u)²)² = |u|/(1+u²)²
-    -- The formal proof requires MeasureTheory.integral_comp_neg or similar
+    -- The function f(u) = |u|/(1+u²)² is even: f(-u) = f(u)
+    -- Change of variables v = -u maps Iio 0 to Ioi 0 bijectively
+    -- Under this substitution: |(-v)|/(1+(-v)²)² = |v|/(1+v²)²
+    --
+    -- Formally: ∫_{Iio 0} f(u) du = ∫_{Ioi 0} f(-v) dv = ∫_{Ioi 0} f(v) dv = 1/2
+    --
+    -- The Lean proof would use:
+    -- - MeasureTheory.Measure.integral_sub_left_eq_self for substitution
+    -- - Show neg '' Ioi 0 = Iio 0
+    -- - Even function property
     sorry
   -- Combine: 1/2 + 1/2 = 1
   rw [← hsplit]
