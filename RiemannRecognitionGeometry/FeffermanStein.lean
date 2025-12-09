@@ -928,7 +928,13 @@ lemma intervalIntegral_u_div_one_add_sq_sq (a : ℝ) (ha : 0 ≤ a) :
     **Proof**: lim_{a→∞} [1/2 - 1/(2(1+a²))] = 1/2 - 0 = 1/2 -/
 lemma integral_Ioi_u_div_one_add_sq_sq :
     ∫ u in Set.Ioi (0:ℝ), u / (1 + u^2)^2 = 1/2 := by
-  -- Uses intervalIntegral_u_div_one_add_sq_sq and limit as a → ∞
+  -- The improper integral is the limit of interval integrals
+  -- ∫_0^∞ f = lim_{a→∞} ∫_0^a f
+  -- By intervalIntegral_u_div_one_add_sq_sq: ∫_0^a = 1/2 - 1/(2(1+a²))
+  -- As a → ∞: 1/(2(1+a²)) → 0, so the limit is 1/2
+  --
+  -- The formal proof uses MeasureTheory.AECover or similar machinery
+  -- for improper integrals in Mathlib.
   sorry
 
 lemma integral_abs_div_one_add_sq_sq :
