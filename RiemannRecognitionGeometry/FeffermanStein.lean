@@ -260,15 +260,66 @@ lemma poissonKernel_integral_eq_one {y : ℝ} (hy : 0 < y) :
     field_simp [hpi_ne, hy_ne, hy_sq_ne, h_denom2_ne]
     ring
   simp_rw [h_rewrite]
-  -- Now we have ∫ (1/π) / ((x/y)² + 1) dx
-  -- Use substitution u = x/y to get (1/π) * y * ∫ 1/(u² + 1) du
-  -- Using integral_comp_mul_left: ∫ g(a * x) dx = |a⁻¹| • ∫ g(y) dy
-  -- With g(u) = 1/(u² + 1) and a = 1/y, we get ∫ g(x/y) dx = |y| * ∫ g(u) du = y * π
-  -- The final integral is (1/π) * y * (1/y) * π = 1
+  -- Now we have: ∫ (1/π) * (1/y) / ((x/y)² + 1) dx
+  -- Define h(u) = (1/π) * (1/y) / (u² + 1), so integral = ∫ h(x/y) dx
+  -- Note: x/y = (1/y) * x
+  --
+  -- By integral_comp_mul_left: ∫ g(a * x) dx = |a⁻¹| • ∫ g(u) du
+  -- With a = 1/y: ∫ h((1/y) * x) dx = |y| • ∫ h(u) du = y * ∫ h(u) du  (since y > 0)
+  --
+  -- So: y * ∫ (1/π) * (1/y) / (u² + 1) du
+  --   = y * (1/π) * (1/y) * ∫ 1/(u² + 1) du   (pulling constants out)
+  --   = (1/π) * ∫ 1/(u² + 1) du
+  --   = (1/π) * π                              (by integral_univ_inv_one_add_sq)
+  --   = 1
+  --
+  -- The formal proof requires:
+  -- 1. Showing the integrand is integrable (for the constant pull-out)
+  -- 2. Applying integral_comp_mul_left with a = y⁻¹
+  -- 3. Using integral_univ_inv_one_add_sq
+  -- 4. Algebraic simplification
 
-  -- Actually, let's compute this more directly using the change of variables
-  -- For now, this is the core computation that requires the Mathlib machinery
-  sorry -- Uses integral_comp_mul_left and integral_univ_inv_one_add_sq
+  -- Factor out constants from the integrand
+  have h_factor : ∀ x, (1 / Real.pi) * (1 / y) / ((x / y)^2 + 1) =
+                      (1 / (Real.pi * y)) * (1 / ((x / y)^2 + 1)) := by
+    intro x
+    have h1 : 1 / Real.pi * (1 / y) = 1 / (Real.pi * y) := by field_simp [hpi_ne, hy_ne]
+    rw [h1, one_div, div_eq_mul_inv]
+    simp only [one_div]
+  simp_rw [h_factor]
+  -- Now we have ∫ (1/(π*y)) * (1/((x/y)² + 1)) dx
+  -- Factor out the constant 1/(π*y):
+  rw [MeasureTheory.integral_mul_left]
+  -- Now we have (1/(π*y)) * ∫ 1/((x/y)² + 1) dx
+  -- Note that x/y = y⁻¹ * x, so use integral_comp_mul_left with a = y⁻¹
+
+  -- Define g(u) = 1/(u² + 1) = (1 + u²)⁻¹
+  -- The goal is: (1/(π*y)) * ∫ g(y⁻¹ * x) dx = 1
+
+  -- By integral_comp_mul_left: ∫ g(a * x) dx = |a⁻¹| • ∫ g(u) du
+  -- With a = y⁻¹: ∫ g(y⁻¹ * x) dx = |y| • ∫ g(u) du = y • ∫ 1/(1+u²) du = y * π
+  -- (since y > 0, so |y| = y, and integral_univ_inv_one_add_sq gives π)
+
+  have h_subst : (fun x => 1 / ((x / y)^2 + 1)) = (fun x => (1 + (y⁻¹ * x)^2)⁻¹) := by
+    ext x
+    rw [one_div, div_eq_mul_inv, mul_comm y⁻¹ x, add_comm]
+  rw [h_subst]
+
+  -- Apply integral_comp_mul_left with a = y⁻¹ and g(u) = (1 + u²)⁻¹
+  -- This is in the MeasureTheory.Measure.Haar.NormedSpace namespace
+  rw [Measure.integral_comp_mul_left (fun u => (1 + u^2)⁻¹) y⁻¹]
+  rw [inv_inv]
+
+  -- Now we have: (1/(π*y)) * (|y| • ∫ (1 + u²)⁻¹ du)
+  rw [abs_of_pos hy]
+
+  -- Use integral_univ_inv_one_add_sq: ∫ (1 + x²)⁻¹ = π
+  rw [integral_univ_inv_one_add_sq]
+
+  -- Now: (1/(π*y)) * (y * π) = 1
+  have hpi_y_ne : Real.pi * y ≠ 0 := mul_ne_zero hpi_ne hy_ne
+  field_simp [hpi_y_ne]
+  ring
 
 /-- The derivative of arctan(x/y) with respect to x is y/(x² + y²). -/
 lemma hasDerivAt_arctan_div_y {y : ℝ} (hy : 0 < y) (x : ℝ) :
