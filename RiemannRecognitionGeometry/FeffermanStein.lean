@@ -862,6 +862,87 @@ The full proof requires:
 - Atomic BMO decomposition
 -/
 
+/-! ### Key Gradient Estimates for Poisson Extension
+
+The following lemmas establish bounds on the gradient of the Poisson extension
+in terms of the BMO norm of the boundary function. -/
+
+/-- The integral of |∂P/∂x| over ℝ scales like 1/y.
+
+    ∫_{-∞}^{∞} |∂P/∂x(t, y)| dt = (2/π) ∫ |t|·y / (t² + y²)² dt
+                                 = (2/π) · (1/y) · ∫ |u| / (u² + 1)² du
+                                 = C / y
+
+    where C = (2/π) · ∫ |u| / (u² + 1)² du = 2/π (computed via substitution). -/
+lemma poissonKernel_dx_integral_bound {y : ℝ} (hy : 0 < y) :
+    ∫ t : ℝ, |poissonKernel_dx t y| ≤ 2 / (Real.pi * y) := by
+  -- The integral is (2/π) · y · ∫ |t| / (t² + y²)² dt
+  -- Using substitution u = t/y, this becomes (2/π) · (1/y) · ∫ |u| / (u² + 1)² du
+  -- The integral ∫_{-∞}^{∞} |u| / (u² + 1)² du = 2 ∫_0^∞ u / (u² + 1)² du = 1
+  -- (via substitution v = u² + 1)
+  --
+  -- The formal proof requires:
+  -- 1. Showing the integrand is integrable
+  -- 2. Change of variables
+  -- 3. Computing the specific integral
+  --
+  -- For now, we note that this is a standard calculus computation.
+  unfold poissonKernel_dx
+  simp only [if_pos hy]
+  -- |-(2/π) · t · y / (t² + y²)²| = (2/π) · |t| · y / (t² + y²)²
+  have h_integrand : ∀ t, |-(2 / Real.pi) * t * y / (t^2 + y^2)^2| =
+                         (2 / Real.pi) * |t| * y / (t^2 + y^2)^2 := by
+    intro t
+    rw [abs_div, abs_mul, abs_mul, abs_neg]
+    simp only [abs_of_pos (by positivity : 2 / Real.pi > 0), abs_of_pos hy]
+    have h_denom_pos : (t^2 + y^2)^2 > 0 := by positivity
+    simp only [abs_of_pos h_denom_pos]
+  simp_rw [h_integrand]
+  -- Now we need ∫ (2/π) · |t| · y / (t² + y²)² dt ≤ 2/(πy)
+  -- This requires the Mathlib integral machinery
+  sorry
+
+/-- The Poisson extension gradient component bound via convolution.
+
+    For the x-derivative:
+    |∂u/∂x(x,y)| = |∫ (∂P/∂x)(x-t, y) f(t) dt|
+
+    Using Minkowski's inequality and the bounded oscillation assumption:
+    |∂u/∂x(x,y)| ≤ ∫ |∂P/∂x(x-t, y)| · |f(t)| dt
+
+    For BMO functions with bounded oscillation, this gives a bound of O(M/y). -/
+lemma poissonExtension_gradient_bound_from_oscillation (f : ℝ → ℝ) (x : ℝ) {y : ℝ} (hy : 0 < y)
+    (M : ℝ) (hM : M ≥ 0)
+    (h_osc : ∀ a b : ℝ, a < b → meanOscillation f a b ≤ M) :
+    ‖poissonExtension_gradient f x y‖ ≤ (2 / Real.pi) * M / y := by
+  -- The key steps are:
+  -- 1. Write ∂u/∂x = ∫ ∂P/∂x(x-t, y) · (f(t) - f_avg) dt
+  --    (the constant f_avg integrates to 0 since ∫∂P/∂x dt = 0)
+  -- 2. Apply Minkowski: |∂u/∂x| ≤ ∫ |∂P/∂x(x-t, y)| · |f(t) - f_avg| dt
+  -- 3. Use the BMO condition: |f(t) - f_avg| ≤ M (in a suitable averaged sense)
+  -- 4. Integrate: ∫ |∂P/∂x(x-t, y)| dt ≤ C/y
+  --
+  -- The rigorous proof requires the John-Nirenberg inequality for BMO.
+  sorry
+
+/-- The Carleson energy over a box is bounded by M² times the interval length
+    when the gradient satisfies the BMO-type bound.
+
+    This is the key step: if |∇u(x,y)| ≤ C·M/y for all (x,y) in the box,
+    then ∫∫ |∇u|² y dx dy ≤ C²M² · |I| · log(height/floor). -/
+lemma carlesonEnergy_bound_from_gradient (f : ℝ → ℝ) (I : WhitneyInterval)
+    (C M : ℝ) (hC : C > 0) (hM : M > 0)
+    (h_grad : ∀ x y, x ∈ I.interval → 0 < y → y ≤ 4 * I.len →
+              ‖poissonExtension_gradient f x y‖ ≤ C * M / y) :
+    carlesonEnergy f I ≤ C^2 * M^2 * (2 * I.len) * Real.log (4 * I.len) := by
+  -- The proof integrates the bound:
+  -- ∫∫_{Q(I)} |∇u|² y dx dy ≤ ∫∫ (CM/y)² · y dx dy
+  --                         = C²M² ∫_I ∫_0^{4|I|} 1/y dy dx
+  --                         = C²M² · |I| · log(4|I|)
+  --
+  -- For small intervals, this gives the required bound.
+  sorry
+
 /-- **THEOREM**: Fefferman-Stein BMO→Carleson Embedding (Partial)
 
     For f with bounded mean oscillation M, the Carleson energy is bounded:
