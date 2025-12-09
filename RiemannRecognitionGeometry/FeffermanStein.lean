@@ -13,9 +13,42 @@ The proof chain uses three classical results:
 2. Local oscillation of log|ξ| (Hadamard product + zero density)
 3. Fefferman-Stein BMO→Carleson (tent space theory)
 
+## Current Status (38 lemmas, 4 sorries)
+
+### Proven Results
+- Poisson kernel properties: integrability, normalization, bounds, continuity
+- Gradient bounds: `poissonKernel_dx_bound`, `poissonKernel_dy_bound`
+- Key integral: `integral_abs_div_one_add_sq_sq = 1`
+- Derivative integral: `poissonKernel_dx_integral_bound ≤ 2/(π·y)`
+- Energy bounds: `carlesonEnergy_bound_from_gradient_with_floor` (with ε floor)
+- Fubini computation for 2D integrals over product boxes
+
+### Remaining Sorries (4)
+1. **poissonExtension_gradient_bound_from_oscillation**: Requires John-Nirenberg inequality
+2. **ContinuousOn poissonGradientEnergy**: Requires continuity of Poisson extension
+3. **carlesonEnergy_bound_from_gradient**: Formulation issue (divergent integral)
+4. **fefferman_stein_embedding_bound**: Main theorem, requires above
+
+## Path Forward: John-Nirenberg Inequality
+
+The John-Nirenberg inequality states that for f ∈ BMO:
+  |{x ∈ I : |f(x) - f_I| > λ}| ≤ C₁ · |I| · exp(-C₂ · λ / ‖f‖_BMO)
+
+This exponential decay implies:
+- Lᵖ bounds for all p < ∞
+- Control of the Poisson extension gradient
+
+Proving John-Nirenberg requires:
+1. Calderón-Zygmund decomposition
+2. Stopping time arguments
+3. Dyadic analysis
+
+This would be a significant Mathlib contribution (~500-1000 lines).
+
 ## References
 
 - Fefferman & Stein (1972), "Hᵖ spaces of several variables", Acta Math. 129
+- John & Nirenberg (1961), "On functions of bounded mean oscillation", CPAM
 - Titchmarsh, "Theory of the Riemann Zeta-Function", Oxford
 - Garnett, "Bounded Analytic Functions", Academic Press
 -/
