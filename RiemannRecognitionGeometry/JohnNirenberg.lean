@@ -1356,19 +1356,121 @@ lemma poissonKernel_dy_even (s : ℝ) {y : ℝ} (hy : 0 < y) :
   unfold poissonKernel_dy
   simp only [hy, if_true, neg_sq]
 
-/-- **Axiom**: The y-derivative of Poisson kernel integrates to 0.
+/-- Antiderivative of poissonKernel_dy: F(s) = -s / (π(s² + y²)).
+    Satisfies F'(s) = poissonKernel_dy(s, y) and F(s) → 0 as s → ±∞. -/
+noncomputable def poisson_dy_antideriv (y : ℝ) (s : ℝ) : ℝ :=
+  if y > 0 then -s / (Real.pi * (s^2 + y^2)) else 0
 
-    This follows from the fact that ∫ P(x,y) dx = 1 for all y > 0,
-    so d/dy(1) = ∫ ∂P/∂y dx = 0.
+/-- s/(s² + y²) → 0 as s → +∞. -/
+lemma tendsto_div_sq_atTop {y : ℝ} (_hy : 0 < y) :
+    Filter.Tendsto (fun s : ℝ => s / (s^2 + y^2)) Filter.atTop (nhds 0) := by
+  rw [Metric.tendsto_atTop]
+  intro ε hε
+  use max 1 (2/ε)
+  intro s hs
+  rw [Real.dist_eq, sub_zero]
+  have hs_pos : s > 0 := by linarith [le_max_left 1 (2/ε), hs]
+  have h_pos : s^2 + y^2 > 0 := by positivity
+  rw [abs_of_pos (div_pos hs_pos h_pos)]
+  have h_denom : s^2 + y^2 ≥ s^2 := by linarith [sq_nonneg y]
+  have h_bound : s / (s^2 + y^2) ≤ 1/s := by
+    calc s / (s^2 + y^2) = s * (1/(s^2 + y^2)) := by ring
+      _ ≤ s * (1/s^2) := mul_le_mul_of_nonneg_left
+          (one_div_le_one_div_of_le (sq_pos_of_pos hs_pos) h_denom) (le_of_lt hs_pos)
+      _ = 1/s := by field_simp; ring
+  have hs_ge : s ≥ 2/ε := le_of_max_le_right hs
+  have hs2 : s > 1/ε := by linarith [div_lt_div_of_pos_right (by norm_num : (2:ℝ) > 1) hε]
+  have h1 : s * ε > 1 := by
+    have hε_ne : ε ≠ 0 := ne_of_gt hε
+    calc s * ε > (1/ε) * ε := mul_lt_mul_of_pos_right hs2 hε
+      _ = 1 := div_mul_cancel₀ 1 hε_ne
+  have h_ineq : 1/s < ε := by rw [div_lt_iff hs_pos]; linarith
+  linarith [h_bound, h_ineq]
 
-    **Explicit computation**: ∫ (1/π)(s² - y²)/(s² + y²)² ds
-    = (1/π) · [-s/(s² + y²)]_{-∞}^{∞}
-    = (1/π) · (0 - 0) = 0
+/-- s/(s² + y²) → 0 as s → -∞. -/
+lemma tendsto_div_sq_atBot {y : ℝ} (hy : 0 < y) :
+    Filter.Tendsto (fun s : ℝ => s / (s^2 + y^2)) Filter.atBot (nhds 0) := by
+  have h_top := tendsto_div_sq_atTop hy
+  have h_neg : Filter.Tendsto (fun s : ℝ => -s / (s^2 + y^2)) Filter.atTop (nhds 0) := by
+    have := h_top.neg; simp only [neg_zero] at this
+    convert this using 1; funext s; ring
+  convert (h_neg.comp Filter.tendsto_neg_atBot_atTop) using 1
+  funext s; simp only [Function.comp_apply, neg_neg, neg_sq]
 
-    This requires the fundamental theorem of calculus for improper integrals,
-    which is subtle in Lean/Mathlib. -/
-axiom poissonKernel_dy_integral_zero {y : ℝ} (hy : 0 < y) :
-    ∫ s : ℝ, poissonKernel_dy s y = 0
+/-- The antiderivative tends to 0 at +∞. -/
+lemma tendsto_poisson_dy_antideriv_atTop {y : ℝ} (hy : 0 < y) :
+    Filter.Tendsto (poisson_dy_antideriv y) Filter.atTop (nhds 0) := by
+  unfold poisson_dy_antideriv; simp only [hy, if_true]
+  have h := tendsto_div_sq_atTop hy
+  have h_eq : (fun s => -s / (Real.pi * (s^2 + y^2))) =
+              (fun s => (-1/Real.pi) * (s / (s^2 + y^2))) := by
+    funext s; have hpi : Real.pi ≠ 0 := ne_of_gt Real.pi_pos
+    have h_pos : s^2 + y^2 > 0 := by positivity
+    field_simp [hpi, ne_of_gt h_pos]
+  rw [h_eq]
+  have h_mul := h.const_mul (-1/Real.pi)
+  convert h_mul using 1
+  ring_nf
+
+/-- The antiderivative tends to 0 at -∞. -/
+lemma tendsto_poisson_dy_antideriv_atBot {y : ℝ} (hy : 0 < y) :
+    Filter.Tendsto (poisson_dy_antideriv y) Filter.atBot (nhds 0) := by
+  unfold poisson_dy_antideriv; simp only [hy, if_true]
+  have h := tendsto_div_sq_atBot hy
+  have h_eq : (fun s => -s / (Real.pi * (s^2 + y^2))) =
+              (fun s => (-1/Real.pi) * (s / (s^2 + y^2))) := by
+    funext s; have hpi : Real.pi ≠ 0 := ne_of_gt Real.pi_pos
+    have h_pos : s^2 + y^2 > 0 := by positivity
+    field_simp [hpi, ne_of_gt h_pos]
+  rw [h_eq]
+  have h_mul := h.const_mul (-1/Real.pi)
+  convert h_mul using 1
+  ring_nf
+
+/-- The antiderivative has derivative poissonKernel_dy. -/
+lemma hasDerivAt_poisson_dy_antideriv {y : ℝ} (hy : 0 < y) (s : ℝ) :
+    HasDerivAt (poisson_dy_antideriv y) (poissonKernel_dy s y) s := by
+  unfold poisson_dy_antideriv poissonKernel_dy
+  simp only [hy, if_true]
+  have hpi : Real.pi ≠ 0 := ne_of_gt Real.pi_pos
+  have h_denom_pos : s^2 + y^2 > 0 := by positivity
+  have h_denom_ne : s^2 + y^2 ≠ 0 := ne_of_gt h_denom_pos
+  have h_full_ne : Real.pi * (s^2 + y^2) ≠ 0 := mul_ne_zero hpi h_denom_ne
+  have h_num : HasDerivAt (fun s => -s) (-1 : ℝ) s := by
+    have := (hasDerivAt_id s).neg; simp only [id_eq, neg_one_mul] at this; exact this
+  have h_inner : HasDerivAt (fun s => s^2 + y^2) (2 * s) s := by
+    have h1 : HasDerivAt (fun x => x^2) (2 * s) s := by
+      have := hasDerivAt_pow 2 s
+      simp only [Nat.cast_ofNat, Nat.succ_sub_succ_eq_sub, Nat.sub_zero, pow_one] at this
+      have h_eq : (s * 2 : ℝ) = 2 * s := by ring
+      exact h_eq ▸ this
+    have h2 := h1.add (hasDerivAt_const s (y^2))
+    simp only [add_zero] at h2
+    exact h2
+  have h_denom : HasDerivAt (fun s => Real.pi * (s^2 + y^2)) (Real.pi * (2 * s)) s :=
+    h_inner.const_mul Real.pi
+  have h := h_num.div h_denom h_full_ne
+  have h_goal : (-1 * (Real.pi * (s^2 + y^2)) - -s * (Real.pi * (2 * s))) / (Real.pi * (s^2 + y^2))^2 =
+                1 / Real.pi * (s^2 - y^2) / (s^2 + y^2)^2 := by
+    field_simp [hpi, h_denom_ne]; ring
+  rw [← h_goal]; exact h
+
+/-- **Theorem**: The y-derivative of Poisson kernel integrates to 0.
+
+    Proven via fundamental theorem of calculus:
+    - Antiderivative: F(s) = -s / (π(s² + y²))
+    - F'(s) = poissonKernel_dy(s, y)
+    - lim_{s→±∞} F(s) = 0
+
+    Therefore ∫ poissonKernel_dy = F(∞) - F(-∞) = 0 - 0 = 0. -/
+theorem poissonKernel_dy_integral_zero {y : ℝ} (hy : 0 < y) :
+    ∫ s : ℝ, poissonKernel_dy s y = 0 := by
+  have h := integral_of_hasDerivAt_of_tendsto
+    (fun s => hasDerivAt_poisson_dy_antideriv hy s)
+    (poissonKernel_dy_integrable_zero hy)
+    (tendsto_poisson_dy_antideriv_atBot hy)
+    (tendsto_poisson_dy_antideriv_atTop hy)
+  simp only [sub_self] at h; exact h
 
 /-- The translated integral ∫ poissonKernel_dy(x-t, y) dt is also 0. -/
 lemma poissonKernel_dy_integral_translated_zero (x : ℝ) {y : ℝ} (hy : 0 < y) :
