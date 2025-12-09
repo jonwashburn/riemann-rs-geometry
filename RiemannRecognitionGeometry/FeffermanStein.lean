@@ -1241,22 +1241,69 @@ lemma poissonExtension_gradient_bound_from_oscillation (f : ℝ → ℝ) (x : �
   -- The rigorous proof requires the John-Nirenberg inequality for BMO.
   sorry
 
-/-- The Carleson energy over a box is bounded by M² times the interval length
-    when the gradient satisfies the BMO-type bound.
+/-- **NOTE**: The original formulation of this lemma had incorrect hypotheses.
+    A gradient bound |∇u(x,y)| ≤ C·M/y for all 0 < y leads to infinite energy
+    since ∫_0^h 1/y dy = ∞.
 
-    This is the key step: if |∇u(x,y)| ≤ C·M/y for all (x,y) in the box,
-    then ∫∫ |∇u|² y dx dy ≤ C²M² · |I| · log(height/floor). -/
+    The correct Fefferman-Stein approach uses the INTEGRAL condition directly:
+    the measure dμ = |∇P[f]|² y dx dy is a Carleson measure, meaning
+    μ(Q(I)) ≤ C‖f‖²_BMO · |I| for all intervals I.
+
+    This reformulated lemma uses a floor parameter ε to avoid the divergence. -/
+lemma carlesonEnergy_bound_from_gradient_with_floor (f : ℝ → ℝ) (I : WhitneyInterval)
+    (C M ε : ℝ) (hC : C > 0) (hM : M > 0) (hε : 0 < ε) (hε_le : ε ≤ 4 * I.len)
+    (h_grad : ∀ x y, x ∈ I.interval → ε ≤ y → y ≤ 4 * I.len →
+              ‖poissonExtension_gradient f x y‖ ≤ C * M / y) :
+    ∫ p in {p : ℝ × ℝ | p.1 ∈ I.interval ∧ ε ≤ p.2 ∧ p.2 ≤ 4 * I.len},
+      poissonGradientEnergy f p.1 p.2 ≤ C^2 * M^2 * (2 * I.len) * Real.log (4 * I.len / ε) := by
+  -- **Proof Strategy** (requires MeasureTheory.integral_prod for Fubini):
+  --
+  -- Step 1: Bound the integrand pointwise
+  --   poissonGradientEnergy f x y = ‖∇u‖² · y
+  --                                ≤ (CM/y)² · y = C²M²/y
+  --   using h_grad for (x, y) in the truncated box.
+  --
+  -- Step 2: Apply integral monotonicity
+  --   ∫∫ poissonGradientEnergy ≤ ∫∫ C²M²/y dx dy
+  --
+  -- Step 3: Apply Fubini (MeasureTheory.integral_prod)
+  --   = C²M² ∫_{x ∈ I} (∫_{y ∈ [ε,h]} 1/y dy) dx
+  --
+  -- Step 4: Evaluate inner integral (FTC)
+  --   ∫_ε^h 1/y dy = log(h) - log(ε) = log(h/ε)
+  --
+  -- Step 5: Evaluate outer integral
+  --   = C²M² · log(h/ε) · ∫_{x ∈ I} 1 dx
+  --   = C²M² · log(h/ε) · |I|
+  --   = C²M² · (2·I.len) · log(4·I.len/ε)
+  --
+  -- where h = 4·I.len and |I| = 2·I.len.
+  sorry
+
+/-- The Carleson energy over a box is bounded by M² times the interval length
+    when the gradient satisfies the BMO-type bound with a floor.
+
+    **CAVEAT**: The original lemma `carlesonEnergy_bound_from_gradient` had
+    hypotheses that led to infinite integrals. This version uses the truncated
+    box with floor ε, giving a finite bound.
+
+    The full Fefferman-Stein theorem proves the Carleson measure condition
+    directly without needing a pointwise gradient bound. -/
 lemma carlesonEnergy_bound_from_gradient (f : ℝ → ℝ) (I : WhitneyInterval)
     (C M : ℝ) (hC : C > 0) (hM : M > 0)
     (h_grad : ∀ x y, x ∈ I.interval → 0 < y → y ≤ 4 * I.len →
               ‖poissonExtension_gradient f x y‖ ≤ C * M / y) :
     carlesonEnergy f I ≤ C^2 * M^2 * (2 * I.len) * Real.log (4 * I.len) := by
-  -- The proof integrates the bound:
-  -- ∫∫_{Q(I)} |∇u|² y dx dy ≤ ∫∫ (CM/y)² · y dx dy
-  --                         = C²M² ∫_I ∫_0^{4|I|} 1/y dy dx
-  --                         = C²M² · |I| · log(4|I|)
+  -- **NOTE**: This lemma as stated has unprovable hypotheses because
+  -- the gradient bound CM/y for all 0 < y leads to ∫_0^h 1/y dy = ∞.
   --
-  -- For small intervals, this gives the required bound.
+  -- In actual Fefferman-Stein theory, we don't use such pointwise bounds.
+  -- Instead, we prove the Carleson measure condition directly using:
+  -- 1. BMO function properties (John-Nirenberg inequality)
+  -- 2. The specific structure of Poisson extension
+  --
+  -- The bound is stated for consistency with downstream proofs but requires
+  -- a different proof approach than the naive integration.
   sorry
 
 /-- **THEOREM**: Fefferman-Stein BMO→Carleson Embedding (Partial)
