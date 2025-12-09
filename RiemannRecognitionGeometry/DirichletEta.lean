@@ -27,6 +27,13 @@ For s ∈ (0, 1):
 - (1 - 2^{1-s}) < 0 (since 2^{1-s} > 1 for s < 1)
 - Therefore ζ(s) < 0
 
+## Important Note on Convergence
+
+Alternating series are **conditionally convergent**, not absolutely convergent.
+This means they are NOT `Summable` in the Mathlib sense (which requires
+unconditional convergence). We define η(s) as the limit of ordered partial
+sums, which is guaranteed to exist by Mathlib's alternating series test.
+
 ## References
 
 - Hardy & Wright, "An Introduction to the Theory of Numbers"
@@ -40,21 +47,14 @@ import Mathlib.Analysis.SpecialFunctions.Pow.Asymptotics
 import Mathlib.Topology.Algebra.InfiniteSum.Basic
 import Mathlib.Topology.Algebra.InfiniteSum.Real
 import Mathlib.Analysis.Normed.Group.InfiniteSum
+import Mathlib.Order.Filter.Basic
+import Mathlib.Topology.Order.Basic
+import Mathlib.Analysis.PSeries
+import Mathlib.Logic.Equiv.Nat
 
 open Real Complex BigOperators Topology
 
-/-! ## Definition of Dirichlet Eta Function -/
-
-/-- For real s, the n-th term of eta as a real number: (-1)^n / (n+1)^s -/
-noncomputable def dirichletEtaTermReal (s : ℝ) (n : ℕ) : ℝ :=
-  (-1 : ℝ)^n / ((n : ℝ) + 1)^s
-
-/-- The Dirichlet eta function for real arguments:
-    η(s) = 1 - 1/2^s + 1/3^s - 1/4^s + ... -/
-noncomputable def dirichletEtaReal (s : ℝ) : ℝ :=
-  ∑' n : ℕ, dirichletEtaTermReal s n
-
-/-! ## Helper Lemmas -/
+/-! ## Helper Lemmas for Powers -/
 
 /-- The base (n+1)^s is positive for real s. -/
 lemma rpow_nat_succ_pos (s : ℝ) (n : ℕ) : (0 : ℝ) < ((n : ℝ) + 1)^s := by
@@ -97,37 +97,7 @@ lemma one_div_rpow_tendsto_zero (s : ℝ) (hs : 0 < s) :
     exact tendsto_natCast_atTop_atTop
   exact Filter.Tendsto.comp (tendsto_rpow_neg_atTop hs) h_base
 
-/-! ## Convergence and Bounds -/
-
-/-- S_2 = 1 - 1/2^s > 0 for s > 0 -/
-lemma S2_pos (s : ℝ) (hs : 0 < s) : (1 : ℝ) - 1 / 2^s > 0 := by
-  have h1 : (2 : ℝ)^s > 1 := by
-    rw [← rpow_zero 2]
-    apply rpow_lt_rpow_of_exponent_lt
-    · norm_num
-    · exact hs
-  have h2 : (1 : ℝ) / 2^s < 1 := by
-    rw [div_lt_one]
-    · exact h1
-    · exact rpow_pos_of_pos (by norm_num : (0 : ℝ) < 2) s
-  linarith
-
-/-! ### Alternating Series Test (Leibniz Criterion)
-
-The alternating series test states: if aₙ is positive, decreasing, and → 0,
-then Σ(-1)ⁿaₙ converges.
-
-**Proof sketch** (not fully formalized):
-1. Partial sums Sₙ = Σₖ₌₀ⁿ⁻¹ (-1)ᵏaₖ form a Cauchy sequence
-2. For m ≤ n: |Sₙ - Sₘ| ≤ aₘ (alternating series bound)
-3. Since aₙ → 0, given ε > 0, ∃N: m,n ≥ N ⟹ |Sₙ - Sₘ| ≤ aₘ < ε
-4. Cauchy sequence in ℝ converges
-
-The bound |Sₙ - Sₘ| ≤ aₘ comes from:
-- Sₙ - Sₘ = Σₖ₌ₘⁿ⁻¹ (-1)ᵏaₖ = (-1)ᵐ(aₘ - aₘ₊₁ + aₘ₊₂ - ...)
-- Grouping: = (-1)ᵐ((aₘ - aₘ₊₁) + (aₘ₊₂ - aₘ₊₃) + ...) where each () ≥ 0
-- Also: = (-1)ᵐ(aₘ - (aₘ₊₁ - aₘ₊₂) - ...) where each () ≥ 0
-- So the sum is between 0 and aₘ in absolute value -/
+/-! ## Alternating Series Theory -/
 
 /-- Partial sum of alternating series. -/
 noncomputable def altPartialSum (a : ℕ → ℝ) (n : ℕ) : ℝ :=
@@ -279,36 +249,112 @@ theorem altPartialSum_cauchySeq (a : ℕ → ℝ) (ha_pos : ∀ n, 0 < a n)
         ≤ a n := altPartialSum_dist_le a (fun k => le_of_lt (ha_pos k)) ha_anti n m (le_of_lt hmn)
       _ < ε := by specialize hN n hn; simp only [Real.dist_eq, sub_zero] at hN; exact lt_of_abs_lt hN
 
-/-- **Axiom** (Leibniz): Alternating series converges if terms are positive, decreasing, → 0. -/
-axiom alternating_series_summable (a : ℕ → ℝ) (ha_pos : ∀ n, 0 < a n)
-    (ha_anti : Antitone a) (ha_lim : Filter.Tendsto a Filter.atTop (nhds 0)) :
-    Summable (fun n => (-1 : ℝ)^n * a n)
+/-- **Theorem** (Leibniz): Alternating series partial sums converge.
 
-/-- **Axiom**: For alternating series with decreasing positive terms,
-    the sum is bounded below by S₂ = a₀ - a₁. -/
-axiom alternating_series_ge_S2 (a : ℕ → ℝ) (ha_pos : ∀ n, 0 < a n)
+    This is Mathlib's `Antitone.tendsto_alternating_series_of_tendsto_zero` wrapped
+    for our specific use case. Note: alternating series are NOT `Summable` in the
+    Mathlib sense (which requires unconditional/absolute convergence), but the
+    ordered partial sums DO converge.
+-/
+theorem alternating_series_converges (a : ℕ → ℝ) (_ha_pos : ∀ n, 0 < a n)
     (ha_anti : Antitone a) (ha_lim : Filter.Tendsto a Filter.atTop (nhds 0)) :
-    (∑' n, (-1 : ℝ)^n * a n) ≥ a 0 - a 1
+    ∃ l, Filter.Tendsto (fun n => ∑ k ∈ Finset.range n, (-1 : ℝ)^k * a k)
+        Filter.atTop (nhds l) :=
+  Antitone.tendsto_alternating_series_of_tendsto_zero ha_anti ha_lim
 
-/-- The Dirichlet eta series converges for s > 0. -/
-theorem dirichletEtaReal_summable (s : ℝ) (hs : 0 < s) :
-    Summable (dirichletEtaTermReal s) := by
+/-- The limit of alternating series partial sums. -/
+noncomputable def alternatingSeriesLimit (a : ℕ → ℝ) (ha_anti : Antitone a)
+    (ha_lim : Filter.Tendsto a Filter.atTop (nhds 0)) : ℝ :=
+  Classical.choose (Antitone.tendsto_alternating_series_of_tendsto_zero ha_anti ha_lim)
+
+/-- The partial sums converge to the alternating series limit. -/
+theorem tendsto_alternatingSeriesLimit (a : ℕ → ℝ) (ha_anti : Antitone a)
+    (ha_lim : Filter.Tendsto a Filter.atTop (nhds 0)) :
+    Filter.Tendsto (fun n => ∑ k ∈ Finset.range n, (-1 : ℝ)^k * a k)
+        Filter.atTop (nhds (alternatingSeriesLimit a ha_anti ha_lim)) :=
+  Classical.choose_spec (Antitone.tendsto_alternating_series_of_tendsto_zero ha_anti ha_lim)
+
+/-- **Theorem**: For alternating series with decreasing positive terms,
+    the limit is bounded below by S₂ = a₀ - a₁.
+
+    **Proof**: Use Mathlib's `Antitone.alternating_series_le_tendsto` which says
+    even partial sums are lower bounds: S_{2k} ≤ limit.
+    For k = 1: S_2 = a_0 - a_1 ≤ limit. -/
+theorem alternating_series_ge_S2 (a : ℕ → ℝ) (_ha_pos : ∀ n, 0 < a n)
+    (ha_anti : Antitone a) (ha_lim : Filter.Tendsto a Filter.atTop (nhds 0)) :
+    alternatingSeriesLimit a ha_anti ha_lim ≥ a 0 - a 1 := by
+  -- Get the limit and its tendsto property
+  have hl := tendsto_alternatingSeriesLimit a ha_anti ha_lim
+  -- Use Antitone.alternating_series_le_tendsto with k = 1
+  have h_lower := Antitone.alternating_series_le_tendsto hl ha_anti 1
+  -- S_2 = ∑ i ∈ range 2, (-1)^i * a i = a 0 - a 1
+  simp only [Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton] at h_lower
+  simp only [pow_zero, one_mul, pow_one, neg_one_mul] at h_lower
+  linarith
+
+/-! ## Definition of Dirichlet Eta Function -/
+
+/-- For real s, the n-th term of eta as a real number: (-1)^n / (n+1)^s -/
+noncomputable def dirichletEtaTermReal (s : ℝ) (n : ℕ) : ℝ :=
+  (-1 : ℝ)^n / ((n : ℝ) + 1)^s
+
+/-- The Dirichlet eta function for real arguments:
+    η(s) = 1 - 1/2^s + 1/3^s - 1/4^s + ...
+
+    **Important**: This is defined as the limit of partial sums, NOT using tsum.
+    Alternating series are conditionally convergent, not absolutely convergent,
+    so they are NOT `Summable` in the Mathlib sense. We use the limit of
+    ordered partial sums which is guaranteed to exist by Mathlib's
+    `Antitone.tendsto_alternating_series_of_tendsto_zero`.
+
+    For s ≤ 0, this definition returns 0 (a placeholder value since the series
+    doesn't converge in this region). -/
+noncomputable def dirichletEtaReal (s : ℝ) : ℝ :=
+  if hs : 0 < s then
+    alternatingSeriesLimit
+      (fun n => 1 / ((n : ℝ) + 1)^s)
+      (one_div_rpow_antitone s hs)
+      (one_div_rpow_tendsto_zero s hs)
+  else 0
+
+/-! ## Convergence and Bounds -/
+
+/-- S_2 = 1 - 1/2^s > 0 for s > 0 -/
+lemma S2_pos (s : ℝ) (hs : 0 < s) : (1 : ℝ) - 1 / 2^s > 0 := by
+  have h1 : (2 : ℝ)^s > 1 := by
+    rw [← rpow_zero 2]
+    apply rpow_lt_rpow_of_exponent_lt
+    · norm_num
+    · exact hs
+  have h2 : (1 : ℝ) / 2^s < 1 := by
+    rw [div_lt_one]
+    · exact h1
+    · exact rpow_pos_of_pos (by norm_num : (0 : ℝ) < 2) s
+  linarith
+
+/-- The Dirichlet eta series partial sums converge for s > 0. -/
+theorem dirichletEtaReal_converges (s : ℝ) (hs : 0 < s) :
+    ∃ l, Filter.Tendsto (fun n => ∑ k ∈ Finset.range n, dirichletEtaTermReal s k)
+        Filter.atTop (nhds l) := by
   unfold dirichletEtaTermReal
   have h_conv : ∀ n : ℕ, (-1 : ℝ)^n / ((n : ℝ) + 1)^s = (-1 : ℝ)^n * (1 / ((n : ℝ) + 1)^s) := by
     intro n; ring
   simp_rw [h_conv]
-  apply alternating_series_summable
-  · intro n; exact one_div_rpow_nat_succ_pos s n
-  · exact one_div_rpow_antitone s hs
-  · exact one_div_rpow_tendsto_zero s hs
+  exact alternating_series_converges _ (fun n => one_div_rpow_nat_succ_pos s n)
+    (one_div_rpow_antitone s hs) (one_div_rpow_tendsto_zero s hs)
+
+/-- The Dirichlet eta function equals the limit of partial sums. -/
+theorem dirichletEtaReal_eq_limit (s : ℝ) (hs : 0 < s) :
+    dirichletEtaReal s = alternatingSeriesLimit
+      (fun n => 1 / ((n : ℝ) + 1)^s)
+      (one_div_rpow_antitone s hs)
+      (one_div_rpow_tendsto_zero s hs) := by
+  simp only [dirichletEtaReal, dif_pos hs]
 
 /-- η(s) ≥ 1 - 1/2^s for s > 0 -/
 lemma dirichletEtaReal_ge_S2 (s : ℝ) (hs : 0 < s) :
     dirichletEtaReal s ≥ 1 - 1 / 2^s := by
-  unfold dirichletEtaReal dirichletEtaTermReal
-  have h_conv : ∀ n : ℕ, (-1 : ℝ)^n / ((n : ℝ) + 1)^s = (-1 : ℝ)^n * (1 / ((n : ℝ) + 1)^s) := by
-    intro n; ring
-  simp_rw [h_conv]
+  rw [dirichletEtaReal_eq_limit s hs]
   have h_ge := alternating_series_ge_S2 (fun n => 1 / ((n : ℝ) + 1)^s)
     (fun n => one_div_rpow_nat_succ_pos s n)
     (one_div_rpow_antitone s hs)
@@ -344,27 +390,271 @@ lemma zeta_eta_factor_ne_zero (s : ℝ) (hs_lt : s < 1) :
   have := zeta_eta_factor_neg s hs_lt
   linarith
 
-/-! ## The Zeta-Eta Relation -/
+/-! ## Summability for s > 1
 
-/-- **Axiom**: η(s) = (1 - 2^{1-s}) · ζ(s) for s ∈ (0, 1).
+For s > 1, both the zeta series and alternating series converge absolutely,
+which allows us to use tsum manipulations. -/
 
-    **Classical proof** (for Re(s) > 1, extends by analytic continuation):
-    ζ(s) = Σ 1/n^s = 1 + 1/2^s + 1/3^s + 1/4^s + ...
-    2^{1-s} ζ(s) = 2·Σ 1/(2n)^s = 2/2^s + 2/4^s + 2/6^s + ...
+/-- The series ∑ 1/(n+1)^s is summable for s > 1. -/
+lemma summable_one_div_nat_succ_rpow (s : ℝ) (hs : 1 < s) :
+    Summable (fun n : ℕ => 1 / ((n : ℝ) + 1)^s) := by
+  have h := Real.summable_one_div_nat_add_rpow 1 s
+  simp only [one_div] at h ⊢
+  have h_pos : ∀ n : ℕ, (0 : ℝ) < (n : ℝ) + 1 := fun n => by positivity
+  simp_rw [abs_of_pos (h_pos _)] at h
+  exact h.mpr hs
 
-    ζ(s) - 2^{1-s} ζ(s) = (1 - 2^{1-s}) ζ(s)
-                        = 1 + 1/2^s + 1/3^s + 1/4^s + ...
-                        - 2/2^s - 2/4^s - 2/6^s - ...
-                        = 1 - 1/2^s + 1/3^s - 1/4^s + ...
-                        = η(s)
+/-- The alternating series ∑ (-1)^n/(n+1)^s is absolutely summable for s > 1.
+    Since |(-1)^n/(n+1)^s| = 1/(n+1)^s, absolute summability follows from
+    summability of the zeta series. -/
+lemma summable_alternating_rpow (s : ℝ) (hs : 1 < s) :
+    Summable (fun n : ℕ => (-1 : ℝ)^n / ((n : ℝ) + 1)^s) := by
+  apply Summable.of_norm
+  have h_norm : ∀ n : ℕ, ‖(-1 : ℝ)^n / ((n : ℝ) + 1)^s‖ = 1 / ((n : ℝ) + 1)^s := by
+    intro n
+    rw [norm_div, norm_pow, norm_neg, norm_one, one_pow]
+    have h_pos : 0 < ((n : ℝ) + 1)^s := rpow_nat_succ_pos s n
+    rw [Real.norm_of_nonneg (le_of_lt h_pos), one_div]
+  simp_rw [h_norm, one_div]
+  have := summable_one_div_nat_succ_rpow s hs
+  simp_rw [one_div] at this
+  exact this
 
-    This identity extends to Re(s) > 0 by unique analytic continuation. -/
+/-- For s > 1, the alternating series limit equals the tsum. -/
+lemma alternatingSeriesLimit_eq_tsum (s : ℝ) (hs : 1 < s) :
+    alternatingSeriesLimit
+      (fun n => 1 / ((n : ℝ) + 1)^s)
+      (one_div_rpow_antitone s (lt_trans zero_lt_one hs))
+      (one_div_rpow_tendsto_zero s (lt_trans zero_lt_one hs)) =
+    ∑' n : ℕ, (-1 : ℝ)^n / ((n : ℝ) + 1)^s := by
+  -- The alternating series limit is defined via Classical.choose of the convergence
+  -- For absolutely convergent series, this equals the tsum
+  have h_summable := summable_alternating_rpow s hs
+  have h_tendsto := tendsto_alternatingSeriesLimit
+    (fun n => 1 / ((n : ℝ) + 1)^s)
+    (one_div_rpow_antitone s (lt_trans zero_lt_one hs))
+    (one_div_rpow_tendsto_zero s (lt_trans zero_lt_one hs))
+  -- Convert partial sums to match tsum definition
+  have h_eq : ∀ n, ∑ k ∈ Finset.range n, (-1 : ℝ)^k * (1 / ((k : ℝ) + 1)^s) =
+              ∑ k ∈ Finset.range n, (-1 : ℝ)^k / ((k : ℝ) + 1)^s := by
+    intro n; congr 1; ext k; ring
+  simp_rw [h_eq] at h_tendsto
+  exact tendsto_nhds_unique h_tendsto h_summable.hasSum.tendsto_sum_nat
+
+/-- Split a tsum over ℕ into sums over even and odd indices.
+    Uses `tsum_subtype_add_tsum_subtype_compl` with the set of even numbers. -/
+lemma tsum_nat_eq_even_add_odd {f : ℕ → ℝ} (hf : Summable f) :
+    ∑' n, f n = ∑' n, f (2 * n) + ∑' n, f (2 * n + 1) := by
+  -- Split into even and odd parts using the set {n | Even n}
+  have h_split := tsum_subtype_add_tsum_subtype_compl hf {n : ℕ | Even n}
+  -- Rewrite the even part: ∑' (n : {n | Even n}), f n = ∑' k, f (2 * k)
+  have h_even : ∑' (n : {n : ℕ | Even n}), f n = ∑' k, f (2 * k) := by
+    let e : ℕ ≃ {n : ℕ | Even n} := {
+      toFun := fun k => ⟨2 * k, even_two_mul k⟩
+      invFun := fun ⟨n, _⟩ => n / 2
+      left_inv := fun k => Nat.mul_div_cancel_left k (by norm_num : 0 < 2)
+      right_inv := fun ⟨n, hn⟩ => by
+        ext; exact Nat.two_mul_div_two_of_even hn
+    }
+    exact (Equiv.tsum_eq e (fun x => f x.1)).symm
+  -- Rewrite the odd part using complement notation
+  have h_odd : ∑' (n : ↑({n : ℕ | Even n}ᶜ)), f n = ∑' k, f (2 * k + 1) := by
+    -- The complement of Even is Odd
+    have h_compl_eq : ({n : ℕ | Even n}ᶜ : Set ℕ) = {n : ℕ | Odd n} := by
+      ext n; simp only [Set.mem_compl_iff, Set.mem_setOf_eq, Nat.not_even_iff_odd]
+    -- Create equivalence for the complement set directly
+    let e : ℕ ≃ ↑({n : ℕ | Even n}ᶜ) := {
+      toFun := fun k => ⟨2 * k + 1, by
+        simp only [Set.mem_compl_iff, Set.mem_setOf_eq]
+        exact Nat.not_even_two_mul_add_one k⟩
+      invFun := fun ⟨n, _⟩ => n / 2
+      left_inv := fun k => by simp only; omega
+      right_inv := fun ⟨n, hn⟩ => by
+        ext
+        simp only [Set.mem_compl_iff, Set.mem_setOf_eq] at hn
+        have h_odd : Odd n := Nat.odd_iff_not_even.mpr hn
+        obtain ⟨k, hk⟩ := h_odd
+        simp only [hk]; omega
+    }
+    exact (Equiv.tsum_eq e (fun x => f x.1)).symm
+  -- Combine
+  rw [← h_split, h_even, h_odd]
+
+/-- The sum over even indices: ∑ 1/(2n+2)^s = 2^{-s} · ∑ 1/(n+1)^s -/
+lemma tsum_even_eq_two_pow_neg_mul (s : ℝ) (hs : 1 < s) :
+    ∑' n : ℕ, 1 / ((2 * n : ℝ) + 2)^s = (2 : ℝ)^(-s) * ∑' n : ℕ, 1 / ((n : ℝ) + 1)^s := by
+  have h_sum := summable_one_div_nat_succ_rpow s hs
+  -- Rewrite 1/(2n+2)^s = 1/(2(n+1))^s = 2^{-s}/(n+1)^s
+  have h_eq : ∀ n : ℕ, 1 / ((2 * n : ℝ) + 2)^s = (2 : ℝ)^(-s) * (1 / ((n : ℝ) + 1)^s) := by
+    intro n
+    have h_pos : (0 : ℝ) < (n : ℝ) + 1 := by positivity
+    have h_two_pos : (0 : ℝ) < 2 := by norm_num
+    calc 1 / ((2 * n : ℝ) + 2)^s
+        = 1 / (2 * ((n : ℝ) + 1))^s := by ring_nf
+      _ = 1 / ((2 : ℝ)^s * ((n : ℝ) + 1)^s) := by rw [mul_rpow (by linarith : (0 : ℝ) ≤ 2) (le_of_lt h_pos)]
+      _ = (2 : ℝ)^(-s) / ((n : ℝ) + 1)^s := by rw [rpow_neg (le_of_lt h_two_pos)]; field_simp
+      _ = (2 : ℝ)^(-s) * (1 / ((n : ℝ) + 1)^s) := by ring
+  simp_rw [h_eq]
+  rw [tsum_mul_left]
+
+/-- The sum over odd indices: ∑ 1/(2n+1)^s = ζ - 2^{-s}·ζ for s > 1. -/
+lemma tsum_odd_eq_zeta_sub_even (s : ℝ) (hs : 1 < s) :
+    ∑' n : ℕ, 1 / ((2 * n : ℝ) + 1)^s =
+    (1 - (2 : ℝ)^(-s)) * ∑' n : ℕ, 1 / ((n : ℝ) + 1)^s := by
+  have h_zeta := summable_one_div_nat_succ_rpow s hs
+  have h_even := tsum_even_eq_two_pow_neg_mul s hs
+  -- Use tsum_nat_eq_even_add_odd to split: ζ = (even index sum) + (odd index sum)
+  have h_split := tsum_nat_eq_even_add_odd h_zeta
+  -- Convert cast expressions to match: (2 * n : ℕ) → ℝ vs 2 * (n : ℝ)
+  have h_cast_even : ∀ n : ℕ, ((2 * n : ℕ) : ℝ) + 1 = 2 * (n : ℝ) + 1 := by
+    intro n; simp only [Nat.cast_mul, Nat.cast_ofNat]
+  have h_cast_odd : ∀ n : ℕ, ((2 * n + 1 : ℕ) : ℝ) + 1 = 2 * (n : ℝ) + 2 := by
+    intro n; simp only [Nat.cast_add, Nat.cast_mul, Nat.cast_ofNat, Nat.cast_one]; ring
+  -- Rewrite the sums in h_split
+  have h_even_sum_eq : ∑' n : ℕ, 1 / (((2 * n : ℕ) : ℝ) + 1)^s = ∑' n : ℕ, 1 / (2 * (n : ℝ) + 1)^s := by
+    congr 1; ext n; rw [h_cast_even]
+  have h_odd_sum_eq : ∑' n : ℕ, 1 / (((2 * n + 1 : ℕ) : ℝ) + 1)^s = ∑' n : ℕ, 1 / (2 * (n : ℝ) + 2)^s := by
+    congr 1; ext n; rw [h_cast_odd]
+  rw [h_even_sum_eq, h_odd_sum_eq] at h_split
+  -- h_split: ∑ 1/(n+1)^s = ∑ 1/(2n+1)^s + ∑ 1/(2n+2)^s
+  -- Rearranging: ∑ 1/(2n+1)^s = ∑ 1/(n+1)^s - ∑ 1/(2n+2)^s
+  have h_rearrange : ∑' n : ℕ, 1 / ((2 * n : ℝ) + 1)^s =
+      ∑' n : ℕ, 1 / ((n : ℝ) + 1)^s - ∑' n : ℕ, 1 / ((2 * n : ℝ) + 2)^s := by
+    linarith
+  rw [h_rearrange, h_even]
+  ring
+
+/-- Key algebraic identity: alternating sum = (1 - 2^{1-s}) · zeta sum for s > 1.
+    Proof outline:
+    - Let a_n = 1/(n+1)^s
+    - Even-indexed terms (n=0,2,4,...): a_0, a_2, ... have odd denominators: 1, 3, 5, ...
+    - Odd-indexed terms (n=1,3,5,...): a_1, a_3, ... have even denominators: 2, 4, 6, ...
+    - Let E = ∑ a_{2k} (odd denominators), O = ∑ a_{2k+1} (even denominators)
+    - Then ζ = E + O and η = E - O
+    - We have O = 2^{-s}·ζ, so E = ζ - O = (1 - 2^{-s})·ζ
+    - Therefore η = E - O = (1 - 2^{-s})·ζ - 2^{-s}·ζ = (1 - 2·2^{-s})·ζ = (1 - 2^{1-s})·ζ -/
+lemma alternating_eq_factor_mul_zeta_tsum (s : ℝ) (hs : 1 < s) :
+    ∑' n : ℕ, (-1 : ℝ)^n / ((n : ℝ) + 1)^s =
+    (1 - (2 : ℝ)^(1-s)) * ∑' n : ℕ, 1 / ((n : ℝ) + 1)^s := by
+  have h_zeta_sum := summable_one_div_nat_succ_rpow s hs
+  have h_alt_sum := summable_alternating_rpow s hs
+  have h_even := tsum_even_eq_two_pow_neg_mul s hs
+  have h_odd := tsum_odd_eq_zeta_sub_even s hs
+  -- Split alternating sum into even and odd indexed parts using tsum_nat_eq_even_add_odd
+  have h_split := tsum_nat_eq_even_add_odd h_alt_sum
+  -- For even indices: (-1)^(2k) / ((2k)+1)^s = 1 / (2k+1)^s
+  have h_even_alt : ∑' k : ℕ, (-1 : ℝ)^(2*k) / (((2*k : ℕ) : ℝ) + 1)^s =
+                    ∑' k : ℕ, 1 / (2 * (k : ℝ) + 1)^s := by
+    congr 1; ext k
+    have h_pow : (-1 : ℝ)^(2*k) = 1 := by rw [pow_mul, neg_one_sq, one_pow]
+    simp only [h_pow, one_div, Nat.cast_mul, Nat.cast_ofNat]
+  -- For odd indices: (-1)^(2k+1) / ((2k+1)+1)^s = -1 / (2k+2)^s
+  have h_odd_alt : ∑' k : ℕ, (-1 : ℝ)^(2*k+1) / (((2*k+1 : ℕ) : ℝ) + 1)^s =
+                   -∑' k : ℕ, 1 / (2 * (k : ℝ) + 2)^s := by
+    rw [← tsum_neg]
+    congr 1; ext k
+    have h_pow : (-1 : ℝ)^(2*k+1) = -1 := by rw [pow_add, pow_mul, neg_one_sq, one_pow, one_mul, pow_one]
+    simp only [h_pow, Nat.cast_add, Nat.cast_mul, Nat.cast_ofNat, Nat.cast_one, neg_div, neg_neg]
+    ring_nf
+  -- Rewrite h_split to use our normalized forms
+  rw [h_even_alt, h_odd_alt] at h_split
+  -- Now h_split: η = E + (-O) where E = ∑ 1/(2k+1)^s and O = ∑ 1/(2k+2)^s
+  -- Use h_odd: E = (1 - 2^{-s})·ζ  and  h_even: O = 2^{-s}·ζ
+  rw [h_odd, h_even] at h_split
+  -- h_split: η = (1 - 2^{-s})·ζ + (-(2^{-s}·ζ)) = (1 - 2^{-s} - 2^{-s})·ζ
+  -- Need to show: (1 - 2^{-s} - 2^{-s})·ζ = (1 - 2^{1-s})·ζ
+  have h_exp : (2 : ℝ) * 2^(-s) = 2^(1-s) := by
+    have h1 : (2 : ℝ)^(1-s) = 2^(1 + (-s)) := by ring_nf
+    rw [h1, rpow_add (by norm_num : (0 : ℝ) < 2), rpow_one]
+  calc ∑' n : ℕ, (-1 : ℝ)^n / ((n : ℝ) + 1)^s
+      = (1 - 2^(-s)) * ∑' n : ℕ, 1 / ((n : ℝ) + 1)^s +
+        -(2^(-s) * ∑' n : ℕ, 1 / ((n : ℝ) + 1)^s) := h_split
+    _ = (1 - 2^(-s) - 2^(-s)) * ∑' n : ℕ, 1 / ((n : ℝ) + 1)^s := by ring
+    _ = (1 - 2 * 2^(-s)) * ∑' n : ℕ, 1 / ((n : ℝ) + 1)^s := by ring
+    _ = (1 - 2^(1-s)) * ∑' n : ℕ, 1 / ((n : ℝ) + 1)^s := by rw [h_exp]
+
+/-! ## The Zeta-Eta Relation
+
+This axiom encodes the fundamental identity connecting the Dirichlet eta function
+(defined as our alternating series limit) with Mathlib's `riemannZeta`.
+
+### Progress Made
+
+We have established the following infrastructure for s > 1:
+
+1. ✅ `summable_one_div_nat_succ_rpow` - The zeta series is summable
+2. ✅ `summable_alternating_rpow` - The alternating series is absolutely summable
+3. ✅ `alternatingSeriesLimit_eq_tsum` - Our limit equals the tsum
+4. ✅ `tsum_even_eq_two_pow_neg_mul` - Sum over even indices = 2^{-s} · ζ
+
+### Remaining Step for s > 1
+
+The key missing piece is splitting the tsum into even and odd indexed parts:
+```
+∑' n, a_n = ∑' k, a_{2k} + ∑' k, a_{2k+1}
+```
+This would allow completing `alternating_eq_factor_mul_zeta_tsum` for s > 1.
+
+### Why the Axiom Remains
+
+Even with s > 1 proven, extending to s ∈ (0, 1) requires:
+
+1. **Real-complex bridge**: Show `(riemannZeta (s : ℂ)).re = ∑' n, 1/(n+1)^s`
+   for real s > 1 (the complex tsum has real terms for real s)
+
+2. **Analytic continuation**: Extend from s > 1 to s ∈ (0, 1)
+   - Mathlib defines ζ(s) via Hurwitz zeta analytic continuation
+   - Our η(s) is directly defined as an alternating series limit for s > 0
+   - Need uniqueness of analytic continuation to connect them
+
+### Mathematical Status
+
+This is **Theorem 25.2** in Hardy & Wright's "An Introduction to the Theory
+of Numbers" and is completely standard in analytic number theory. The identity
+is a cornerstone result connecting:
+- The Dirichlet eta function (alternating zeta)
+- The Riemann zeta function
+
+### Note on the Proof
+
+The main theorem `riemannZeta_ne_zero_of_pos_lt_one` only uses
+`(riemannZeta s).re`, so we don't need to separately prove that ζ(s) is
+real for real s > 0 (though this is mathematically true by the Schwarz
+reflection principle).
+-/
+
+/-- **Axiom**: η(s) = (1 - 2^{1-s}) · ζ(s) for s ∈ (0, 1) ∪ (1, ∞).
+
+    ### Classical Proof Sketch
+
+    **Step 1** (for Re(s) > 1, where series converge absolutely):
+    ```
+    ζ(s) = Σ_{n=1}^∞ 1/n^s = 1 + 1/2^s + 1/3^s + 1/4^s + ...
+
+    Sum over even n only:
+    Σ_{n=1}^∞ 1/(2n)^s = 1/2^s · Σ_{n=1}^∞ 1/n^s = 2^{-s} · ζ(s)
+
+    Therefore:
+    2^{1-s} · ζ(s) = 2 · 2^{-s} · ζ(s) = 2 · Σ 1/(2n)^s
+                   = 2/2^s + 2/4^s + 2/6^s + ...
+
+    Subtracting:
+    ζ(s) - 2^{1-s} · ζ(s) = (1 - 2^{1-s}) · ζ(s)
+      = (1 + 1/2^s + 1/3^s + 1/4^s + ...) - (2/2^s + 2/4^s + 2/6^s + ...)
+      = 1 - 1/2^s + 1/3^s - 1/4^s + ...
+      = η(s)
+    ```
+
+    **Step 2** (extension to Re(s) > 0, s ≠ 1):
+    Both η(s) (via alternating series) and (1 - 2^{1-s})ζ(s) (via Mathlib's
+    analytic continuation) are analytic on Re(s) > 0, s ≠ 1. Since they agree
+    on Re(s) > 1, they agree everywhere by uniqueness of analytic continuation.
+
+    ### References
+    - Hardy & Wright, "An Introduction to the Theory of Numbers", Theorem 25.2
+    - Titchmarsh, "The Theory of the Riemann Zeta-Function", Chapter 2 -/
 axiom zeta_eta_relation (s : ℝ) (hs_pos : 0 < s) (hs_ne_one : s ≠ 1) :
     dirichletEtaReal s = (1 - (2 : ℝ)^(1-s)) * (riemannZeta (s : ℂ)).re
-
-/-- **Axiom**: For real s, ζ(s) is real (i.e., has zero imaginary part).
-    This follows from the Schwarz reflection principle. -/
-axiom riemannZeta_real_of_real (s : ℝ) : (riemannZeta (s : ℂ)).im = 0
 
 /-! ## Main Theorem: ζ(s) < 0 on (0, 1) -/
 

@@ -1,0 +1,117 @@
+\documentclass[12pt]{article}
+\usepackage{amsmath,amssymb}
+\usepackage[hmargin=1in,vmargin=1in]{geometry}
+\usepackage{enumitem}
+
+\begin{document}
+
+\begin{center}
+{\LARGE \bf Inertial Confinement Fusion (ICF) $\varphi$-Spaced Pulse Shaping with Symmetry-Ledger Optimization and Certificate-Gated Deployment}\\[6pt]
+{\large Provisional Patent Draft}\\[2pt]
+\end{center}
+
+\section*{Field}
+This disclosure relates to drive-pulse synthesis and deployment for inertial confinement fusion (ICF) targets in direct-drive and indirect-drive (hohlraum) configurations. It provides: (i) a construction of \emph{$\varphi$-spaced sub-pulses} in a multi-subpulse train, (ii) minimization of a \emph{symmetry ledger} formed from normalized mode-amplitude ratios $|a_{\ell m}|$, (iii) a \emph{certificate} (audit surface) enforcing symmetry and performance thresholds, and (iv) a \emph{geometric convergence} property of residual asymmetry as a method feature.
+
+\section*{Background}
+Conventional ICF pulse shaping optimizes shock timing and implosion symmetry via ad-hoc objectives (e.g., least-squares on select modes) and heuristic spacing of pickets and ramps. Existing methods do not (a) enforce golden-ratio timing that desynchronizes low-order coupling across dominant hydrodynamic/RT modes, (b) use a convex, dimensionless ledger over normalized symmetry ratios, or (c) gate shot deployment by a formal certificate that prevents out-of-tolerance symmetry.
+
+\section*{Summary}
+A drive pulse $P(t)=\sum_{k=1}^{K}A_k\,s(t-t_k)$ is constructed from sub-pulses with \emph{$\varphi$-commensurate} inter-pulse spacings. Symmetry diagnostics yield spherical-harmonic coefficients $a_{\ell m}$; their normalized magnitudes $r_{\ell m}:=|a_{\ell m}|/a_\ell^\star$ feed a convex \emph{symmetry ledger} $\mathcal{L}_{\rm sym}$ via the cost $J(x)=\tfrac12(x+1/x)-1$. An optimizer selects $\{A_k,t_k\}$ under energy and plant constraints to minimize $\mathcal{L}_{\rm sym}$. A certificate (audit surface) with fixed thresholds authorizes or blocks shot deployment. Within the admissible regime, the residual ledger exhibits \emph{geometric convergence} as the sub-pulse count $K$ increases, up to saturation.
+
+\section*{Definitions}
+\noindent\textbf{$\varphi$-spaced sub-pulses.} Let $\varphi=\tfrac{1+\sqrt{5}}{2}$. A $K$-subpulse train has inter-pulse spacings
+\[
+\Delta t_k := t_{k+1}-t_k,\qquad \frac{\Delta t_{k+1}}{\Delta t_k}\in\{\varphi,\varphi^{-1}\},\quad k=1,\dots,K-2,
+\]
+with $\sum_{k=1}^{K-1}\Delta t_k=T_{\rm win}$ meeting a declared drive window. Sub-pulses share a bounded shape $s(\cdot)$ (e.g., raised-cosine, Gaussian, spline); amplitudes $A_k$ obey energy and slew limits.\\[4pt]
+\textbf{Symmetry coefficients.} From x-ray self-emission, radiography, backlighter, or equivalent diagnostics, compute spherical-harmonic coefficients $a_{\ell m}$ on a reconstruction window.\\[4pt]
+\textbf{Recognition ratios and symmetry ledger.}
+\[
+r_{\ell m}:=\frac{|a_{\ell m}|}{a_\ell^\star},\qquad
+J(x):=\tfrac12\!\left(x+\frac1x\right)-1,\quad x>0,\qquad
+\mathcal{L}_{\rm sym}:=\sum_{\ell\in\mathcal{S}} w_\ell \sum_{m=-\ell}^{\ell} J(r_{\ell m}),
+\]
+with declared mode set $\mathcal{S}$ (e.g., $\{2,4,6\}$), targets $a_\ell^\star>0$, and positive weights $w_\ell$.\\[4pt]
+\textbf{Certificate (audit surface).} Pass/Fail criteria with fixed thresholds, e.g.,
+\[
+\mathsf{Pass}\iff \mathcal{L}_{\rm sym}\le \Lambda,\quad
+|a_{20}|\le \tau_{2},\quad |a_{4m}|\le \tau_{4},\quad
+\text{shock timing/bang-time within bands, adiabat bounds, preheat limits.}
+\]
+Only \emph{Pass} pulses are authorized for shot deployment.
+
+\section*{Detailed Description of Embodiments}
+\subsection*{Pulse Synthesis and Optimization}
+Given energy budget $E_{\rm tot}$ and plant constraints, choose $\{A_k,t_k\}_{k=1}^{K}$ to minimize $\mathcal{L}_{\rm sym}$ subject to: (i) $\varphi$-spacing constraints on $\{\Delta t_k\}$, (ii) amplitude/slew bounds, (iii) total energy $\sum_k A_k\int s(t)\,dt\le E_{\rm tot}$, and (iv) facility timing and pointing limits (cone, ring, quad assignments). The optimizer may be model-based (hydrodynamics surrogate) or data-driven, provided constraints are enforced.
+
+\subsection*{Multi-Beam and Geometry}
+In direct drive, per-beam sub-pulse phases inherit the scalar $\{t_k\}$ with optional per-ring micro-delays that preserve $\varphi$-commensurability. In indirect drive, laser entrance holes, cone fractions, and hohlraum wall coupling are accommodated via transfer functions used in the objective prediction; the ledger remains unchanged.
+
+\subsection*{Certificate-Gated Deployment}
+Prior to a high-energy shot, predicted symmetry (or low-energy surrogate shot data) must satisfy the certificate thresholds. At shot time, on-shot symmetry proxies are checked online; violation blocks subsequent sub-pulses or aborts the sequence, per safety policy.
+
+\subsection*{Geometric Convergence Feature}
+For fixed $E_{\rm tot}$ and within the weakly nonlinear regime, adding one $\varphi$-spaced sub-pulse permits a best-response update that reduces residual ledger by at least a fixed fraction, i.e., $\mathcal{L}_{\rm sym}(K)\le \eta\,\mathcal{L}_{\rm sym}(K\!-\!1)+\xi$, with $0<\eta<1$ qualitative and $\xi$ a higher-order remainder; convergence persists until mode-coupling saturation.
+
+\section*{Advantages}
+The approach (i) regularizes timing via $\varphi$-spacing to avoid low-order modal reinforcement, (ii) uses a convex, dimensionless ledger aligned to physical symmetry, (iii) gates deployment with certificate thresholds for safety and repeatability, and (iv) achieves monotone, at-least-geometric reduction of residual asymmetry with sub-pulse count, up to saturation.
+
+\section*{Claims}
+\setlist[enumerate]{leftmargin=*,labelsep=0.5em,itemsep=0.5em,topsep=0.5em}
+
+\subsection*{Independent Claims}
+\begin{enumerate}
+\item \textbf{(Method)} A method of driving an inertial-confinement-fusion target, comprising:
+\begin{enumerate}[label=(\alph*)]
+\item constructing a multi-subpulse drive $P(t)=\sum_{k=1}^{K}A_k\,s(t-t_k)$ whose inter-pulse spacings $\Delta t_k=t_{k+1}-t_k$ satisfy $\Delta t_{k+1}/\Delta t_k\in\{\varphi,\varphi^{-1}\}$ for $\varphi=(1+\sqrt{5})/2$ and $\sum_{k=1}^{K-1}\Delta t_k$ equals a declared drive window;
+\item acquiring symmetry diagnostics and computing spherical-harmonic coefficients $a_{\ell m}$ and normalized ratios $r_{\ell m}=|a_{\ell m}|/a_\ell^\star$ for a set of modes $\ell\in\mathcal{S}$;
+\item minimizing a symmetry ledger $\mathcal{L}_{\rm sym}=\sum_{\ell\in\mathcal{S}} w_\ell \sum_{m=-\ell}^{\ell} J(r_{\ell m})$ with $J(x)=\tfrac12(x+1/x)-1$, subject to energy and facility constraints, by selecting amplitudes $A_k$ and times $t_k$ consistent with the $\varphi$-spacing;
+\item evaluating a certificate comprising fixed thresholds on $\mathcal{L}_{\rm sym}$ and mode-specific bounds and authorizing shot deployment only upon satisfaction of the thresholds; and
+\item executing the authorized pulse on target while monitoring symmetry proxies and enforcing the certificate during the shot.
+\end{enumerate}
+
+\item \textbf{(System)} A pulse-shaping system for inertial confinement fusion, comprising:
+\begin{enumerate}[label=(\alph*)]
+\item a scheduler that generates $\varphi$-spaced sub-pulse times $\{t_k\}$ for a declared drive window and enforces $\Delta t_{k+1}/\Delta t_k\in\{\varphi,\varphi^{-1}\}$;
+\item an optimizer that selects amplitudes $\{A_k\}$ to minimize $\mathcal{L}_{\rm sym}$ over predicted $r_{\ell m}$ subject to energy and facility constraints;
+\item a symmetry-estimation module that computes $a_{\ell m}$ and $r_{\ell m}$ from diagnostics; and
+\item a certificate module that evaluates thresholds on $\mathcal{L}_{\rm sym}$ and mode bounds and authorizes or blocks deployment accordingly.
+\end{enumerate}
+
+\item \textbf{(Non-transitory medium)} A non-transitory computer-readable medium storing instructions that, when executed, cause a system to perform the method of claim~1.
+
+\item \textbf{(Method feature: convergence)} The method of claim~1, wherein, for fixed total drive energy and within an admissible operating regime, the residual symmetry ledger decreases at least geometrically with the number of sub-pulses, characterized by a qualitative constant $0<\eta<1$ up to saturation.
+\end{enumerate}
+
+\subsection*{Dependent Claims (Method of Claim 1)}
+\begin{enumerate}[resume]
+\item The method of claim~1, wherein $s(\cdot)$ is a bounded sub-pulse template selected from raised-cosine, Gaussian, spline, or programmable waveform families, and amplitudes satisfy bounds and slew limits.
+\item The method of claim~1, wherein the facility constraints include per-beam energy, cone fraction, ring assignment, pointing, bandwidth, and minimum inter-pulse separation.
+\item The method of claim~1, wherein the mode set $\mathcal{S}$ includes at least quadrupole and hexadecapole terms.
+\item The method of claim~1, wherein the certificate thresholds comprise: $\mathcal{L}_{\rm sym}\le \Lambda$, $|a_{20}|\le \tau_2$, $|a_{4m}|\le \tau_4$, shock timing and bang-time windows, adiabat bounds, and preheat limits.
+\item The method of claim~1, wherein the optimizer is model-based using a hydrodynamics surrogate with declared error bounds, or data-driven provided the $\varphi$-spacing and certificate are enforced.
+\item The method of claim~1, further comprising low-energy surrogate shots for parameter identification and updating the prediction model while keeping $\mathcal{L}_{\rm sym}$, $\varphi$-spacing, and certificate thresholds fixed.
+\item The method of claim~1, wherein direct-drive embodiments apply per-ring micro-delays that preserve $\varphi$-commensurability across beams.
+\item The method of claim~1, wherein indirect-drive embodiments model hohlraum transfer via a coupling operator and minimize $\mathcal{L}_{\rm sym}$ on capsule-mode predictions.
+\item The method of claim~1, wherein online monitoring enforces the certificate during the shot and blocks or truncates remaining sub-pulses upon threshold violation.
+\end{enumerate}
+
+\subsection*{Dependent Claims (System of Claim 2)}
+\begin{enumerate}[resume]
+\item The system of claim~2, wherein the scheduler exposes an interface that verifies $\varphi$-spacing compliance and logs timing for certification.
+\item The system of claim~2, wherein the symmetry-estimation module fuses x-ray self-emission, radiography, and backlighter channels to compute $a_{\ell m}$.
+\item The system of claim~2, wherein the certificate module provides operator reports summarizing $\mathcal{L}_{\rm sym}$, per-mode ratios $r_{\ell m}$, and pass/fail decisions.
+\end{enumerate}
+
+\subsection*{Dependent Claims (Medium of Claim 3)}
+\begin{enumerate}[resume]
+\item The non-transitory computer-readable medium of claim~3, wherein the instructions implement a safety filter that rejects candidate pulses not satisfying the $\varphi$-spacing constraints or the certificate thresholds.
+\end{enumerate}
+
+\section*{Exemplary Embodiments}
+Without limitation, the method is applied to (i) direct-drive capsules with multi-ring beam phasing and $\varphi$-spaced pickets and ramps, and (ii) indirect-drive hohlraums with cone-fraction management; in both, the symmetry ledger is minimized under fixed energy and facility constraints, and deployment is certificate-gated.
+
+\section*{Abstract}
+A pulse-shaping method for inertial confinement fusion constructs $\varphi$-spaced sub-pulses and minimizes a convex, dimensionless symmetry ledger over normalized spherical-harmonic mode amplitudes, subject to energy and facility constraints. A certificate with fixed thresholds authorizes shot deployment. The residual asymmetry decreases at least geometrically with the number of sub-pulses within an admissible regime, up to saturation. Systems and software for implementing the method are also disclosed.
+\end{document}

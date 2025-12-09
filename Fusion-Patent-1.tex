@@ -1,0 +1,99 @@
+\documentclass[12pt]{article}
+\usepackage{amsmath,amssymb}
+\usepackage[hmargin=1in,vmargin=1in]{geometry}
+\usepackage{enumitem}
+
+\begin{document}
+
+\begin{center}
+{\LARGE \bf Magnetic Confinement Plasma Controller with Ledger-Objective Optimization, $\varphi$-Timed Actuation, and Certificate-Gated Deployment}\\[6pt]
+{\large Provisional Patent Draft}\\[2pt]
+\end{center}
+
+\section*{Field}
+This disclosure relates to control of magnetically confined plasmas (tokamaks, stellarators, spherical tokamaks, and related devices). It provides a controller that optimizes a convex, dimensionless ledger objective formed from normalized plasma diagnostics, enforces $\varphi$-timed multi-actuator updates on an eight-phase schedule, and deploys only when certificate (audit-surface) acceptance criteria are satisfied. The disclosure also covers periodic model predictive control (MPC) and reinforcement learning (RL) implementations that enforce the same constraints via a safety filter.
+
+\section*{Background}
+Multi-actuator plasma control commonly suffers from cross-interference (``actuator fighting''), fragile objective choices (mean-square errors that do not correlate with transport or stability), and ad-hoc per-shot tuning. Existing approaches lack a principled timing scheme to desynchronize actuator updates across dominant plasma modes and rarely embed a formal acceptance gate that blocks unsafe or non-beneficial policies before application to the plant.
+
+\section*{Summary}
+The controller constructs \emph{recognition ratios} by normalizing measured diagnostics against declared target values, aggregates them with a convex, symmetric ledger cost $J(x)$, and minimizes the resulting objective under plant constraints. Actuators are scheduled in eight discrete update windows per control period whose durations are $\varphi$-commensurate. A built-in audit surface enforces pass/fail thresholds on risk, impurities, transport proxies, and tracking error; policies that do not pass are automatically rejected or modified. The controller can be realized as periodic MPC or as RL with a safety filter that guarantees $\varphi$-gating and certificate compliance.
+
+\section*{Definitions}
+\noindent\textbf{Recognition ratios.} For each diagnostic channel $i$, $r_i := y_i / y_i^\star$ with $y_i^\star>0$ a declared, fixed target (possibly time-scheduled, but not tuned per shot).\\
+\textbf{Ledger cost.} $J(x) := \tfrac12(x+1/x)-1$ for $x>0$ (convex, symmetric, $J(1)=0$).\\
+\textbf{$\varphi$-timed eight-phase schedule.} A control period is partitioned into eight disjoint windows $W_0,\dots,W_7$ with durations $\Delta t_\ell$ satisfying $\sum_{\ell=0}^{7}\Delta t_\ell = T$ and $\Delta t_{\ell+1}/\Delta t_\ell \in \{\varphi,\varphi^{-1}\}$ for $\varphi=(1+\sqrt{5})/2$. Each actuator $a$ has an assigned phase set $\Pi(a)\subseteq\{0,\dots,7\}$; setpoints for $a$ may change only within windows $W_\ell$ with $\ell\in\Pi(a)$.\\
+\textbf{Audit surface (certificate).} A vector of dimensionless acceptance metrics $\mathcal{A}(y)$ (including disruptivity risk, impurity and radiation fractions, transport proxies, and tracking error) compared to fixed thresholds $\theta$; a policy is applied to the plant only if $\mathcal{A}\le\theta$.
+
+\section*{Detailed Description of Embodiments}
+\subsection*{Magnetic Confinement Embodiment}
+Actuators include one or more of: neutral beam injection (NBI), electron cyclotron resonance heating (ECRH), ion cyclotron resonance heating (ICRH), pellet injection, gas puffing, resonant magnetic perturbations (RMP), shaping and poloidal/vertical stabilization coils. Diagnostics include one or more of: Thomson scattering, ECE radiometry, reflectometry, beam emission spectroscopy (BES), magnetic probes, soft X-ray, bolometry, neutron rate, loop voltage, and equilibrium reconstructions. Recognition ratios may include critical-gradient ratios $R/L_{T_e}$, $R/L_{T_i}$ normalized by declared critical values, shear ratios $\gamma_{E\times B}/\gamma^\star$, safety-factor profile metrics, and other dimensionless proxies.
+
+The controller minimizes the sum $\sum_i w_i J(r_i)$ over a finite horizon subject to plant and actuator constraints, while enforcing $\varphi$-timed updates. In a periodic MPC realization, the terminal set and terminal cost are eight-phase periodic, ensuring recursive feasibility and stability. In an RL realization, a safety filter solves the same constrained ledger problem at deployment time and applies the filtered action only if the audit surface passes.
+
+\subsection*{Graceful-Degradation Robustness}
+Under bounded model mismatch and disturbances, the closed-loop ledger objective remains within a computable tube and the audit metrics remain under thresholds when policies are accepted by the certificate. This provides a lower bound on confinement-factor improvement relative to baseline when the ledger objective is reduced by a declared amount.
+
+\section*{Advantages}
+The disclosed controller: (i) reduces multi-actuator cross-interference by phase desynchronization on an eight-phase $\varphi$ schedule, (ii) optimizes a physics-meaningful convex objective that correlates with transport and stability, and (iii) enforces safety and performance via a certificate gate, yielding portable, auditable control across devices.
+
+\section*{Claims}
+\setlist[enumerate]{leftmargin=*,labelsep=0.5em,itemsep=0.5em,topsep=0.5em}
+
+\subsection*{Independent Claims}
+\begin{enumerate}
+\item \textbf{(Method)} A method of controlling a magnetically confined plasma, comprising:
+\begin{enumerate}[label=(\alph*)]
+\item receiving plasma diagnostics and forming dimensionless recognition ratios $r_i = y_i / y_i^\star$ for a plurality of channels with declared targets $y_i^\star>0$;
+\item defining a control objective as a weighted sum of a convex ledger cost $J$ applied to the recognition ratios, the ledger cost being $J(x)=\tfrac12(x+1/x)-1$ for $x>0$;
+\item computing actuator setpoints subject to plant constraints so as to minimize the ledger objective over a control horizon;
+\item applying the actuator setpoints under a $\varphi$-timed eight-phase schedule that constrains setpoint changes for each actuator to one or more designated phase windows within each control period; and
+\item evaluating an audit surface comprising dimensionless acceptance metrics with fixed thresholds and deploying the computed setpoints to the plant only upon satisfaction of the thresholds.
+\end{enumerate}
+
+\item \textbf{(System)} A plasma control system for magnetic confinement, comprising:
+\begin{enumerate}[label=(\alph*)]
+\item a processor configured to receive diagnostics and compute recognition ratios;
+\item an optimizer configured to minimize a weighted sum of the ledger cost $J(x)=\tfrac12(x+1/x)-1$ over predicted recognition ratios subject to plant constraints;
+\item a $\varphi$-scheduler that partitions each control period into eight phase windows with $\varphi$-commensurate durations and enforces actuator updates only within designated windows; and
+\item an audit module that evaluates certificate metrics and authorizes deployment of setpoints only if acceptance thresholds are met.
+\end{enumerate}
+
+\item \textbf{(Non-transitory medium)} A non-transitory computer-readable medium storing instructions that, when executed by one or more processors, cause a plasma control system to perform the method of claim 1.
+\end{enumerate}
+
+\subsection*{Dependent Claims (Method of Claim 1)}
+\begin{enumerate}[resume]
+\item The method of claim 1, wherein the eight phase windows $W_0,\dots,W_7$ have durations $\Delta t_\ell$ satisfying $\Delta t_{\ell+1}/\Delta t_\ell \in \{\varphi,\varphi^{-1}\}$ and $\sum_{\ell=0}^{7}\Delta t_\ell = T$ for each control period.
+\item The method of claim 1, wherein actuator classes comprise one or more of: neutral beam injection, electron cyclotron resonance heating, ion cyclotron resonance heating, pellet injection, gas puffing, resonant magnetic perturbations, shaping coils, and vertical stabilization.
+\item The method of claim 1, wherein diagnostics comprise one or more of: Thomson scattering, electron cyclotron emission radiometry, reflectometry, beam emission spectroscopy, magnetic probes, soft X-ray, bolometry, neutron rate, loop voltage, and equilibrium reconstructions.
+\item The method of claim 1, wherein the recognition ratios include critical-gradient ratios $R/L_{T_e}$ and $R/L_{T_i}$ normalized by declared critical values, shear ratios $\gamma_{E\times B}/\gamma^\star$, safety-factor profile metrics, and radiation or impurity fractions normalized by targets.
+\item The method of claim 1, wherein the optimizer is a periodic model predictive controller with an eight-phase periodic terminal set and terminal cost ensuring recursive feasibility and closed-loop stability under the $\varphi$-timed schedule.
+\item The method of claim 1, wherein the control action proposed by a learned policy is filtered by solving a constrained ledger-minimization problem that enforces $\varphi$-gating and certificate thresholds, and only the filtered action is applied if the audit surface is satisfied.
+\item The method of claim 1, wherein actuator phase assignments $\Pi(a)$ include: pellets assigned to a single phase, resonant magnetic perturbations to a distinct phase, electron cyclotron heating to two phases for core and edge targeting, ion cyclotron heating to a single phase, neutral beams to two phases, and gas puffing to a single phase.
+\item The method of claim 1, further comprising identifying local sensitivity of recognition ratios to actuator perturbations via small, phase-separated probes and locking calibration once rank and condition-number thresholds are satisfied.
+\item The method of claim 1, wherein the audit surface includes thresholds on disruptivity risk, impurity fraction, radiation fraction, transport proxies, and tracking error, and a policy that does not satisfy the thresholds is automatically modified or rejected.
+\item The method of claim 1, wherein model mismatch and disturbances are bounded, and the closed-loop ledger objective remains within a computable bound implying a minimum improvement in a confinement-factor metric relative to baseline when the ledger objective is reduced by a declared amount.
+\item The method of claim 1, wherein the eight-phase schedule reduces cross-interference among actuators by a quantifiable factor relative to co-phased updates at equal duty.
+\item The method of claim 1, wherein the plant constraints include actuator saturation, slew limits, dwell times per phase window, and safety envelopes for plasma shape and position, and feasibility is maintained by periodic terminal invariance under the $\varphi$-timed schedule.
+\end{enumerate}
+
+\subsection*{Dependent Claims (System of Claim 2)}
+\begin{enumerate}[resume]
+\item The system of claim 2, wherein the optimizer employs a predictive plant model that is first-principles based, learned, or hybrid, with declared bounds on model error used by the audit module to compute acceptance margins.
+\item The system of claim 2, wherein the $\varphi$-scheduler exposes an interface that enforces window compliance for third-party controllers and logs compliance for certification.
+\item The system of claim 2, wherein the audit module logs acceptance decisions and the associated recognition ratios and certificate metrics for each control period and blocks actuator updates upon any threshold violation.
+\end{enumerate}
+
+\subsection*{Dependent Claims (Medium of Claim 3)}
+\begin{enumerate}[resume]
+\item The non-transitory computer-readable medium of claim 3, wherein the instructions further cause the system to generate an operator report summarizing ledger objective values, audit-surface metrics, phase-window compliance, and applied setpoints for each control period.
+\end{enumerate}
+
+\section*{Exemplary Embodiments}
+Without limitation, the method is applied to tokamak profile control with NBI, ECRH, ICRH, pellets, gas puffing, RMP, and shaping coils; recognition ratios include normalized critical gradients and shear; eight-phase $\varphi$-timed updates reduce cross-interference; the audit surface enforces disruptivity and impurity thresholds; and periodic MPC or RL with a safety filter provides closed-loop deployment.
+
+\section*{Abstract}
+A controller for magnetic-confinement plasmas optimizes a convex ledger objective of dimensionless recognition ratios derived from diagnostics, enforces $\varphi$-timed multi-actuator updates on an eight-phase schedule, and deploys only when a certificate (audit surface) is satisfied. The controller can be realized as periodic MPC or as RL with a safety filter. The approach reduces actuator cross-interference, improves transport and stability metrics in a predictable manner, and provides auditable, portable control across devices.
+
+\end{document}

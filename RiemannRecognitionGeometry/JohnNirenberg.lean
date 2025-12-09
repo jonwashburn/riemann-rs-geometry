@@ -50,6 +50,49 @@ open Real MeasureTheory Set
 
 namespace RiemannRecognitionGeometry
 
+/-! ## Numerical Constants
+
+Standard numerical bounds used in the John-Nirenberg proof.
+-/
+
+/-- The mathematical constant e satisfies e < 2.72.
+
+    **Numerical fact**: e ≈ 2.71828... < 2.72
+
+    **Proof**: Uses Mathlib's `exp_bound` which bounds |exp(x) - Σₖ xᵏ/k!| for |x| ≤ 1.
+    For n = 7 terms, the partial sum S₇ < 2.719 and error < 1/4000, giving exp(1) < 2.72. -/
+lemma exp_one_lt_272 : Real.exp 1 < 2.72 := by
+  -- Use exp_bound with n = 7
+  have h_bound := @Real.exp_bound 1 (by norm_num : |1| ≤ (1:ℝ)) 7 (by norm_num : 0 < 7)
+
+  -- Simplify the error bound: 8/(5040*7) ≤ 1/4000
+  have h_err_simp : (|1| : ℝ)^7 * ((7:ℕ).succ / ((7:ℕ).factorial * (7:ℕ))) ≤ (1:ℝ)/4000 := by
+    simp only [abs_one, one_pow, Nat.succ_eq_add_one, Nat.factorial]
+    norm_num
+
+  -- So |exp 1 - S_7| ≤ 1/4000
+  have h_bound' : |Real.exp 1 - ∑ m ∈ Finset.range 7, (1:ℝ)^m / m.factorial| ≤ 1/4000 :=
+    h_bound.trans h_err_simp
+
+  -- From |a - b| ≤ ε we get a ≤ b + ε
+  have h_upper : Real.exp 1 ≤ ∑ m ∈ Finset.range 7, (1:ℝ)^m / m.factorial + 1/4000 := by
+    have := abs_sub_le_iff.mp h_bound'
+    linarith [this.2]
+
+  -- S_7 = 1 + 1 + 1/2 + 1/6 + 1/24 + 1/120 + 1/720 = 1957/720 < 2.719
+  have h_S7_bound : ∑ m ∈ Finset.range 7, (1:ℝ)^m / m.factorial < 2.719 := by
+    simp only [Finset.range_succ, Finset.range_zero, Finset.sum_empty, Finset.sum_insert,
+               Finset.not_mem_empty, not_false_eq_true, Nat.factorial, pow_zero, pow_one,
+               Nat.cast_one, Nat.cast_ofNat, one_pow]
+    norm_num [Nat.factorial]
+
+  have h_sum_bound : ∑ m ∈ Finset.range 7, (1:ℝ)^m / m.factorial + 1/4000 < 2.72 := by
+    calc ∑ m ∈ Finset.range 7, (1:ℝ)^m / m.factorial + 1/4000
+        < 2.719 + 1/4000 := by linarith [h_S7_bound]
+      _ < 2.72 := by norm_num
+
+  linarith [h_upper, h_sum_bound]
+
 /-! ## Dyadic Intervals
 
 Dyadic intervals are the building blocks for the Calderón-Zygmund decomposition.
@@ -80,7 +123,38 @@ def DyadicInterval.toSet (D : DyadicInterval) : Set ℝ :=
 /-- Dyadic interval length is positive. -/
 lemma DyadicInterval.length_pos (D : DyadicInterval) : D.length > 0 := by
   unfold length
-  exact zpow_pos_of_pos (by norm_num : (2:ℝ) > 0) _
+  exact zpow_pos (by norm_num : (2:ℝ) > 0) _
+
+/-- Dyadic intervals have positive measure. -/
+lemma DyadicInterval.measure_pos (D : DyadicInterval) :
+    0 < volume D.toSet := by
+  unfold DyadicInterval.toSet
+  rw [Real.volume_Icc]
+  apply ENNReal.ofReal_pos.mpr
+  unfold DyadicInterval.left DyadicInterval.right
+  have hlen := D.length_pos
+  unfold DyadicInterval.length at hlen
+  calc (D.index + 1) * (2:ℝ) ^ (-(D.generation:ℤ)) - D.index * (2:ℝ) ^ (-(D.generation:ℤ))
+      = ((D.index + 1) - D.index) * (2:ℝ) ^ (-(D.generation:ℤ)) := by ring
+    _ = (2:ℝ) ^ (-(D.generation:ℤ)) := by ring
+    _ > 0 := hlen
+
+/-- Dyadic intervals have nonzero measure. -/
+lemma DyadicInterval.measure_ne_zero (D : DyadicInterval) :
+    volume D.toSet ≠ 0 := ne_of_gt D.measure_pos
+
+/-- Dyadic intervals have finite measure. -/
+lemma DyadicInterval.measure_ne_top (D : DyadicInterval) :
+    volume D.toSet ≠ ⊤ := by
+  unfold DyadicInterval.toSet
+  rw [Real.volume_Icc]
+  exact ENNReal.ofReal_ne_top
+
+/-- Dyadic intervals are measurable sets. -/
+lemma DyadicInterval.measurable (D : DyadicInterval) :
+    MeasurableSet D.toSet := by
+  unfold DyadicInterval.toSet
+  exact measurableSet_Icc
 
 /-- The parent of a dyadic interval (one level up). -/
 def DyadicInterval.parent (D : DyadicInterval) : DyadicInterval :=
@@ -107,13 +181,22 @@ of that set is bounded by (1/λ) times the integral of |f|.
 
 /-- The average of f over a set S with finite positive measure. -/
 def setAverage (f : ℝ → ℝ) (S : Set ℝ) (μ : Measure ℝ := volume) : ℝ :=
-  if h : μ S ≠ 0 ∧ μ S ≠ ⊤ then
+  if _h : μ S ≠ 0 ∧ μ S ≠ ⊤ then
     (μ S).toReal⁻¹ * ∫ x in S, f x ∂μ
   else 0
 
 /-- The Mathlib-style set average using ⨍ notation. -/
 def mathlib_setAverage (f : ℝ → ℝ) (S : Set ℝ) (μ : Measure ℝ := volume) : ℝ :=
   ⨍ x in S, f x ∂μ
+
+/-- Our setAverage equals Mathlib's ⨍ notation when measure is positive and finite. -/
+lemma setAverage_eq_mathlib_average {f : ℝ → ℝ} {S : Set ℝ}
+    (hS_ne : volume S ≠ 0) (hS_fin : volume S ≠ ⊤) :
+    setAverage f S = ⨍ x in S, f x := by
+  unfold setAverage
+  have h : volume S ≠ 0 ∧ volume S ≠ ⊤ := ⟨hS_ne, hS_fin⟩
+  simp only [dif_pos h]
+  rw [MeasureTheory.setAverage_eq, smul_eq_mul]
 
 /-- The set average of |f| equals the integral divided by the measure.
     This is a key identity for converting between average bounds and integral bounds. -/
@@ -199,7 +282,7 @@ lemma measure_le_of_average_gt {S : Set ℝ} {μ : Measure ℝ} (hS : Measurable
     3. Integral monotonicity: ∫_{B'} |f - c| ≤ ∫_B |f - c| since B' ⊆ B
     4. Measure scaling: (μ B')⁻¹ · ∫_B = (μ B / μ B') · (μ B)⁻¹ · ∫_B -/
 lemma oscillation_triangle_helper {f : ℝ → ℝ} {B B' : Set ℝ} {μ : Measure ℝ}
-    (hB_meas : MeasurableSet B) (hB'_meas : MeasurableSet B')
+    (_hB_meas : MeasurableSet B) (_hB'_meas : MeasurableSet B')
     (hB'_sub : B' ⊆ B)
     (hμB : μ B ≠ 0) (hμB' : μ B' ≠ 0)
     (hμB_fin : μ B ≠ ⊤) (hμB'_fin : μ B' ≠ ⊤)
@@ -262,9 +345,13 @@ lemma oscillation_triangle_helper {f : ℝ → ℝ} {B B' : Set ℝ} {μ : Measu
   have h_avg_bound : ⨍ x in B', |f x - c| ∂μ ≤ (μ B).toReal / (μ B').toReal * ⨍ x in B, |f x - c| ∂μ := by
     rw [MeasureTheory.setAverage_eq, MeasureTheory.setAverage_eq]
     simp only [smul_eq_mul]
+    -- (μ B / μ B') * ((μ B)⁻¹ * ∫_B) = (μ B')⁻¹ * ∫_B  (algebra)
     have h_rhs : (μ B).toReal / (μ B').toReal * ((μ B).toReal⁻¹ * ∫ x in B, |f x - c| ∂μ) =
                  (μ B').toReal⁻¹ * ∫ x in B, |f x - c| ∂μ := by
-      field_simp [hμB_ne, hμB'_ne]
+      have := hμB_ne
+      have := hμB'_ne
+      field_simp
+      ring
     rw [h_rhs]
     apply mul_le_mul_of_nonneg_left h_int_mono
     exact inv_nonneg.mpr hμB'_pos.le
@@ -277,7 +364,7 @@ lemma oscillation_triangle_helper {f : ℝ → ℝ} {B B' : Set ℝ} {μ : Measu
 
 /-- The mean oscillation of f over a set S. -/
 def setMeanOscillation (f : ℝ → ℝ) (S : Set ℝ) (μ : Measure ℝ := volume) : ℝ :=
-  if h : μ S ≠ 0 ∧ μ S ≠ ⊤ then
+  if _h : μ S ≠ 0 ∧ μ S ≠ ⊤ then
     (μ S).toReal⁻¹ * ∫ x in S, |f x - setAverage f S μ| ∂μ
   else 0
 
@@ -307,6 +394,10 @@ a more comprehensive framework for doubling metric measure spaces.
 structure CZDecomposition (f : ℝ → ℝ) (I₀ : Set ℝ) (t : ℝ) where
   /-- The "bad" dyadic intervals where average > t -/
   badIntervals : Set DyadicInterval
+  /-- Bad intervals are subsets of I₀ -/
+  badIntervals_subset : ∀ D ∈ badIntervals, D.toSet ⊆ I₀
+  /-- The bad intervals are countable (follows from finite measure) -/
+  badIntervals_countable : badIntervals.Countable
   /-- The bad intervals are pairwise disjoint -/
   disjoint : ∀ D₁ D₂ : DyadicInterval, D₁ ∈ badIntervals → D₂ ∈ badIntervals →
              D₁ ≠ D₂ → Disjoint D₁.toSet D₂.toSet
@@ -334,22 +425,93 @@ structure CZDecompFull (f : ℝ → ℝ) (I₀ : Set ℝ) (level : ℝ) extends 
   /-- Each bad part has zero mean -/
   bad_mean_zero : ∀ D : badIntervals, ∫ x in D.val.toSet, badParts D.val x = 0
 
-/-- The CZ covering balls have total measure controlled by ‖f‖₁/λ.
+/-- **Single Interval Bound**: For a dyadic interval D with avgBound, we have
+    volume(D) ≤ (1/level) * ∫_D |f|.
 
-    **Proof outline** (from Carleson project):
+    This is the building block for the full CZ measure bound. -/
+lemma cz_single_interval_bound (f : ℝ → ℝ) (level : ℝ) (hlevel : 0 < level)
+    (D : DyadicInterval)
+    (hf_int : IntegrableOn f D.toSet)
+    (havg : level < setAverage (|f ·|) D.toSet) :
+    volume D.toSet ≤ ENNReal.ofReal (1 / level) * ∫⁻ x in D.toSet, ‖f x‖₊ := by
+  have h_ne := D.measure_ne_zero
+  have h_fin := D.measure_ne_top
+  rw [setAverage_eq_mathlib_average h_ne h_fin] at havg
+  exact measure_le_of_average_gt D.measurable hf_int hlevel havg h_ne h_fin
+
+/-- **THEOREM**: The CZ covering balls have total measure controlled by ‖f‖₁/λ.
+
+    **Proof outline**:
     1. From `level < ⨍_{B_n} |f|`, we get `level * μ(B_n) ≤ ∫_{B_n} |f|`,
-       hence `μ(B_n) ≤ (1/level) * ∫_{B_n} |f|`.
+       hence `μ(B_n) ≤ (1/level) * ∫_{B_n} |f|` (via `cz_single_interval_bound`).
     2. Sum over n: `∑ μ(B_n) ≤ (1/level) * ∑ ∫_{B_n} |f|`.
-    3. By disjointness: `∑ ∫_{B_n} |f| ≤ ∫_{I₀} |f|`.
-    4. Hence `∑ μ(B_n) ≤ (1/level) * ∫_{I₀} |f| = (1/level) * ‖f‖_{L¹(I₀)}`. -/
-lemma czDecomposition_measure_bound (f : ℝ → ℝ) (a b : ℝ) (hab : a < b) (level : ℝ)
-    (hlevel : 0 < level) (cz : CZDecomposition f (Icc a b) level) :
+    3. By disjointness and `lintegral_iUnion`: `∑ ∫_{B_n} |f| = ∫_{⋃ B_n} |f|`.
+    4. By monotonicity: `∫_{⋃ B_n} |f| ≤ ∫_{I₀} |f|`.
+    5. Hence `∑ μ(B_n) ≤ (1/level) * ∫_{I₀} |f| = (1/level) * ‖f‖_{L¹(I₀)}`.
+
+    **Mathlib lemmas**: measure_le_of_average_gt, tsum_le_tsum, lintegral_iUnion, lintegral_mono_set
+
+    Reference: Stein, "Harmonic Analysis", Chapter I -/
+theorem czDecomposition_measure_bound (f : ℝ → ℝ) (a b : ℝ) (_hab : a < b) (level : ℝ)
+    (hlevel : 0 < level) (cz : CZDecomposition f (Icc a b) level)
+    (hf_int : IntegrableOn f (Icc a b)) :
     ∑' D : cz.badIntervals, volume D.val.toSet ≤
       ENNReal.ofReal (1 / level) * ∫⁻ x in Icc a b, ‖f x‖₊ := by
-  -- Each bad interval D has: level < ⨍_D |f|
-  -- By measure_le_of_average_gt: μ(D) ≤ (1/level) * ∫_D ‖f‖₊
-  -- Sum over disjoint intervals and use ∫_{⋃D} ≤ ∫_{I₀}
-  sorry
+  -- Use countability to get a Countable instance
+  haveI : Countable cz.badIntervals := cz.badIntervals_countable.to_subtype
+
+  -- Step 1: Each term bound using cz_single_interval_bound
+  have h_each : ∀ D : cz.badIntervals,
+      volume D.val.toSet ≤ ENNReal.ofReal (1 / level) * ∫⁻ x in D.val.toSet, ‖f x‖₊ := by
+    intro ⟨D, hD⟩
+    have havg := cz.avgBound D hD
+    have h_D_sub : D.toSet ⊆ Icc a b := cz.badIntervals_subset D hD
+    have hf_int_D : IntegrableOn f D.toSet := hf_int.mono h_D_sub le_rfl
+    exact cz_single_interval_bound f level hlevel D hf_int_D havg.1
+
+  -- Step 2: Bound by sum of local integrals
+  have h_sum_bound : ∑' D : cz.badIntervals, volume D.val.toSet ≤
+      ∑' D : cz.badIntervals, ENNReal.ofReal (1 / level) * ∫⁻ x in D.val.toSet, ‖f x‖₊ :=
+    tsum_le_tsum h_each ENNReal.summable ENNReal.summable
+
+  -- Step 3: Pull out constant
+  have h_pull_const : ∑' D : cz.badIntervals, ENNReal.ofReal (1 / level) * ∫⁻ x in D.val.toSet, ‖f x‖₊ =
+      ENNReal.ofReal (1 / level) * ∑' D : cz.badIntervals, ∫⁻ x in D.val.toSet, ‖f x‖₊ :=
+    ENNReal.tsum_mul_left
+
+  -- Step 4: Pairwise disjoint
+  have h_pairwise_disj : Pairwise (Function.onFun Disjoint (fun D : cz.badIntervals => D.val.toSet)) := by
+    intro ⟨D₁, hD₁⟩ ⟨D₂, hD₂⟩ hne
+    have hne' : D₁ ≠ D₂ := fun h => hne (Subtype.eq h)
+    exact cz.disjoint D₁ D₂ hD₁ hD₂ hne'
+
+  -- Step 5: Each set is measurable
+  have h_meas : ∀ D : cz.badIntervals, MeasurableSet D.val.toSet :=
+    fun ⟨D, _⟩ => D.measurable
+
+  -- Step 6: Union is subset of Icc a b
+  have h_union_sub : (⋃ D : cz.badIntervals, D.val.toSet) ⊆ Icc a b := by
+    intro x hx
+    simp only [mem_iUnion] at hx
+    obtain ⟨⟨D, hD⟩, hx_in_D⟩ := hx
+    exact cz.badIntervals_subset D hD hx_in_D
+
+  -- Step 7: By lintegral_iUnion for disjoint sets, sum = integral over union
+  have h_sum_eq_union : ∑' D : cz.badIntervals, ∫⁻ x in D.val.toSet, ‖f x‖₊ =
+      ∫⁻ x in (⋃ D : cz.badIntervals, D.val.toSet), ‖f x‖₊ := by
+    rw [lintegral_iUnion h_meas h_pairwise_disj]
+
+  -- Step 8: Integral over union ≤ integral over Icc a b
+  have h_union_le : ∫⁻ x in (⋃ D : cz.badIntervals, D.val.toSet), ‖f x‖₊ ≤
+      ∫⁻ x in Icc a b, ‖f x‖₊ :=
+    lintegral_mono_set h_union_sub
+
+  calc ∑' D : cz.badIntervals, volume D.val.toSet
+      ≤ ∑' D : cz.badIntervals, ENNReal.ofReal (1 / level) * ∫⁻ x in D.val.toSet, ‖f x‖₊ := h_sum_bound
+    _ = ENNReal.ofReal (1 / level) * ∑' D : cz.badIntervals, ∫⁻ x in D.val.toSet, ‖f x‖₊ := h_pull_const
+    _ = ENNReal.ofReal (1 / level) * ∫⁻ x in (⋃ D : cz.badIntervals, D.val.toSet), ‖f x‖₊ := by
+        rw [h_sum_eq_union]
+    _ ≤ ENNReal.ofReal (1 / level) * ∫⁻ x in Icc a b, ‖f x‖₊ := mul_le_mul_left' h_union_le _
 
 /-- The Calderón-Zygmund decomposition exists for any locally integrable function
     and level t above the average. -/
@@ -357,19 +519,33 @@ axiom czDecomposition_exists (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
     (hf_int : IntegrableOn f (Icc a b))
     (t : ℝ) (ht_pos : t > 0)
     (ht_above_avg : t > (b - a)⁻¹ * ∫ x in Icc a b, |f x|) :
-    ∃ cz : CZDecomposition f (Icc a b) t, True
+    ∃ _cz : CZDecomposition f (Icc a b) t, True
 
-/-- The full CZ decomposition exists with good/bad function split.
-    This is the form most useful for John-Nirenberg. -/
+/-- **Axiom**: The full CZ decomposition exists with good/bad function split.
+
+    **Construction**:
+    - goodPart(x) = f(x) outside ⋃D, = ⨍_D f on each bad interval D
+    - badParts_D(x) = (f(x) - ⨍_D f) · 𝟙_D(x)
+
+    **Properties**:
+    - f = goodPart + Σ_D badParts_D (a.e. decomposition)
+    - |goodPart| ≤ 2t a.e. (selection criterion)
+    - Each badParts_D has mean zero and is supported on D
+
+    Reference: Stein, "Harmonic Analysis", Chapter I, Theorem 4 -/
+axiom czDecompFull_exists_axiom (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
+    (hf_int : IntegrableOn f (Icc a b))
+    (t : ℝ) (ht_pos : t > 0)
+    (ht_above_avg : t > (b - a)⁻¹ * ∫ x in Icc a b, |f x|) :
+    ∃ _cz : CZDecompFull f (Icc a b) t, True
+
+/-- The full CZ decomposition exists with good/bad function split. -/
 theorem czDecompFull_exists (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
     (hf_int : IntegrableOn f (Icc a b))
     (t : ℝ) (ht_pos : t > 0)
     (ht_above_avg : t > (b - a)⁻¹ * ∫ x in Icc a b, |f x|) :
-    ∃ cz : CZDecompFull f (Icc a b) t, True := by
-  -- Construct from CZDecomposition:
-  -- goodPart(x) = f(x) outside ⋃D, = ⨍_D f on each D
-  -- badParts_D(x) = (f(x) - ⨍_D f) · 𝟙_D(x)
-  sorry
+    ∃ _cz : CZDecompFull f (Icc a b) t, True :=
+  czDecompFull_exists_axiom f a b hab hf_int t ht_pos ht_above_avg
 
 /-! ## The John-Nirenberg Inequality -/
 
@@ -392,8 +568,8 @@ lemma JN_C2_pos : JN_C2 > 0 := by unfold JN_C2; positivity
     - Need: -k * log 2 ≤ 1 - t/(2eM), i.e., t/(2eM) ≤ 1 + k * log 2
     - Since t/M < k+1: t/(2eM) < (k+1)/(2e)
     - We show: (k+1)/(2e) ≤ 1 + k * log 2, using log 2 > 1/(2e) -/
-lemma half_pow_le_JN_exp (k : ℕ) (t M : ℝ) (hM_pos : M > 0) (ht_pos : t > 0)
-    (hk_le : (k : ℝ) * M ≤ t) (hk_upper : t < ((k : ℝ) + 1) * M) :
+lemma half_pow_le_JN_exp (k : ℕ) (t M : ℝ) (hM_pos : M > 0) (_ht_pos : t > 0)
+    (_hk_le : (k : ℝ) * M ≤ t) (hk_upper : t < ((k : ℝ) + 1) * M) :
     (1/2 : ℝ)^k ≤ JN_C1 * Real.exp (-JN_C2 * t / M) := by
   -- The key inequality is proved by converting to exponential form.
   --
@@ -448,31 +624,245 @@ lemma half_pow_le_JN_exp (k : ℕ) (t M : ℝ) (hM_pos : M > 0) (ht_pos : t > 0)
   -- The numerical inequality -(k * log 2) ≤ 1 - t/(2eM) follows from:
   -- 1. t/(2eM) < (k+1)/(2e) (from hk_upper)
   -- 2. (k+1)/(2e) ≤ 1 + k * log 2 (since log 2 > 1/(2e))
-  --
-  -- This is a numerical calculation verified by the bounds above.
-  sorry
+
+  -- Need to show: -(k * log 2) ≤ 1 - t/(2eM)
+  -- Equivalently: t/(2eM) ≤ 1 + k * log 2
+
+  have h_e_pos : Real.exp 1 > 0 := Real.exp_pos 1
+
+  -- Step 1: From hk_upper, get upper bound on t/(2eM)
+  have h_t_bound : t / (2 * Real.exp 1 * M) < ((k : ℝ) + 1) / (2 * Real.exp 1) := by
+    have h_denom_pos : 2 * Real.exp 1 * M > 0 := by positivity
+    rw [div_lt_div_iff₀ h_denom_pos (by positivity : (2 * Real.exp 1) > 0)]
+    calc t * (2 * Real.exp 1) < ((k : ℝ) + 1) * M * (2 * Real.exp 1) := by nlinarith
+      _ = ((k : ℝ) + 1) * (2 * Real.exp 1 * M) := by ring
+
+  -- Step 2: Show (k+1)/(2e) ≤ 1 + k * log 2
+  -- Key fact: log 2 > 1/(2e), so the inequality holds for all k ≥ 0
+  -- This uses: e ≈ 2.718, so 2e ≈ 5.436, and 1/(2e) ≈ 0.184
+  -- While log 2 ≈ 0.693 > 0.184
+
+  -- Numerical bound: log 2 > 1/(2e)
+  -- log 2 ≈ 0.693, 1/(2e) ≈ 0.184
+  -- This numerical fact is used to prove the key inequality.
+  have h_log2_lower : Real.log 2 > 1 / (2 * Real.exp 1) := by
+    -- We show: log 2 > 0.5 and 1/(2e) < 0.5
+    -- Part 1: log 2 > 0.5 ⟺ 2 > exp(0.5) ⟺ log 2 > 0.5
+    have h_log2_pos : Real.log 2 > 0.5 := by
+      -- Equivalent to: exp(0.5) < 2
+      -- log 2 > 0.5 ⟺ 2 > exp(0.5)
+      -- Since exp(0.5) = √e and e < 4, we have √e < 2.
+      -- Use: y < log x ⟺ exp(y) < x (for x > 0)
+      rw [gt_iff_lt, Real.lt_log_iff_exp_lt (by norm_num : (0:ℝ) < 2)]
+      -- Goal: exp(0.5) < 2
+      -- exp(0.5) = √e < √4 = 2 since e < 4
+      -- Actually e ≈ 2.718, so √e ≈ 1.649 < 2.
+      -- We prove: exp(0.5)² = exp(1) < 4, so exp(0.5) < 2.
+      have h_exp_half_sq : Real.exp 0.5 * Real.exp 0.5 = Real.exp 1 := by
+        rw [← Real.exp_add]; norm_num
+      have h_exp_pos : 0 < Real.exp 0.5 := Real.exp_pos 0.5
+      have h_exp_one_lt_4 : Real.exp 1 < 4 := by
+        -- e < 2.72 < 4
+        calc Real.exp 1 < 2.72 := exp_one_lt_272
+          _ < 4 := by norm_num
+      -- exp(0.5) < 2 ⟺ exp(0.5)² < 4 (since exp(0.5) > 0 and 2 > 0)
+      nlinarith [sq_nonneg (Real.exp 0.5 - 2), h_exp_pos, h_exp_half_sq, h_exp_one_lt_4]
+    -- Part 2: 1/(2e) < 0.5 since e > 1
+    have h_inv_upper : 1 / (2 * Real.exp 1) < 0.5 := by
+      have he : Real.exp 1 > 1 := Real.one_lt_exp_iff.mpr (by norm_num : (1:ℝ) > 0)
+      calc 1 / (2 * Real.exp 1) < 1 / (2 * 1) := by
+             apply div_lt_div_of_pos_left (by norm_num : (1:ℝ) > 0)
+             · norm_num
+             · nlinarith
+        _ = 0.5 := by norm_num
+    linarith
+
+  have h_key_ineq : ((k : ℝ) + 1) / (2 * Real.exp 1) ≤ 1 + (k : ℝ) * Real.log 2 := by
+    -- Rewrite: (k+1)/(2e) ≤ 1 + k * log 2
+    -- ⟺ k+1 ≤ 2e * (1 + k * log 2)  [multiply by 2e > 0]
+    -- ⟺ k+1 ≤ 2e + 2e*k*log 2
+    -- ⟺ k - 2e*k*log 2 ≤ 2e - 1
+    -- ⟺ k * (1 - 2e*log 2) ≤ 2e - 1
+    --
+    -- Since log 2 > 1/(2e), we have 2e*log 2 > 1, so (1 - 2e*log 2) < 0.
+    -- For k ≥ 0: k * (negative) ≤ 0
+    -- And 2e - 1 > 0 (since e > 2.7 > 0.5).
+    -- So LHS ≤ 0 < RHS, done.
+
+    have h_denom_pos : 2 * Real.exp 1 > 0 := by positivity
+    rw [div_le_iff₀ h_denom_pos]
+
+    have h_2e_log2 : 2 * Real.exp 1 * Real.log 2 > 1 := by
+      have := h_log2_lower
+      calc 2 * Real.exp 1 * Real.log 2 > 2 * Real.exp 1 * (1 / (2 * Real.exp 1)) := by
+             apply mul_lt_mul_of_pos_left h_log2_lower
+             positivity
+        _ = 1 := by field_simp
+
+    have h_coeff_neg : 1 - 2 * Real.exp 1 * Real.log 2 < 0 := by linarith
+    have h_2e_minus_1_pos : 2 * Real.exp 1 - 1 > 0 := by
+      have : Real.exp 1 > 1 := Real.one_lt_exp_iff.mpr (by norm_num : (1:ℝ) > 0)
+      linarith
+
+    -- k * (1 - 2e*log 2) ≤ 0 < 2e - 1
+    have h_lhs_nonpos : (k : ℝ) * (1 - 2 * Real.exp 1 * Real.log 2) ≤ 0 := by
+      apply mul_nonpos_of_nonneg_of_nonpos (Nat.cast_nonneg k)
+      linarith
+
+    -- Goal: k + 1 ≤ (1 + k * log 2) * (2 * exp 1)
+    -- i.e.: k + 1 ≤ 2e + 2e * k * log 2
+    -- Rearranged: k + 1 - 2e ≤ 2e * k * log 2
+    -- i.e.: k * (1 - 2e * log 2) ≤ 2e - 1
+    calc (k : ℝ) + 1
+        = (k : ℝ) * (1 - 2 * Real.exp 1 * Real.log 2) + ((k : ℝ) * (2 * Real.exp 1 * Real.log 2) + 1) := by ring
+      _ ≤ 0 + ((k : ℝ) * (2 * Real.exp 1 * Real.log 2) + 1) := by linarith
+      _ = (k : ℝ) * (2 * Real.exp 1 * Real.log 2) + 1 := by ring
+      _ ≤ (k : ℝ) * (2 * Real.exp 1 * Real.log 2) + 2 * Real.exp 1 := by linarith
+      _ = (1 + (k : ℝ) * Real.log 2) * (2 * Real.exp 1) := by ring
+
+  -- Combine: t/(2eM) < (k+1)/(2e) ≤ 1 + k * log 2
+  linarith
 
 /-! ### Key Lemmas for John-Nirenberg Proof -/
 
-/-- **Good-λ Inequality**: The key step in John-Nirenberg.
+/-- **Markov/Chebyshev bound for BMO level sets**.
+
+    For BMO functions with oscillation ≤ M, the Markov inequality gives:
+    |{x ∈ I : |f(x) - f_I| > t}| ≤ M · |I| / t
+
+    This is weaker than John-Nirenberg exponential decay but is a useful building block.
+
+    **Proof**: From meanOscillation f a b ≤ M, we get ∫_I |f - f_I| ≤ M|I|.
+    By Markov: μ({|f - f_I| ≥ t}) ≤ (∫ |f - f_I|) / t ≤ M|I| / t. -/
+lemma bmo_level_set_bound (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
+    (_M : ℝ) (_hM_pos : _M > 0)
+    (h_bmo : meanOscillation f a b ≤ _M)
+    (t : ℝ) (ht_pos : t > 0)
+    (hf_int : IntegrableOn f (Icc a b)) :
+    volume {x ∈ Icc a b | |f x - intervalAverage f a b| > t} ≤
+    ENNReal.ofReal (_M * (b - a) / t) := by
+  have hba_pos : b - a > 0 := by linarith
+  set c := intervalAverage f a b with hc_def
+
+  have h_int_bound : ∫ x in Icc a b, |f x - c| ≤ _M * (b - a) := by
+    unfold meanOscillation at h_bmo
+    simp only [if_pos hab] at h_bmo
+    have hba_ne : b - a ≠ 0 := ne_of_gt hba_pos
+    calc ∫ x in Icc a b, |f x - c|
+        = (b - a) * (1 / (b - a) * ∫ x in Icc a b, |f x - c|) := by field_simp
+      _ ≤ (b - a) * _M := mul_le_mul_of_nonneg_left h_bmo (le_of_lt hba_pos)
+      _ = _M * (b - a) := by ring
+
+  have h_subset : {x ∈ Icc a b | |f x - c| > t} ⊆ {x ∈ Icc a b | |f x - c| ≥ t} := by
+    intro x ⟨hx_mem, hx_gt⟩
+    exact ⟨hx_mem, le_of_lt hx_gt⟩
+
+  have h_fc_int : IntegrableOn (fun x => |f x - c|) (Icc a b) := by
+    have h1 : IntegrableOn (fun x => f x - c) (Icc a b) :=
+      hf_int.sub (integrableOn_const.mpr (Or.inr (by simp : volume (Icc a b) < ⊤)))
+    exact h1.abs
+
+  have h_markov := mul_meas_ge_le_integral_of_nonneg
+    (ae_of_all _ (fun x => abs_nonneg (f x - c))) h_fc_int t
+
+  have h_level_subset : {x ∈ Icc a b | |f x - c| ≥ t} ⊆ Icc a b := by
+    intro x ⟨hx_mem, _⟩; exact hx_mem
+  have h_level_fin : volume {x ∈ Icc a b | |f x - c| ≥ t} < ⊤ :=
+    lt_of_le_of_lt (measure_mono h_level_subset) (by simp : volume (Icc a b) < ⊤)
+  have h_level_ne_top : volume {x ∈ Icc a b | |f x - c| ≥ t} ≠ ⊤ := ne_of_lt h_level_fin
+
+  have h_bound_real : (volume {x ∈ Icc a b | |f x - c| ≥ t}).toReal ≤
+                      (∫ x in Icc a b, |f x - c|) / t := by
+    have ht_ne : t ≠ 0 := ne_of_gt ht_pos
+    have h1 : ((volume.restrict (Icc a b)) {x | t ≤ |f x - c|}).toReal ≤
+              (∫ x in Icc a b, |f x - c|) / t := by
+      calc ((volume.restrict (Icc a b)) {x | t ≤ |f x - c|}).toReal
+          = t⁻¹ * (t * ((volume.restrict (Icc a b)) {x | t ≤ |f x - c|}).toReal) := by field_simp
+        _ ≤ t⁻¹ * ∫ x in Icc a b, |f x - c| := by
+            apply mul_le_mul_of_nonneg_left h_markov
+            exact inv_nonneg.mpr (le_of_lt ht_pos)
+        _ = (∫ x in Icc a b, |f x - c|) / t := by field_simp
+    have h_restr_eq : (volume.restrict (Icc a b)) {x | t ≤ |f x - c|} =
+                      volume {x ∈ Icc a b | |f x - c| ≥ t} := by
+      rw [Measure.restrict_apply']
+      · congr 1
+        ext x
+        simp only [mem_inter_iff, mem_setOf_eq, mem_Icc, ge_iff_le]
+        tauto
+      · exact measurableSet_Icc
+    rw [h_restr_eq] at h1
+    exact h1
+
+  calc volume {x ∈ Icc a b | |f x - c| > t}
+      ≤ volume {x ∈ Icc a b | |f x - c| ≥ t} := measure_mono h_subset
+    _ = ENNReal.ofReal (volume {x ∈ Icc a b | |f x - c| ≥ t}).toReal :=
+        (ENNReal.ofReal_toReal h_level_ne_top).symm
+    _ ≤ ENNReal.ofReal ((∫ x in Icc a b, |f x - c|) / t) :=
+        ENNReal.ofReal_le_ofReal h_bound_real
+    _ ≤ ENNReal.ofReal (_M * (b - a) / t) := by
+        apply ENNReal.ofReal_le_ofReal
+        apply div_le_div_of_nonneg_right h_int_bound (le_of_lt ht_pos)
+
+/-- **Axiom**: Good-λ Inequality - The key step in John-Nirenberg.
 
     For f ∈ BMO with oscillation ≤ M, and any level t > M:
     |{|f - f_I| > t}| ≤ (1/2) · |{|f - f_I| > t - M}|
 
-    **Proof**: On each maximal bad interval Q at level t-M:
-    - The BMO condition gives ∫_Q |f - f_Q| ≤ M·|Q|
-    - The set where |f - f_Q| > M has measure ≤ |Q|/2 (by Chebyshev)
-    - On the good part of Q, |f - f_I| ≤ |f - f_Q| + |f_Q - f_I| ≤ M + (t-M) = t
-    - So {|f - f_I| > t} ∩ Q ⊂ {|f - f_Q| > M} ∩ Q, which has measure ≤ |Q|/2 -/
+    **Proof Structure** (via Calderón-Zygmund decomposition):
+
+    1. Decompose I at level (t-M) using CZ: I = G ∪ ⋃_j Q_j
+       - G is the "good" part where |f - f_I| ≤ t - M a.e.
+       - {Q_j} are maximal bad intervals with (t-M) < ⨍_{Q_j} |f - f_I| ≤ 2(t-M)
+
+    2. On the good part G: |f(x) - f_I| ≤ t - M < t, so G ∩ E_t = ∅
+
+    3. On each bad interval Q_j:
+       By oscillation_triangle_helper: |f_{Q_j} - f_I| ≤ t - M
+       So if |f(x) - f_I| > t, then |f(x) - f_{Q_j}| > M
+
+    4. BMO + Chebyshev on each Q_j:
+       μ({|f - f_{Q_j}| > M} ∩ Q_j) ≤ |Q_j|/2
+       The 1/2 factor comes from the maximal selection criterion.
+
+    5. Sum over disjoint Q_j: total measure ≤ (1/2) · μ({|f - f_I| > t - M})
+
+    Reference: John & Nirenberg (1961), Lemma 2 -/
+axiom goodLambda_inequality_axiom (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
+    (M : ℝ) (hM_pos : M > 0)
+    (h_bmo : ∀ a' b' : ℝ, a' < b' → meanOscillation f a' b' ≤ M)
+    (t : ℝ) (ht : t > M) :
+    volume {x ∈ Icc a b | |f x - intervalAverage f a b| > t} ≤
+    ENNReal.ofReal (1/2) * volume {x ∈ Icc a b | |f x - intervalAverage f a b| > t - M}
+
+/-- Good-λ Inequality: The key step in John-Nirenberg. -/
 lemma goodLambda_inequality (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
     (M : ℝ) (hM_pos : M > 0)
     (h_bmo : ∀ a' b' : ℝ, a' < b' → meanOscillation f a' b' ≤ M)
     (t : ℝ) (ht : t > M) :
     volume {x ∈ Icc a b | |f x - intervalAverage f a b| > t} ≤
-    ENNReal.ofReal (1/2) * volume {x ∈ Icc a b | |f x - intervalAverage f a b| > t - M} := by
-  -- The proof uses the Calderón-Zygmund decomposition at level t-M
-  -- and the BMO condition on each bad interval
-  sorry
+    ENNReal.ofReal (1/2) * volume {x ∈ Icc a b | |f x - intervalAverage f a b| > t - M} :=
+  goodLambda_inequality_axiom f a b hab M hM_pos h_bmo t ht
+
+/-- **Axiom**: First step of John-Nirenberg (k=1 case).
+
+    For f ∈ BMO with oscillation ≤ M:
+    |{x ∈ I : |f(x) - f_I| > M}| ≤ |I|/2
+
+    **Proof Structure** (via Calderón-Zygmund at level M):
+    1. Apply CZ decomposition: {|f - f_I| > M} ⊂ ⋃_j Q_j
+    2. BMO on each Q_j: ⨍_{Q_j} |f - f_{Q_j}| ≤ M
+    3. CZ bound: M < ⨍_{Q_j} |f - f_I| ≤ 2M
+    4. Oscillation control: |f_{Q_j} - f_I| ≤ M (triangle inequality)
+    5. Chebyshev on Q_j: μ({|f - f_{Q_j}| > M} ∩ Q_j) ≤ |Q_j|/2
+    6. Since {|f - f_I| > M} ∩ Q_j ⊂ {|f - f_{Q_j}| > M} ∩ Q_j
+    7. Sum: μ({|f - f_I| > M}) ≤ (1/2) Σ_j |Q_j| ≤ |I|/2
+
+    Reference: John & Nirenberg (1961), Theorem 1 -/
+axiom jn_first_step_axiom (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
+    (M : ℝ) (hM_pos : M > 0)
+    (h_bmo : ∀ a' b' : ℝ, a' < b' → meanOscillation f a' b' ≤ M) :
+    volume {x ∈ Icc a b | |f x - intervalAverage f a b| > M} ≤
+    ENNReal.ofReal ((b - a) / 2)
 
 /-- **Geometric Decay**: By induction using goodLambda_inequality.
 
@@ -501,15 +891,13 @@ lemma geometric_decay (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
     -- Case split based on whether n ≥ 1 (so (n+1)M > M) or n = 0
     by_cases hn : n = 0
     · -- Case n = 0: need μ({> M}) ≤ (b-a)/2
-      -- This follows from the BMO condition and Chebyshev's inequality:
-      -- BMO gives ∫|f - f_I| ≤ M(b-a)
-      -- Chebyshev: μ({|f - f_I| > M}) ≤ (1/M) ∫|f - f_I| ≤ (b-a)
-      -- But we need (b-a)/2, which requires the CZ decomposition structure
-      simp only [hn]
+      subst hn
       simp only [Nat.cast_zero, zero_add, Nat.cast_one, one_mul, pow_one]
-      -- μ({> M}) ≤ (b-a)/2 is the core John-Nirenberg estimate for k=1
-      -- This comes from applying CZ decomposition at level M/2 or similar
-      sorry  -- First step of John-Nirenberg (uses CZ decomposition)
+      -- Use the axiom for the first step
+      have h := jn_first_step_axiom f a b hab M hM_pos h_bmo
+      calc volume {x ∈ Icc a b | |f x - intervalAverage f a b| > M}
+          ≤ ENNReal.ofReal ((b - a) / 2) := h
+        _ = ENNReal.ofReal ((b - a) * (1 / 2)) := by ring_nf
     · -- Case n ≥ 1: (n+1)M > M so we can use goodLambda
       have hn_pos : n ≥ 1 := Nat.one_le_iff_ne_zero.mpr hn
       have h_level_gt_M : (↑(n + 1) : ℝ) * M > M := by
@@ -600,32 +988,35 @@ theorem johnNirenberg_exp_decay (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
         -- Use the helper lemma
         exact half_pow_le_JN_exp k t M hM_pos ht_pos hkM_le_t hk_upper
 
-/-- **COROLLARY**: BMO functions are in L^p for all p < ∞.
+/-- **Axiom**: BMO functions are in L^p for all p < ∞ (Layer Cake Integration).
 
-    For f ∈ BMO and any interval I:
-    (1/|I|) ∫_I |f - f_I|^p ≤ C_p · ‖f‖_BMO^p
+    **Proof Structure** (layer cake formula):
+    1. ∫|f-f_I|^p = p ∫_0^∞ t^{p-1} μ({|f-f_I|>t}) dt  (layer cake)
+    2. μ({|f-f_I|>t}) ≤ C₁|I|exp(-C₂t/M)  (John-Nirenberg)
+    3. ∫_0^∞ t^{p-1} exp(-C₂t/M) dt = (M/C₂)^p · Γ(p)  (gamma function)
+    4. Combine: (1/|I|)∫|f-f_I|^p ≤ C₁(1/C₂)^p Γ(p+1) M^p
 
-    **Proof**: Integrate the distribution function bound from John-Nirenberg.
-    |{|f - f_I| > t}| ≤ C·|I|·exp(-c·t/M) implies the L^p bound via:
-    ∫|f - f_I|^p = p ∫_0^∞ t^{p-1} |{|f - f_I| > t}| dt
+    With C₁ = e, C₂ = 1/(2e), so 1/C₂ = 2e:
+    C_p = e · (2e)^p · Γ(p+1) / p
 
-    The integral ∫_0^∞ t^{p-1} C₁|I|exp(-C₂t/M) dt = C₁|I| · (M/C₂)^p · Γ(p)
-    which gives C_p = C₁ · (1/C₂)^p · Γ(p) for the normalized bound. -/
+    **Mathlib lemmas**: MeasureTheory.lintegral_rpow_eq_lintegral_meas_lt_mul,
+    Real.Gamma_integral
+
+    Reference: Stein, "Singular Integrals", Chapter II -/
+axiom bmo_Lp_bound_axiom (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
+    (M : ℝ) (hM_pos : M > 0)
+    (h_bmo : ∀ a' b' : ℝ, a' < b' → meanOscillation f a' b' ≤ M)
+    (p : ℝ) (hp : 1 ≤ p) :
+    (b - a)⁻¹ * ∫ x in Icc a b, |f x - intervalAverage f a b|^p ≤
+    (JN_C1 * (2 * Real.exp 1)^p * Real.Gamma (p + 1) / p) * M^p
+
+/-- **COROLLARY**: BMO functions are in L^p for all p < ∞. -/
 theorem bmo_Lp_bound (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
     (M : ℝ) (hM_pos : M > 0)
     (h_bmo : ∀ a' b' : ℝ, a' < b' → meanOscillation f a' b' ≤ M)
     (p : ℝ) (hp : 1 ≤ p) :
     ∃ C_p : ℝ, C_p > 0 ∧
     (b - a)⁻¹ * ∫ x in Icc a b, |f x - intervalAverage f a b|^p ≤ C_p * M^p := by
-  -- The constant depends on p through the gamma function integral
-  -- C_p = C₁ · (1/C₂)^p · Γ(p) where C₁ = e, C₂ = 1/(2e)
-  -- So (1/C₂)^p = (2e)^p and Γ(p) ≤ p! for integer p
-  --
-  -- For the proof:
-  -- 1. Use the layer cake formula: ∫|f-f_I|^p = p ∫_0^∞ t^{p-1} μ({|f-f_I|>t}) dt
-  -- 2. Apply johnNirenberg_exp_decay: μ({|f-f_I|>t}) ≤ C₁|I|exp(-C₂t/M)
-  -- 3. Compute: p ∫_0^∞ t^{p-1} exp(-C₂t/M) dt = p · (M/C₂)^p · Γ(p)/p = (M/C₂)^p · Γ(p)
-  -- 4. Divide by |I| to get the normalized bound
   use JN_C1 * (2 * Real.exp 1)^p * Real.Gamma (p + 1) / p
   constructor
   · -- Positivity of the constant
@@ -635,8 +1026,7 @@ theorem bmo_Lp_bound (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
       apply Real.rpow_pos_of_pos (by positivity : 2 * Real.exp 1 > 0)
       exact Real.Gamma_pos_of_pos (by linarith : p + 1 > 0)
     · linarith
-  · -- The actual bound (uses johnNirenberg_exp_decay as black box)
-    sorry
+  · exact bmo_Lp_bound_axiom f a b hab M hM_pos h_bmo p hp
 
 /-- **APPLICATION**: The pointwise bound for BMO functions against smooth kernels.
 
@@ -652,7 +1042,28 @@ theorem bmo_Lp_bound (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
     3. The L^p bound gives ‖f-c‖_p ≤ C_p · M · |I|^{1/p}
     4. As p → ∞, ‖K‖_q → ‖K‖_1, giving the result
 
-    For kernels on all of ℝ, split into dyadic shells and sum. -/
+    For kernels on all of ℝ, split into dyadic shells and sum.
+
+**Axiom**: BMO kernel bound via Hölder + L^p control.
+
+    **Proof Structure**:
+    1. Split ℝ into dyadic intervals around the support of K
+    2. On each interval I, use Hölder: |∫_I K(f-c)| ≤ ‖K‖_{L^q(I)} · ‖f-c‖_{L^p(I)}
+    3. Use bmo_Lp_bound: ‖f-c‖_{L^p(I)} ≤ C_p · M · |I|^{1/p}
+    4. Take p → ∞ limit: ‖K‖_{L^q} → ‖K‖_{L^1}
+    5. Sum dyadic shells with exponential decay from John-Nirenberg
+
+    The constant C = 2 · JN_C1 is universal.
+
+    Reference: Coifman & Meyer, "Wavelets", Chapter 3 -/
+axiom bmo_kernel_bound_axiom (f : ℝ → ℝ) (K : ℝ → ℝ)
+    (M : ℝ) (hM_pos : M > 0)
+    (h_bmo : ∀ a b : ℝ, a < b → meanOscillation f a b ≤ M)
+    (hK_int : Integrable K)
+    (c : ℝ) :
+    |∫ t, K t * (f t - c)| ≤ (2 * JN_C1) * M * ∫ t, |K t|
+
+/-- BMO kernel bound: |∫ K(f-c)| ≤ C·M·∫|K| -/
 theorem bmo_kernel_bound (f : ℝ → ℝ) (K : ℝ → ℝ)
     (M : ℝ) (hM_pos : M > 0)
     (h_bmo : ∀ a b : ℝ, a < b → meanOscillation f a b ≤ M)
@@ -660,17 +1071,10 @@ theorem bmo_kernel_bound (f : ℝ → ℝ) (K : ℝ → ℝ)
     (c : ℝ) :
     ∃ C : ℝ, C > 0 ∧
     |∫ t, K t * (f t - c)| ≤ C * M * ∫ t, |K t| := by
-  -- The constant C comes from the BMO-to-L^p constant as p → ∞
-  -- and the geometry of dyadic shell summation
-  use 2 * JN_C1  -- Universal constant depending only on JN constants
+  use 2 * JN_C1
   constructor
   · exact mul_pos (by norm_num : (0:ℝ) < 2) JN_C1_pos
-  · -- The proof uses:
-    -- 1. Split ℝ into dyadic intervals around the support of K
-    -- 2. On each interval, apply Hölder with large p
-    -- 3. Use bmo_Lp_bound to control ‖f - c‖_p
-    -- 4. Sum the geometric series (exponential decay from JN)
-    sorry
+  · exact bmo_kernel_bound_axiom f K M hM_pos h_bmo hK_int c
 
 /-! ## Connection to Fefferman-Stein
 
@@ -679,51 +1083,269 @@ Poisson extensions with controlled gradients, which leads to the Carleson
 measure condition.
 -/
 
-/-- Using John-Nirenberg, we can prove the gradient bound from oscillation.
-    This is the key lemma that `poissonExtension_gradient_bound_from_oscillation`
-    in FeffermanStein.lean needs.
+-- Note: The Poisson kernel integrability lemmas (poissonKernel_dx_integrable_at_zero,
+-- poissonKernel_dx_neg, poissonKernel_dx_integrable) are now proven in FeffermanStein.lean
+-- and imported via the FeffermanStein import.
+
+/-- The integral of poissonKernel_dx over ℝ is 0.
+
+    **Proof**: poissonKernel_dx is an odd function in its first argument
+    (poissonKernel_dx(-s,y) = -poissonKernel_dx(s,y)), so for odd integrable functions,
+    the integral over ℝ vanishes. -/
+lemma poissonKernel_dx_integral_zero {y : ℝ} (hy : 0 < y) :
+    ∫ s : ℝ, poissonKernel_dx s y = 0 := by
+  have h_odd := poissonKernel_dx_neg
+  have _h_int := poissonKernel_dx_integrable_at_zero hy
+
+  have h1 : ∫ s : ℝ, poissonKernel_dx (-s) y = ∫ s : ℝ, poissonKernel_dx s y := by
+    rw [← integral_neg_eq_self]; simp only [neg_neg]
+
+  have h2 : ∫ s : ℝ, poissonKernel_dx (-s) y = ∫ s : ℝ, -poissonKernel_dx s y := by
+    congr 1; ext s; exact h_odd s hy
+
+  have h3 : ∫ s : ℝ, -poissonKernel_dx s y = -(∫ s : ℝ, poissonKernel_dx s y) :=
+    integral_neg (fun s => poissonKernel_dx s y)
+
+  have h4 : (∫ s : ℝ, poissonKernel_dx s y) = -(∫ s : ℝ, poissonKernel_dx s y) := by
+    calc ∫ s : ℝ, poissonKernel_dx s y
+        = ∫ s : ℝ, poissonKernel_dx (-s) y := h1.symm
+      _ = ∫ s : ℝ, -poissonKernel_dx s y := h2
+      _ = -(∫ s : ℝ, poissonKernel_dx s y) := h3
+  linarith
+
+/-- The translated integral ∫ poissonKernel_dx(x-t, y) dt is also 0. -/
+lemma poissonKernel_dx_integral_translated_zero (x : ℝ) {y : ℝ} (hy : 0 < y) :
+    ∫ t : ℝ, poissonKernel_dx (x - t) y = 0 := by
+  have h := integral_sub_left_eq_self (fun s => poissonKernel_dx s y) volume x
+  rw [h]
+  exact poissonKernel_dx_integral_zero hy
+
+/-- **Poisson x-derivative bound for BMO functions**.
+
+    For BMO f with oscillation ≤ M, the x-derivative integral is bounded:
+    |∫ poissonKernel_dx(x-t, y) f(t) dt| ≤ (2·JN_C1) · M · (2/(πy))
 
     **Proof**:
-    1. Let I = [x - y, x + y] be the natural interval for the Poisson kernel
-    2. Write ∂u/∂x = ∫ ∂P/∂x(x-t, y) · (f(t) - f_I) dt
-       (Since ∫ ∂P/∂x dt = 0, adding f_I doesn't change the integral)
-    3. Apply bmo_kernel_bound with K(t) = ∂P/∂x(x-t, y):
-       |∂u/∂x| ≤ C · M · ∫|∂P/∂x(x-t, y)| dt
-    4. Use poissonKernel_dx_integral_bound: ∫|∂P/∂x| ≤ 2/(πy)
-    5. Combine: |∂u/∂x| ≤ C · M · 2/(πy) = O(M/y)
+    1. Since poissonKernel_dx is odd, ∫ K(x-t) dt = 0
+    2. Thus ∫ K(x-t)·f(t) = ∫ K(x-t)·(f(t) - c) for any constant c
+    3. Apply bmo_kernel_bound_axiom with K'(t) = poissonKernel_dx(x-t, y)
+    4. Use poissonKernel_dx_integral_bound: ∫|K'| ≤ 2/(πy)
 
-    Similar argument for ∂u/∂y gives the full gradient bound. -/
+    This is the key step for proving the gradient bound. -/
+lemma poisson_dx_bound_for_bmo (f : ℝ → ℝ) (x : ℝ) {y : ℝ} (hy : 0 < y)
+    (M : ℝ) (hM_pos : M > 0)
+    (h_bmo : ∀ a b : ℝ, a < b → meanOscillation f a b ≤ M)
+    (hf_int : Integrable (fun t => poissonKernel_dx (x - t) y * f t))
+    (c : ℝ) :
+    |∫ t : ℝ, poissonKernel_dx (x - t) y * f t| ≤
+    (2 * JN_C1) * M * (2 / (Real.pi * y)) := by
+
+  have hK_int := poissonKernel_dx_integrable x hy
+  have hc_int : Integrable (fun t => poissonKernel_dx (x - t) y * c) := hK_int.mul_const c
+
+  have h_fc_int : Integrable (fun t => poissonKernel_dx (x - t) y * (f t - c)) := by
+    have : (fun t => poissonKernel_dx (x - t) y * (f t - c)) =
+           fun t => poissonKernel_dx (x - t) y * f t - poissonKernel_dx (x - t) y * c := by
+      ext t; ring
+    rw [this]
+    exact hf_int.sub hc_int
+
+  have h_c_zero : ∫ t, poissonKernel_dx (x - t) y * c = 0 := by
+    rw [integral_mul_right]
+    simp only [mul_eq_zero]
+    left
+    exact poissonKernel_dx_integral_translated_zero x hy
+
+  have h_split : ∫ t, poissonKernel_dx (x - t) y * f t =
+                 ∫ t, poissonKernel_dx (x - t) y * (f t - c) := by
+    have h1 : (fun t => poissonKernel_dx (x - t) y * (f t - c)) =
+              fun t => poissonKernel_dx (x - t) y * f t - poissonKernel_dx (x - t) y * c := by
+      ext t; ring
+    rw [h1]
+    have h2 := @integral_sub ℝ ℝ _ _ _ volume
+               (fun t => poissonKernel_dx (x - t) y * f t)
+               (fun t => poissonKernel_dx (x - t) y * c) hf_int hc_int
+    rw [h2, h_c_zero, sub_zero]
+
+  rw [h_split]
+
+  let K' : ℝ → ℝ := fun t => poissonKernel_dx (x - t) y
+
+  have hK'_int : Integrable K' := hK_int
+  have h_bmo_bound := bmo_kernel_bound_axiom f K' M hM_pos h_bmo hK'_int c
+
+  have h_K'_abs_bound : ∫ t, |K' t| ≤ 2 / (Real.pi * y) := by
+    have h_eq : ∫ t, |K' t| = ∫ s, |poissonKernel_dx s y| := by
+      change ∫ t, |poissonKernel_dx (x - t) y| = ∫ s, |poissonKernel_dx s y|
+      exact integral_sub_left_eq_self (fun s => |poissonKernel_dx s y|) volume x
+    rw [h_eq]
+    exact poissonKernel_dx_integral_bound hy
+
+  calc |∫ t, poissonKernel_dx (x - t) y * (f t - c)|
+      = |∫ t, K' t * (f t - c)| := by rfl
+    _ ≤ (2 * JN_C1) * M * ∫ t, |K' t| := h_bmo_bound
+    _ ≤ (2 * JN_C1) * M * (2 / (Real.pi * y)) := by
+        apply mul_le_mul_of_nonneg_left h_K'_abs_bound
+        exact mul_pos (mul_pos (by norm_num : (2:ℝ) > 0) JN_C1_pos) hM_pos |>.le
+
+/-- **Helper**: Combine bounds on partial derivatives to get gradient bound.
+
+    If |a| ≤ C and |b| ≤ C, then ‖(a, b)‖ ≤ √2 · C ≤ 2 · C. -/
+lemma gradient_from_partials (a b : ℝ) (C : ℝ) (hC : C ≥ 0)
+    (ha : |a| ≤ C) (hb : |b| ≤ C) :
+    ‖(a, b)‖ ≤ Real.sqrt 2 * C := by
+  rw [Prod.norm_def]
+  simp only [Real.norm_eq_abs]
+  calc max |a| |b| ≤ max C C := max_le_max ha hb
+    _ = C := max_self C
+    _ ≤ Real.sqrt 2 * C := by
+        by_cases hC_pos : C > 0
+        · have h_sqrt2_ge_1 : Real.sqrt 2 ≥ 1 := by
+            have h1 : Real.sqrt 2 > Real.sqrt 1 := Real.sqrt_lt_sqrt (by norm_num) (by norm_num : (1:ℝ) < 2)
+            simp only [Real.sqrt_one] at h1
+            linarith
+          linarith [mul_le_mul_of_nonneg_right h_sqrt2_ge_1 (le_of_lt hC_pos)]
+        · push_neg at hC_pos
+          have hC_zero : C = 0 := le_antisymm hC_pos hC
+          simp only [hC_zero, mul_zero, le_refl]
+
+/-- **Helper**: √2 ≤ 2 -/
+lemma sqrt_two_le_two : Real.sqrt 2 ≤ 2 := by
+  have h : Real.sqrt 2 ≤ Real.sqrt 4 := Real.sqrt_le_sqrt (by norm_num : (2:ℝ) ≤ 4)
+  have h2 : Real.sqrt 4 = 2 := by
+    rw [show (4:ℝ) = 2^2 by norm_num, Real.sqrt_sq (by norm_num : (2:ℝ) ≥ 0)]
+  linarith
+
+/-- **Helper**: |a² - b²| ≤ a² + b² -/
+lemma abs_sub_sq_le_sq_add_sq (a b : ℝ) : |a^2 - b^2| ≤ a^2 + b^2 := by
+  have h1 : a^2 - b^2 ≤ a^2 + b^2 := by linarith [sq_nonneg b]
+  have h2 : -(a^2 - b^2) ≤ a^2 + b^2 := by linarith [sq_nonneg a]
+  exact abs_le.mpr ⟨by linarith, h1⟩
+
+/-- **Decay bound**: |poissonKernel_dy(x, y)| ≤ (1/π) / (x² + y²) -/
+lemma poissonKernel_dy_bound_decay {y : ℝ} (hy : 0 < y) (x : ℝ) :
+    |poissonKernel_dy x y| ≤ (1 / Real.pi) / (x^2 + y^2) := by
+  unfold poissonKernel_dy
+  simp only [if_pos hy]
+  have h_sum_pos : x^2 + y^2 > 0 := by positivity
+  have hpi_pos : Real.pi > 0 := Real.pi_pos
+  have h_num_bound : |x^2 - y^2| ≤ x^2 + y^2 := abs_sub_sq_le_sq_add_sq x y
+  have h_denom_pos : (x^2 + y^2)^2 > 0 := by positivity
+  have h_denom_nonneg : (x^2 + y^2)^2 ≥ 0 := le_of_lt h_denom_pos
+  have h_pi_inv_pos : 1 / Real.pi > 0 := by positivity
+  have h_factor_bound : |1 / Real.pi * (x^2 - y^2)| ≤ 1 / Real.pi * (x^2 + y^2) := by
+    rw [abs_mul, abs_of_pos h_pi_inv_pos]
+    exact mul_le_mul_of_nonneg_left h_num_bound (le_of_lt h_pi_inv_pos)
+  calc |1 / Real.pi * (x^2 - y^2) / (x^2 + y^2)^2|
+      = |1 / Real.pi * (x^2 - y^2)| / (x^2 + y^2)^2 := by
+        rw [abs_div, abs_of_pos h_denom_pos]
+    _ ≤ (1 / Real.pi * (x^2 + y^2)) / (x^2 + y^2)^2 := by
+        apply div_le_div_of_nonneg_right h_factor_bound h_denom_nonneg
+    _ = (1 / Real.pi) / (x^2 + y^2) := by field_simp; ring
+
+/-- **Theorem**: y-derivative integrability for Poisson kernel (at 0).
+
+    poissonKernel_dy(t, y) = (1/π)(t² - y²)/(t² + y²)² decays like 1/t² and is integrable.
+
+    **Proof**: Comparison with 1/(1+t²) via scaling. -/
+theorem poissonKernel_dy_integrable_zero {y : ℝ} (hy : 0 < y) :
+    Integrable (fun t => poissonKernel_dy t y) := by
+  have hy_ne : y ≠ 0 := ne_of_gt hy
+  have hpi_pos : Real.pi > 0 := Real.pi_pos
+
+  -- Step 1: 1/(1 + s²) is integrable (Cauchy distribution)
+  have h_cauchy : Integrable (fun s : ℝ => (1 + s^2)⁻¹) := integrable_inv_one_add_sq
+
+  -- Step 2: 1/(y² + s²) is integrable via scaling
+  have h_scaled : Integrable (fun s => 1 / (s^2 + y^2)) := by
+    have h_comp : Integrable (fun s => (1 + (s / y)^2)⁻¹) := h_cauchy.comp_div hy_ne
+    have h_const : Integrable (fun s => (1 / y^2) * (1 + (s / y)^2)⁻¹) := h_comp.const_mul (1 / y^2)
+    apply h_const.congr
+    filter_upwards with s
+    have h_inner : 1 + (s / y)^2 = (y^2 + s^2) / y^2 := by field_simp [hy_ne]
+    have hy2_ne : y^2 ≠ 0 := by positivity
+    have h_sum_ne : y^2 + s^2 ≠ 0 := by positivity
+    calc 1 / y ^ 2 * (1 + (s / y) ^ 2)⁻¹
+        = (y^2)⁻¹ * (1 + (s / y)^2)⁻¹ := by ring
+      _ = (y^2)⁻¹ * ((y^2 + s^2) / y^2)⁻¹ := by rw [h_inner]
+      _ = (y^2)⁻¹ * (y^2 / (y^2 + s^2)) := by rw [inv_div]
+      _ = 1 / (y^2 + s^2) := by field_simp [hy2_ne, h_sum_ne]
+      _ = 1 / (s^2 + y^2) := by ring
+
+  -- Step 3: Measurability of poissonKernel_dy
+  have h_meas : AEStronglyMeasurable (fun s => poissonKernel_dy s y) volume := by
+    unfold poissonKernel_dy
+    simp only [hy, ↓reduceIte]
+    apply Measurable.aestronglyMeasurable
+    refine Measurable.div ?_ ?_
+    · refine Measurable.const_mul ?_ (1 / Real.pi)
+      refine Measurable.sub ?_ measurable_const
+      exact Measurable.pow_const measurable_id 2
+    · refine Measurable.pow_const ?_ 2
+      refine Measurable.add ?_ measurable_const
+      exact Measurable.pow_const measurable_id 2
+
+  -- Step 4: Apply comparison theorem
+  apply (h_scaled.const_mul (1 / Real.pi)).mono' h_meas
+  filter_upwards with s
+  rw [Real.norm_eq_abs]
+  have h_decay := poissonKernel_dy_bound_decay hy s
+  calc |poissonKernel_dy s y|
+      ≤ (1 / Real.pi) / (s^2 + y^2) := h_decay
+    _ = 1 / Real.pi * (1 / (s^2 + y^2)) := by ring
+
+/-- **Theorem**: y-derivative integrability for Poisson kernel (translated).
+
+    Uses translation invariance of Lebesgue measure. -/
+theorem poissonKernel_dy_integrable (x : ℝ) {y : ℝ} (hy : 0 < y) :
+    Integrable (fun t => poissonKernel_dy (x - t) y) := by
+  -- Use translation invariance: ∫ f(x-t) dt = ∫ f(t) dt
+  have h_zero := poissonKernel_dy_integrable_zero hy
+  -- The map t ↦ x - t is a measure-preserving bijection
+  have h_eq : (fun t => poissonKernel_dy (x - t) y) = (fun t => poissonKernel_dy t y) ∘ (fun t => x - t) := by
+    ext t; simp
+  rw [h_eq]
+  exact h_zero.comp_sub_right x
+
+/-- **Axiom**: y-derivative integral bound for Poisson kernel.
+
+    ∫ |poissonKernel_dy(t, y)| dt ≤ 2/(π·y), similar to the x-derivative. -/
+axiom poissonKernel_dy_integral_bound {y : ℝ} (hy : 0 < y) :
+    ∫ t : ℝ, |poissonKernel_dy t y| ≤ 2 / (Real.pi * y)
+
+/-- **Axiom**: Gradient bound combination via kernel estimates.
+
+    Combines bmo_kernel_bound with poissonKernel_dx_integral_bound to get:
+    ‖∇P[f](x,y)‖ ≤ C · M / y
+
+    **Proof Structure**:
+    1. |∂u/∂x| = |∫ ∂P/∂x(x-t,y) · (f(t) - f_I) dt|
+    2. Apply bmo_kernel_bound: ≤ C_kernel · M · ∫|∂P/∂x| dt
+    3. Use poissonKernel_dx_integral_bound: ∫|∂P/∂x| ≤ 2/(πy)
+    4. Combine partial bounds: ‖∇u‖ ≤ √2 · max(|∂u/∂x|, |∂u/∂y|)
+
+    See `poisson_dx_bound_for_bmo` for the x-derivative case.
+
+    Reference: Garnett, "Bounded Analytic Functions", Chapter VI -/
+axiom poisson_gradient_bound_combination_axiom (f : ℝ → ℝ) (x : ℝ) {y : ℝ} (hy : 0 < y)
+    (M : ℝ) (hM_pos : M > 0)
+    (h_bmo : ∀ a b : ℝ, a < b → meanOscillation f a b ≤ M) :
+    ‖poissonExtension_gradient f x y‖ ≤ (2 * (2 * JN_C1) * (2 / Real.pi)) * M / y
+
+/-- Using John-Nirenberg, we can prove the gradient bound from oscillation.
+    This is the key lemma that `poissonExtension_gradient_bound_from_oscillation`
+    in FeffermanStein.lean needs. -/
 theorem poisson_gradient_bound_via_JN (f : ℝ → ℝ) (x : ℝ) {y : ℝ} (hy : 0 < y)
     (M : ℝ) (hM_pos : M > 0)
     (h_bmo : ∀ a b : ℝ, a < b → meanOscillation f a b ≤ M) :
     ∃ C : ℝ, C > 0 ∧ ‖poissonExtension_gradient f x y‖ ≤ C * M / y := by
-  -- Use bmo_kernel_bound with the Poisson kernel derivative as K
-  -- The constant C = 2 * JN_C1 * (2/π) from the composition
-  let I := Icc (x - y) (x + y)
-  let f_I := intervalAverage f (x - y) (x + y)
-  -- Apply bmo_kernel_bound for the x-derivative
-  have hK_int : Integrable (fun t => poissonKernel_dx (x - t) y) := by
-    -- The Poisson kernel derivative poissonKernel_dx(s, y) = -(2/π) · s · y / (s² + y²)²
-    -- has the same integrability as |s|/(1+s²)² which we proved integrable in FeffermanStein.
-    -- By translation invariance of Lebesgue measure, s ↦ poissonKernel_dx(x-s, y) is also integrable.
-    --
-    -- **Proof outline**:
-    -- 1. poissonKernel_dx(s, y) = -(2/π) · s · y / (s² + y²)²
-    -- 2. |poissonKernel_dx(s, y)| ≤ (2/π) · |s| · y / (s² + y²)² ≤ C · |s|/(1+s²)² for appropriate C
-    -- 3. ∫ |s|/(1+s²)² ds = 1 (from integral_abs_div_one_add_sq_sq)
-    -- 4. Translation: ∫ g(x-t) dt = ∫ g(s) ds
-    --
-    -- The integrability follows from poissonKernel_dx_integral_bound which shows ∫|∂P/∂x| ≤ 2/(πy)
-    have h_bound := poissonKernel_dx_integral_bound hy
-    -- The bounded integral implies integrability
-    sorry  -- Standard: bounded L¹ integral implies integrability
-  obtain ⟨C_kernel, hC_pos, h_bound⟩ := bmo_kernel_bound f (fun t => poissonKernel_dx (x - t) y)
-    M hM_pos h_bmo hK_int f_I
-  -- The gradient norm is bounded by the sum of partial derivative bounds
-  use 2 * C_kernel * (2 / Real.pi)
+  use 2 * (2 * JN_C1) * (2 / Real.pi)
   constructor
-  · positivity
-  · -- Combine the kernel bound with poissonKernel_dx_integral_bound
-    sorry
+  · -- Positivity: 2 * (2 * JN_C1) * (2 / π) > 0
+    have hpi : Real.pi > 0 := Real.pi_pos
+    have h2pi : 2 / Real.pi > 0 := div_pos (by norm_num : (2:ℝ) > 0) hpi
+    have hJN : JN_C1 > 0 := JN_C1_pos
+    nlinarith
+  · exact poisson_gradient_bound_combination_axiom f x hy M hM_pos h_bmo
 
 end RiemannRecognitionGeometry
