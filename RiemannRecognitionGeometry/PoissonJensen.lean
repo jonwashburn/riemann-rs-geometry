@@ -68,6 +68,28 @@ lemma blaschkeFactor_at_re (ρ : ℂ) (hγ_pos : 0 < ρ.im) :
   have hI_γ_ne : Complex.I * ρ.im ≠ 0 := mul_ne_zero Complex.I_ne_zero hγ_ne
   field_simp [hI_γ_ne]
 
+/-- At t = Re(ρ), the Blaschke factor equals -1 (generalized for γ ≠ 0).
+    B(σ) = (σ - ρ)/(σ - conj(ρ)) = (-iγ)/(iγ) = -1 -/
+lemma blaschkeFactor_at_re' (ρ : ℂ) (hγ_ne : ρ.im ≠ 0) :
+    blaschkeFactor ρ ρ.re = -1 := by
+  simp only [blaschkeFactor]
+  have h1 : (↑ρ.re : ℂ) - ρ = -Complex.I * ρ.im := by
+    simp only [Complex.ext_iff, Complex.sub_re, Complex.ofReal_re,
+               Complex.sub_im, Complex.ofReal_im, Complex.neg_re,
+               Complex.neg_im, Complex.mul_re, Complex.I_re, Complex.I_im,
+               Complex.ofReal_re, Complex.ofReal_im, Complex.mul_im]
+    constructor <;> ring
+  have h2 : (↑ρ.re : ℂ) - conj ρ = Complex.I * ρ.im := by
+    simp only [Complex.ext_iff, Complex.sub_re, Complex.ofReal_re,
+               Complex.conj_re, Complex.sub_im, Complex.ofReal_im,
+               Complex.conj_im, Complex.mul_re, Complex.I_re, Complex.I_im,
+               Complex.ofReal_re, Complex.ofReal_im, Complex.mul_im]
+    constructor <;> ring
+  rw [h1, h2]
+  have hγ_ne' : (ρ.im : ℂ) ≠ 0 := by simp only [Complex.ofReal_ne_zero]; exact hγ_ne
+  have hI_γ_ne : Complex.I * ρ.im ≠ 0 := mul_ne_zero Complex.I_ne_zero hγ_ne'
+  field_simp [hI_γ_ne]
+
 /-- The phase of the Blaschke factor at t = Re(ρ) is π.
     Since B(σ) = -1, arg(B(σ)) = arg(-1) = π. -/
 lemma blaschkePhase_at_re (ρ : ℂ) (hγ_pos : 0 < ρ.im) :

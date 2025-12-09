@@ -12,46 +12,54 @@ Complete a fully unconditional Lean 4 proof of the Riemann Hypothesis using Reco
 
 | Line | Declaration | Case | Blocker |
 |------|-------------|------|---------|
-| 903 | `phase_bound_from_arctan` | σ > b, γ > 0 | `nlinarith` on bound `1/3 ≤ (x-y)/(1+xy)` |
-| 1128 | `phase_bound_neg_im` | σ ∈ [a,b], γ < 0 | `simp` failures, type mismatches |
+| 903 | `phase_bound_from_arctan` | σ > b, γ > 0 | Needs σ ≤ 1 constraint |
+| 1128 | `phase_bound_neg_im` | σ ∈ [a,b], γ < 0 | Same structure as γ > 0 |
 | 1309 | `phase_bound_neg_im` | σ > b, γ < 0 | Same as line 903 |
 
-## Technical Analysis
+## Root Cause Analysis
 
-### σ > b Case (Lines 903, 1309)
-The bound `(x-y)/(1+xy) ≥ 1/3` requires showing `1 + xy ≤ 3(x-y)`.
+### The σ > b Problem
+For the σ > b case, we need to prove:
+```
+(x - y) / (1 + x * y) ≥ 1/3
+```
+where `x = (b-σ)/γ < 0` and `y = (a-σ)/γ < 0`.
 
-**Variables:**
-- `x = (b-σ)/γ < 0`, `y = (a-σ)/γ < 0`, `x > y`
-- `x - y = (b-a)/γ ≥ 1` (from `h_spread`)
-- `xy = (b-σ)(a-σ)/γ² > 0`
+This requires `xy ≤ 3(x-y) - 1`. With `x - y ≥ 1`, we need `xy ≤ 2` in the minimal case.
 
-**Available constraint:** `hσ_upper : ρ.re ≤ 1` (critical strip)
+**Key insight**: `xy = |x||y|` where:
+- `|x| = (σ - b)/γ` (unbounded without σ constraint!)
+- `|y| = (σ - a)/γ = |x| + (b-a)/γ`
 
-**Derived bounds:**
-- `σ - b ≤ 1 - b ≤ 1 - γ` (since `b ≥ γ` from `hγ_upper`)
-- `|x| = (σ-b)/γ ≤ (1-γ)/γ`
+**Without σ ≤ 1**: As σ → ∞, both `|x|` and `|y|` → ∞, making `xy` arbitrarily large.
 
-**Why `nlinarith` fails:** The inequality `xy ≤ 3(x-y) - 1` requires polynomial reasoning that `nlinarith` can't find with the available hypotheses. Need to manually derive intermediate bounds.
+**With σ ≤ 1** and `b ≥ γ` (from hγ_upper):
+- `|x| = (σ - b)/γ ≤ (1 - b)/γ ≤ (1 - γ)/γ`
+- For `γ ≥ 1/2`: `|x| ≤ 1`, giving bounded `xy`
 
-### Mixed-Sign Case (Line 1128)
-For γ < 0 with σ ∈ [a, b]:
-- `x = (b-σ)/γ ≤ 0` and `y = (a-σ)/γ ≥ 0`
-- Need `|phaseChange| ≥ 4·arctan(1/5) > L_rec`
+## Solution: Add σ ≤ 1 Constraint
 
-**Approach:** Use `phaseChange_abs_conj` to reduce to γ > 0 case.
-**Blockers:**
-1. `simp` not simplifying `starRingEnd` correctly
-2. Type mismatches with `blaschkePhase_arctan` hypotheses
-3. Edge case handling when σ = a or σ = b (singular points)
+The constraint `hσ_upper : ρ.re ≤ 1` needs to propagate through:
+1. `phase_bound_from_arctan`
+2. `phase_bound_neg_im`
+3. `blaschke_lower_bound`
+4. `zero_free_with_interval`
+5. `local_zero_free`
+6. `no_interior_zeros`
 
-## Suggested Approach
+This is justified because the RH proof structure handles:
+- **Re(ρ) > 1**: No zeros (Euler product)
+- **Re(ρ) ≤ 1/2**: Functional equation symmetry
+- **1/2 < Re(ρ) ≤ 1**: Recognition Geometry (these lemmas)
 
-1. **Add lemma hypotheses:** Explicitly require `a < σ < b` (strict) for mixed-sign case to avoid edge case issues.
+## Implementation Steps
 
-2. **Use `polyrith` or `nlinarith` with explicit terms:** For σ > b case, may need to provide explicit intermediate bounds that nlinarith can use.
-
-3. **Factor out reusable lemmas:** Create helper lemmas for the arctan bounds that can be proven separately.
+1. Add `(hσ_upper : ρ.re ≤ 1)` to `phase_bound_from_arctan` signature
+2. Use `hσ_upper` to derive `|x| ≤ (1-γ)/γ` bound
+3. Prove `xy ≤ 3(x-y) - 1` using the bound
+4. Update `phase_bound_neg_im` similarly
+5. Propagate constraint through call chain
+6. Verify build passes
 
 ## Build Commands
 
@@ -62,7 +70,6 @@ grep -n "sorry" RiemannRecognitionGeometry/Axioms.lean
 
 ## Notes
 
-- DirichletEta.lean being developed in separate session (`zero_has_nonzero_im`)
 - FeffermanStein.lean is completely proven (with 5 axioms)
-- The σ ≤ 1 constraint is now available in lemma signatures (recently added)
-- All 3 remaining sorries have similar structure: arctan bounds from Whitney geometry
+- The σ ≤ 1 constraint is mathematically sound for RH
+- All 3 sorries share the same root cause

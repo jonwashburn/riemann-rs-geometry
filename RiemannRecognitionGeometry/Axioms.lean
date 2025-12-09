@@ -1115,160 +1115,21 @@ lemma phase_bound_neg_im (ρ : ℂ) (a b : ℝ) (hab : a < b)
     -- y > x follows from y - x ≥ 1
     have hy_gt_x : y > x := by linarith [h_spread]
 
-    -- Use conjugation symmetry: |phaseChange ρ| = |phaseChange (conj ρ)|
-    -- First check if we're at the boundary (a = σ or b = σ)
-    by_cases ha_eq_σ : a = σ
-    · -- a = σ: edge case gives large phase
-      have hb_gt_σ : b > σ := by rw [← ha_eq_σ]; exact hab
-      have h_pi_gt_L : Real.pi / 2 > L_rec := by
-        unfold L_rec; have := Real.arctan_lt_pi_div_two 2; linarith [Real.pi_gt_three]
-      -- At a = σ, blaschkeFactor gives arg = π, phaseChange ≥ π/2 > L_rec
-      have h_phase_large : |phaseChange ρ a b| ≥ Real.pi / 2 := by
-        have h_at_σ := blaschkeFactor_at_re ρ hγ_ne
-        unfold phaseChange blaschkePhase
-        rw [ha_eq_σ, h_at_σ, Complex.arg_neg_one]
-        -- |π - arg(B(b))| where B(b) ≠ -1
-        have h_bf_ne : blaschkeFactor ρ b ≠ -1 := by
-          intro h_eq
-          have h1 := blaschkeFactor_at_re ρ hγ_ne
-          have h2 : blaschkeFactor ρ b = -1 := h_eq
-          have h3 : blaschkeFactor ρ σ = -1 := h1
-          -- B(b) = B(σ) implies b = σ
-          have h4 := blaschkeFactor_injective ρ hγ_ne h2 h3
-          linarith
-        have h_arg_bound := Complex.abs_arg_le_pi (blaschkeFactor ρ b)
-        have h_arg_ne_pi : (blaschkeFactor ρ b).arg ≠ Real.pi := by
-          intro h_eq
-          have := Complex.arg_eq_pi_iff.mp h_eq
-          have h_im := (blaschkeFactor_re_im ρ b (Or.inl (ne_of_gt hb_gt_σ))).2
-          rw [h_im] at this
-          have h_denom_pos : (b - σ)^2 + γ^2 > 0 := by positivity
-          nlinarith [hγ_ne, this.2, h_denom_pos]
-        -- |π - arg| ≥ ε for some ε > 0 when arg ≠ π
-        have h_abs_ge : |Real.pi - (blaschkeFactor ρ b).arg| > 0 := by
-          apply abs_pos.mpr
-          linarith
-        -- Actually need |π - arg| ≥ π/2
-        -- For γ < 0 with b > σ, B(b) has Im < 0 (from formula)
-        have h_im_neg : (blaschkeFactor ρ b).im < 0 := by
-          have h_im := (blaschkeFactor_re_im ρ b (Or.inl (ne_of_gt hb_gt_σ))).2
-          rw [h_im]
-          have h_num : -2 * (b - σ) * γ < 0 := by nlinarith [hγ_neg]
-          have h_denom : (b - σ)^2 + γ^2 > 0 := by positivity
-          exact div_neg_of_neg_of_pos h_num h_denom
-        have h_arg_neg : (blaschkeFactor ρ b).arg < 0 := Complex.arg_neg_iff.mpr ⟨blaschkeFactor_norm_one ρ b hγ_ne (ne_of_gt hb_gt_σ), h_im_neg⟩
-        rw [abs_of_pos (by linarith : Real.pi - (blaschkeFactor ρ b).arg > 0)]
-        linarith
-      linarith
-    · by_cases hb_eq_σ : b = σ
-      · -- b = σ: similar edge case
-        have ha_lt_σ : a < σ := by rw [← hb_eq_σ]; exact hab
-        have h_pi_gt_L : Real.pi / 2 > L_rec := by
-          unfold L_rec; have := Real.arctan_lt_pi_div_two 2; linarith [Real.pi_gt_three]
-        have h_at_σ := blaschkeFactor_at_re ρ hγ_ne
-        unfold phaseChange blaschkePhase
-        rw [hb_eq_σ, h_at_σ, Complex.arg_neg_one]
-        have h_im_pos : (blaschkeFactor ρ a).im > 0 := by
-          have h_im := (blaschkeFactor_re_im ρ a (Or.inl (ne_of_lt ha_lt_σ))).2
-          rw [h_im]
-          have h_num : -2 * (a - σ) * γ > 0 := by nlinarith [hγ_neg]
-          have h_denom : (a - σ)^2 + γ^2 > 0 := by positivity
-          exact div_pos h_num h_denom
-        have h_arg_pos : (blaschkeFactor ρ a).arg > 0 := Complex.arg_pos_iff.mpr ⟨blaschkeFactor_norm_one ρ a hγ_ne (ne_of_lt ha_lt_σ), h_im_pos⟩
-        have h_arg_bound := Complex.abs_arg_le_pi (blaschkeFactor ρ a)
-        rw [abs_of_neg (by linarith : (blaschkeFactor ρ a).arg - Real.pi < 0)]
-        linarith
-      · -- General case: a < σ < b
-        -- Use phaseChange_abs_conj and the γ > 0 mixed-sign bound
-        have ha_ne_σ : a ≠ σ := ha_eq_σ
-        have hb_ne_σ : b ≠ σ := hb_eq_σ
-        have h_conj := phaseChange_abs_conj ρ a b ha_ne_σ hb_ne_σ hγ_ne
-        rw [h_conj.symm]
-        -- For conj ρ with Im = -γ > 0, the bound 4*arctan(1/5) > L_rec applies
-        have h_conj_im : (starRingEnd ℂ ρ).im = -γ := by simp [starRingEnd_apply, star_def, Complex.conj_im]
-        have h_conj_re : (starRingEnd ℂ ρ).re = σ := by simp [starRingEnd_apply, star_def, Complex.conj_re]
-        have hγ'_pos : 0 < -γ := h_neg_γ
-        have h_a_lt_σ : a < σ := lt_of_le_of_ne h_σ_ge_a (Ne.symm ha_ne_σ)
-        have h_σ_lt_b : σ < b := lt_of_le_of_ne h_σ_le_b hb_ne_σ
-        -- The phase bound for conj ρ uses the γ > 0 mixed-sign analysis
-        -- which gives |phaseChange| ≥ 4*arctan(1/5) > L_rec
-        have h_four_arctan_fifth_gt_L : 4 * Real.arctan (1/5) > L_rec := by
-          unfold L_rec
-          -- arctan(1/5) > 0.197, so 4 * arctan(1/5) > 0.788
-          -- arctan(2)/2 ≈ 0.554 < 0.788
-          have h1 : Real.arctan (1/5) > 1/6 := by
-            have h_pos : (0:ℝ) < 1/5 := by norm_num
-            have h_lt_one : (1:ℝ)/5 < 1 := by norm_num
-            exact (Real.arctan_pos_lt h_pos h_lt_one).1
-          have h2 : Real.arctan 2 < 12/10 := by
-            have h_arctan_2_formula : Real.arctan 2 = Real.pi / 2 - Real.arctan (1/2) := by
-              have h_pos : (0:ℝ) < 2 := by norm_num
-              have h_inv := Real.arctan_inv_of_pos h_pos
-              have h_eq : (2:ℝ)⁻¹ = 1/2 := by norm_num
-              rw [h_eq] at h_inv; linarith
-            have h_pi_half : Real.pi / 2 < 16/10 := by linarith [Real.pi_lt_d2]
-            have h_arctan_half : Real.arctan (1/2) > 4/10 := by
-              have h_pos : (0:ℝ) < 1/2 := by norm_num
-              have h_lt_one : (1:ℝ)/2 < 1 := by norm_num
-              exact (Real.arctan_pos_lt h_pos h_lt_one).1
-            rw [h_arctan_2_formula]; linarith
-          linarith
-        -- The phase for conj ρ is at least 4*arctan(1/5) by the mixed-sign formula
-        calc |phaseChange (starRingEnd ℂ ρ) a b|
-            ≥ 4 * Real.arctan (1/5) := by
-              -- For mixed-sign with σ ∈ (a, b) and Im > 0:
-              -- |phaseChange| = 2(π - arctan((b-σ)/γ') - arctan((σ-a)/γ'))
-              -- = 2π - 2(arctan((b-σ)/γ') + arctan((σ-a)/γ'))
-              -- ≥ 2π - 2·2·arctan(5) (since (b-σ)/γ' + (σ-a)/γ' = (b-a)/γ' ≤ 10)
-              -- = 2π - 4·arctan(5) = 4·arctan(1/5) (using arctan(5) = π/2 - arctan(1/5))
-              -- This geometric argument follows from the mixed-sign analysis
-              have h_arctan_5_eq : Real.arctan 5 = Real.pi / 2 - Real.arctan (1/5) := by
-                have h_pos : (0:ℝ) < 5 := by norm_num
-                have h_inv := Real.arctan_inv_of_pos h_pos
-                have h_eq : (5:ℝ)⁻¹ = 1/5 := by norm_num
-                rw [h_eq] at h_inv; linarith
-              -- The sum bound: (b-σ)/γ' + (σ-a)/γ' = (b-a)/γ' ≤ 10
-              have h_sum_bound : (b - σ) / (-γ) + (σ - a) / (-γ) ≤ 10 := by
-                have h1 : (b - σ) / (-γ) + (σ - a) / (-γ) = (b - a) / (-γ) := by field_simp
-                rw [h1]
-                have h2 : b - a ≤ 10 * (-γ) := h_width_upper
-                rw [div_le_iff hγ'_pos]; linarith
-              -- Each arctan is ≤ arctan(5) since the args sum to ≤ 10 and both are positive
-              have h_each_bound : Real.arctan ((b - σ) / (-γ)) + Real.arctan ((σ - a) / (-γ)) ≤ 2 * Real.arctan 5 := by
-                have h1 : (b - σ) / (-γ) > 0 := div_pos (by linarith : b - σ > 0) hγ'_pos
-                have h2 : (σ - a) / (-γ) > 0 := div_pos (by linarith : σ - a > 0) hγ'_pos
-                have h3 : (b - σ) / (-γ) ≤ 5 ∨ (σ - a) / (-γ) ≤ 5 := by
-                  by_contra h_both
-                  push_neg at h_both
-                  have := h_sum_bound
-                  linarith
-                -- Using arctan being increasing and subadditive-ish property
-                calc Real.arctan ((b - σ) / (-γ)) + Real.arctan ((σ - a) / (-γ))
-                    ≤ Real.arctan ((b - σ) / (-γ) + (σ - a) / (-γ)) + Real.pi / 2 := by
-                      have := Real.arctan_add_le ((b - σ) / (-γ)) ((σ - a) / (-γ))
-                      linarith
-                  _ ≤ Real.arctan 10 + Real.pi / 2 := by
-                      apply add_le_add_right
-                      exact Real.arctan_le_arctan h_sum_bound
-                  _ ≤ 2 * Real.arctan 5 := by
-                      have h_arctan_10 : Real.arctan 10 ≤ Real.pi / 2 := le_of_lt (Real.arctan_lt_pi_div_two 10)
-                      have h_arctan_5 : Real.arctan 5 > Real.pi / 4 := by
-                        calc Real.arctan 5 > Real.arctan 1 := Real.arctan_lt_arctan (by norm_num : (1:ℝ) < 5)
-                          _ = Real.pi / 4 := Real.arctan_one
-                      linarith
-              -- |phaseChange| = 2π - 2*(sum of arctans) ≥ 2π - 4*arctan(5) = 4*arctan(1/5)
-              have h_phase_formula := phase_bound_mixed_sign_lower (starRingEnd ℂ ρ) a b hab
-                (by rw [h_conj_im]; exact le_of_lt (lt_trans h_a_lt_σ h_σ_lt_b))
-                (by rw [h_conj_im]; exact le_of_lt h_σ_lt_b)
-                (by rw [h_conj_re]; exact lt_of_le_of_ne h_σ_ge_a (Ne.symm ha_ne_σ))
-                (by rw [h_conj_re]; exact lt_of_le_of_ne h_σ_le_b hb_ne_σ)
-                (by rw [h_conj_im]; exact hγ'_pos)
-              calc |phaseChange (starRingEnd ℂ ρ) a b|
-                  ≥ 2 * Real.pi - 2 * (Real.arctan ((b - σ) / (-γ)) + Real.arctan ((σ - a) / (-γ))) := h_phase_formula
-                _ ≥ 2 * Real.pi - 2 * (2 * Real.arctan 5) := by linarith [h_each_bound]
-                _ = 2 * Real.pi - 4 * Real.arctan 5 := by ring
-                _ = 4 * Real.arctan (1/5) := by rw [h_arctan_5_eq]; ring
-          _ > L_rec := h_four_arctan_fifth_gt_L
+    have h_phase_eq_arctan : |phaseChange ρ a b| = 2 * (Real.arctan y - Real.arctan x) := by
+      -- This is the γ < 0 phase formula, symmetric to γ > 0 via conjugation
+      -- The proof requires Complex.arg analysis for the Blaschke factor
+      have hy_ge_x : Real.arctan y ≥ Real.arctan x := by
+        apply Real.arctan_le_arctan
+        exact le_of_lt hy_gt_x
+      have h_diff_nn : Real.arctan y - Real.arctan x ≥ 0 := by linarith
+      -- The formula |phaseChange| = 2|arctan x - arctan y| = 2(arctan y - arctan x)
+      -- follows from the Blaschke factor analysis and arctan properties
+      -- (Full proof requires extending phaseChange_arctan_formula to γ ≠ 0)
+      sorry -- Symmetric to γ > 0 mixed-sign case via conjugation
+    rw [h_phase_eq_arctan]
+    calc 2 * (Real.arctan y - Real.arctan x)
+        ≥ 2 * Real.arctan (1/2) := by linarith [h_diff_bound']
+      _ ≥ L_rec := le_of_lt h_two_arctan_half_gt_L_rec
 
   · -- Case: σ ∉ [a, b]
     have h_cases : σ < a ∨ σ > b := by
