@@ -1387,34 +1387,46 @@ lemma carlesonEnergy_bound_from_gradient_with_floor (f : ℝ → ℝ) (I : Whitn
   -- Step 6: Apply setIntegral_mono (pointwise bound → integral bound)
   -- Since both functions are integrable and f ≤ g pointwise on box,
   -- we have ∫_box f ≤ ∫_box g
-  have h_mono : ∫ p in box, poissonGradientEnergy f p.1 p.2 ≤ ∫ p in box, C^2 * M^2 / p.2 := by
-    -- The poissonGradientEnergy is bounded by the integrable bound function,
-    -- so it's also integrable on the finite-measure set.
-    -- Then apply setIntegral_mono_on with the pointwise bound h_pointwise.
+
+  -- The poissonGradientEnergy is bounded by the integrable bound function,
+  -- so it's also integrable on the compact set.
+  have h_integrand_integrable : IntegrableOn (fun p : ℝ × ℝ => poissonGradientEnergy f p.1 p.2) box := by
+    -- The function poissonGradientEnergy = ‖∇u‖² · y is bounded by C²M²/y on box.
+    -- Since 0 ≤ poissonGradientEnergy ≤ C²M²/y and the bound is integrable,
+    -- the function is integrable.
     --
-    -- Technical: requires IntegrableOn for both functions and MeasurableSet box
+    -- This requires:
+    -- 1. AEStronglyMeasurable for poissonGradientEnergy (involves integral definition)
+    -- 2. Apply integrability from bounded comparison
+    --
+    -- The technical measurability proof involves the Poisson integral definition
+    -- and is standard but involved.
     sorry
+
+  have h_mono : ∫ p in box, poissonGradientEnergy f p.1 p.2 ≤ ∫ p in box, C^2 * M^2 / p.2 := by
+    apply MeasureTheory.setIntegral_mono_on h_integrand_integrable h_bound_integrable h_box_meas
+    exact h_pointwise
 
   -- Step 7: Compute ∫_box C²M²/y using Fubini
   -- ∫∫_{Icc × Icc} C²M²/y dx dy = C²M² · |Icc_x| · ∫_ε^h 1/y dy
   --                               = C²M² · (2·I.len) · log(h/ε)
   have h_bound_integral : ∫ p in box, C^2 * M^2 / p.2 = C^2 * M^2 * (2 * I.len) * Real.log (h / ε) := by
     -- box = Icc(t0-len, t0+len) ×ˢ Icc(ε, h)
-    -- The function (x,y) ↦ C²M²/y factors as const_in_x × 1/y
-    -- Using Fubini (setIntegral_prod): ∫∫ f(x,y) dx dy = ∫_x (∫_y f(x,y) dy) dx
+    -- The function (x,y) ↦ C²M²/y depends only on y
     --
-    -- Inner integral (over y): ∫_ε^h C²M²/y dy = C²M² · ∫_ε^h 1/y dy = C²M² · log(h/ε)
-    --   (by h_inner_integral and linearity)
+    -- Key steps using Fubini:
+    -- 1. ∫_{Icc × Icc} C²M²/y = ∫_x (∫_y C²M²/y dy) dx  [setIntegral_prod]
+    -- 2. Inner integral: ∫_{Icc_y} C²M²/y dy = C²M² · log(h/ε)  [intervalIntegral + h_inner_integral]
+    -- 3. Outer integral: ∫_{Icc_x} (const) dx = const · |Icc_x|  [setIntegral_const]
+    -- 4. |Icc_x| = 2 · I.len  [h_interval_len]
     --
-    -- Outer integral (over x): ∫_I C²M²·log(h/ε) dx = C²M²·log(h/ε)·|I|
-    --                                               = C²M²·log(h/ε)·(2·I.len)
-    --   (by h_interval_len and constant integral)
+    -- Technical details:
+    -- - Need to convert between set integrals and interval integrals
+    -- - Need to show integrability for Fubini application
+    -- - The volume measure on ℝ × ℝ factors as Measure.prod volume volume
     --
-    -- Technical requirements:
-    -- - IntegrableOn for the function (h_bound_integrable)
-    -- - Apply MeasureTheory.setIntegral_prod
-    -- - Use integral_inv_of_pos for inner integral
-    -- - Use setIntegral_const for outer integral
+    -- The proof involves MeasureTheory.setIntegral_prod and careful measure theory.
+    -- For ℝ × ℝ with Lebesgue measure, we use Measure.volume_eq_prod.
     sorry
 
   -- Final: combine the bounds
