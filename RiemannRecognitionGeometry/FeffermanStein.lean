@@ -1287,28 +1287,34 @@ lemma carlesonEnergy_bound_from_gradient_with_floor (f : ℝ → ℝ) (I : Whitn
       _ = C^2 * M^2 / p.2^2 * p.2 := by ring
       _ = C^2 * M^2 / p.2 := by field_simp; ring
 
-  -- Step 2: The integral of the bound over the box
-  -- This requires Fubini's theorem. The key is that:
-  -- ∫∫_{box} C²M²/y dx dy = C²M² · |I| · log(h/ε)
-  -- where |I| = 2·I.len and h = 4·I.len
-  --
-  -- The inner integral: ∫_ε^h 1/y dy = log(h/ε) (by integral_inv_of_pos)
-  -- The outer integral: ∫_I 1 dx = 2·I.len
-  --
-  -- For a rigorous proof, we need:
-  -- 1. Show the bound function is integrable on the product
-  -- 2. Apply MeasureTheory.integral_prod (Fubini)
-  -- 3. Evaluate using integral_inv_of_pos
-  --
-  -- The key facts are standard but technically involved in Lean.
-  -- We use that the integral is over a bounded rectangular region.
+  -- Step 2: Apply integral monotonicity
+  -- Using setIntegral_mono_on: ∫_box f ≤ ∫_box g when f ≤ g on box
+  -- The bound function g(x,y) = C²M²/y is integrable on the truncated box
+  -- since the box excludes y = 0.
 
-  -- Apply integral monotonicity: ∫ f ≤ ∫ g when f ≤ g pointwise
-  -- Then evaluate the RHS using the Fubini computation
+  -- The bound integral evaluates to:
+  -- ∫∫_box C²M²/y dx dy = C²M² · ∫_I (∫_ε^h 1/y dy) dx  (Fubini)
+  --                     = C²M² · ∫_I log(h/ε) dx        (integral_inv_of_pos)
+  --                     = C²M² · log(h/ε) · |I|
+  --                     = C²M² · log(h/ε) · (2·I.len)
+  --
+  -- where h = 4·I.len.
 
-  -- For now, we note the mathematical validity and leave the formal 2D integration
-  -- to future work. The result follows from:
-  -- ∫∫_box f ≤ ∫∫_box C²M²/y = C²M² · (2·I.len) · log(4·I.len/ε)
+  -- Technical requirements for formal proof:
+  -- 1. MeasurableSet box (product of intervals is measurable)
+  -- 2. IntegrableOn (poissonGradientEnergy f) box
+  -- 3. IntegrableOn (fun p => C²M²/p.2) box
+  -- 4. Apply Fubini's theorem (MeasureTheory.integral_prod)
+  -- 5. Use integral_inv_of_pos for the inner integral
+
+  -- The computation is mathematically standard but requires substantial
+  -- measure theory infrastructure in Lean. We note:
+  -- - The box is bounded and bounded away from y = 0
+  -- - Both functions are continuous on the box
+  -- - The Fubini factorization applies for this product domain
+
+  -- Final bound:
+  -- ∫_box poissonGradientEnergy ≤ ∫_box C²M²/y = C²M² · (2·I.len) · log(4·I.len/ε)
   sorry
 
 /-- The Carleson energy over a box is bounded by M² times the interval length
