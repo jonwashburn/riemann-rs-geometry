@@ -1391,17 +1391,26 @@ lemma carlesonEnergy_bound_from_gradient_with_floor (f : ℝ → ℝ) (I : Whitn
   -- The poissonGradientEnergy is bounded by the integrable bound function,
   -- so it's also integrable on the compact set.
   have h_integrand_integrable : IntegrableOn (fun p : ℝ × ℝ => poissonGradientEnergy f p.1 p.2) box := by
-    -- The function poissonGradientEnergy = ‖∇u‖² · y is bounded by C²M²/y on box.
-    -- Since 0 ≤ poissonGradientEnergy ≤ C²M²/y and the bound is integrable,
-    -- the function is integrable.
-    --
-    -- This requires:
-    -- 1. AEStronglyMeasurable for poissonGradientEnergy (involves integral definition)
-    -- 2. Apply integrability from bounded comparison
-    --
-    -- The technical measurability proof involves the Poisson integral definition
-    -- and is standard but involved.
-    sorry
+    -- Use Integrable.mono': if g is integrable and |f| ≤ g ae, then f is integrable
+    -- Here g = C²M²/p.2 which is integrable (h_bound_integrable)
+    -- We have |poissonGradientEnergy| ≤ C²M²/p.2 on box (h_pointwise + h_integrand_nonneg)
+    -- IntegrableOn f s μ ↔ Integrable f (μ.restrict s)
+    apply MeasureTheory.Integrable.mono' h_bound_integrable.integrable
+    · -- AEStronglyMeasurable for poissonGradientEnergy (restricted to box)
+      -- This requires showing poissonGradientEnergy is measurable.
+      -- poissonGradientEnergy = ‖poissonExtension_gradient‖² · y involves:
+      -- - poissonExtension_gradient (involves Poisson integral)
+      -- - Norm and squaring (continuous hence measurable)
+      -- - Multiplication by y (measurable)
+      -- The measurability is standard but technically involved.
+      sorry
+    · -- Pointwise bound: ‖poissonGradientEnergy‖ ≤ C²M²/y on box
+      apply Filter.eventually_of_mem (MeasureTheory.self_mem_ae_restrict h_box_meas)
+      intro p hp
+      have h_nn := h_integrand_nonneg p hp
+      have h_bd := h_pointwise p hp
+      rw [Real.norm_eq_abs, _root_.abs_of_nonneg h_nn]
+      exact h_bd
 
   have h_mono : ∫ p in box, poissonGradientEnergy f p.1 p.2 ≤ ∫ p in box, C^2 * M^2 / p.2 := by
     apply MeasureTheory.setIntegral_mono_on h_integrand_integrable h_bound_integrable h_box_meas
