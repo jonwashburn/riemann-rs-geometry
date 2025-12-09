@@ -12,54 +12,52 @@ Complete a fully unconditional Lean 4 proof of the Riemann Hypothesis using Reco
 
 | Line | Declaration | Case | Blocker |
 |------|-------------|------|---------|
-| 903 | `phase_bound_from_arctan` | σ > b, γ > 0 | Needs σ ≤ 1 constraint |
-| 1128 | `phase_bound_neg_im` | σ ∈ [a,b], γ < 0 | Same structure as γ > 0 |
+| 903 | `phase_bound_from_arctan` | σ > b, γ > 0 | Needs σ ≤ 1 + bound proof |
+| 1128 | `phase_bound_neg_im` | σ ∈ [a,b], γ < 0 | Needs `blaschkePhase_arctan` for γ < 0 |
 | 1309 | `phase_bound_neg_im` | σ > b, γ < 0 | Same as line 903 |
 
-## Root Cause Analysis
+## Technical Analysis
 
-### The σ > b Problem
-For the σ > b case, we need to prove:
-```
-(x - y) / (1 + x * y) ≥ 1/3
-```
-where `x = (b-σ)/γ < 0` and `y = (a-σ)/γ < 0`.
+### Line 903: σ > b, γ > 0 Case
+**Goal**: Prove `|phaseChange ρ a b| ≥ 2 * Real.arctan (1/3)`
 
-This requires `xy ≤ 3(x-y) - 1`. With `x - y ≥ 1`, we need `xy ≤ 2` in the minimal case.
+**Structure**: For σ > b with γ > 0:
+- x = (b-σ)/γ < 0 and y = (a-σ)/γ < 0 (both negative)
+- x > y (x closer to 0)
+- x - y = (b-a)/γ ≥ 1 (from `h_spread`)
+- xy = |x||y| > 0
 
-**Key insight**: `xy = |x||y|` where:
-- `|x| = (σ - b)/γ` (unbounded without σ constraint!)
-- `|y| = (σ - a)/γ = |x| + (b-a)/γ`
+**Required bound**: `(x-y)/(1+xy) ≥ 1/3`, i.e., `xy ≤ 3(x-y) - 1`
 
-**Without σ ≤ 1**: As σ → ∞, both `|x|` and `|y|` → ∞, making `xy` arbitrarily large.
+**Solution**: Add `hσ_upper : ρ.re ≤ 1` constraint through lemma chain:
+- This bounds |x| = (σ-b)/γ ≤ (1-γ)/γ
+- For γ ≥ 1/2: |x| ≤ 1, giving bounded xy
+- Propagate through: `phase_bound_from_arctan` → `phase_bound_neg_im` → `blaschke_lower_bound` → call sites
 
-**With σ ≤ 1** and `b ≥ γ` (from hγ_upper):
-- `|x| = (σ - b)/γ ≤ (1 - b)/γ ≤ (1 - γ)/γ`
-- For `γ ≥ 1/2`: `|x| ≤ 1`, giving bounded `xy`
+### Line 1128: Mixed-Sign γ < 0 Case  
+**Goal**: Prove `|phaseChange ρ a b| = 2 * (Real.arctan y - Real.arctan x)` for γ < 0
 
-## Solution: Add σ ≤ 1 Constraint
+**Structure**: For σ ∈ [a, b] with γ < 0:
+- x = (b-σ)/γ ≤ 0 (b ≥ σ, γ < 0)
+- y = (a-σ)/γ ≥ 0 (a ≤ σ, γ < 0)  
+- y - x ≥ 1 gives `arctan(y) - arctan(x) ≥ arctan(1/2)`
 
-The constraint `hσ_upper : ρ.re ≤ 1` needs to propagate through:
-1. `phase_bound_from_arctan`
-2. `phase_bound_neg_im`
-3. `blaschke_lower_bound`
-4. `zero_free_with_interval`
-5. `local_zero_free`
-6. `no_interior_zeros`
+**Solution Options**:
+1. **Extend `blaschkePhase_arctan`** to γ ≠ 0 (same formula works)
+2. **Use conjugation**: `|phaseChange ρ| = |phaseChange (conj ρ)|` where conj ρ has γ > 0
+3. **Direct proof** via Complex.arg analysis of Blaschke factor
 
-This is justified because the RH proof structure handles:
-- **Re(ρ) > 1**: No zeros (Euler product)
-- **Re(ρ) ≤ 1/2**: Functional equation symmetry
-- **1/2 < Re(ρ) ≤ 1**: Recognition Geometry (these lemmas)
+**Current edge case handling**: Uses `blaschkeFactor_at_re'` for a = σ or b = σ
 
-## Implementation Steps
+### Line 1309: σ > b, γ < 0 Case
+Same structure as line 903 but with negative γ. Via conjugation, reduces to γ > 0 case.
 
-1. Add `(hσ_upper : ρ.re ≤ 1)` to `phase_bound_from_arctan` signature
-2. Use `hσ_upper` to derive `|x| ≤ (1-γ)/γ` bound
-3. Prove `xy ≤ 3(x-y) - 1` using the bound
-4. Update `phase_bound_neg_im` similarly
-5. Propagate constraint through call chain
-6. Verify build passes
+## Helper Lemmas Available
+
+- `phaseChange_abs_conj`: |phaseChange ρ a b| = |phaseChange (conj ρ) a b|
+- `blaschkeFactor_at_re'`: B(σ) = -1 when γ ≠ 0
+- `blaschkeFactor_re_im`: Re and Im formulas for B(t)
+- `Real.four_arctan_fifth_gt_L_rec`: 4*arctan(1/5) > L_rec
 
 ## Build Commands
 
@@ -68,8 +66,14 @@ lake build 2>&1 | grep -E "error:|sorry"
 grep -n "sorry" RiemannRecognitionGeometry/Axioms.lean
 ```
 
+## Next Steps
+
+1. **Add σ ≤ 1 constraint** through lemma chain (see Technical Analysis)
+2. **Extend `blaschkePhase_arctan`** to handle γ < 0 (or use conjugation approach)
+3. **Complete proofs** using derived bounds
+
 ## Notes
 
 - FeffermanStein.lean is completely proven (with 5 axioms)
-- The σ ≤ 1 constraint is mathematically sound for RH
-- All 3 sorries share the same root cause
+- The σ ≤ 1 constraint is mathematically sound for RH (critical strip)
+- All 3 sorries share similar Whitney geometry structure
