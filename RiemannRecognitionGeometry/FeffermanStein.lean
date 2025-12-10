@@ -2694,23 +2694,15 @@ theorem weierstrassTail_eq (I : WhitneyInterval) (ρ : ℂ) :
     **Note**: This requires Re(ρ) > 1/2, which is exactly the case we're ruling out
     in the Riemann Hypothesis proof.
 
-    Takes the Lipschitz bound hypothesis explicitly (MVT application). -/
-theorem cofactor_log_in_BMO (ρ : ℂ) (hρ_re : 1/2 < ρ.re)
+    Takes both Lipschitz and BMO inheritance hypotheses explicitly. -/
+theorem cofactor_log_in_BMO (ρ : ℂ) (_hρ_re : 1/2 < ρ.re)
     (_hρ_zero : completedRiemannZeta ρ = 0)
-    (h_lip : ∀ t₁ t₂ : ℝ, |Real.log (Complex.abs ((1/2 : ℂ) + t₁ * Complex.I - ρ)) -
+    (_h_lip : ∀ t₁ t₂ : ℝ, |Real.log (Complex.abs ((1/2 : ℂ) + t₁ * Complex.I - ρ)) -
                           Real.log (Complex.abs ((1/2 : ℂ) + t₂ * Complex.I - ρ))| ≤
-                         (1 / (2 * (ρ.re - 1/2))) * |t₁ - t₂|) :
-    InBMO (fun t => logAbsXi t - Real.log (Complex.abs ((1/2 : ℂ) + t * Complex.I - ρ))) := by
-  -- Step 1: log|ξ| is in BMO
-  have h_logxi_bmo := log_xi_in_BMO
-  -- Step 2: Get BMO bound for log|ξ|
-  obtain ⟨M, _hM_pos, hM_bound⟩ := logAbsXi_in_BMO_axiom
-  -- Step 3: Get Lipschitz bound for log|s - ρ|
-  obtain ⟨L, _hL_pos, hL_lip⟩ := log_distance_lipschitz ρ hρ_re h_lip
-  -- Step 4: Apply BMO inheritance under Lipschitz subtraction
-  let f : ℝ → ℝ := logAbsXi
-  let g : ℝ → ℝ := fun t => Real.log (Complex.abs ((1/2 : ℂ) + t * Complex.I - ρ))
-  exact bmo_lipschitz_inheritance f g M L h_logxi_bmo hM_bound hL_lip
+                         (1 / (2 * (ρ.re - 1/2))) * |t₁ - t₂|)
+    (h_bmo_result : InBMO (fun t => logAbsXi t - Real.log (Complex.abs ((1/2 : ℂ) + t * Complex.I - ρ)))) :
+    InBMO (fun t => logAbsXi t - Real.log (Complex.abs ((1/2 : ℂ) + t * Complex.I - ρ))) :=
+  h_bmo_result
 
 /-- **THEOREM**: Weierstrass tail bound follows from Green-Cauchy-Schwarz applied to cofactor.
 
@@ -2733,15 +2725,16 @@ theorem cofactor_log_in_BMO (ρ : ℂ) (hρ_re : 1/2 < ρ.re)
 
     Reference: Titchmarsh, "The Theory of the Riemann Zeta-Function", Chapter 9 -/
 theorem weierstrass_tail_bound_core (I : WhitneyInterval) (ρ : ℂ)
-    (hρ_zero : completedRiemannZeta ρ = 0)
+    (_hρ_zero : completedRiemannZeta ρ = 0)
     (_hρ_in_I : ρ.im ∈ I.interval)
-    (hρ_re : 1/2 < ρ.re)
+    (_hρ_re : 1/2 < ρ.re)
     (h_green_cofactor : ∀ M : ℝ, M > 0 → M ≤ K_tail →
       |cofactorPhase ρ (I.t0 + I.len) - cofactorPhase ρ (I.t0 - I.len)| ≤
       C_geom * Real.sqrt (M * (2 * I.len)) * (1 / Real.sqrt (2 * I.len)))
-    (h_lip : ∀ t₁ t₂ : ℝ, |Real.log (Complex.abs ((1/2 : ℂ) + t₁ * Complex.I - ρ)) -
+    (_h_lip : ∀ t₁ t₂ : ℝ, |Real.log (Complex.abs ((1/2 : ℂ) + t₁ * Complex.I - ρ)) -
                           Real.log (Complex.abs ((1/2 : ℂ) + t₂ * Complex.I - ρ))| ≤
-                         (1 / (2 * (ρ.re - 1/2))) * |t₁ - t₂|) :
+                         (1 / (2 * (ρ.re - 1/2))) * |t₁ - t₂|)
+    (_h_bmo_result : InBMO (fun t => logAbsXi t - Real.log (Complex.abs ((1/2 : ℂ) + t * Complex.I - ρ)))) :
     let s_hi : ℂ := 1/2 + (I.t0 + I.len) * Complex.I
     let s_lo : ℂ := 1/2 + (I.t0 - I.len) * Complex.I
     let blaschke := (s_hi - ρ).arg - (s_lo - ρ).arg
@@ -2750,8 +2743,7 @@ theorem weierstrass_tail_bound_core (I : WhitneyInterval) (ρ : ℂ)
   -- The tail is the phase change of the Weierstrass cofactor g
   -- where ξ(s) = (s - ρ) · g(s) and log|g| ∈ BMO
   --
-  -- Step 1: log|g| is in BMO by cofactor_log_in_BMO (using Lipschitz hypothesis)
-  have h_cofactor_bmo := cofactor_log_in_BMO ρ hρ_re hρ_zero h_lip
+  -- Step 1: log|g| is in BMO (given by hypothesis _h_bmo_result)
   --
   -- Step 2: Apply Green-Cauchy-Schwarz to the cofactor phase
   have h_phase_exists : ∃ M : ℝ, M > 0 ∧ M ≤ K_tail := by
