@@ -280,11 +280,15 @@ def c1 : ℝ := c_kernel * (A1 * Real.log T0 + A2)
 
     **Numerical verification**:
     log(10^6) = 6·log(10) ≈ 6 × 2.3026 ≈ 13.8155
-    c1 = 0.374 × (0.11 × 13.8155 + 3) ≈ 0.374 × 4.52 ≈ 1.69 < 1.7 ✓ -/
+    c1 = 0.374 × (0.11 × 13.8155 + 3) ≈ 0.374 × 4.52 ≈ 1.69 < 1.7 ✓
+
+    **Proof approach** (for formal verification):
+    1. Use log(10^6) < 14 (since exp(14) ≈ 1202604 > 10^6)
+    2. Then: 0.374 × (0.11 × 14 + 3) = 0.374 × 4.54 = 1.698 < 1.7 ✓ -/
 lemma c1_approx : c1 < 1.7 := by
   unfold c1 c_kernel A1 A2 T0
   -- Numerical verification: 0.374 * (0.11 * ln(10^6) + 3) < 1.7
-  -- This requires computing ln(10^6) ≈ 13.8155, then 0.374 * 4.52 ≈ 1.69
+  -- Using log(10^6) < 14: 0.374 * (0.11 * 14 + 3) = 1.698 < 1.7
   sorry
 
 /-- c0: Compact regime mean oscillation contribution.
