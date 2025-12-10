@@ -1944,13 +1944,13 @@ theorem zero_free_with_interval (ρ : ℂ) (I : WhitneyInterval)
     have h_sqrt005 := sqrt_005_lt
     -- 2 * U_tail = 2 * (1/√2) * √0.05 = √2 * √0.05 < 1.42 * 0.224 < 0.32
     have h_bound : 2 * ((1 / Real.sqrt 2) * Real.sqrt 0.05) < 0.32 := by
-      have h1 : 2 * (1 / Real.sqrt 2) = Real.sqrt 2 := by
-        field_simp
-        rw [mul_comm, ← Real.sqrt_sq (by norm_num : (0:ℝ) ≤ 2)]
-        ring_nf
-        rw [Real.sqrt_sq (by norm_num : (0:ℝ) ≤ 2)]
+      have h_ne : Real.sqrt 2 ≠ 0 := ne_of_gt h_sqrt2_pos
+      have hsq : Real.sqrt 2 * Real.sqrt 2 = 2 := Real.mul_self_sqrt (by norm_num : (0:ℝ) ≤ 2)
+      -- 2/√2 = √2 because (2/√2) * √2 = 2 = √2 * √2
+      have h1 : 2 / Real.sqrt 2 = Real.sqrt 2 := by
+        rw [div_eq_iff h_ne, mul_comm, hsq]
       calc 2 * ((1 / Real.sqrt 2) * Real.sqrt 0.05)
-          = (2 * (1 / Real.sqrt 2)) * Real.sqrt 0.05 := by ring
+          = 2 / Real.sqrt 2 * Real.sqrt 0.05 := by ring
         _ = Real.sqrt 2 * Real.sqrt 0.05 := by rw [h1]
         _ < 1.42 * 0.224 := by nlinarith
         _ < 0.32 := by norm_num
