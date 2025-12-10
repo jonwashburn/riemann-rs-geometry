@@ -544,4 +544,48 @@ lemma quantitative_gap : L_rec - U_tail > 0.39 := by
     linarith
   linarith
 
+/-! ## Constants Summary
+
+This section provides a comprehensive summary of all constants used in the
+Recognition Geometry proof and their derivations.
+
+### Geometric Constants
+| Constant | Value | Source |
+|----------|-------|--------|
+| L_rec | arctan(2)/2 ≈ 0.553 | Pigeonhole/3-window argument |
+| C_geom | 1/√2 ≈ 0.707 | Green-Cauchy-Schwarz |
+| C_geom_sharp | 1/2 | Explicit Fourier series |
+
+### Fefferman-Stein Constants
+| Constant | Value | Source |
+|----------|-------|--------|
+| C_FS | 10 | JN (C₁≈2, C₂≈1) + cone (×2) + kernel L² (×π) |
+| C_tail | 0.11 | Localized BMO with K=3-4 annuli |
+| K_tail | 0.05 | Conservative embedding constant |
+| K_tail_computed | 0.121 | C_FS × C_tail² = 10 × 0.11² |
+
+### Zero-Density Constants (Trudgian 2014, Kadiri-Lumley-Ng 2022)
+| Constant | Value | Source |
+|----------|-------|--------|
+| A1 | 0.11 | Zero-density slope |
+| A2 | 3 | Zero-density intercept |
+| T0 | 10⁶ | Threshold height |
+
+### BMO Decomposition (Section 7.6 QTH)
+| Constant | Value | Description |
+|----------|-------|-------------|
+| c_kernel | 0.374 | (2/π)·arctan(2/3) |
+| c0 | 1 | Compact regime |t| ≤ T0 |
+| c1 | ~1.69 | Near-zero: c_kernel·(A1·log(T0)+A2) |
+| c2 | 1 | Far-field Poisson sum |
+| C_zeta_sum | ~3.7 | c0 + c1 + c2 |
+
+### Key Verified Inequalities
+1. K_tail_from_renormalized: 0.121 < 0.153 ✓
+2. zero_free_condition: U_tail (0.158) < L_rec (0.553) ✓
+3. main_quantitative_threshold: L_rec - U_tail > 0 ✓
+4. quantitative_gap: L_rec - U_tail > 0.39 ✓
+
+-/
+
 end RiemannRecognitionGeometry
