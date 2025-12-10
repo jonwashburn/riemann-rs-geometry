@@ -740,8 +740,22 @@ theorem zeta_eta_relation_gt_one (s : ℝ) (hs : 1 < s) :
     - Titchmarsh, "The Theory of the Riemann Zeta-Function", Chapter 2, §2.2
     - Apostol, "Introduction to Analytic Number Theory", Section 12.5
     - Edwards, "Riemann's Zeta Function", Chapter 1 -/
-axiom zeta_eta_relation_lt_one (s : ℝ) (hs_pos : 0 < s) (hs_lt : s < 1) :
-    dirichletEtaReal s = (1 - (2 : ℝ)^(1-s)) * (riemannZeta (s : ℂ)).re
+theorem zeta_eta_relation_lt_one (s : ℝ) (hs_pos : 0 < s) (hs_lt : s < 1) :
+    dirichletEtaReal s = (1 - (2 : ℝ)^(1-s)) * (riemannZeta (s : ℂ)).re := by
+  -- Attempt to prove using continuity/analytic continuation
+  -- Both sides are continuous on (0, 1) and agree at the limit as s → 1⁺
+  -- But we cannot directly use this because:
+  -- 1. zeta has a pole at s = 1
+  -- 2. The factor (1 - 2^{1-s}) goes to 0 as s → 1
+  -- 3. The product (1 - 2^{1-s}) * ζ(s) has a removable singularity at s = 1
+  --
+  -- The formal proof requires the identity principle for analytic functions:
+  -- - Both LHS and RHS define analytic functions on {Re(s) > 0, s ≠ 1}
+  -- - They agree on {Re(s) > 1} (proven in zeta_eta_relation_gt_one)
+  -- - Therefore they agree everywhere by identity principle
+  --
+  -- This is NOT available in Mathlib for this specific application.
+  sorry
 
 /-- The full zeta-eta relation: η(s) = (1 - 2^{1-s}) · ζ(s) for s ∈ (0, 1) ∪ (1, ∞). -/
 theorem zeta_eta_relation (s : ℝ) (hs_pos : 0 < s) (hs_ne_one : s ≠ 1) :

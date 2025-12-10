@@ -1727,28 +1727,95 @@ theorem integral_Icc_one_minus_sq :
     _ = -(sqMinusOneAntideriv 1 - sqMinusOneAntideriv (-1)) := by rw [h_ftc]
     _ = 1 := by simp [sqMinusOneAntideriv_one, sqMinusOneAntideriv_neg_one]; norm_num
 
--- **Key Integral Identity**: ∫ |u² - 1|/(1 + u²)² du = 2.
---
--- **Verified Computation** via antiderivatives:
--- F(u) = -u/(1 + u²) has derivative F'(u) = (u² - 1)/(1 + u²)²
--- (proven in hasDerivAt_sqMinusOneAntideriv)
---
--- Splitting the integral at u = ±1:
--- - For u ∈ [1, ∞): |u² - 1| = u² - 1, integral = F(∞) - F(1) = 0 - (-1/2) = 1/2
--- - For u ∈ (-∞, -1]: |u² - 1| = u² - 1, integral = F(-1) - F(-∞) = 1/2 - 0 = 1/2
--- - For u ∈ [-1, 1]: |u² - 1| = 1 - u², integral = -(F(1) - F(-1)) = -(-1/2 - 1/2) = 1
---
--- Total = 1/2 + 1/2 + 1 = 2.
---
--- **Supporting lemmas proven above**:
--- - hasDerivAt_sqMinusOneAntideriv: F'(u) = (u² - 1)/(1 + u²)²
--- - tendsto_sqMinusOneAntideriv_atTop/atBot: F(u) → 0 as u → ±∞
--- - sqMinusOneAntideriv_one/neg_one: F(1) = -1/2, F(-1) = 1/2
---
--- The formal proof would require integral splitting (setIntegral_union) and
--- applying FTC on each piece. This is a classical calculus identity.
-axiom integral_abs_sq_minus_one_div_one_add_sq_sq :
-    ∫ u : ℝ, |u^2 - 1| / (1 + u^2)^2 = 2
+-- Helper lemmas for integral splitting
+
+/-- Disjointness: Iio(-1) and Icc(-1,1) -/
+private lemma Iio_neg_one_disjoint_Icc_neg_one_one : Disjoint (Iio (-1 : ℝ)) (Icc (-1) 1) := by
+  rw [Set.disjoint_iff]
+  intro x hx
+  simp only [mem_inter_iff, mem_Iio, mem_Icc] at hx
+  linarith [hx.1, hx.2.1]
+
+/-- Disjointness: Icc(-1,1) and Ioi(1) -/
+private lemma Icc_neg_one_one_disjoint_Ioi_one : Disjoint (Icc (-1 : ℝ) 1) (Ioi 1) := by
+  rw [Set.disjoint_iff]
+  intro x hx
+  simp only [mem_inter_iff, mem_Icc, mem_Ioi] at hx
+  linarith [hx.1.2, hx.2]
+
+/-- Disjointness: (Iio(-1) ∪ Icc(-1,1)) and Ioi(1) -/
+private lemma Iio_neg_one_union_Icc_disjoint_Ioi : Disjoint (Iio (-1 : ℝ) ∪ Icc (-1) 1) (Ioi 1) := by
+  rw [Set.disjoint_union_left]
+  constructor
+  · rw [Set.disjoint_iff]
+    intro x hx
+    simp only [mem_inter_iff, mem_Iio, mem_Ioi] at hx
+    linarith [hx.1, hx.2]
+  · exact Icc_neg_one_one_disjoint_Ioi_one
+
+/-- ℝ = Iio(-1) ∪ Icc(-1,1) ∪ Ioi(1) -/
+private lemma univ_eq_three_parts : (univ : Set ℝ) = Iio (-1) ∪ Icc (-1) 1 ∪ Ioi 1 := by
+  ext x
+  simp only [mem_univ, mem_union, mem_Iio, mem_Icc, mem_Ioi, true_iff]
+  by_cases h1 : x < -1
+  · left; left; exact h1
+  · push_neg at h1
+    by_cases h2 : x ≤ 1
+    · left; right; exact ⟨h1, h2⟩
+    · push_neg at h2; right; exact h2
+
+/-- Iio and Iic integrals are equal (differ by measure zero point) -/
+private lemma setIntegral_Iio_eq_Iic (f : ℝ → ℝ) :
+    ∫ u in Iio (-1 : ℝ), f u = ∫ u in Iic (-1 : ℝ), f u :=
+  setIntegral_congr_set Iio_ae_eq_Iic
+
+/-- On Iio(-1), |u² - 1| = u² - 1 -/
+private lemma abs_eq_on_Iio' (u : ℝ) (hu : u ∈ Iio (-1 : ℝ)) :
+    |u^2 - 1| / (1 + u^2)^2 = (u^2 - 1) / (1 + u^2)^2 := by
+  have hu' : u ∈ Iic (-1 : ℝ) := by simp only [mem_Iic, mem_Iio] at hu ⊢; exact le_of_lt hu
+  rw [abs_sq_minus_one_Iic u hu']
+
+/-- On Ioi(1), |u² - 1| = u² - 1 -/
+private lemma abs_eq_on_Ioi' (u : ℝ) (hu : u ∈ Ioi (1 : ℝ)) :
+    |u^2 - 1| / (1 + u^2)^2 = (u^2 - 1) / (1 + u^2)^2 := by
+  rw [abs_sq_minus_one_Ioi u hu]
+
+/-- On Icc(-1,1), |u² - 1| = 1 - u² -/
+private lemma abs_eq_on_Icc' (u : ℝ) (hu : u ∈ Icc (-1 : ℝ) 1) :
+    |u^2 - 1| / (1 + u^2)^2 = (1 - u^2) / (1 + u^2)^2 := by
+  rw [abs_sq_minus_one_Icc u hu]
+
+/-- **PROVEN**: Key Integral Identity ∫ |u² - 1|/(1 + u²)² du = 2.
+
+    **Proof**: Split ℝ = Iio(-1) ∪ Icc(-1,1) ∪ Ioi(1), convert absolute values on each piece,
+    and apply the FTC-based theorems integral_Iic_sq_minus_one, integral_Icc_one_minus_sq,
+    and integral_Ioi_sq_minus_one. -/
+theorem integral_abs_sq_minus_one_div_one_add_sq_sq :
+    ∫ u : ℝ, |u^2 - 1| / (1 + u^2)^2 = 2 := by
+  have h_int := integrable_abs_sq_minus_one_div_one_add_sq_sq
+  -- Rewrite as integral over univ, then split
+  rw [← setIntegral_univ, univ_eq_three_parts]
+  -- Split: (Iio ∪ Icc) ∪ Ioi
+  rw [setIntegral_union Iio_neg_one_union_Icc_disjoint_Ioi measurableSet_Ioi
+      h_int.integrableOn h_int.integrableOn]
+  -- Split: Iio ∪ Icc
+  rw [setIntegral_union Iio_neg_one_disjoint_Icc_neg_one_one measurableSet_Icc
+      h_int.integrableOn h_int.integrableOn]
+  -- Convert absolute values on each piece
+  have h1 : ∫ u in Iio (-1 : ℝ), |u^2 - 1| / (1 + u^2)^2 =
+            ∫ u in Iio (-1 : ℝ), (u^2 - 1) / (1 + u^2)^2 :=
+    setIntegral_congr_fun measurableSet_Iio abs_eq_on_Iio'
+  have h2 : ∫ u in Icc (-1 : ℝ) 1, |u^2 - 1| / (1 + u^2)^2 =
+            ∫ u in Icc (-1 : ℝ) 1, (1 - u^2) / (1 + u^2)^2 :=
+    setIntegral_congr_fun measurableSet_Icc abs_eq_on_Icc'
+  have h3 : ∫ u in Ioi (1 : ℝ), |u^2 - 1| / (1 + u^2)^2 =
+            ∫ u in Ioi (1 : ℝ), (u^2 - 1) / (1 + u^2)^2 :=
+    setIntegral_congr_fun measurableSet_Ioi abs_eq_on_Ioi'
+  rw [h1, h2, h3, setIntegral_Iio_eq_Iic]
+  -- Apply proven theorems
+  rw [integral_Iic_sq_minus_one, integral_Icc_one_minus_sq, integral_Ioi_sq_minus_one]
+  -- Compute: 1/2 + 1 + 1/2 = 2
+  norm_num
 
 -- **THEOREM**: y-derivative integral bound for Poisson kernel.
 --
