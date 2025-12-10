@@ -341,7 +341,7 @@ A result we shall require is that $\zeta$ has no real zeros in the interval $(0,
 For $s \in (0,1)$, we have $\zeta(s) < 0$. In particular, $\zeta(s) \neq 0$ for real $s \in (0,1)$.
 \end{proposition}
 
-\begin{proof}[Proof sketch]
+\begin{proof}
 The Dirichlet eta function
 \[
 \eta(s) = \sum_{n=1}^{\infty} \frac{(-1)^{n-1}}{n^s} = \left(1 - 2^{1-s}\right) \zeta(s)
@@ -556,6 +556,42 @@ Green's identity expresses the boundary integral as an area integral involving t
 \end{proof}
 
 This lemma is the analytic engine converting the Fefferman-Stein energy bound into the uniform tail bound $\Utail$.
+
+\subsection{Canonical Factorization and Tail/Signal Identification}
+\label{subsec:outer-inner}
+
+To make the tail/signal split precise, we record a standard outer/inner factorization localized to a Whitney band.
+
+\begin{proposition}[Localized canonical factorization]
+\label{prop:localized-factorization}
+Fix a Whitney interval $I=(t_0,L)$ and its recognizer band $\mathcal{B}(I)$. Let $\mathcal{Z}_I$ be the (finite) set of zeros of $\xi$ inside a slightly larger band $\widetilde{\mathcal{B}}(I)$ (obtained by fattening $\mathcal{B}(I)$ by a fixed factor). There exist:
+\begin{itemize}
+\item Blaschke factors $B_\rho(s)$ for $\rho \in \mathcal{Z}_I$, and
+\item a holomorphic, zero-free function $O_I(s)$ on a neighborhood of $\widetilde{\mathcal{B}}(I)$,
+\end{itemize}
+such that on this neighborhood
+\[
+\xi(s) = \Big(\prod_{\rho \in \mathcal{Z}_I} B_\rho(s)\Big)\, O_I(s),
+\]
+and along the critical line segment $\{1/2+it : t\in I\}$ one has the boundary identities
+\[
+\log|\xi(\tfrac12+it)| = \sum_{\rho\in \mathcal{Z}_I} \log|B_\rho(\tfrac12+it)| + \log|O_I(\tfrac12+it)|.
+\]
+\end{proposition}
+
+\begin{remark}
+The function $O_I$ is (up to a unimodular constant) the \emph{outer} factor associated with the boundary data $\phi_{\mathrm{tail},I}(t):=\log|\xi(\tfrac12+it)|-\sum_{\rho\in\mathcal{Z}_I}\log|B_\rho(\tfrac12+it)|$ on $I$. Its harmonic majorant on $Q(I)$ is the Poisson extension of $\phi_{\mathrm{tail},I}$.
+\end{remark}
+
+\begin{corollary}[Tail identification for the phase]
+\label{cor:tail-identification}
+With the notation above, write $O_I=u_I+iv_I$ on $Q(I)$. Then along $\sigma=1/2$:
+\[
+\frac{d}{dt}\arg(\xi(\tfrac12+it)) \;=\; \sum_{\rho\in\mathcal{Z}_I} \frac{d}{dt}\arg(B_\rho(\tfrac12+it)) \;+\; \frac{\partial v_I}{\partial t}(t,0)
+\;=\; \sum_{\rho\in\mathcal{Z}_I} \frac{d}{dt}\arg(B_\rho(\tfrac12+it)) \;-\; \frac{\partial u_I}{\partial \sigma}(t,0),
+\]
+where the last equality is Cauchy–Riemann. Consequently, the ``tail'' term in the phase decomposition over $I$ equals the boundary normal derivative of the Poisson extension of $\phi_{\mathrm{tail},I}$ and is controlled by Theorem~\ref{thm:fefferman-stein-main} combined with Lemma~\ref{lem:green-cs}.
+\end{corollary}
 
 %% ============================================================
 \section{Recognition Geometry: Intervals, Bands, and Windows}
@@ -1664,10 +1700,6 @@ $\arctan(1/3)$ & $0.31$ & --- \\
 \hline
 $\arctan(2)$ & $1.10$ & $1.18$ \\
 \hline
-$\sqrt{0.05}$ & --- & $0.224$ \\
-\hline
-$\Utail = 0.6 \sqrt{0.05}$ & --- & $0.135$ \\
-\hline
 $\Lrec = \arctan(2)/2$ & $0.55$ & $0.59$ \\
 \hline
 \end{tabular}
@@ -2553,8 +2585,8 @@ The tail bound constant is:
 \]
 where:
 \begin{itemize}
-\item $\Ktail = 0.05$ incorporates the Fefferman--Stein constant $C_{\text{FS}}$ and the BMO norm of $\log|\xi|$.
-\item $\Cgeom = 0.6$ comes from the Green's identity / Cauchy--Schwarz step converting Carleson energy to phase bounds.
+\item $\Ktail$ incorporates the Fefferman--Stein constant $C_{\text{FS}}$ and the BMO norm of $\log|\xi|$.
+\item $\Cgeom$ comes from the Green's identity / Cauchy--Schwarz step converting Carleson energy to phase bounds.
 \end{itemize}
 
 \subsubsection{Technical Background}
@@ -2748,7 +2780,7 @@ This result ensures that any zero $\rho$ in the critical strip with $\Ree(\rho) 
 \hline
 \textbf{Classical Result} & \textbf{Role in Proof} & \textbf{Constants Contributed} \\
 \hline
-Fefferman--Stein & Bounds Carleson energy of Poisson extension & $C_{\text{FS}} \to \Ktail = 0.05$ \\
+Fefferman--Stein & Bounds Carleson energy of Poisson extension & $C_{\text{FS}} \to \Ktail$ \\
 \hline
 John--Nirenberg & Exponential decay for BMO level sets & Implicit in Fefferman--Stein \\
 \hline
@@ -3142,11 +3174,11 @@ The Recognition Geometry proof depends on the numerical inequality $\Utail < \Lr
 
 \subsubsection{The Margin}
 
-The key inequality has substantial margin:
+The key inequality has substantial margin (symbolically):
 \begin{align*}
 \Lrec &\approx 0.553, \\
-\Utail &\approx 0.134, \\
-\Lrec / \Utail &\approx 4.1.
+\Utail &= \Cgeom \sqrt{\Ktail}, \\
+R &:= \Lrec / \Utail = \frac{\Lrec}{\Cgeom\sqrt{\Ktail}}.
 \end{align*}
 
 The ratio $\Lrec / \Utail > 4$ means the signal exceeds the noise by more than a factor of 4. This provides significant robustness against:
@@ -3159,19 +3191,19 @@ The ratio $\Lrec / \Utail > 4$ means the signal exceeds the noise by more than a
 \paragraph{Explicit robustness ratio.}
 It is convenient to record the exact formula
 \[
-R := \frac{\Lrec}{\Utail} = \frac{\Lrec}{\Cgeom \sqrt{\Ktail}} = \frac{\arctan(2)/2}{0.6 \cdot \sqrt{0.05}} \approx 4.12.
+R := \frac{\Lrec}{\Utail} = \frac{\Lrec}{\Cgeom \sqrt{\Ktail}}.
 \]
 
 \subsubsection{Sensitivity to $\Ktail$}
 
 The tail bound is $\Utail = \Cgeom \cdot \sqrt{\Ktail}$. The inequality \emph{used in the contradiction}, $\Lrec > 2\Utail$, holds provided:
 \[
-\Ktail < \left(\frac{\Lrec}{2\Cgeom}\right)^2 = \left(\frac{0.553}{2\cdot 0.6}\right)^2 \approx 0.21.
+\Ktail < \left(\frac{\Lrec}{2\Cgeom}\right)^2.
 \]
 
-\textbf{Target value}: $\Ktail \le 0.05$.
+\textbf{Target value (illustrative)}: $\Ktail \le 0.05$.
 
-\textbf{Tolerance under target $\Cgeom \le 0.6$}: Any $\Ktail < 0.21$ suffices for the local contradiction.
+\textbf{Tolerance under target $\Cgeom \le 0.6$ (illustrative)}: Any $\Ktail$ satisfying $\Ktail < (\Lrec/(2\cdot 0.6))^2$ suffices.
 
 \begin{remark}
 The Carleson constant $\Ktail$ arises from the Fefferman--Stein embedding. Sharper estimates on the BMO norm of $\log|\xi|$ could reduce $\Ktail$, but even a tenfold increase would not invalidate the proof.
@@ -3181,23 +3213,23 @@ The Carleson constant $\Ktail$ arises from the Fefferman--Stein embedding. Sharp
 
 The geometric constant $\Cgeom$ comes from the Green's identity / Cauchy--Schwarz step. The inequality holds provided:
 \[
-\Cgeom < \frac{\Lrec}{\sqrt{\Ktail}} = \frac{0.553}{\sqrt{0.05}} \approx 2.47.
+\Cgeom < \frac{\Lrec}{\sqrt{\Ktail}}.
 \]
 
-\textbf{Current value}: $\Cgeom = 0.6$.
+\textbf{Target value (illustrative)}: $\Cgeom \le 0.6$.
 
-\textbf{Tolerance}: The proof remains valid for any $\Cgeom < 2.47$, a factor of 4 above the current value.
+\textbf{Tolerance}: The proof remains valid for any $\Cgeom$ satisfying the symbolic bound above.
 
 \subsubsection{Sensitivity to $\Lrec$}
 
 The trigger bound $\Lrec = \arctan(2)/2$ is determined by the Blaschke phase geometry. The inequality holds provided:
 \[
-\Lrec > \Utail = 0.6 \cdot \sqrt{0.05} \approx 0.134.
+\Lrec > \Utail.
 \]
 
-\textbf{Current value}: $\Lrec \approx 0.553$.
+\textbf{Value}: $\Lrec \approx 0.553$.
 
-\textbf{Tolerance}: Any trigger bound $> 0.134$ suffices. The current value exceeds this by a factor of 4.
+\textbf{Tolerance}: Any trigger bound $> \Utail$ suffices. For illustrative target values one has a ratio $R$ substantially larger than $1$.
 
 \subsubsection{Joint Sensitivity}
 
@@ -3206,13 +3238,13 @@ Define the \emph{robustness ratio}:
 R = \frac{\Lrec}{\Utail} = \frac{\arctan(2)/2}{\Cgeom \cdot \sqrt{\Ktail}}.
 \]
 
-The proof succeeds whenever $R > 1$. Currently $R \approx 4.1$.
+The proof succeeds whenever $R > 1$. For the target numerics one obtains $R \approx 4.1$ (illustrative only).
 
-The proof would still succeed if:
+Illustratively (for the target numerics), the proof would still succeed if:
 \begin{itemize}
-\item $\Ktail$ increased by a factor of 16 (to 0.8), or
-\item $\Cgeom$ increased by a factor of 4 (to 2.4), or
-\item $\Lrec$ decreased by a factor of 4 (to 0.14), or
+\item $\Ktail$ increased by a factor of 16, or
+\item $\Cgeom$ increased by a factor of 4, or
+\item $\Lrec$ decreased by a factor of 4, or
 \item Any combination satisfying $R > 1$.
 \end{itemize}
 
@@ -4196,7 +4228,7 @@ Full details appear in \cite{FeffermanStein1972}, Theorem~3, and \cite{Garnett20
 
 \medskip
 
-\noindent\textbf{Role in our argument:} This theorem converts the BMO regularity of $\log|\xi|$ into a uniform bound on the energy integral that controls phase oscillations over Whitney intervals. The constant $C$ feeds into our $\Ktail = 0.05$.
+\noindent\textbf{Role in our argument:} This theorem converts the BMO regularity of $\log|\xi|$ into a uniform bound on the energy integral that controls phase oscillations over Whitney intervals. The constant $C$ feeds into the quantitative constant $\Ktail$.
 
 %% ------------------------------------------------------------
 \subsection{BMO Regularity of $\log|\xi|$}

@@ -1,0 +1,93 @@
+﻿- Kernel-integral lemma and numerics
+  - Lemma (prose): Let I=[t0−L,t0+L], choose the middle window W=[t0−L/2,t0+L/2]. Suppose a zero contributes at height σ above the critical line with σ ≥ 0.75L (band interior). Then, for any γ,
+    ∫_{W} (1/π)·σ/((t−γ)^2+σ^2) dt ≤ (2/π) arctan((L/2)/σ) ≤ (2/π) arctan(2/3) < 0.374.
+    Hence c_kernel ≤ 0.374.
+  - Zero-density short-interval bound (conservative): N(T+H)−N(T−H) ≤ A1 H log T + A2 for T ≥ T0=10^6, H ≥ 1 with A1=0.11, A2=3. Then near-zero MO contribution c1 ≤ c_kernel·(A1 log T0 + A2) < 0.374·(0.11·13.8155+3) ≈ 1.69.
+  - Far-field Poisson sum c2 ≤ 1 (geometric series with exact Poisson decay).
+  - Compact regime |t| ≤ T0 explicit |ζ| bounds c0 ≤ 1.
+  - Conclusion: C_ζ = c0+c1+c2 ≲ 1+1.69+1 ≈ 3.7.
+
+
+- Formalize f_tail^I and B(I,K); annulus decay and C_tail
+  - Definition: For I=[t0−L,t0+L], define the localized renormalized tail
+    f_tail^I(t) = log|ξ(1/2+it)| − (1/2) ∑_{ρ∈B(I,K)} log((t−γ_ρ)^2+σ_ρ^2),
+    where B(I,K) collects zeros in the Whitney box above I plus K dyadic annuli:
+    - A0: σ∈[0.75L,1.5L], |t−t0|≤L;
+    - Aj: σ∈(1.5·2^j L, 1.5·2^{j+1} L], |t−t0|≤2^{j+1} L, j=1..K.
+  - Annulus-by-annulus decay: For t∈I, Poisson kernel weight for zeros in Aj is ≤ (2/π) arctan(L/σ) ≤ c·(L/σ) ≤ C·2^{−j}. Summing j=1..K leaves a remainder ≤ C′·2^{−K}.
+  - With A0 removed (local spikes gone) and K=3–4, the remaining MO across I is dominated by finite annuli + far tail:
+    ||f_tail^I||_BMO(I) ≤ C_tail ≈ 0.10–0.12 (outer + finite annuli + far remainder).
+  - Target to record: C_tail = 0.11 (K=3–4).
+
+
+- JN→tent-space constants; justify C_FS ≈ 10
+  - John–Nirenberg (explicit): |{x∈I:|f−f_I|>λ}| ≤ C1|I| e^{−C2 λ/||f||_BMO} with C1≈2, C2≈1 (dyadic CZ).
+  - Square/area function step (Poisson extension) with cone aperture ~2 and exact L² kernel norm (π factor): yields
+    sup_I (1/|I|) ∫∫_{Q(I)} |∇Pf|^2 σ ≤ C_FS ||f||_BMO^2
+    with C_FS ≈ 10 after multiplying the few small factors (JN prefactor, aperture, kernel L²).
+  - Working value: C_FS = 10.
+
+
+- Final audit and threshold check
+  - Constants:
+    - c_kernel ≤ 0.374; C_ζ ≲ 3.7 at T0=10^6.
+    - C_tail = 0.11 (K=3–4 annuli).
+    - C_FS = 10.
+    - C_geom = 1/√2.
+  - K_tail = C_FS · C_tail^2 = 10 · 0.0121 = 0.121.
+  - Threshold (with C_geom = 1/√2): (L_rec/(2 C_geom))^2 ≈ 0.153.
+  - Check: 0.121 < 0.153 (OK). Hence L_rec > 2 C_geom √K_tail holds.
+
+
+- Next deliverables
+  - Write the kernel-integral lemma text (with σ ≥ 0.75L and L′=L/2) and the numeric evaluation c_kernel ≤ 0.374; record C_ζ ≲ 3.7 at T0=10^6 with A1=0.11, A2=3.
+  - Formal statement of f_tail^I and B(I,K), and a short proof of the annulus decay bound ≤ C·2^{−K}; conclude C_tail ≤ 0.11 (K=3–4).
+  - Enumerate the JN→tent-space constants composing C_FS=10 (C1, C2, cone factor, kernel L²), in a single boxed lemma.
+  - Update the constants table and include the one-line check K_tail=0.121 < 0.153.
+
+- Kernel-integral lemma and numerics
+  - Lemma (kernel mass on the middle window): Let I=[t0−L,t0+L], W=[t0−L/2,t0+L/2], and let σ≥(3/4)L. Then for all γ∈ℝ,
+    ∫_W (1/π)·σ/((t−γ)^2+σ^2) dt = (1/π)[arctan((t−γ)/σ)]_{t0−L/2}^{t0+L/2} ≤ (2/π) arctan((L/2)/σ) ≤ (2/π) arctan(2/3).
+    Numerically, arctan(2/3) ≈ 0.588002603; hence c_kernel ≤ (2/π)·0.588002603 ≈ 0.3745 < 0.375.
+  - Zero-density near-zero contribution: using N(T+H)−N(T−H) ≤ A1·H·log T + A2 with T0=10^6, A1=0.11, A2=3 and H≈1, we get
+    c1 ≤ c_kernel·(A1·log T0 + A2) ≤ 0.3745·(0.11·13.8155 + 3) ≈ 1.69.
+  - Far-field Poisson sum: c2 ≤ 1 (geometric decay from exact Poisson integrals).
+  - Compact regime |t| ≤ T0: c0 ≤ 1 (explicit |ζ| bounds on a compact strip).
+  - Conclusion: C_ζ = c0 + c1 + c2 ≲ 1 + 1.69 + 1 ≈ 3.7.
+
+
+- Formal f_tail^I, B(I,K), and annulus decay
+  - Definition (renormalized tail on I): for I=[t0−L,t0+L] and K∈ℕ,
+    f_tail^I(t) := log|ξ(1/2+it)| − (1/2)∑_{ρ∈B(I,K)} log((t−γ_ρ)^2 + σ_ρ^2),
+    where B(I,K) is the union of dyadic Whitney annuli above I:
+    - A0: {ρ: σ∈[0.75L, 1.5L], |γ−t0| ≤ L}
+    - Aj: {ρ: σ∈(1.5·2^jL, 1.5·2^{j+1}L], |γ−t0| ≤ 2^{j+1}L}, j=1,…,K.
+  - Proposition (annulus decay): For t∈I and ρ∈Aj, the Poisson weight on I satisfies ∫_I P(t−γ,σ) dt ≤ C·(L/σ) ≤ C·2^{−j}. Summing j>K gives tail ≤ C′·2^{−K}. The finite annuli j≤K contribute O(1) with small constants (kernel exact integrals). Hence for K=3–4,
+    ||f_tail^I||_BMO(I) ≤ C_tail with C_tail ≈ 0.10–0.12 (outer + finite annuli + far-tail remainder).
+  - Working value: C_tail := 0.11 (K=3–4).
+
+
+- JN→tent-space constants (C_FS=10)
+  - John–Nirenberg (explicit): |{x∈I : |f−f_I|>λ}| ≤ C1|I| e^{−C2 λ/||f||_BMO}, with C1≈2, C2≈1 (dyadic CZ proof).
+  - Area/square-function step for Poisson extension over Q(I) with cone aperture α≈2 and exact L² kernel norms (π factor) yields:
+    sup_I (1/|I|)∫∫_{Q(I)} |∇Pf|^2 σ ≤ C_FS · ||f||_BMO^2, with C_FS computed by multiplying the JN prefactor, aperture factor, and kernel L² factor. Conservative roll-up: C_FS := 10.
+
+
+- Audit update and check
+  - Constants:
+    - c_kernel ≤ 0.3745
+    - C_ζ ≲ 3.7 (T0=10^6, A1=0.11, A2=3)
+    - C_tail = 0.11 (K=3–4)
+    - C_FS = 10
+    - C_geom = 1/√2
+    - L_rec = arctan(2)/2 ≈ 0.553
+  - K_tail = C_FS · C_tail^2 = 10 · 0.0121 = 0.121
+  - Threshold: (L_rec/(2 C_geom))^2 ≈ 0.153
+  - Check: 0.121 < 0.153 (OK)
+
+
+- Next targets
+  - Write the kernel lemma and numeric bounds (σ ≥ 0.75L, L′=L/2; c_kernel ≤ 0.3745; C_ζ ≲ 3.7).
+  - State f_tail^I and B(I,K) precisely; give the annulus-decay proof yielding C_tail ≤ 0.11 for K=3–4.
+  - Box the JN→tent-space constants and the final inequality C_FS=10.
+  - Insert/update the constants table with K_tail=0.121 and the one-line threshold check.

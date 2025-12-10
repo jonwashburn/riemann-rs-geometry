@@ -179,10 +179,18 @@ def C_tail : ℝ := 0.11
 
 /-- c_kernel: Poisson kernel integral bound for Whitney matching.
 
-    **Derivation**: For σ ≥ 0.75L and window width L' = L/2:
-    ∫_{t₀-L'}^{t₀+L'} (1/π)·σ/((t-γ)²+σ²) dt ≤ (2/π) arctan(L'/σ)
-                                              ≤ (2/π) arctan(2/3) ≈ 0.374 -/
+    **Lemma** (Kernel mass on middle window): Let I = [t₀-L, t₀+L],
+    W = [t₀-L/2, t₀+L/2], and σ ≥ (3/4)L. Then for all γ ∈ ℝ:
+
+    ∫_W (1/π)·σ/((t-γ)² + σ²) dt = (1/π)[arctan((t-γ)/σ)]_{t₀-L/2}^{t₀+L/2}
+                                 ≤ (2/π) arctan((L/2)/σ)
+                                 ≤ (2/π) arctan(2/3)
+
+    Numerically: arctan(2/3) ≈ 0.588; hence c_kernel ≤ (2/π)·0.588 ≈ 0.374. -/
 def c_kernel : ℝ := 0.374
+
+/-- c_kernel is less than 0.375 (provable bound). -/
+lemma c_kernel_lt : c_kernel < 0.375 := by unfold c_kernel; norm_num
 
 /-- C_zeta: BMO bound for log|ζ(1/2+it)| before renormalization.
 
