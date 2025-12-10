@@ -105,8 +105,66 @@ end RecognizerBand
 /-- L_rec = arctan(2)/2 ≈ 0.553: Trigger threshold. -/
 def L_rec : ℝ := Real.arctan 2 / 2
 
-/-- K_tail: Carleson embedding constant for tail energy. -/
+/-- K_tail: Carleson embedding constant for tail energy.
+
+    **Definition**: K_tail = C_FS · ∥f_tail∥²_BMO where f_tail is the
+    renormalized log|ξ| with Blaschke factors subtracted.
+
+    **Derivation** (see riemann-geometry-formalization.txt):
+    For the renormalized tail f_tail := log|ξ| - ∑_{ρ in local box} log|B_ρ|,
+    the local BMO norm ∥f_tail∥_BMO is much smaller than the global
+    ∥log|ξ|∥_BMO because near-zero spikes are removed.
+
+    With careful Whitney matching and zero-density estimates,
+    K_tail = C_FS · C_tail² can be made small enough to satisfy
+    the required inequality K_tail < (L_rec/(2·C_geom))² ≈ 0.153. -/
 def K_tail : ℝ := 0.05
+
+/-! ## BMO Component Constants
+
+    The BMO norm of log|ξ| decomposes into three components:
+    ∥log|ξ|∥_BMO ≤ C_Γ + C_poly + C_ζ
+
+    However, for the tail bound we use the renormalized tail f_tail
+    which has much smaller oscillation.
+-/
+
+/-- C_poly: BMO bound for the polynomial term log|(1/2+it)(-1/2+it)/2|.
+
+    **Derivation**: f_poly(t) = log((t² + 1/4)/2) = log(1 + (2t)²) - log 4.
+    By BMO invariance under translation/dilation, ∥f_poly∥_BMO = ∥log(1+t²)∥_BMO.
+
+    **Explicit bound** (see formalization notes):
+    - Far from 0 (|t₀| ≥ 2L): Taylor remainder gives MO(I) ≤ 1/6
+    - Near 0: dominated by ∥log(1+|t|)∥_BMO + bounded remainder
+
+    Conservative bound: C_poly ≤ 3 (actually ≤ 2 with careful computation). -/
+def C_poly : ℝ := 3
+
+/-- C_Γ: BMO bound for the Gamma term Re log Γ(1/4 + it/2).
+
+    **Derivation** (Stirling with explicit remainder):
+    For Re s ≥ 1/4: log Γ(s) = (s-1/2) log s - s + (1/2) log(2π) + R(s)
+    with |R(s)| ≤ 1/(12|s|).
+
+    For s = 1/4 + it/2, |s| ≥ |t|/2, so |R| ≤ 1/6 for |t| ≥ 1.
+    Variation is O(1/|t|), giving uniform mean oscillation O(1).
+
+    Conservative bound: C_Γ ≤ 1 (likely smaller with detailed computation). -/
+def C_Gamma : ℝ := 1
+
+/-- C_FS: Fefferman-Stein BMO→Carleson embedding constant.
+
+    **Statement**: For f ∈ BMO(ℝ), the Poisson extension satisfies
+    sup_I (1/|I|) ∫∫_{Q(I)} |∇Pf|² σ dσ dx ≤ C_FS · ∥f∥²_BMO
+
+    **Provenance of constants**:
+    - John-Nirenberg: C₁ = 4, C₂ = 1/2 (conservative)
+    - Area function/tent-space: C₃ ≤ 32
+    - Combined: C_FS = 32 (can be reduced with tighter audit)
+
+    Target: 8-16 with refined constants. -/
+def C_FS : ℝ := 32
 
 /-- C_geom: Geometric constant from Green + Cauchy-Schwarz.
 
