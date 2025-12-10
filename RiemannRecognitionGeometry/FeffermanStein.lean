@@ -3024,8 +3024,18 @@ lemma annulus_decay_bound (j : ℕ) (_hj : j ≥ 1) :
     - Algebraic simplification -/
 lemma far_field_geometric_bound (K : ℕ) :
     ∑' (j : ℕ), (if j > K then (1/2 : ℝ)^j else 0) ≤ (1/2 : ℝ)^K := by
-  -- Standard geometric series tail calculation
-  -- Full Mathlib proof requires careful handling of conditional sums and index shifts
+  -- The sum ∑_{j>K} (1/2)^j = (1/2)^{K+1} · ∑_{i≥0} (1/2)^i = (1/2)^{K+1} · 2 = (1/2)^K
+  --
+  -- Full proof outline:
+  -- 1. The conditional sum can be rewritten as ∑_{j=K+1}^∞ (1/2)^j
+  -- 2. Factor out (1/2)^{K+1}: = (1/2)^{K+1} · ∑_{i=0}^∞ (1/2)^i
+  -- 3. Evaluate geometric series: = (1/2)^{K+1} · (1/(1-1/2)) = (1/2)^{K+1} · 2
+  -- 4. Simplify: = (1/2)^K
+  --
+  -- Mathlib proof requires:
+  -- - tsum_eq_tsum_of_ne_zero_bij for reindexing
+  -- - tsum_geometric_of_lt_one for series evaluation
+  -- - Careful handling of conditional sums
   sorry
 
 /-- C_tail bound: With K = 3-4 annuli removed, the localized BMO norm is small.
