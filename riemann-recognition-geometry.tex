@@ -131,13 +131,13 @@ The following table clarifies which classical results are treated as axioms in o
 \hline
 \textbf{Component} & \textbf{Status} & \textbf{Reference} \\
 \hline
-$\Utail < \Lrec$ & Fully proven & Theorem~\ref{thm:key-numerical} \\
+$\Lrec > 2\Utail$ & Conditional (quantitative hypothesis) & \eqref{eq:threshold}, Thm.~\ref{thm:main} \\
 Arctan inequalities & Fully proven & Appendix~\ref{app:arctan} \\
 Whitney interval existence & Fully proven & Section~\ref{sec:globalization} \\
 Blaschke phase formula & Fully proven & Proposition~\ref{prop:blaschke-phase-arctan} \\
 \hline
-Fefferman--Stein embedding & Axiom & \cite{FeffermanStein1972} \\
-BMO of $\log|\xi|$ & Axiom & \cite{Titchmarsh1986}, \cite{Garnett2007} \\
+Fefferman--Stein embedding (with explicit constant) & Assumed quantitatively & \cite{FeffermanStein1972} \\
+BMO of $\log|\xi|$ (with explicit norm) & Assumed quantitatively & \cite{Titchmarsh1986}, \cite{Garnett2007} \\
 $\zeta(s) \neq 0$ on $(0,1)$ & Axiom & Theorem~\ref{thm:no-real-zeros-input} \\
 Polynomial growth of $\xi$ & Axiom & \cite{Titchmarsh1986} \\
 \hline
@@ -166,9 +166,18 @@ If $\zeta(\rho) = 0$ and $0 < \Ree(\rho) < 1$, then $\Ree(\rho) = 1/2$.
 
 The purpose of this paper is to present a proof of Conjecture~\ref{conj:RH}, contingent on several well-established classical results from harmonic analysis and analytic number theory. The argument synthesizes these inputs through a geometric framework we term ``Recognition Geometry,'' and a substantial portion has been formally verified in the Lean~4 theorem prover. Our main result is the following.
 
-\begin{theorem}[Main Theorem]
+\begin{theorem}[Conditional Main Theorem]
 \label{thm:main}
-Assuming the classical results enumerated in Section~\ref{sec:classical-inputs} (specifically: the Fefferman--Stein BMO-to-Carleson embedding, the BMO regularity of $\log|\xi|$, and the non-vanishing of $\zeta$ on the real interval $(0,1)$), all non-trivial zeros of the Riemann zeta function lie on the critical line. That is, if $\zeta(\rho) = 0$ and $0 < \Ree(\rho) < 1$, then $\Ree(\rho) = 1/2$.
+Assume the classical results enumerated in Section~\ref{sec:classical-inputs} and, in addition, the following \emph{quantitative tail bound}: there are explicit constants $C_{\mathrm{geom}}>0$ and $K_{\mathrm{tail}}>0$ such that for $f(t)=\log|\xi(\tfrac12+it)|$ and its Poisson extension $u$, the Carleson energy satisfies $E(I)\le K_{\mathrm{tail}}|I|$ for all intervals $I$, and the Green--Cauchy--Schwarz step yields
+\[
+\Big|\int_I \partial_y u(t,0)\,dt\Big| \le C_{\mathrm{geom}}\,\frac{\sqrt{E(I)}}{\sqrt{|I|}}.
+\]
+If these constants satisfy the threshold
+\[
+L_{\mathrm{rec}} > 2\, C_{\mathrm{geom}}\,\sqrt{K_{\mathrm{tail}}}
+\qquad\Big(\text{equivalently } K_{\mathrm{tail}} < \big(\tfrac{L_{\mathrm{rec}}}{2C_{\mathrm{geom}}}\big)^2\Big),
+\]
+then all non-trivial zeros of the Riemann zeta function lie on the critical line. That is, if $\zeta(\rho) = 0$ and $0 < \Ree(\rho) < 1$, then $\Ree(\rho) = 1/2$.
 \end{theorem}
 
 \subsection{The Recognition Geometry Approach}
@@ -1002,10 +1011,10 @@ The constants are:
 Therefore:
 \begin{equation}
 \label{eq:utail-value}
-\Utail = \Cgeom \cdot \sqrt{\Ktail} = 0.6 \times 0.2236 \approx \boxed{0.134}.
+\Utail = \Cgeom \cdot \sqrt{\Ktail} \le 0.6 \times 0.2236 \approx \boxed{0.134}.
 \end{equation}
 
-This value is significantly smaller than $\Lrec \approx 0.553$ (Section~\ref{sec:trigger-bound}), which is essential for the proof.
+This bound is significantly smaller than $\Lrec \approx 0.553$ (Section~\ref{sec:trigger-bound}) and, under the target values, satisfies $\Lrec > 2\Utail$.
 
 \subsection{Summary}
 
@@ -1367,27 +1376,38 @@ Combined with the tail upper bound $\Utail \approx 0.134$, this creates the fund
 \label{sec:key-inequality}
 %% ============================================================
 
-In this section, we establish the central numerical inequality of the Recognition Geometry approach:
+In this section, we isolate the central numerical inequality of the Recognition Geometry approach and record the quantitative hypothesis under which it holds:
 \begin{equation}
 \label{eq:key-inequality-main}
 \boxed{\Utail < \Lrec.}
 \end{equation}
-This inequality is \emph{proven}, not assumed. The proof is entirely self-contained, relying only on elementary bounds for $\pi$ and Taylor series estimates for the arctangent function. Detailed proofs of all arctangent inequalities appear in Appendix~\ref{app:arctan}.
+Here $\Utail := C_{\mathrm{geom}}\sqrt{K_{\mathrm{tail}}}$. Under the \emph{threshold condition}
+\begin{equation}
+\label{eq:threshold}
+L_{\mathrm{rec}} > 2\, C_{\mathrm{geom}}\,\sqrt{K_{\mathrm{tail}}},
+\end{equation}
+we have the stronger inequality $\Lrec > 2\Utail$ required by the local contradiction.
+Detailed proofs of the arctangent inequalities used to evaluate $L_{\mathrm{rec}}$ appear in Appendix~\ref{app:arctan}.
 
 \subsection{Choice of Constants}
 
 \subsubsection{The Tail Bound Constants}
 
-The tail bound $\Utail$ involves two constants arising from the Fefferman-Stein machinery:
+The tail bound $\Utail$ involves two constants arising from the Fefferman--Stein machinery and the Green--Cauchy--Schwarz step:
 
 \begin{definition}[Tail Bound Constants]
 \label{def:tail-constants}
 \begin{align*}
-\Ktail &= 0.05, \\
-\Cgeom &= 0.6.
+\Ktail &\text{ (Carleson energy constant for } \log|\xi|\text{)}, \\
+\Cgeom &\text{ (geometric constant from Green--Cauchy--Schwarz)}.
 \end{align*}
 \end{definition}
 
+In the rest of this section we will sometimes refer to \emph{target values} (for illustrative numerics):
+\[
+\Ktail^{\star} = 0.05,\qquad \Cgeom^{\star} = 0.6,
+\]
+but these specific numbers are not derived here and are treated as quantitative hypotheses to be justified independently.
 Here:
 \begin{itemize}
 \item $\Ktail$ is the \emph{Carleson embedding constant}, bounding the ratio of Carleson energy to interval length for $\log|\xi|$.
@@ -1396,7 +1416,7 @@ Here:
 
 The tail bound is then:
 \[
-\Utail = \Cgeom \cdot \sqrt{\Ktail} = 0.6 \cdot \sqrt{0.05}.
+\Utail = \Cgeom \cdot \sqrt{\Ktail}.
 \]
 
 \subsubsection{The Trigger Bound Constant}
@@ -1420,7 +1440,7 @@ We have:
 \]
 Thus:
 \[
-\Utail = 0.6 \times 0.2236 \approx 0.1342.
+\Utail \le 0.6 \times 0.2236 \approx 0.1342.
 \]
 
 More precisely, we can bound $\sqrt{0.05}$ rigorously:
@@ -3160,14 +3180,14 @@ R := \frac{\Lrec}{\Utail} = \frac{\Lrec}{\Cgeom \sqrt{\Ktail}} = \frac{\arctan(2
 
 \subsubsection{Sensitivity to $\Ktail$}
 
-The tail bound is $\Utail = \Cgeom \cdot \sqrt{\Ktail}$. The inequality $\Utail < \Lrec$ holds provided:
+The tail bound is $\Utail = \Cgeom \cdot \sqrt{\Ktail}$. The inequality \emph{used in the contradiction}, $\Lrec > 2\Utail$, holds provided:
 \[
-\Ktail < \left(\frac{\Lrec}{\Cgeom}\right)^2 = \left(\frac{0.553}{0.6}\right)^2 \approx 0.85.
+\Ktail < \left(\frac{\Lrec}{2\Cgeom}\right)^2 = \left(\frac{0.553}{2\cdot 0.6}\right)^2 \approx 0.21.
 \]
 
-\textbf{Current value}: $\Ktail = 0.05$.
+\textbf{Target value}: $\Ktail \le 0.05$.
 
-\textbf{Tolerance}: The proof remains valid for any $\Ktail < 0.85$, a factor of 17 above the current value.
+\textbf{Tolerance under target $\Cgeom \le 0.6$}: Any $\Ktail < 0.21$ suffices for the local contradiction.
 
 \begin{remark}
 The Carleson constant $\Ktail$ arises from the Fefferman--Stein embedding. Sharper estimates on the BMO norm of $\log|\xi|$ could reduce $\Ktail$, but even a tenfold increase would not invalidate the proof.

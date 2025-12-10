@@ -1817,19 +1817,59 @@ theorem integral_abs_sq_minus_one_div_one_add_sq_sq :
   -- Compute: 1/2 + 1 + 1/2 = 2
   norm_num
 
--- **THEOREM**: y-derivative integral bound for Poisson kernel.
---
--- ∫ |poissonKernel_dy(t, y)| dt = 2/(π·y), similar to the x-derivative.
---
--- **Proof via scaling**: Using substitution t = yu:
--- ∫ |poissonKernel_dy(t,y)| dt = (1/π) ∫ |t² - y²|/(t² + y²)² dt
---                              = (1/(πy)) ∫ |u² - 1|/(u² + 1)² du
---                              = (1/(πy)) · 2 = 2/(πy)
---
--- The key integral ∫ |u² - 1|/(u² + 1)² du = 2 follows from
--- integral_abs_sq_minus_one_div_one_add_sq_sq (proven via antiderivatives).
-axiom poissonKernel_dy_integral_bound {y : ℝ} (hy : 0 < y) :
-    ∫ t : ℝ, |poissonKernel_dy t y| ≤ 2 / (Real.pi * y)
+/-- **PROVEN**: The key relation |poissonKernel_dy t y| = (1/(πy²)) · |(t/y)² - 1| / (1 + (t/y)²)²
+
+    This expresses the Poisson y-derivative in terms of the normalized integrand g(u) = |u² - 1|/(1 + u²)²
+    for substitution u = t/y. -/
+private lemma poissonKernel_dy_abs_eq {y : ℝ} (hy : 0 < y) (t : ℝ) :
+    |poissonKernel_dy t y| = (1 / (Real.pi * y^2)) * (|( t / y)^2 - 1| / (1 + (t / y)^2)^2) := by
+  unfold poissonKernel_dy
+  simp only [if_pos hy]
+  have hy_ne : y ≠ 0 := ne_of_gt hy
+  have hpi_ne : Real.pi ≠ 0 := Real.pi_ne_zero
+  have h_denom_pos : (t^2 + y^2)^2 > 0 := by positivity
+  have hy2_pos : y^2 > 0 := sq_pos_of_pos hy
+  rw [abs_div, abs_mul, abs_of_pos (by positivity : 1 / Real.pi > 0), abs_of_pos h_denom_pos]
+  have step2 : |t^2 - y^2| = y^2 * |(t/y)^2 - 1| := by
+    have h1 : t^2 - y^2 = y^2 * ((t/y)^2 - 1) := by field_simp [hy_ne]
+    rw [h1, abs_mul, abs_of_pos hy2_pos]
+  have step3 : (t^2 + y^2)^2 = y^4 * (1 + (t/y)^2)^2 := by
+    have h2a : y^2 + t^2 = y^2 * (1 + (t/y)^2) := by field_simp [hy_ne]
+    have h2b : t^2 + y^2 = y^2 + t^2 := by ring
+    rw [h2b, h2a]; ring
+  rw [step2, step3]
+  have h_inner_ne : (1 + (t/y)^2)^2 ≠ 0 := by positivity
+  field_simp [hy_ne, hpi_ne]
+  ring
+
+/-- **PROVEN**: y-derivative integral bound for Poisson kernel.
+
+    ∫ |poissonKernel_dy(t, y)| dt = 2/(π·y)
+
+    **Proof via scaling**: Using substitution t = yu and integral_comp_div:
+    - |poissonKernel_dy(t,y)| = (1/(πy²)) · |( t / y)² - 1| / (1 + (t / y)²)² = (1/(πy²)) · g(t/y)
+    - ∫ g(t/y) dt = |y| · ∫ g(u) du = y · 2 = 2y  (using integral_abs_sq_minus_one_div_one_add_sq_sq)
+    - Total: (1/(πy²)) · 2y = 2/(πy) -/
+theorem poissonKernel_dy_integral_bound {y : ℝ} (hy : 0 < y) :
+    ∫ t : ℝ, |poissonKernel_dy t y| ≤ 2 / (Real.pi * y) := by
+  have hy_ne : y ≠ 0 := ne_of_gt hy
+  have hpi_ne : Real.pi ≠ 0 := Real.pi_ne_zero
+  let g : ℝ → ℝ := fun u => |u^2 - 1| / (1 + u^2)^2
+  have h_eq_fn : ∀ t, |poissonKernel_dy t y| = (1 / (Real.pi * y^2)) * g (t / y) := by
+    intro t; exact poissonKernel_dy_abs_eq hy t
+  have h_subst := MeasureTheory.Measure.integral_comp_div g y
+  have h_g_int : ∫ u : ℝ, g u = 2 := by
+    simp only [g]; exact integral_abs_sq_minus_one_div_one_add_sq_sq
+  calc ∫ t : ℝ, |poissonKernel_dy t y|
+      = ∫ t : ℝ, (1 / (Real.pi * y^2)) * g (t / y) := by
+        apply MeasureTheory.integral_congr_ae
+        filter_upwards with t; exact h_eq_fn t
+    _ = (1 / (Real.pi * y^2)) * ∫ t : ℝ, g (t / y) := by rw [MeasureTheory.integral_mul_left]
+    _ = (1 / (Real.pi * y^2)) * (|y| • ∫ u : ℝ, g u) := by rw [h_subst]
+    _ = (1 / (Real.pi * y^2)) * (y * ∫ u : ℝ, g u) := by rw [abs_of_pos hy, smul_eq_mul]
+    _ = (1 / (Real.pi * y^2)) * (y * 2) := by rw [h_g_int]
+    _ = 2 / (Real.pi * y) := by field_simp [hy_ne, hpi_ne]; ring
+    _ ≤ 2 / (Real.pi * y) := le_refl _
 
 /-- **Poisson y-derivative bound for BMO functions**.
 
