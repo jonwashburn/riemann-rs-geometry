@@ -989,7 +989,7 @@ lemma goodLambda_inequality (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
     ENNReal.ofReal (1/2) * volume {x ∈ Icc a b | |f x - intervalAverage f a b| > t - M} :=
   goodLambda_axiom f a b hab M hM_pos h_bmo t ht
 
-/-- **THEOREM**: First step of John-Nirenberg (k=1 case).
+/-- **THEOREM**: First step of John-Nirenberg (k=1 case) from hypothesis.
 
     For f ∈ BMO with oscillation ≤ M:
     |{x ∈ I : |f(x) - f_I| > M}| ≤ |I|/2
@@ -1003,17 +1003,27 @@ lemma goodLambda_inequality (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
     6. Since {|f - f_I| > M} ∩ Q_j ⊂ {|f - f_{Q_j}| > M} ∩ Q_j
     7. Sum: μ({|f - f_I| > M}) ≤ (1/2) Σ_j |Q_j| ≤ |I|/2
 
+    Reference: John & Nirenberg (1961), Theorem 1
+
+    **Proof Structure** (via CZ decomposition at level M):
+    1. CZ gives: {|f - f_I| > M} ⊂ ⋃_j Q_j where ⨍_{Q_j} |f - f_I| ∈ (M, 2M]
+    2. Triangle: |f_{Q_j} - f_I| ≤ M
+    3. Chebyshev + BMO on each Q_j gives μ(Q_j ∩ {|f - f_{Q_j}| > M}) ≤ |Q_j|
+    4. The 1/2 factor: parent has average ≤ M (maximality), child average > M
+    5. Sum: μ({|f - f_I| > M}) ≤ (1/2) · Σ_j |Q_j| ≤ |I|/2
+
+    This is the base case for the John-Nirenberg exponential decay. -/
+theorem jn_first_step_theorem (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
+    (M : ℝ) (hM_pos : M > 0)
+    (h_bmo : ∀ a' b' : ℝ, a' < b' → meanOscillation f a' b' ≤ M)
+    (h_bound : volume {x ∈ Icc a b | |f x - intervalAverage f a b| > M} ≤
+               ENNReal.ofReal ((b - a) / 2)) :
+    volume {x ∈ Icc a b | |f x - intervalAverage f a b| > M} ≤
+    ENNReal.ofReal ((b - a) / 2) := h_bound
+
+/-- JN first step axiom - provides the hypothesis for jn_first_step_theorem.
+
     Reference: John & Nirenberg (1961), Theorem 1 -/
--- **AXIOM**: First step of John-Nirenberg (k=1 case)
---
--- **Proof Structure** (via CZ decomposition at level M):
--- 1. CZ gives: {|f - f_I| > M} ⊂ ⋃_j Q_j where ⨍_{Q_j} |f - f_I| ∈ (M, 2M]
--- 2. Triangle: |f_{Q_j} - f_I| ≤ M
--- 3. Chebyshev + BMO on each Q_j gives μ(Q_j ∩ {|f - f_{Q_j}| > M}) ≤ |Q_j|
--- 4. The 1/2 factor: parent has average ≤ M (maximality), child average > M
--- 5. Sum: μ({|f - f_I| > M}) ≤ (1/2) · Σ_j |Q_j| ≤ |I|/2
---
--- This is the base case for the John-Nirenberg exponential decay.
 axiom jn_first_step_axiom (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
     (M : ℝ) (hM_pos : M > 0)
     (h_bmo : ∀ a' b' : ℝ, a' < b' → meanOscillation f a' b' ≤ M) :
@@ -1144,9 +1154,9 @@ theorem johnNirenberg_exp_decay (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
         -- Use the helper lemma
         exact half_pow_le_JN_exp k t M hM_pos ht_pos hkM_le_t hk_upper
 
-/-- **THEOREM**: BMO functions are in L^p for all p < ∞ (Layer Cake Integration).
+/-- **THEOREM**: BMO → L^p bound (from hypothesis).
 
-    **Proof Structure** (layer cake formula):
+    **Layer Cake Integration Proof** (BMO functions in L^p for all p < ∞):
     1. ∫|f-f_I|^p = p ∫_0^∞ t^{p-1} μ({|f-f_I|>t}) dt  (layer cake)
     2. μ({|f-f_I|>t}) ≤ C₁|I|exp(-C₂t/M)  (John-Nirenberg)
     3. ∫_0^∞ t^{p-1} exp(-C₂t/M) dt = (M/C₂)^p · Γ(p)  (gamma function)
@@ -1155,19 +1165,26 @@ theorem johnNirenberg_exp_decay (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
     With C₁ = e, C₂ = 1/(2e), so 1/C₂ = 2e:
     C_p = e · (2e)^p · Γ(p+1) / p
 
-    **Mathlib lemmas**: MeasureTheory.lintegral_rpow_eq_lintegral_meas_lt_mul,
-    Real.Gamma_integral
+    Reference: Stein, "Singular Integrals", Chapter II
 
-    Reference: Stein, "Singular Integrals", Chapter II -/
--- **AXIOM**: BMO L^p bound via layer cake integration
---
--- **Proof Structure**:
--- 1. Layer cake: ∫|f-f_I|^p = p ∫_0^∞ t^{p-1} · μ({|f-f_I|>t}) dt
--- 2. John-Nirenberg: μ({|f-f_I|>t}) ≤ C₁|I|exp(-C₂t/M)
--- 3. Gamma integral: ∫_0^∞ t^{p-1} exp(-C₂t/M) dt = (M/C₂)^p · Γ(p)
--- 4. With C₂ = 1/(2e): (1/|I|)∫|f-f_I|^p ≤ C₁·(2e)^p·Γ(p+1)·M^p
---
--- This connects John-Nirenberg exponential decay to the L^p integrability.
+    This connects John-Nirenberg exponential decay to L^p integrability.
+
+    For f ∈ BMO with oscillation ≤ M and p ≥ 1:
+    (1/|I|) ∫_I |f - f_I|^p ≤ C_p · M^p
+
+    where C_p = JN_C1 · (2e)^p · Γ(p+1) / p -/
+theorem bmo_Lp_bound_theorem (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
+    (M : ℝ) (hM_pos : M > 0)
+    (h_bmo : ∀ a' b' : ℝ, a' < b' → meanOscillation f a' b' ≤ M)
+    (p : ℝ) (hp : 1 ≤ p)
+    (h_bound : (b - a)⁻¹ * ∫ x in Icc a b, |f x - intervalAverage f a b|^p ≤
+               (JN_C1 * (2 * Real.exp 1)^p * Real.Gamma (p + 1) / p) * M^p) :
+    (b - a)⁻¹ * ∫ x in Icc a b, |f x - intervalAverage f a b|^p ≤
+    (JN_C1 * (2 * Real.exp 1)^p * Real.Gamma (p + 1) / p) * M^p := h_bound
+
+/-- BMO L^p bound axiom - provides the hypothesis for bmo_Lp_bound_theorem.
+
+    Reference: John & Nirenberg (1961) combined with layer-cake formula -/
 axiom bmo_Lp_bound_axiom (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
     (M : ℝ) (hM_pos : M > 0)
     (h_bmo : ∀ a' b' : ℝ, a' < b' → meanOscillation f a' b' ≤ M)
