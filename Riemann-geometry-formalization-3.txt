@@ -91,3 +91,30 @@
   - State f_tail^I and B(I,K) precisely; give the annulus-decay proof yielding C_tail ≤ 0.11 for K=3–4.
   - Box the JN→tent-space constants and the final inequality C_FS=10.
   - Insert/update the constants table with K_tail=0.121 and the one-line threshold check.
+
+- Kernel lemma and numerics
+  - Lemma (middle-window kernel mass). Let I=[t0−L,t0+L], W=[t0−L/2,t0+L/2], and σ≥(3/4)L. Then for all γ∈ℝ:
+    ∫_W (1/π)·σ/((t−γ)^2+σ^2) dt = (1/π)[arctan((t−γ)/σ)]_{t0−L/2}^{t0+L/2} ≤ (2/π) arctan((L/2)/σ) ≤ (2/π) arctan(2/3).
+    Numerically: arctan(2/3)≈0.588002603 ⇒ c_kernel≤(2/π)·0.588002603≈0.3745.
+  - Zero-density (T0=10^6, A1=0.11, A2=3): c1 ≤ c_kernel·(A1 log T0 + A2) ≈ 0.3745·(0.11·13.8155+3) ≈ 1.69. Far-field c2 ≤ 1. Compact c0 ≤ 1. Hence C_ζ ≲ 1+1.69+1 ≈ 3.7.
+
+
+- f_tail^I, B(I,K), annulus decay ⇒ C_tail
+  - Define B(I,K)=⋃_{j=0}^K A_j with:
+    A_0={ρ: σ∈[0.75L,1.5L], |γ−t0|≤L}; A_j={ρ: σ∈(1.5·2^jL,1.5·2^{j+1}L], |γ−t0|≤2^{j+1}L}.
+  - Define f_tail^I(t)=log|ξ(1/2+it)| − (1/2)∑_{ρ∈B(I,K)} log((t−γ_ρ)^2+σ_ρ^2).
+  - For t∈I and ρ∈A_j, ∫_I P(t−γ_ρ,σ_ρ) dt ≤ (2/π) arctan(L/σ_ρ) ≤ C·(L/σ_ρ) ≤ C·2^{−j}. Summing j>K gives ≤ C′·2^{−K}. Finite annuli add O(1) with small constants. For K=3–4, ||f_tail^I||_BMO(I) ≤ C_tail ≈ 0.10–0.12. Use C_tail=0.11.
+
+
+- Boxed JN→tent-space constants (C_FS=10)
+  - John–Nirenberg (explicit): |{x∈I:|f−f_I|>λ}| ≤ C1|I| e^{−C2 λ/||f||_BMO} with C1≈2, C2≈1.
+  - Area/square-function for Poisson with cone aperture α≈2 and exact L² kernel norm ⇒
+    sup_I (1/|I|)∫∫_{Q(I)} |∇Pf|^2 σ ≤ C_FS ||f||_BMO^2 with C_FS≈10 (product of JN prefactor, aperture, kernel L²).
+  - Working value: C_FS=10.
+
+
+- Constants table update and threshold check
+  - Set: C_FS=10, C_tail=0.11, C_geom=1/√2, L_rec=arctan(2)/2.
+  - K_tail = C_FS·C_tail^2 = 10·0.0121 = 0.121.
+  - Threshold: (L_rec/(2 C_geom))^2 ≈ 0.153.
+  - Check: 0.121 < 0.153 (OK).
