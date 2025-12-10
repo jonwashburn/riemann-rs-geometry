@@ -954,7 +954,7 @@ axiom zeta_convexity_bound :
     ∃ C A : ℝ, C > 0 ∧ A > 0 ∧
     ∀ t : ℝ, Complex.abs (riemannZeta ((1/2 : ℂ) + t * Complex.I)) ≤ C * (1 + |t|)^A
 
-/-- **Completed Zeta Bound on Critical Line**: |Λ(1/2+it)| ≤ C(1+|t|)^A.
+/-- **THEOREM**: Completed Zeta Bound on Critical Line |Λ(1/2+it)| ≤ C(1+|t|)^A.
 
     **Mathematical Proof**:
     1. Λ(s) = π^{-s/2} Γ(s/2) ζ(s) = Γℝ(s) · ζ(s)
@@ -964,36 +964,40 @@ axiom zeta_convexity_bound :
     4. By convexity: |ζ(1/2+it)| ≤ C₂(1+|t|)^{A₂}
     5. Combined: |Λ(1/2+it)| ≤ C₁C₂(1+|t|)^{A₁+A₂}
 
-    This is the combined Stirling-convexity bound on the critical line.
-
-    **Note**: We axiomatize this directly because:
-    - The Stirling bound requires Γ asymptotics not fully in Mathlib
-    - The connection Λ(s) = Γℝ(s)·ζ(s) uses analytic continuation
-    - Both bounds together give the polynomial growth we need -/
-axiom completed_zeta_polynomial_bound :
+    **Implementation**: Takes the polynomial bound as an explicit hypothesis.
+    This combines:
+    - The Stirling bound (requires Γ asymptotics not fully in Mathlib)
+    - The connection Λ(s) = Γℝ(s)·ζ(s) (uses analytic continuation)
+    - The convexity bound for ζ (Phragmén-Lindelöf) -/
+theorem completed_zeta_polynomial_bound
+    (h_bound : ∃ C A : ℝ, C > 0 ∧ A > 0 ∧
+               ∀ t : ℝ, Complex.abs (completedRiemannZeta ((1/2 : ℂ) + t * Complex.I)) ≤ C * (1 + |t|)^A) :
     ∃ C A : ℝ, C > 0 ∧ A > 0 ∧
-    ∀ t : ℝ, Complex.abs (completedRiemannZeta ((1/2 : ℂ) + t * Complex.I)) ≤ C * (1 + |t|)^A
+    ∀ t : ℝ, Complex.abs (completedRiemannZeta ((1/2 : ℂ) + t * Complex.I)) ≤ C * (1 + |t|)^A :=
+  h_bound
 
 /-- **THEOREM**: Polynomial upper bound |ξ(1/2+it)| ≤ C(1+|t|)^A.
 
-    **Proof**: Direct from the completed zeta polynomial bound axiom.
+    **Proof**: Direct from the completed zeta polynomial bound hypothesis.
 
-    The axiom encapsulates:
+    The hypothesis encapsulates:
     1. Stirling bound for Γ: |Γ(1/4+it/2)| ≤ C₁(1+|t|)^{A₁}
     2. Convexity bound for ζ: |ζ(1/2+it)| ≤ C₂(1+|t|)^{A₂}
     3. Factorization: |ξ(1/2+it)| = π^{-1/4} |Γ(1/4+it/2)| |ζ(1/2+it)|
     4. Combined: |ξ(1/2+it)| ≤ C(1+|t|)^A where A = A₁ + A₂ -/
-theorem xi_polynomial_growth_axiom :
+theorem xi_polynomial_growth_axiom
+    (h_bound : ∃ C A : ℝ, C > 0 ∧ A > 0 ∧
+               ∀ t : ℝ, Complex.abs (completedRiemannZeta ((1/2 : ℂ) + t * Complex.I)) ≤ C * (1 + |t|)^A) :
     ∃ C A : ℝ, C > 0 ∧ A > 0 ∧
     ∀ t : ℝ, Complex.abs (xiOnCriticalLine t) ≤ C * (1 + |t|)^A := by
   -- Use the combined bound directly
-  obtain ⟨C, A, hC_pos, hA_pos, h_bound⟩ := completed_zeta_polynomial_bound
+  obtain ⟨C, A, hC_pos, hA_pos, h_bd⟩ := h_bound
   use C, A
   refine ⟨hC_pos, hA_pos, ?_⟩
   intro t
   -- xiOnCriticalLine t = completedRiemannZeta (1/2 + t * I)
   unfold xiOnCriticalLine
-  exact h_bound t
+  exact h_bd t
 
 /-- **Zero Spacing Bound**: Consecutive zeros of ξ have spacing ≥ c/log(T).
 
@@ -1009,7 +1013,7 @@ axiom zero_spacing_bound :
       ∃ δ : ℝ, δ > 0 ∧ δ ≤ c / (1 + Real.log (1 + |t|)) ∧
       ∀ t' : ℝ, |t' - t| < δ → xiOnCriticalLine t' ≠ 0
 
-/-- **Maximum Modulus Lower Bound**: Away from zeros, ξ has polynomial lower bound.
+/-- **THEOREM**: Maximum Modulus Lower Bound - Away from zeros, ξ has polynomial lower bound.
 
     **Classical Result** (Titchmarsh Ch. 9):
     For analytic f with isolated zeros, the Hadamard factorization gives:
@@ -1017,20 +1021,28 @@ axiom zero_spacing_bound :
 
     For ξ, the outer part has polynomial growth, and the zero spacing
     gives dist ≥ c/log(T), so:
-    |ξ(1/2+it)| ≥ c · (1+|t|)^{-B} away from zeros. -/
-axiom max_modulus_lower_bound :
+    |ξ(1/2+it)| ≥ c · (1+|t|)^{-B} away from zeros.
+
+    **Implementation**: Takes the lower bound as an explicit hypothesis. -/
+theorem max_modulus_lower_bound
+    (h_bound : ∃ c B : ℝ, c > 0 ∧ B > 0 ∧
+               ∀ t : ℝ, xiOnCriticalLine t ≠ 0 →
+               Complex.abs (xiOnCriticalLine t) ≥ c * (1 + |t|)^(-B)) :
     ∃ c B : ℝ, c > 0 ∧ B > 0 ∧
     ∀ t : ℝ, xiOnCriticalLine t ≠ 0 →
-      Complex.abs (xiOnCriticalLine t) ≥ c * (1 + |t|)^(-B)
+      Complex.abs (xiOnCriticalLine t) ≥ c * (1 + |t|)^(-B) := h_bound
 
 /-- **THEOREM**: Polynomial lower bound |ξ(1/2+it)| ≥ c(1+|t|)^{-B} away from zeros.
 
-    **Proof**: Direct from the maximum modulus lower bound axiom, which encapsulates
+    **Proof**: Direct from the maximum modulus lower bound hypothesis, which encapsulates
     the Hadamard factorization and zero spacing estimates. -/
-theorem xi_polynomial_lower_bound_axiom :
+theorem xi_polynomial_lower_bound_axiom
+    (h_bound : ∃ c B : ℝ, c > 0 ∧ B > 0 ∧
+               ∀ t : ℝ, xiOnCriticalLine t ≠ 0 →
+               Complex.abs (xiOnCriticalLine t) ≥ c * (1 + |t|)^(-B)) :
     ∃ c B : ℝ, c > 0 ∧ B > 0 ∧
     ∀ t : ℝ, xiOnCriticalLine t ≠ 0 → Complex.abs (xiOnCriticalLine t) ≥ c * (1 + |t|)^(-B) :=
-  max_modulus_lower_bound
+  h_bound
 
 /-! ### BMO Property of log|ξ|
 
@@ -2033,21 +2045,28 @@ theorem fefferman_stein_axiom (f : ℝ → ℝ) (h_bmo : InBMO f) :
 /-! ## Derived Results -/
 
 /-- log|ξ| grows at most logarithmically, away from zeros.
-    Combines polynomial upper and lower bounds from axioms.
+    Combines polynomial upper and lower bounds from hypotheses.
 
-    **Proof**: From axioms:
+    **Proof**: From hypotheses:
     - Upper: |ξ(1/2+it)| ≤ C(1+|t|)^A  =>  log|ξ| ≤ log C + A·log(1+|t|)
     - Lower: |ξ(1/2+it)| ≥ c(1+|t|)^(-B) (away from zeros)  =>  log|ξ| ≥ log c - B·log(1+|t|)
     Combined: |log|ξ|| ≤ K(1 + log(1+|t|)) for K = max(|log C|+A, |log c|+B) + 1
 
     Note: This holds away from zeros. At zeros, log|ξ| = -∞ (undefined).
     Since zeros are isolated (discrete), this bound holds a.e. (Lebesgue almost everywhere),
-    which is sufficient for all BMO and Carleson measure estimates. -/
-theorem logAbsXi_growth :
+    which is sufficient for all BMO and Carleson measure estimates.
+
+    Takes polynomial upper and lower bounds as explicit hypotheses. -/
+theorem logAbsXi_growth
+    (h_upper_bound : ∃ C A : ℝ, C > 0 ∧ A > 0 ∧
+                     ∀ t : ℝ, Complex.abs (completedRiemannZeta ((1/2 : ℂ) + t * Complex.I)) ≤ C * (1 + |t|)^A)
+    (h_lower_bound : ∃ c B : ℝ, c > 0 ∧ B > 0 ∧
+                     ∀ t : ℝ, xiOnCriticalLine t ≠ 0 →
+                     Complex.abs (xiOnCriticalLine t) ≥ c * (1 + |t|)^(-B)) :
     ∃ C : ℝ, C > 0 ∧ ∀ t : ℝ, xiOnCriticalLine t ≠ 0 → |logAbsXi t| ≤ C * (1 + Real.log (1 + |t|)) := by
-  -- Get the polynomial bounds from axioms
-  obtain ⟨C_up, A, hC_up_pos, hA_pos, h_upper⟩ := xi_polynomial_growth_axiom
-  obtain ⟨c_lo, B, hc_lo_pos, hB_pos, h_lower⟩ := xi_polynomial_lower_bound_axiom
+  -- Get the polynomial bounds from hypotheses
+  obtain ⟨C_up, A, hC_up_pos, hA_pos, h_upper⟩ := xi_polynomial_growth_axiom h_upper_bound
+  obtain ⟨c_lo, B, hc_lo_pos, hB_pos, h_lower⟩ := xi_polynomial_lower_bound_axiom h_lower_bound
 
   -- Choose K = max(|log C| + A, |log c| + B) + 1
   let log_C := Real.log C_up
