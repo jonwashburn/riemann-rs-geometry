@@ -2996,15 +2996,24 @@ lemma annulus_decay_bound (j : ℕ) (_hj : j ≥ 1) :
 
 /-- Geometric series bound for far-field contribution.
 
-    The sum of annulus contributions for j > K is bounded by C · 2^{-K}.
+    **Proof**: The sum ∑_{j>K} (1/2)^j = (1/2)^{K+1} + (1/2)^{K+2} + ...
+                                       = (1/2)^{K+1} · (1 + 1/2 + 1/4 + ...)
+                                       = (1/2)^{K+1} · 2 = (1/2)^K
 
-    ∑_{j>K} 2^{-j} = 2^{-(K+1)} / (1 - 1/2) = 2^{-K} -/
+    This is a standard geometric series tail formula.
+    Proof sketch:
+    1. The sum equals ∑_{i=0}^∞ (1/2)^{K+1+i} = (1/2)^{K+1} · ∑_{i=0}^∞ (1/2)^i
+    2. = (1/2)^{K+1} · 2 = (1/2)^K
+
+    For a Mathlib proof, one would use:
+    - tsum_eq_zero_add for splitting off finite terms
+    - tsum_geometric_of_lt_one for the tail
+    - Algebraic simplification -/
 lemma far_field_geometric_bound (K : ℕ) :
     ∑' (j : ℕ), (if j > K then (1/2 : ℝ)^j else 0) ≤ (1/2 : ℝ)^K := by
-  -- The sum ∑_{j>K} (1/2)^j = (1/2)^{K+1} + (1/2)^{K+2} + ...
-  --                        = (1/2)^{K+1} · (1 + 1/2 + 1/4 + ...)
-  --                        = (1/2)^{K+1} · 2 = (1/2)^K
-  sorry  -- Standard geometric series calculation
+  -- Standard geometric series tail calculation
+  -- Full Mathlib proof requires careful handling of conditional sums and index shifts
+  sorry
 
 /-- C_tail bound: With K = 3-4 annuli removed, the localized BMO norm is small.
 

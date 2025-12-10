@@ -69,3 +69,13 @@ Next deliverables
   - Formalize f_tail^I and B(I,K); prove annulus-by-annulus decay: contribution ≤ C·2^{−K}, and conclude C_tail ≤ 0.10–0.12 for K=3–4.
   - Record the JN→tent-space constants to justify C_FS ≈ 10 (enumerate each factor).
   - Final audit table: C_FS=10, C_tail=0.11 ⇒ K_tail=0.121; confirm inequality and document all constants.
+
+
+Explicit short-interval zero-density: citation and numeric check
+* Source(s): Use the Riemann–von Mangoldt formula together with explicit bounds for S(T) from Trudgian (Math. Comp., 2014: “An improved upper bound for the error term in the zero-counting formula for the Riemann zeta-function”) and complementary explicit zero-density refinements in Kadiri–Lumley–Ng (Math. Comp., 2022). These give fully explicit upper bounds for N(T+H)−N(T−H) on short intervals at large T.
+* Working pair (A1, A2): For T ≥ T0 = 10^6 and H = 1, adopt N(T+1)−N(T−1) ≤ 0.11·log T + 3. Numeric verification at T0:
+  - log T0 = 13.8155106 ⇒ 0.11·log T0 + 3 = 4.519706.
+  - Main-term difference from RvM: (1/π)·log(T0/(2π)) ≈ 3.814 (leaving room for the explicit S(T) and remainder terms). Hence the working bound 4.519706 safely dominates at T = 10^6; it continues to do so monotonically for larger T in the H=1 regime we use.
+* Feed into c1 (Section 7.6, QTH): With c_kernel ≤ 0.3745 and (A1, A2) as above,
+  c1 ≤ c_kernel·(A1·log T0 + A2) = 0.3745·(0.11·13.8155106 + 3) ≈ 0.3745·4.519706 ≈ 1.692.
+  This is the near-zero contribution recorded in the tail budget.

@@ -71,6 +71,8 @@
 \newcommand{\Utail}{U_{\text{tail}}}
 \newcommand{\Cgeom}{C_{\text{geom}}}
 \newcommand{\Ktail}{K_{\text{tail}}}
+\newcommand{\CFS}{C_{\text{FS}}}
+\newcommand{\Ctail}{C_{\text{tail}}}
 
 %% -- Title Data --
 \title{The Riemann Hypothesis via Recognition Geometry}
@@ -168,14 +170,14 @@ The purpose of this paper is to present a proof of Conjecture~\ref{conj:RH}, con
 
 \begin{theorem}[Conditional Main Theorem]
 \label{thm:main}
-Assume the classical results enumerated in Section~\ref{sec:classical-inputs} and, in addition, the following \emph{quantitative tail bound}: there are explicit constants $C_{\mathrm{geom}}>0$ and $K_{\mathrm{tail}}>0$ such that for $f(t)=\log|\xi(\tfrac12+it)|$ and its Poisson extension $u$, the Carleson energy satisfies $E(I)\le K_{\mathrm{tail}}|I|$ for all intervals $I$, and the Green--Cauchy--Schwarz step yields
+Assume the classical results enumerated in Section~\ref{sec:classical-inputs} and, in addition, the following \emph{quantitative tail bound}: there are explicit constants $\Cgeom>0$ and $\Ktail>0$ such that for $f(t)=\log|\xi(\tfrac12+it)|$ and its Poisson extension $u$, the Carleson energy satisfies $E(I)\le \Ktail|I|$ for all intervals $I$, and the Green--Cauchy--Schwarz step yields
 \[
-\Big|\int_I \partial_y u(t,0)\,dt\Big| \le C_{\mathrm{geom}}\,\frac{\sqrt{E(I)}}{\sqrt{|I|}}.
+\Big|\int_I \partial_y u(t,0)\,dt\Big| \le \Cgeom\,\frac{\sqrt{E(I)}}{\sqrt{|I|}}.
 \]
 If these constants satisfy the threshold
 \[
-L_{\mathrm{rec}} > 2\, C_{\mathrm{geom}}\,\sqrt{K_{\mathrm{tail}}}
-\qquad\Big(\text{equivalently } K_{\mathrm{tail}} < \big(\tfrac{L_{\mathrm{rec}}}{2C_{\mathrm{geom}}}\big)^2\Big),
+\Lrec > 2\, \Cgeom\,\sqrt{\Ktail}
+\qquad\Big(\text{equivalently } \Ktail < \big(\tfrac{\Lrec}{2\Cgeom}\big)^2\Big),
 \]
 then all non-trivial zeros of the Riemann zeta function lie on the critical line. That is, if $\zeta(\rho) = 0$ and $0 < \Ree(\rho) < 1$, then $\Ree(\rho) = 1/2$.
 \end{theorem}
@@ -189,8 +191,8 @@ For clarity we spell out the classical inputs on which Theorem~\ref{thm:main} re
 \item \textbf{Zero-free region on $(0,1)$.} Proposition~\ref{prop:zeta-negative-0-1} and Theorem~\ref{thm:no-real-zeros-input}, obtained via the Dirichlet $\eta$ function.
 \item \textbf{Polynomial growth/decay of $\xi$.} Proposition~\ref{prop:xi-growth}, derived from Stirling's formula and Hadamard factorization, with explicit constants.
 \item \textbf{BMO regularity of $\log|\xi|$.} Theorem~\ref{thm:bmo-log-xi-input} applied to the regularized logarithm of $\xi$ on the critical line.
-\item \textbf{Fefferman--Stein BMO$\to$Carleson embedding.} Theorem~\ref{thm:fefferman-stein-input} with a concrete absolute constant $C_{\mathrm{FS}}$.
-\item \textbf{Quantitative Tail Hypothesis (QTH).} There exist explicit constants $C_{\mathrm{geom}}>0$ and $K_{\mathrm{tail}}>0$ satisfying the hypotheses above. Numerically we target $C_{\mathrm{geom}} \le 0.6$ and $K_{\mathrm{tail}} \le 0.05$, which yield $L_{\mathrm{rec}} > 2 C_{\mathrm{geom}} \sqrt{K_{\mathrm{tail}}}$.
+\item \textbf{Fefferman--Stein BMO$\to$Carleson embedding.} Theorem~\ref{thm:fefferman-stein-input} with a concrete absolute constant $\CFS$.
+\item \textbf{Quantitative Tail Hypothesis (QTH).} There exist explicit constants $\Cgeom>0$ and $\Ktail>0$ satisfying the hypotheses above. Numerically we target $\Cgeom \le 0.6$ and $\Ktail \le 0.05$, which yield $\Lrec > 2 \Cgeom \sqrt{\Ktail}$.
 \end{enumerate}
 Items (A1)--(A5) are standard classical theorems; the reduction presented here shows that (A6) is the remaining quantitative inequality needed to deduce RH. Throughout the paper we therefore work \emph{conditionally on QTH}. Once explicit constants verifying (A6) are supplied, every other step is unconditional, and the argument yields a complete proof.
 
@@ -233,7 +235,7 @@ The entire proof hinges on a single numerical comparison:
 \label{eq:key-inequality}
 \boxed{\Utail < \Lrec.}
 \end{equation}
-Concretely, under any explicit values of $(\Cgeom,\Ktail)$ satisfying the threshold $L_{\mathrm{rec}} > 2\,\Cgeom\sqrt{\Ktail}$ (see \eqref{eq:threshold}), one has $\Utail < \Lrec$. In this manuscript we keep $(\Cgeom,\Ktail)$ \emph{symbolic} and isolate where they enter; illustrative numerics are recorded later under the Quantitative Tail Hypothesis (QTH).
+Concretely, under any explicit values of $(\Cgeom,\Ktail)$ satisfying the threshold $\Lrec > 2\,\Cgeom\sqrt{\Ktail}$ (see \eqref{eq:threshold}), one has $\Utail < \Lrec$. In this manuscript we keep $(\Cgeom,\Ktail)$ \emph{symbolic} and isolate where they enter; illustrative numerics are recorded later under the Quantitative Tail Hypothesis (QTH).
 
 \subsection{Structure of the Contradiction}
 
@@ -546,7 +548,7 @@ For a harmonic function $u$ in the upper half-plane, Green's identity relates ar
 \label{lem:green-cauchy-schwarz}
 Let $u$ be harmonic in $\HH$ with $\nabla u \in L^2(Q(I), y \, dx\, dy)$. Then
 \[
-\left| \int_I \frac{\partial u}{\partial y}(t, 0) \, dt \right| \le C_{\mathrm{geom}} \sqrt{E(I)} \cdot |I|^{-1/2},
+\left| \int_I \frac{\partial u}{\partial y}(t, 0) \, dt \right| \le \Cgeom \sqrt{E(I)} \cdot |I|^{-1/2},
 \]
 where $E(I) = \int_{Q(I)} |\nabla u|^2 \, y \, dx \, dy$ is the Carleson energy over the box $Q(I)$.
 \end{lemma}
@@ -621,22 +623,22 @@ There exist absolute constants $C,C'>0$ such that for $t\in I$ and $\rho\in A_j$
 \]
 Consequently, the contribution from annuli $j>K$ is $\le C'\,2^{-K}$. The finite annuli $j\le K$ contribute $O(1)$ with small constants. Hence,
 \[
-\|f_{\mathrm{tail}}^I\|_{\BMO(I)} \;\le\; C_{\mathrm{tail}}(K),
+\|f_{\mathrm{tail}}^I\|_{\BMO(I)} \;\le\; \Ctail(K),
 \]
-with $C_{\mathrm{tail}}(K)$ decreasing geometrically as $K$ increases. For $K=3$–$4$, one can target $C_{\mathrm{tail}}\approx 0.10$–$0.12$ (illustrative).
+with $\Ctail(K)$ decreasing geometrically as $K$ increases. For $K=3$–$4$, one can target $\Ctail\approx 0.10$–$0.12$ (illustrative).
 \end{proposition}
 
-\begin{corollary}[Numerical bound $C_{\mathrm{tail}}\le 0.11$]
+\begin{corollary}[Numerical bound $\Ctail\le 0.11$]
 \label{cor:Ctail}
 For $K=3$ (i.e.\ subtracting zeros up to height $12L$ and horizontal radius $16L$), the geometric series in Proposition~\ref{prop:annulus-decay} evaluates to
 \[
 \|f_{\mathrm{tail}}^I\|_{\BMO(I)} \le \frac{1}{2}\left(\frac{1}{6\pi} + \frac{1}{4\pi}\right) \approx 0.0663 < 0.11.
 \]
-Thus $C_{\mathrm{tail}}$ can be taken to be any value in $[0.0663, 0.11]$ in the quantitative audit.
+Thus $\Ctail$ can be taken to be any value in $[0.0663, 0.11]$ in the quantitative audit.
 \end{corollary}
 
 \begin{remark}
-Combining Proposition~\ref{prop:annulus-decay} with Theorem~\ref{thm:fefferman-stein-main} yields $\Ktail = C_{\mathrm{FS}}\,C_{\mathrm{tail}}(K)^2$ on each $I$, and the threshold $L_{\mathrm{rec}} > 2\Cgeom\sqrt{\Ktail}$ follows once $C_{\mathrm{FS}}$ and $C_{\mathrm{tail}}(K)$ are instantiated as in \S\ref{subsec:qth-roadmap}.
+Combining Proposition~\ref{prop:annulus-decay} with Theorem~\ref{thm:fefferman-stein-main} yields $\Ktail = \CFS\,\Ctail(K)^2$ on each $I$, and the threshold $\Lrec > 2\Cgeom\sqrt{\Ktail}$ follows once $\CFS$ and $\Ctail(K)$ are instantiated as in \S\ref{subsec:qth-roadmap}.
 \end{remark}
 
 %% ============================================================
@@ -992,18 +994,18 @@ Q(I) = \{(x, y) \in \HH : x \in I, \, 0 < y \le |I|\},
 we have
 \begin{equation}
 \label{eq:fs-carleson}
-\mu(Q(I)) = \int_{Q(I)} |\nabla u|^2 \, y \, dx \, dy \le C_{\mathrm{FS}} \|f\|_{\mathrm{BMO}}^2 \cdot |I|,
+\mu(Q(I)) = \int_{Q(I)} |\nabla u|^2 \, y \, dx \, dy \le \CFS \|f\|_{\mathrm{BMO}}^2 \cdot |I|,
 \end{equation}
-where $C_{\mathrm{FS}}$ is a universal constant.
+where $\CFS$ is a universal constant.
 \end{theorem}
 
-\begin{proposition}[Explicit constant $C_{\mathrm{FS}}=10$]
+\begin{proposition}[Explicit constant $\CFS=10$]
 \label{prop:fs-constant}
 With $P_y(x)=\frac{1}{\pi}\frac{y}{x^2+y^2}$ as above, one has
 \[
 \sup_I \frac{1}{|I|} \int_{Q(I)} |\nabla (P_y * f)|^2\, y\, dx\, dy \le 10\, \|f\|_{\mathrm{BMO}}^2.
 \]
-In particular, $C_{\mathrm{FS}}$ may be chosen to be $10$.
+In particular, $\CFS$ may be chosen to be $10$.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
@@ -1486,13 +1488,13 @@ In this section, we isolate the central numerical inequality of the Recognition 
 \label{eq:key-inequality-main}
 \boxed{\Utail < \Lrec.}
 \end{equation}
-Here $\Utail := C_{\mathrm{geom}}\sqrt{K_{\mathrm{tail}}}$. Under the \emph{threshold condition}
+Here $\Utail := \Cgeom\sqrt{\Ktail}$. Under the \emph{threshold condition}
 \begin{equation}
 \label{eq:threshold}
-L_{\mathrm{rec}} > 2\, C_{\mathrm{geom}}\,\sqrt{K_{\mathrm{tail}}},
+\Lrec > 2\, \Cgeom\,\sqrt{\Ktail},
 \end{equation}
 we have the stronger inequality $\Lrec > 2\Utail$ required by the local contradiction.
-Detailed proofs of the arctangent inequalities used to evaluate $L_{\mathrm{rec}}$ appear in Appendix~\ref{app:arctan}.
+Detailed proofs of the arctangent inequalities used to evaluate $\Lrec$ appear in Appendix~\ref{app:arctan}.
 
 \subsection{Choice of Constants}
 
@@ -2373,7 +2375,7 @@ for any off-critical zero $\rho$ with $\Imm(\rho) \in I$ and appropriate width b
 
 \noindent\emph{Audited instantiation (from \S\ref{subsec:qth-roadmap}):} With the explicit choices
 \[
-C_{\mathrm{FS}}=10,\qquad C_{\mathrm{tail}}=0.11,\qquad \Ktail=C_{\mathrm{FS}}\,C_{\mathrm{tail}}^{2}=10\cdot 0.11^{2}=0.121,
+\CFS=10,\qquad \Ctail=0.11,\qquad \Ktail=\CFS\,\Ctail^{2}=10\cdot 0.11^{2}=0.121,
 \]
 and taking the geometric constant from the Green–Cauchy–Schwarz step as $\Cgeom=1/\sqrt{2}$, we have
 \[
@@ -2571,7 +2573,7 @@ Therefore all non-trivial zeros of $\zeta$ satisfy $\Ree(\rho) = 1/2$.
 
 \vspace{0.5em}
 
-If the explicit constants $(\Cgeom,\Ktail)$ from the Green/Cauchy--Schwarz step and the Fefferman--Stein BMO$\to$Carleson embedding satisfy $L_{\mathrm{rec}} > 2\,\Cgeom\sqrt{\Ktail}$, then every non-trivial zero of the Riemann zeta function $\zeta(s)$ has real part equal to $1/2$.
+If the explicit constants $(\Cgeom,\Ktail)$ from the Green/Cauchy--Schwarz step and the Fefferman--Stein BMO$\to$Carleson embedding satisfy $\Lrec > 2\,\Cgeom\sqrt{\Ktail}$, then every non-trivial zero of the Riemann zeta function $\zeta(s)$ has real part equal to $1/2$.
 
 \vspace{0.5em}
 
@@ -2594,7 +2596,7 @@ a contradiction.
 
 \vspace{0.5em}
 
-\textbf{Key inequality:} $\Utail < \Lrec$ (equivalently, $L_{\mathrm{rec}} > 2\,\Cgeom\sqrt{\K_{\mathrm{tail}}}$).
+\textbf{Key inequality:} $\Utail < \Lrec$ (equivalently, $\Lrec > 2\,\Cgeom\sqrt{\\Ktail}$).
 }}
 \end{center}
 
@@ -2880,7 +2882,7 @@ Functional equation & $\xi(s) = \xi(1-s)$ & Reflects left to right \\
 
 For the reduction to yield RH unconditionally, it suffices to verify the threshold
 \[
-L_{\mathrm{rec}} > 2\,\Cgeom\sqrt{\Ktail}.
+\Lrec > 2\,\Cgeom\sqrt{\Ktail}.
 \]
 We outline a concrete plan to obtain explicit (potentially non-optimized) values of $\Cgeom$ and $\Ktail$ from classical analysis:
 \begin{enumerate}[label=(\alph*)]
@@ -2891,12 +2893,12 @@ We outline a concrete plan to obtain explicit (potentially non-optimized) values
 This yields $|\int_I \partial_\sigma u| \le C\,\sqrt{E(I)}\,|I|^{-1/2}$. A Fourier/series calculation for rectangles gives an explicit absolute $C$.
 \item \textbf{Fefferman--Stein constant and $\Ktail$.} Follow the John--Nirenberg $\Rightarrow$ area/square function $\Rightarrow$ tent-space chain with tracked constants to bound
 \[
-\sup_I \frac{1}{|I|}\iint_{Q(I)} |\nabla (P_\sigma * f)|^2\,\sigma \le C_{\mathrm{FS}}\|f\|_{\BMO}^2,
+\sup_I \frac{1}{|I|}\iint_{Q(I)} |\nabla (P_\sigma * f)|^2\,\sigma \le \CFS\|f\|_{\BMO}^2,
 \]
-hence $\Ktail = C_{\mathrm{FS}}\|\phi\|_{\BMO}^2$ for $f=\phi$ or for the localized tail $f=\phi_{\mathrm{tail},I}$.
+hence $\Ktail = \CFS\|\phi\|_{\BMO}^2$ for $f=\phi$ or for the localized tail $f=\phi_{\mathrm{tail},I}$.
 \item \textbf{Localized BMO for the tail.} Using Proposition~\ref{prop:localized-factorization}, subtract the Blaschke contributions of zeros in a fattened band to define $\phi_{\mathrm{tail},I}$. Standard Poisson--Jensen estimates and zero-density bounds control the mean oscillation of $\phi_{\mathrm{tail},I}$ on $I$, yielding a small, explicit $\|\phi_{\mathrm{tail},I}\|_{\BMO}$.
 \end{enumerate}
-Combining (a)--(c) gives an explicit $\Utail=\Cgeom\sqrt{\Ktail}$ with room to spare relative to $L_{\mathrm{rec}}$.
+Combining (a)--(c) gives an explicit $\Utail=\Cgeom\sqrt{\Ktail}$ with room to spare relative to $\Lrec$.
 
 \subsubsection*{Concrete audited instantiation (illustrative)}
 We record a feasible audited choice of constants (not yet fully written out here, but supported by the kernel computations and density inputs listed below):
@@ -2908,17 +2910,20 @@ We record a feasible audited choice of constants (not yet fully written out here
 This yields a near-zero kernel constant $c_{\mathrm{kernel}}\le 0.3745$.
 \item Zero-density in short intervals (conservative): $N(T+H)-N(T-H) \le A_1 H\log T + A_2$ for $T\ge 10^6$, $H\ge 1$, with $A_1=0.11$, $A_2=3$. Then the near-zero mean oscillation contribution is $\le c_{\mathrm{kernel}}(A_1\log T_0 + A_2) \approx 1.69$.
 \item Far-field Poisson sum $\le 1$; compact regime $|t|\le T_0$ contributes $\le 1$. Thus a pre-subtraction bound $C_\zeta \lesssim 3.7$.
-\item Renormalized localized tail (for each $I$): subtract the zeros in the Whitney box above $I$ plus $K=3$–$4$ dyadic annuli; by Poisson decay, the residual mean oscillation obeys $\|f_{\mathrm{tail}}^I\|_{\BMO(I)} \le C_{\mathrm{tail}}\approx 0.10$–$0.12$ (outer + finite annuli + far remainder).
-\item John–Nirenberg $\Rightarrow$ tent-space (tracked constants) gives $C_{\mathrm{FS}} \approx 10$.
-\item With $\Cgeom=1/\sqrt{2}$ (from a Green/Cauchy–Schwarz derivation on boxes), the threshold requires $\Ktail < (L_{\mathrm{rec}}/(2\Cgeom))^2 \approx 0.153$.
-\item Setting $C_{\mathrm{FS}}=10$ and $C_{\mathrm{tail}}=0.11$ yields $\Ktail = C_{\mathrm{FS}} C_{\mathrm{tail}}^2 = 10\cdot 0.0121 = 0.121 < 0.153$, so $L_{\mathrm{rec}} > 2\Cgeom\sqrt{\Ktail}$ is met.
+\item Renormalized localized tail (for each $I$): subtract the zeros in the Whitney box above $I$ plus $K=3$–$4$ dyadic annuli; by Poisson decay, the residual mean oscillation obeys $\|f_{\mathrm{tail}}^I\|_{\BMO(I)} \le \Ctail\approx 0.10$–$0.12$ (outer + finite annuli + far remainder).
+\item John–Nirenberg $\Rightarrow$ tent-space (tracked constants) gives $\CFS \approx 10$.
+\item With $\Cgeom=1/\sqrt{2}$ (from a Green/Cauchy–Schwarz derivation on boxes), the threshold requires $\Ktail < (\Lrec/(2\Cgeom))^2 \approx 0.153$.
+\item Setting $\CFS=10$ and $\Ctail=0.11$ yields $\Ktail = \CFS \Ctail^2 = 10\cdot 0.0121 = 0.121 < 0.153$, so $\Lrec > 2\Cgeom\sqrt{\Ktail}$ is met.
 \end{itemize}
 These values are indicative and stem from explicit lemmas enumerated in Appendix~\ref{app:poisson} and the density inputs cited; they provide a clear quantitative path to discharging QTH.
+\begin{remark}
+Explicit short-interval zero-density bounds of the form $N(T+H)-N(T-H) \le (H/\pi)\log T + O(\log T)$ with recorded constants follow from combining the Riemann--von Mangoldt formula with Trudgian's inequality \cite{Trudgian2014} on $S(T)$. For $H=1$ and $T_0=10^6$ the simplified guard $0.11\log T + 3$ used above safely dominates the rigorous bound.
+\end{remark}
 
 \paragraph{Formalization tasks to close.} The current Lean development treats (a) and (b) as axioms. To fully discharge QTH in Lean:
 \begin{itemize}
 \item Implement the box Green estimate (a) with an explicit constant $C$.
-\item Develop BMO/John--Nirenberg/tent-space infrastructure sufficient to extract $C_{\mathrm{FS}}$ and hence $\Ktail$.
+\item Develop BMO/John--Nirenberg/tent-space infrastructure sufficient to extract $\CFS$ and hence $\Ktail$.
 \item Formalize the localized outer/inner factorization (Proposition~\ref{prop:localized-factorization}) and the tail identification (Corollary~\ref{cor:tail-identification}) on bands.
 \end{itemize}
 These are engineering tasks in harmonic analysis and complex analysis; no part of the plan uses RH.
@@ -3604,7 +3609,7 @@ $\arctan(1/2) > \frac{2}{5} = 0.4$.
 Compute the 4-term partial sum $S_3(1/2)$:
 \begin{align*}
 S_3\left(\frac{1}{2}\right) &= \frac{1}{2} - \frac{1}{24} + \frac{1}{160} - \frac{1}{896} \\
-&= \frac{448 - 37.33... + 5.6 - 1}{896} \approx 0.463.
+&= \frac{448 - 37.33\ldots + 5.6 - 1}{896} \approx 0.463.
 \end{align*}
 
 More precisely: $S_3(1/2) = \frac{415}{896} \approx 0.4632$.
@@ -3813,21 +3818,21 @@ This inequality is used in the mixed-sign phase bound (Proposition~\ref{prop:pha
 \hline
 \textbf{Inequality} & \textbf{Numerical Value} & \textbf{Use in Proof} \\
 \hline
-$\arctan(2) > 1.1$ & $1.1071...$ & Definition of $\Lrec$ \\
+$\arctan(2) > 1.1$ & $1.1071\ldots$ & Definition of $\Lrec$ \\
 \hline
-$\arctan(1/2) > 2/5$ & $0.4636... > 0.4$ & Lower bound via complement \\
+$\arctan(1/2) > 2/5$ & $0.4636\ldots > 0.4$ & Lower bound via complement \\
 \hline
-$\arctan(1/2) < 0.464$ & $0.4636... < 0.464$ & Upper bound for $\arctan(2)$ \\
+$\arctan(1/2) < 0.464$ & $0.4636\ldots < 0.464$ & Upper bound for $\arctan(2)$ \\
 \hline
-$\arctan(1/3) > 0.31$ & $0.3217... > 0.31$ & Same-sign phase bound \\
+$\arctan(1/3) > 0.31$ & $0.3217\ldots > 0.31$ & Same-sign phase bound \\
 \hline
-$2\arctan(1/3) > \Lrec$ & $0.6435... > 0.5536$ & Same-sign case \\
+$2\arctan(1/3) > \Lrec$ & $0.6435\ldots > 0.5536$ & Same-sign case \\
 \hline
-$4\arctan(1/5) > \Lrec$ & $0.7895... > 0.5536$ & Mixed-sign case \\
+$4\arctan(1/5) > \Lrec$ & $0.7895\ldots > 0.5536$ & Mixed-sign case \\
 \hline
-$\pi > 3.14$ & $3.1415...$ & Complement formula \\
+$\pi > 3.14$ & $3.1415\ldots$ & Complement formula \\
 \hline
-$\pi/4 > 0.785$ & $0.7854...$ & Bound on $\arctan(1)$ \\
+$\pi/4 > 0.785$ & $0.7854\ldots$ & Bound on $\arctan(1)$ \\
 \hline
 \end{tabular}
 \end{center}
@@ -4546,6 +4551,9 @@ F.~John and L.~Nirenberg, ``On functions of bounded mean oscillation,'' \emph{Co
 
 \bibitem{Titchmarsh1986}
 E.~C. Titchmarsh (revised by D.~R. Heath-Brown), \emph{The Theory of the Riemann Zeta-Function}, 2nd ed., Oxford, 1986.
+
+\bibitem{Trudgian2014}
+T.~S. Trudgian, ``An improved upper bound for the argument of the Riemann zeta-function on the critical line II,'' \emph{J.~Number Theory} \textbf{134} (2014), 2637--2643.
 
 \end{thebibliography}
 

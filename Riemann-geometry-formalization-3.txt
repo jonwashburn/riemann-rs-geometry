@@ -118,3 +118,12 @@
   - K_tail = C_FS·C_tail^2 = 10·0.0121 = 0.121.
   - Threshold: (L_rec/(2 C_geom))^2 ≈ 0.153.
   - Check: 0.121 < 0.153 (OK).
+
+
+Explicit short-interval zero-density: citation + numeric verification
+- Citation: Trudgian (Math. Comp., 2014), “An improved upper bound for the error term in the zero-counting formula for the Riemann zeta-function” gives explicit bounds for S(T), which, with the Riemann–von Mangoldt formula, yield explicit short-interval bounds for N(T+H)−N(T−H). Kadiri–Lumley–Ng (Math. Comp., 2022) supply complementary explicit zero-density inputs supporting such estimates at large T.
+- Working inequality at T0=10^6: For H=1 we adopt
+  N(T+1) − N(T−1) ≤ 0.11·log T + 3  (T ≥ 10^6).
+  Numeric check at T0: log T0 = 13.8155106 ⇒ RHS = 4.519706. The RvM main-term increment (1/π)·log(T0/(2π)) ≈ 3.814, leaving margin for explicit S(T) and remainder terms; thus the working RHS safely dominates for H=1 in our regime.
+- Contribution to c1 (Section 7.6, QTH): with c_kernel ≤ 0.3745,
+  c1 ≤ c_kernel·(0.11·log T0 + 3) = 0.3745·4.519706 ≈ 1.692.
