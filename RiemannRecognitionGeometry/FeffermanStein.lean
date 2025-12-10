@@ -3028,14 +3028,21 @@ lemma far_field_geometric_bound (K : ℕ) :
   --                        = (1/2)^{K+1} · (1 + 1/2 + 1/4 + ...)
   --                        = (1/2)^{K+1} · 2 = (1/2)^K
   --
-  -- Proof approach: Show the conditional sum equals the tail of the geometric series
-  -- and use the closed form for geometric series tails.
+  -- **Proof outline**:
+  -- 1. The key identity: ∑_{j=K+1}^∞ r^j = r^{K+1}/(1-r) for |r| < 1
+  -- 2. With r = 1/2: = (1/2)^{K+1} / (1/2) = (1/2)^K
   --
-  -- The key identity: ∑_{j=K+1}^∞ r^j = r^{K+1}/(1-r) for |r| < 1
-  -- With r = 1/2: = (1/2)^{K+1} / (1/2) = (1/2)^K
+  -- **Reindexing approach**:
+  -- ∑_{j>K} (1/2)^j = ∑_{i=0}^∞ (1/2)^{K+1+i} = (1/2)^{K+1} · ∑_{i=0}^∞ (1/2)^i
+  --                 = (1/2)^{K+1} · 2 = (1/2)^K
   --
-  -- This is a classical result requiring careful handling of infinite sums in Mathlib.
-  -- The numerical bound is verified: for K=3, sum = 1/16 + 1/32 + ... = 1/8 = (1/2)^3 ✓
+  -- **Mathlib requirements**:
+  -- - tsum_geometric_of_lt_one for ∑(1/2)^i = 2
+  -- - tsum_eq_tsum_of_ne_zero_bij for reindexing
+  -- - Summability of conditional sums
+  --
+  -- **Numerical verification** (K=3):
+  -- ∑_{j>3} (1/2)^j = 1/16 + 1/32 + 1/64 + ... = (1/16)/(1-1/2) = 1/8 = (1/2)^3 ✓
   sorry
 
 /-- C_tail bound: With K = 3-4 annuli removed, the localized BMO norm is small.
