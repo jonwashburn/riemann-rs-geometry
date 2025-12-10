@@ -2637,8 +2637,9 @@ theorem weierstrass_tail_bound_core (I : WhitneyInterval) (ρ : ℂ)
     · exact K_tail_pos
     · exact le_refl K_tail
   --
-  -- Step 3: The bound C_geom · √K_tail = U_tail
-  -- The Green's identity bound is handled by the axiom in green_cauchy_schwarz_bound
+  -- Step 3: Apply green_cauchy_schwarz_bound
+  -- The Green's identity bound comes from the axiom greens_identity_phase_bound_axiom
+  -- which is applied internally by green_cauchy_schwarz_bound
   have h_bound := green_cauchy_schwarz_bound (cofactorPhase ρ) I K_tail K_tail_pos h_phase_exists
   --
   -- Step 4: Connect cofactorPhase to actualPhaseSignal - blaschke
