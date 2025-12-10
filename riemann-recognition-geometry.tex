@@ -929,10 +929,12 @@ Let $u(t, \sigma)$ be the Poisson extension of $\phi$. Then
 \[
 E(I) := \int_{Q(I)} |\nabla u|^2 \, \sigma \, d\sigma \, dt \le \Ktail \cdot |I|,
 \]
-where $|I| = 2L$ and $\Ktail = 0.05$ absorbs the BMO norm of $\phi$ and the Fefferman-Stein constant.
+where $|I| = 2L$ and $\Ktail$ absorbs the Fefferman--Stein constant and $\|\phi\|_{\BMO}^2$ (see Theorem~\ref{thm:fefferman-stein-main}).
 \end{corollary}
 
-The specific value $\Ktail = 0.05$ is derived from numerical estimates of $\|\phi\|_{\mathrm{BMO}}$ and the optimal Fefferman-Stein constant.
+\begin{remark}
+An \emph{explicit} numerical value for $\Ktail$ follows from explicit bounds on the Fefferman--Stein constant and on $\|\phi\|_{\BMO}$. In this paper we keep $\Ktail$ symbolic and record where it is required. See Section~\ref{sec:classical-inputs} and \S\ref{subsec:qth-roadmap} for a quantitative roadmap.
+\end{remark}
 
 \subsection{Green's Identity and Cauchy-Schwarz}
 
@@ -963,10 +965,10 @@ With notation as above,
 \[
 \left| \int_I \frac{\partial u}{\partial \sigma}(t, 0) \, dt \right| \le \Cgeom \cdot \sqrt{E(I)} \cdot |I|^{-1/2},
 \]
-where $\Cgeom = 0.6$ is a geometric constant absorbing the Green's function estimates.
+for an absolute geometric constant $\Cgeom>0$ arising from Green's function estimates on $Q(I)$.
 \end{lemma}
 
-\begin{proof}[Proof sketch]
+\begin{proof}[Proof outline]
 Apply Cauchy-Schwarz to the area integral from Green's identity:
 \begin{align*}
 \left| \int_I \frac{\partial u}{\partial \sigma}(t, 0) \, dt \right|
@@ -978,7 +980,7 @@ The first factor is $\sqrt{E(I)}$. The second factor is a standard estimate for 
 \[
 \int_{Q(I)} |\nabla G|^2 \sigma^{-1} \, dt \, d\sigma \le C^2 / |I|,
 \]
-which gives the factor $|I|^{-1/2}$. The constant $\Cgeom = 0.6$ consolidates all geometric factors.
+which gives the factor $|I|^{-1/2}$. The constant $\Cgeom$ consolidates the geometric constants. An explicit $C$ can be obtained from the Green function of the rectangle; see \S\ref{subsec:qth-roadmap}.
 \end{proof}
 
 \subsection{The Key Cancellation}
@@ -1016,19 +1018,13 @@ We conclude
 
 \subsection{Numerical Value of $\Utail$}
 
-The constants are:
-\begin{align*}
-\Ktail &= 0.05, \\
-\Cgeom &= 0.6, \\
-\sqrt{\Ktail} &= \sqrt{0.05} \approx 0.2236.
-\end{align*}
-Therefore:
-\begin{equation}
-\label{eq:utail-value}
-\Utail = \Cgeom \cdot \sqrt{\Ktail} \le 0.6 \times 0.2236 \approx \boxed{0.134}.
-\end{equation}
-
-This bound is significantly smaller than $\Lrec \approx 0.553$ (Section~\ref{sec:trigger-bound}) and, under the target values, satisfies $\Lrec > 2\Utail$.
+\begin{remark}[Illustrative numerics under QTH]
+If one can justify explicit bounds such as $\Ktail \le 0.05$ and $\Cgeom \le 0.6$, then
+\[
+\Utail \le 0.6 \cdot \sqrt{0.05} \approx 0.134,
+\]
+which is significantly smaller than $\Lrec \approx 0.553$ (Section~\ref{sec:trigger-bound}) and satisfies $\Lrec > 2\,\Utail$. In this paper, these numbers serve only as \emph{targets}; the proofs below keep $(\Cgeom,\Ktail)$ symbolic.
+\end{remark}
 
 \subsection{Summary}
 
@@ -1446,36 +1442,12 @@ The trigger bound involves the arctangent of $2$:
 
 \subsection{Numerical Evaluation}
 
-\subsubsection{Computing $\Utail$}
-
-We have:
+\subsubsection{Computing $\Utail$ (illustrative)}
+Under the target values $\Ktail^{\star} = 0.05$ and $\Cgeom^{\star} = 0.6$,
 \[
-\sqrt{0.05} = \sqrt{\frac{5}{100}} = \frac{\sqrt{5}}{10} \approx \frac{2.236}{10} = 0.2236.
+\Utail \le 0.6 \cdot \sqrt{0.05} \approx 0.1342.
 \]
-Thus:
-\[
-\Utail \le 0.6 \times 0.2236 \approx 0.1342.
-\]
-
-More precisely, we can bound $\sqrt{0.05}$ rigorously:
-
-\begin{lemma}[$\sqrt{0.05}$ Bound]
-\label{lem:sqrt-005}
-$\sqrt{0.05} < 0.224$.
-\end{lemma}
-
-\begin{proof}
-$(0.224)^2 = 0.050176 > 0.05$, so $\sqrt{0.05} < 0.224$.
-\end{proof}
-
-\begin{corollary}[$\Utail$ Upper Bound]
-\label{cor:utail-upper}
-$\Utail < 0.135$.
-\end{corollary}
-
-\begin{proof}
-$\Utail = 0.6 \times \sqrt{0.05} < 0.6 \times 0.224 = 0.1344 < 0.135$.
-\end{proof}
+These figures are illustrative only; all rigorous statements below keep $(\Cgeom,\Ktail)$ symbolic and rely on the threshold \eqref{eq:threshold}.
 
 \subsubsection{Computing $\Lrec$}
 
@@ -1616,9 +1588,7 @@ $\Lrec - \Utail > 0.4$ and $\Lrec > 4 \cdot \Utail$.
 \end{corollary}
 
 \begin{proof}
-$\Lrec - \Utail > 0.55 - 0.135 = 0.415 > 0.4$.
-
-$\Lrec / \Utail > 0.55 / 0.135 \approx 4.07 > 4$.
+If $\Lrec > 2\Utail$, then $\Lrec - \Utail > \Utail$ and $\Lrec/\Utail > 2$.
 \end{proof}
 
 This margin is important: it shows the inequality is not ``tight'' and provides robustness against small errors in the constants.
@@ -1633,7 +1603,7 @@ $\Lrec > 2 \cdot \Utail$.
 \end{lemma}
 
 \begin{proof}
-$2 \cdot \Utail < 2 \times 0.135 = 0.27 < 0.55 < \Lrec$.
+This is exactly the threshold condition \eqref{eq:threshold} rewritten as $\Lrec/2 > \Utail$.
 \end{proof}
 
 This ensures that even after subtracting $\Utail$ from both sides of the Blaschke dominance inequality, a positive gap remains.
@@ -2493,11 +2463,11 @@ Therefore all non-trivial zeros of $\zeta$ satisfy $\Ree(\rho) = 1/2$.
 
 \begin{center}
 \fbox{\parbox{0.9\textwidth}{
-\textbf{The Riemann Hypothesis is True.}
+\textbf{Conditional Main Theorem (Reduction).}
 
 \vspace{0.5em}
 
-Every non-trivial zero of the Riemann zeta function $\zeta(s)$ has real part equal to $1/2$.
+If the explicit constants $(\Cgeom,\Ktail)$ from the Green/Cauchy--Schwarz step and the Fefferman--Stein BMO$\to$Carleson embedding satisfy $L_{\mathrm{rec}} > 2\,\Cgeom\sqrt{\Ktail}$, then every non-trivial zero of the Riemann zeta function $\zeta(s)$ has real part equal to $1/2$.
 
 \vspace{0.5em}
 
@@ -2505,7 +2475,7 @@ Every non-trivial zero of the Riemann zeta function $\zeta(s)$ has real part equ
 \begin{enumerate}
 \item An off-critical zero $\rho$ with $1/2 < \Ree(\rho) \le 1$ would induce a Blaschke phase contribution $\ge \Lrec \approx 0.553$.
 
-\item The Carleson-BMO bound limits the total phase to $\le \Utail \approx 0.134$.
+\item The Carleson/BMO bound limits the total phase to $\le \Utail = \Cgeom\sqrt{\Ktail}$.
 
 \item Since $\Lrec > 2\Utail$, the phase decomposition gives:
 \[
@@ -2520,7 +2490,7 @@ a contradiction.
 
 \vspace{0.5em}
 
-\textbf{Key inequality:} $\Utail < \Lrec$, i.e., $0.6\sqrt{0.05} < \frac{\arctan(2)}{2}$.
+\textbf{Key inequality:} $\Utail < \Lrec$ (equivalently, $L_{\mathrm{rec}} > 2\,\Cgeom\sqrt{\K_{\mathrm{tail}}}$).
 }}
 \end{center}
 
