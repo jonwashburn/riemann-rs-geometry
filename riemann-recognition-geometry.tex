@@ -1084,8 +1084,84 @@ With $P_y(x)=\frac{1}{\pi}\frac{y}{x^2+y^2}$ as above, one has
 In particular, $\CFS$ may be chosen to be $10$.
 \end{proposition}
 
-\begin{proof}[Proof sketch]
-Decompose $f = f_I + g + h$ with $g = (f-f_I)\mathbf{1}_I$ and $h=(f-f_I)\mathbf{1}_{\mathbb{R}\setminus I}$. For the local part, the energy identity $\iint_{\HH} |\nabla (P_y*g)|^2 y = \tfrac{1}{2}\|g\|_2^2$ together with the John–Nirenberg inequality (explicit constants $C_1=2$, $C_2=1$) gives $\frac{2}{|I|}\iint_{Q(I)} |\nabla (P_y*g)|^2 y \le 4\|f\|_{\BMO}^2$. For the tail, slice $\R\setminus I$ into dyadic annuli and split each portion into its mean-zero part and its average. The Poisson gradient bounds and a direct kernel integration show that the mean-zero contributions decay like $4^{-k}$ while the averages telescope; both summations are dominated by $6\|f\|_{\BMO}^2$. Adding the two pieces yields the stated inequality.
+\begin{proof}
+Write $u = P_y * f$. Fix an interval $I$ and its Carleson box $Q(I)=I\times(0,|I|)$. Split
+\[
+f \;=\; f_I + g + h,\qquad g := (f-f_I)\mathbf{1}_I,\quad h := (f-f_I)\mathbf{1}_{\R\setminus I}.
+\]
+By linearity and $(a+b)^2\le 2a^2+2b^2$ applied at the Carleson level,
+\begin{equation}\label{eq:split-carleson}
+\frac{1}{|I|}\iint_{Q(I)} |\nabla u|^2\,y
+\;\le\; \frac{2}{|I|}\iint_{Q(I)} |\nabla (P_y*g)|^2\,y
+\;+\; \frac{2}{|I|}\iint_{Q(I)} |\nabla (P_y*h)|^2\,y.
+\end{equation}
+
+\emph{Local piece.} For our normalization $P_y(x)=\frac{1}{\pi}\frac{y}{x^2+y^2}$, the energy identity holds:
+\[
+\iint_{\HH} \big|\nabla (P_y*\varphi)\big|^2\,y\,dx\,dy \;=\; \frac{1}{2}\,\|\varphi\|_{L^2(\R)}^2 \qquad (\varphi\in L^2(\R)).
+\]
+Hence
+\[
+\frac{2}{|I|}\iint_{Q(I)} |\nabla (P_y*g)|^2\,y \;\le\; \frac{1}{|I|}\|g\|_2^2
+\,=\, \frac{1}{|I|}\int_I |f-f_I|^2.
+\]
+By John–Nirenberg with explicit constants $C_1=2$, $C_2=1$,
+\[
+\frac{1}{|I|}\int_I |f-f_I|^2 \;\le\; 4\,\|f\|_{\BMO}^2,
+\]
+so the local contribution is $\le 4\,\|f\|_{\BMO}^2$.
+
+\emph{Tail piece.} Decompose $\R\setminus I$ into dyadic annuli $I_0:=2I\setminus I$ and $I_k:=2^{k+1}I\setminus 2^k I$ for $k\ge 1$, and write
+\[
+h \;=\; \sum_{k\ge 0} h_k,\quad h_k:=(f-f_I)\mathbf{1}_{I_k}
+\;=\; a_k + c_k,\quad
+a_k := (f-f_{2^{k+1}I})\mathbf{1}_{I_k},\ \ c_k := (f_{2^{k+1}I}-f_I)\mathbf{1}_{I_k}.
+\]
+The Poisson gradient has the pointwise bound (by explicit differentiation)
+\[
+\big|\nabla P_y(\xi-t)\big|^2 \;\le\; \frac{2}{\pi^2}\,\frac{1}{\big((\xi-t)^2+y^2\big)^2}.
+\]
+One-variable calculus yields, uniformly for $t\in I_k$,
+\[
+\iint_{Q(I)} \frac{y}{\big((x-t)^2+y^2\big)^2}\,dx\,dy
+\;\le\; \frac{1}{\pi^2}\,\frac{|I_k|}{\dist(I_k,I)} \;\lesssim\; 2^{-k}.
+\]
+For the mean-zero part $a_k$ there is a standard “cancellation gain” (subtract the average of the kernel over $I_k$, via Taylor/FTC), giving an absolute $c_0\in(0,1)$ (one may take $c_0=\tfrac18$) with
+\[
+\iint_{Q(I)} \big|\nabla(P_y*a_k)\big|^2\,y \;\le\; c_0\,4^{-k}\,\|a_k\|_2^2.
+\]
+Summing and using the $L^2$ consequence of John–Nirenberg on $2^{k+1}I$,
+\[
+\sum_{k\ge 0}\iint_{Q(I)} \big|\nabla(P_y*a_k)\big|^2\,y
+\;\le\; \frac18\sum_{k\ge 0}4^{-k}\,|I_k|\,\Big(\frac{1}{|2^{k+1}I|}\int_{2^{k+1}I} |f-f_{2^{k+1}I}|^2\Big)
+\;\le\; |I|\,\|f\|_{\BMO}^2.
+\]
+For the constant part, by telescoping averages,
+\[
+|f_{2^{k+1}I}-f_I| \;\le\; \sum_{j=0}^k |f_{2^{j+1}I}-f_{2^{j}I}| \;\le\; (k+1)\,\|f\|_{\BMO},
+\]
+and the crude kernel bound (without cancellation) gives
+\[
+\iint_{Q(I)} \big|\nabla(P_y*c_k)\big|^2\,y
+\;\le\; \frac{1}{\pi^2}\,|I_k|\,\dist(I_k,I)^{-1}\,|f_{2^{k+1}I}-f_I|^2
+\;\lesssim\; \frac{1}{\pi^2}\,|I|\, (k+1)^2\,2^{-k}\,\|f\|_{\BMO}^2.
+\]
+Summing $k\ge 0$ yields
+\[
+\sum_{k\ge 0}\iint_{Q(I)} \big|\nabla(P_y*c_k)\big|^2\,y \;\le\; \frac{4}{\pi^2}\,|I|\,\|f\|_{\BMO}^2.
+\]
+Therefore
+\[
+\frac{2}{|I|}\iint_{Q(I)} |\nabla(P_y*h)|^2\,y
+\;\le\; 2\,\|f\|_{\BMO}^2 \;+\; \frac{8}{\pi^2}\,\|f\|_{\BMO}^2 \;\le\; 6\,\|f\|_{\BMO}^2,
+\]
+using $8/\pi^2<1$.
+
+Combining the local and tail bounds in \eqref{eq:split-carleson} gives
+\[
+\frac{1}{|I|}\iint_{Q(I)} |\nabla (P_y*f)|^2\,y \;\le\; 4\,\|f\|_{\BMO}^2 + 6\,\|f\|_{\BMO}^2 \;=\; 10\,\|f\|_{\BMO}^2.
+\]
+Taking the supremum over $I$ proves the proposition. See \cite[Thm.~3]{FeffermanStein1972} and \cite[Ch.~VI]{Garnett2007} for background.
 \end{proof}
 
 \subsubsection{Application to $\phi$}

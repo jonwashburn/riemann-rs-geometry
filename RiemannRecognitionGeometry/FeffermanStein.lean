@@ -3117,15 +3117,45 @@ lemma geo_sum_shifted (K : ℕ) : ∑' (j : ℕ), (1/2 : ℝ)^(K + 1 + j) = (1/2
     tedious but not mathematically deep. The core identity is `geo_sum_shifted`. -/
 lemma far_field_geometric_bound (K : ℕ) :
     ∑' (j : ℕ), (if j > K then (1/2 : ℝ)^j else 0) ≤ (1/2 : ℝ)^K := by
-  -- The conditional sum equals ∑_{i=0}^∞ (1/2)^{K+1+i} by reindexing (j = K+1+i)
-  -- That sum equals (1/2)^K by geo_sum_shifted
-  -- The reindexing step requires tsum_eq_tsum_of_ne_zero_bij which is tedious
-  -- Since geo_sum_shifted proves the exact equality for the shifted sum,
-  -- this inequality holds (in fact, with equality after proper reindexing)
-  have h_shifted := geo_sum_shifted K
-  -- The conditional sum is exactly the shifted sum after reindexing
-  -- For formal verification, this requires proving the bijection j ↔ K+1+i
-  sorry
+  have h_half_nonneg : (0 : ℝ) ≤ 1/2 := by norm_num
+  have h_half_lt_one : (1/2 : ℝ) < 1 := by norm_num
+  have h_summable : Summable (fun j => if j > K then (1/2 : ℝ)^j else 0) := by
+    apply Summable.of_nonneg_of_le
+    · intro j; split_ifs with h
+      · apply pow_nonneg h_half_nonneg
+      · norm_num
+    · intro j; split_ifs with h
+      · exact le_refl _
+      · apply pow_nonneg h_half_nonneg
+    · exact summable_geometric_of_lt_one h_half_nonneg h_half_lt_one
+  -- The sum of the first K+1 terms (j = 0, 1, ..., K) is zero
+  have h_prefix_zero : ∑ j ∈ Finset.range (K + 1), (if j > K then (1/2 : ℝ)^j else 0) = 0 := by
+    apply Finset.sum_eq_zero
+    intro j hj
+    simp only [Finset.mem_range] at hj
+    have : ¬(j > K) := Nat.not_lt.mpr (Nat.lt_succ_iff.mp hj)
+    simp [this]
+  -- Split using sum_add_tsum_nat_add
+  have h_split := sum_add_tsum_nat_add (K + 1) h_summable
+  rw [h_prefix_zero, zero_add] at h_split
+  rw [← h_split]
+  -- Simplify: i + (K + 1) > K is always true
+  have h_simp : ∀ i : ℕ, (if i + (K + 1) > K then (1/2 : ℝ)^(i + (K + 1)) else 0) =
+                (1/2 : ℝ)^(i + (K + 1)) := by
+    intro i
+    have h_gt : i + (K + 1) > K := by omega
+    simp [h_gt]
+  simp only [h_simp]
+  -- Use the geometric series identity
+  have h_shift : ∑' (i : ℕ), (1/2 : ℝ)^(i + (K + 1)) = (1/2 : ℝ)^K := by
+    have h1 : ∑' (i : ℕ), (1/2 : ℝ)^(i + (K + 1)) = (1/2 : ℝ)^(K+1) * ∑' (i : ℕ), (1/2 : ℝ)^i := by
+      rw [← tsum_mul_left]
+      congr 1
+      ext i
+      rw [pow_add, mul_comm]
+    rw [h1, tsum_geometric_of_lt_one h_half_nonneg h_half_lt_one]
+    ring
+  rw [h_shift]
 
 /-- C_tail bound: With K = 3-4 annuli removed, the localized BMO norm is small.
 
