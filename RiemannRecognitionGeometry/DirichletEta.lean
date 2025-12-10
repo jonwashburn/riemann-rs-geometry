@@ -683,21 +683,44 @@ theorem zeta_eta_relation_gt_one (s : ℝ) (hs : 1 < s) :
   -- Step 4: ∑' n, 1/(n+1)^s = (riemannZeta (s : ℂ)).re
   rw [← riemannZeta_re_eq_real_tsum s hs]
 
-/-- **Axiom**: η(s) = (1 - 2^{1-s}) · ζ(s) for s ∈ (0, 1).
+/-- **AXIOM**: η(s) = (1 - 2^{1-s}) · ζ(s) for s ∈ (0, 1).
+
+    ### Status: CLASSICAL THEOREM (requires analytic continuation)
 
     For s > 1, this is proven as `zeta_eta_relation_gt_one` using series manipulation.
 
     For s ∈ (0, 1), the proof requires **analytic continuation**:
-    - Both η(s) and (1 - 2^{1-s})ζ(s) are analytic on Re(s) > 0, s ≠ 1
-    - They agree on Re(s) > 1 (proven above)
-    - By uniqueness of analytic continuation, they agree everywhere
 
-    This extension requires complex analysis infrastructure not fully available in Mathlib
-    for this specific application.
+    **Step 1**: The Dirichlet eta function η(s) = ∑_{n=1}^∞ (-1)^{n-1}/n^s converges
+    conditionally for all Re(s) > 0 (not just Re(s) > 1).
+
+    **Step 2**: Both η(s) and (1 - 2^{1-s})ζ(s) are analytic on {Re(s) > 0, s ≠ 1}.
+    - η(s) is analytic as an alternating Dirichlet series with convergence abscissa 0
+    - (1 - 2^{1-s})ζ(s) is analytic: ζ has a pole at s=1 but (1 - 2^{1-s}) vanishes there
+
+    **Step 3**: By `zeta_eta_relation_gt_one`, they agree on Re(s) > 1.
+
+    **Step 4**: By the identity principle for analytic functions, they agree everywhere
+    on {Re(s) > 0, s ≠ 1}.
+
+    **Step 5**: For real s ∈ (0, 1), both sides are real:
+    - `dirichletEtaReal s` is real by definition (limit of real partial sums)
+    - `(riemannZeta (s : ℂ)).re` is the real part of Mathlib's zeta
+
+    ### Why This Remains an Axiom
+
+    Formalizing this in Lean requires:
+    1. Proving the alternating series η(s) is analytic for Re(s) > 0
+    2. Connecting our `dirichletEtaReal` to a complex analytic function
+    3. Verifying Mathlib's `riemannZeta` via Hurwitz zeta matches the analytic continuation
+    4. Applying the identity principle for complex analytic functions
+
+    This infrastructure is not fully available in Mathlib for this specific application.
 
     ### References
     - Hardy & Wright, "An Introduction to the Theory of Numbers", Theorem 25.2
-    - Titchmarsh, "The Theory of the Riemann Zeta-Function", Chapter 2 -/
+    - Titchmarsh, "The Theory of the Riemann Zeta-Function", Chapter 2
+    - Apostol, "Introduction to Analytic Number Theory", Section 12.5 -/
 axiom zeta_eta_relation_lt_one (s : ℝ) (hs_pos : 0 < s) (hs_lt : s < 1) :
     dirichletEtaReal s = (1 - (2 : ℝ)^(1-s)) * (riemannZeta (s : ℂ)).re
 
