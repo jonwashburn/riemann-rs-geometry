@@ -2977,6 +2977,39 @@ def inLocalAnnuli (L t0 : ℝ) (K : ℕ) (σ γ : ℝ) : Prop :=
   (σ ≤ 1.5 * (2 : ℝ)^K * L) ∧
   (|γ - t0| ≤ (2 : ℝ)^(K+1) * L)
 
+/-- arctan is positive for positive x. -/
+lemma arctan_pos_of_pos {x : ℝ} (hx : 0 < x) : 0 < Real.arctan x := by
+  have h0 : Real.arctan 0 = 0 := Real.arctan_zero
+  have h1 : Real.arctan 0 < Real.arctan x := Real.arctan_lt_arctan hx
+  rw [h0] at h1
+  exact h1
+
+/-- arctan is nonnegative for nonnegative x. -/
+lemma arctan_nonneg {x : ℝ} (hx : 0 ≤ x) : 0 ≤ Real.arctan x := by
+  rcases hx.eq_or_lt with rfl | hx_pos
+  · simp [Real.arctan_zero]
+  · exact le_of_lt (arctan_pos_of_pos hx_pos)
+
+/-- arctan(x) ≤ x for x ≥ 0.
+
+    **Proof**: Let f(x) = x - arctan(x). Then:
+    1. f(0) = 0 - arctan(0) = 0
+    2. f'(x) = 1 - 1/(1+x²) = x²/(1+x²) ≥ 0 for all x
+    3. Therefore f is monotonically increasing on [0, ∞)
+    4. For x ≥ 0: f(x) ≥ f(0) = 0, i.e., x - arctan(x) ≥ 0
+
+    **Mathlib approach**: Use `Convex.monotoneOn_of_deriv_nonneg` or MVT.
+    This is a classical inequality from calculus. -/
+lemma arctan_le_self {x : ℝ} (hx : 0 ≤ x) : Real.arctan x ≤ x := by
+  -- Classical: f(x) = x - arctan(x) has f(0) = 0 and f'(x) = x²/(1+x²) ≥ 0
+  -- Therefore f is increasing and f(x) ≥ 0 for x ≥ 0
+  sorry
+
+/-- 2 < π (consequence of π > 3). -/
+lemma two_lt_pi : (2 : ℝ) < Real.pi := by
+  have h := Real.pi_gt_three
+  linarith
+
 /-- Annulus decay bound: (2/π) · arctan((1/2)^j / 1.5) < (1/2)^j for j ≥ 1.
 
     **Context**: For t ∈ I and ρ ∈ Aⱼ with j ≥ 1:
@@ -2986,26 +3019,59 @@ def inLocalAnnuli (L t0 : ℝ) (K : ℕ) (σ γ : ℝ) : Prop :=
     Let x = (1/2)^j / 1.5. For j ≥ 1, we have x ≤ 1/3.
 
     The key chain of inequalities:
-    1. arctan(x) < x for x > 0 (classical: f(x) = x - arctan(x) has f(0)=0, f'(x) > 0)
-    2. (2/π) · arctan(x) < (2/π) · x (multiply by 2/π > 0)
-    3. (2/π) · x < x (since 2/π ≈ 0.637 < 1)
+    1. arctan(x) ≤ x for x ≥ 0 (from `arctan_le_self`)
+    2. (2/π) · arctan(x) ≤ (2/π) · x (multiply by 2/π > 0)
+    3. (2/π) · x < x (since 2/π < 1, from π > 2)
     4. x = (1/2)^j / 1.5 < (1/2)^j (since 1/1.5 < 1)
 
-    Combined: (2/π) · arctan((1/2)^j / 1.5) < (2/π) · ((1/2)^j / 1.5) < (1/2)^j / 1.5 < (1/2)^j
+    Combined: (2/π) · arctan((1/2)^j / 1.5) < (1/2)^j
 
     **Numerical verification**:
     - For j = 1: (2/π)·arctan(1/3) ≈ 0.637 × 0.322 ≈ 0.205 < 0.5 = (1/2)^1 ✓
     - For j = 2: (2/π)·arctan(1/6) ≈ 0.637 × 0.165 ≈ 0.105 < 0.25 = (1/2)^2 ✓
-    - For j ≥ 3: The bound gets even better as x decreases
-
-    **Mathlib note**: The key inequality arctan(x) ≤ x for x ≥ 0 is classical but requires
-    derivation from tan properties. Taylor series: arctan(x) = x - x³/3 + x⁵/5 - ... < x. -/
+    - For j ≥ 3: The bound gets even better as x decreases -/
 lemma annulus_decay_bound (j : ℕ) (_hj : j ≥ 1) :
     (2 / Real.pi) * Real.arctan ((1/2 : ℝ)^j / 1.5) < (1/2 : ℝ)^j := by
-  -- The proof requires arctan(x) ≤ x for x ≥ 0 (classical Taylor bound).
-  -- Full Mathlib proof would need to derive this from tan properties.
-  -- The numerical verification is provided in the docstring above.
-  sorry
+  have h_half_pow_pos : (0 : ℝ) < (1/2 : ℝ)^j := by positivity
+  have h_arg_pos : (0 : ℝ) < (1/2 : ℝ)^j / 1.5 := by positivity
+  have h_arg_nonneg : (0 : ℝ) ≤ (1/2 : ℝ)^j / 1.5 := le_of_lt h_arg_pos
+  -- Use arctan(x) ≤ x for the argument
+  have h1 : Real.arctan ((1/2 : ℝ)^j / 1.5) ≤ (1/2 : ℝ)^j / 1.5 := arctan_le_self h_arg_nonneg
+  -- (2/π) < 1 since π > 2
+  have h_two_pi_lt_one : (2 : ℝ) / Real.pi < 1 := by
+    rw [div_lt_one Real.pi_pos]
+    exact two_lt_pi
+  -- Chain of inequalities
+  calc (2 / Real.pi) * Real.arctan ((1/2 : ℝ)^j / 1.5)
+      ≤ (2 / Real.pi) * ((1/2 : ℝ)^j / 1.5) := by
+        apply mul_le_mul_of_nonneg_left h1; positivity
+    _ < 1 * ((1/2 : ℝ)^j / 1.5) := by
+        apply mul_lt_mul_of_pos_right h_two_pi_lt_one; positivity
+    _ = (1/2 : ℝ)^j / 1.5 := by ring
+    _ < (1/2 : ℝ)^j := by
+        rw [div_lt_iff₀ (by norm_num : (1.5 : ℝ) > 0)]
+        have : (1/2 : ℝ)^j * 1.5 > (1/2 : ℝ)^j * 1 := by
+          apply mul_lt_mul_of_pos_left (by norm_num : (1 : ℝ) < 1.5) h_half_pow_pos
+        linarith
+
+/-- Shifted geometric series: ∑_{i=0}^∞ (1/2)^{K+1+i} = (1/2)^K.
+
+    **Proof**:
+    ∑_{i=0}^∞ (1/2)^{K+1+i} = (1/2)^{K+1} · ∑_{i=0}^∞ (1/2)^i
+                            = (1/2)^{K+1} · 2 = (1/2)^K
+
+    Uses: tsum_mul_left, tsum_geometric_of_lt_one, ring. -/
+lemma geo_sum_shifted (K : ℕ) : ∑' (j : ℕ), (1/2 : ℝ)^(K + 1 + j) = (1/2 : ℝ)^K := by
+  have h1 : ∑' (j : ℕ), (1/2 : ℝ)^(K + 1 + j) = (1/2 : ℝ)^(K+1) * ∑' (j : ℕ), (1/2 : ℝ)^j := by
+    rw [← tsum_mul_left]
+    congr 1
+    ext j
+    rw [pow_add]
+  rw [h1]
+  have h_half_nonneg : (0 : ℝ) ≤ 1/2 := by norm_num
+  have h_half_lt_one : (1/2 : ℝ) < 1 := by norm_num
+  rw [tsum_geometric_of_lt_one h_half_nonneg h_half_lt_one]
+  ring
 
 /-- Geometric series bound for far-field contribution.
 
@@ -3014,35 +3080,27 @@ lemma annulus_decay_bound (j : ℕ) (_hj : j ≥ 1) :
                                        = (1/2)^{K+1} · 2 = (1/2)^K
 
     This is a standard geometric series tail formula.
-    Proof sketch:
-    1. The sum equals ∑_{i=0}^∞ (1/2)^{K+1+i} = (1/2)^{K+1} · ∑_{i=0}^∞ (1/2)^i
-    2. = (1/2)^{K+1} · 2 = (1/2)^K
+    The exact equality is proven in `geo_sum_shifted`.
 
-    For a Mathlib proof, one would use:
-    - tsum_eq_zero_add for splitting off finite terms
-    - tsum_geometric_of_lt_one for the tail
-    - Algebraic simplification -/
+    **Reindexing approach**:
+    ∑_{j>K} (1/2)^j = ∑_{i=0}^∞ (1/2)^{K+1+i} = (1/2)^{K+1} · ∑_{i=0}^∞ (1/2)^i
+                    = (1/2)^{K+1} · 2 = (1/2)^K (exact equality)
+
+    **Numerical verification** (K=3):
+    ∑_{j>3} (1/2)^j = 1/16 + 1/32 + 1/64 + ... = (1/16)/(1-1/2) = 1/8 = (1/2)^3 ✓
+
+    **Technical note**: The conditional sum formulation requires reindexing that is
+    tedious but not mathematically deep. The core identity is `geo_sum_shifted`. -/
 lemma far_field_geometric_bound (K : ℕ) :
     ∑' (j : ℕ), (if j > K then (1/2 : ℝ)^j else 0) ≤ (1/2 : ℝ)^K := by
-  -- The sum ∑_{j>K} (1/2)^j = (1/2)^{K+1} + (1/2)^{K+2} + ...
-  --                        = (1/2)^{K+1} · (1 + 1/2 + 1/4 + ...)
-  --                        = (1/2)^{K+1} · 2 = (1/2)^K
-  --
-  -- **Proof outline**:
-  -- 1. The key identity: ∑_{j=K+1}^∞ r^j = r^{K+1}/(1-r) for |r| < 1
-  -- 2. With r = 1/2: = (1/2)^{K+1} / (1/2) = (1/2)^K
-  --
-  -- **Reindexing approach**:
-  -- ∑_{j>K} (1/2)^j = ∑_{i=0}^∞ (1/2)^{K+1+i} = (1/2)^{K+1} · ∑_{i=0}^∞ (1/2)^i
-  --                 = (1/2)^{K+1} · 2 = (1/2)^K
-  --
-  -- **Mathlib requirements**:
-  -- - tsum_geometric_of_lt_one for ∑(1/2)^i = 2
-  -- - tsum_eq_tsum_of_ne_zero_bij for reindexing
-  -- - Summability of conditional sums
-  --
-  -- **Numerical verification** (K=3):
-  -- ∑_{j>3} (1/2)^j = 1/16 + 1/32 + 1/64 + ... = (1/16)/(1-1/2) = 1/8 = (1/2)^3 ✓
+  -- The conditional sum equals ∑_{i=0}^∞ (1/2)^{K+1+i} by reindexing (j = K+1+i)
+  -- That sum equals (1/2)^K by geo_sum_shifted
+  -- The reindexing step requires tsum_eq_tsum_of_ne_zero_bij which is tedious
+  -- Since geo_sum_shifted proves the exact equality for the shifted sum,
+  -- this inequality holds (in fact, with equality after proper reindexing)
+  have h_shifted := geo_sum_shifted K
+  -- The conditional sum is exactly the shifted sum after reindexing
+  -- For formal verification, this requires proving the bijection j ↔ K+1+i
   sorry
 
 /-- C_tail bound: With K = 3-4 annuli removed, the localized BMO norm is small.
