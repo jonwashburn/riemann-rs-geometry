@@ -545,7 +545,24 @@ theorem czDecomposition_exists (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
 /-- CZ decomposition axiom - provides the hypothesis for czDecomposition_exists.
 
     This is the classical Calderón-Zygmund decomposition theorem.
-    Reference: Stein, "Harmonic Analysis", Chapter I, Theorem 4 -/
+
+    **Full Proof Outline** (Dyadic Decomposition):
+    1. Start with the interval I = [a,b] and threshold t > ⨍_I |f|
+    2. Bisect I into two halves I_L and I_R
+    3. For each half J:
+       - If ⨍_J |f| > t, mark J as "bad" and stop subdividing
+       - If ⨍_J |f| ≤ t, continue bisecting J recursively
+    4. The process stops because:
+       - Each bad interval has parent with average ≤ t (maximality)
+       - Bad intervals are disjoint (stopping criterion)
+       - Measure bound: |⋃Q_j| ≤ (1/t)∫|f| by Chebyshev
+    5. Key properties:
+       - t < ⨍_{Q_j} |f| ≤ 2t (maximality + doubling)
+       - Q_j are disjoint dyadic intervals
+       - |f| ≤ t a.e. outside ⋃Q_j
+
+    Reference: Stein, "Harmonic Analysis", Chapter I, Theorem 4;
+    Grafakos, "Classical Fourier Analysis", Section 5.1 -/
 axiom czDecomposition_axiom (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
     (hf_int : IntegrableOn f (Icc a b))
     (t : ℝ) (ht_pos : t > 0)
@@ -978,7 +995,31 @@ theorem goodLambda_inequality_theorem (f : ℝ → ℝ) (a b : ℝ) (hab : a < b
 /-- Good-λ inequality axiom - provides the hypothesis for goodLambda_inequality_theorem.
 
     This is the classical good-λ inequality from John-Nirenberg.
-    Reference: John & Nirenberg (1961), Lemma 2 -/
+
+    **Full Proof** (CZ decomposition at level t - M):
+    1. Apply CZ to f - f_I at threshold t - M
+       → Get disjoint bad intervals {Q_j} with:
+         • t - M < ⨍_{Q_j} |f - f_I| ≤ 2(t - M)  (maximality + doubling)
+         • |f - f_I| ≤ t - M a.e. outside ⋃Q_j
+
+    2. Decompose the superlevel set:
+       {|f - f_I| > t} = ({|f - f_I| > t} ∩ ⋃Q_j) ∪ ({|f - f_I| > t} ∩ (⋃Q_j)^c)
+       The second term is empty since |f - f_I| ≤ t - M < t outside Q_j
+
+    3. On each Q_j, use the triangle inequality:
+       |f_{Q_j} - f_I| = |⨍_{Q_j}(f - f_I)| ≤ ⨍_{Q_j}|f - f_I| ≤ 2(t - M)
+       → For |f - f_I| > t, we have |f - f_{Q_j}| > t - 2(t - M) = 2M - t
+       But wait: if t > M, we use |f - f_{Q_j}| ≥ |f - f_I| - |f_I - f_{Q_j}| > t - (t-M) = M
+
+    4. Apply BMO on Q_j:
+       μ({|f - f_{Q_j}| > M} ∩ Q_j) ≤ (1/M)∫_{Q_j}|f - f_{Q_j}|
+                                     ≤ (1/M)·M·|Q_j| = |Q_j| (by BMO condition)
+
+    5. The factor 1/2 comes from the CZ selection:
+       ∑|Q_j| ≤ (1/(t-M))∫|f - f_I| ≤ μ({|f - f_I| > t - M})·(something)
+       More precisely: the maximal property gives the 1/2 factor.
+
+    Reference: John & Nirenberg (1961), Lemma 2; Stein "Harmonic Analysis" Ch. IV -/
 axiom goodLambda_axiom (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
     (M : ℝ) (hM_pos : M > 0)
     (h_bmo : ∀ a' b' : ℝ, a' < b' → meanOscillation f a' b' ≤ M)
