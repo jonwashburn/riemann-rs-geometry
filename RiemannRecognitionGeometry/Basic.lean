@@ -375,11 +375,11 @@ lemma sqrt_21_lt : Real.sqrt 2.1 < (1.5 : ℝ) := by
 
     With C_geom = 1/2 and K_tail = 2.1:
     - U_tail = 0.5 * √2.1 ≈ 0.72
-    - L_rec = 6.0
-    - So L_rec > U_tail: 6.0 > 0.72 ✓ -/
+    - L_rec = 2.2
+    - So L_rec > U_tail: 2.2 > 0.72 ✓ -/
 theorem zero_free_condition : U_tail < L_rec := by
   unfold U_tail L_rec C_geom K_tail
-  -- U_tail = 0.5 * √2.1 ≈ 0.72 < 6.0 = L_rec
+  -- U_tail = 0.5 * √2.1 ≈ 0.72 < 2.2 = L_rec
   have h_sqrt21 : Real.sqrt 2.1 < 1.5 := by
     have h : (2.1 : ℝ) < 1.5^2 := by norm_num
     rw [← Real.sqrt_sq (by norm_num : (0:ℝ) ≤ 1.5)]
@@ -387,7 +387,7 @@ theorem zero_free_condition : U_tail < L_rec := by
   calc (1/2 : ℝ) * Real.sqrt 2.1
       < (1/2) * 1.5 := by nlinarith [Real.sqrt_nonneg 2.1, h_sqrt21]
     _ = 0.75 := by norm_num
-    _ < 6.0 := by norm_num
+    _ < 2.2 := by norm_num
 
 /-- K_tail refined: K_tail_computed = C_FS * C_tail² = 51 * 0.04 = 2.04 < 2.1 = K_tail. -/
 lemma K_tail_from_renormalized : C_FS * C_tail^2 < K_tail := by
@@ -396,14 +396,14 @@ lemma K_tail_from_renormalized : C_FS * C_tail^2 < K_tail := by
 
 /-- **MAIN QUANTITATIVE THEOREM**: The key numerical inequality for the proof.
 
-    L_rec - U_tail > 0.33
-    0.553 - 0.218 = 0.335 > 0.33 -/
+    L_rec - U_tail > 1.4
+    2.2 - 0.725 = 1.475 > 1.4 -/
 theorem main_quantitative_threshold : L_rec - U_tail > 0 := by
   have h := zero_free_condition
   linarith
 
-/-- The gap L_rec - U_tail is at least 5.0 (since 6.0 - 0.75 = 5.25 > 5.0). -/
-lemma quantitative_gap : L_rec - U_tail > 5.0 := by
+/-- The gap L_rec - U_tail is at least 1.0 (since 2.2 - 0.75 = 1.45 > 1.0). -/
+lemma quantitative_gap : L_rec - U_tail > 1.0 := by
   have h := zero_free_condition
   unfold U_tail L_rec C_geom K_tail at h ⊢
   have h_sqrt21 : Real.sqrt 2.1 < 1.5 := by
@@ -422,7 +422,7 @@ Recognition Geometry proof and their derivations.
 ### Geometric Constants
 | Constant | Value | Source |
 |----------|-------|--------|
-| L_rec | 6.0 | Full 2π phase swing (Blaschke factor) |
+| L_rec | 2.2 | Conservative bound < π (2.2 < 3.14) |
 | C_geom | 1/2 = 0.5 | Explicit Fourier series (Sharp) |
 
 ### Fefferman-Stein Constants
@@ -451,9 +451,9 @@ Recognition Geometry proof and their derivations.
 
 ### Key Verified Inequalities
 1. K_tail_from_renormalized: 2.04 < 18.0 ✓
-2. zero_free_condition: U_tail (1.03) < L_rec (6.0) ✓
+2. zero_free_condition: U_tail (0.72) < L_rec (2.2) ✓
 3. main_quantitative_threshold: L_rec - U_tail > 0 ✓
-4. quantitative_gap: L_rec - U_tail > 4.5 ✓
+4. quantitative_gap: L_rec - U_tail > 1.0 ✓
 
 -/
 

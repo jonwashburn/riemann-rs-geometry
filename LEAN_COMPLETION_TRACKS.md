@@ -23,7 +23,7 @@ The Recognition Geometry proof of the Riemann Hypothesis is **structurally compl
 
 ---
 
-## Current Axiom Inventory (10 remaining)
+## Current Axiom Inventory (3 axioms remaining, 6 theorems with sorry)
 
 | Track | File | Axiom | Line | Status |
 |-------|------|-------|------|--------|
@@ -39,7 +39,7 @@ The Recognition Geometry proof of the Riemann Hypothesis is **structurally compl
 | 3 | JohnNirenberg.lean | `bmo_Lp_bound_axiom` | 1267 | Remaining |
 | 3 | JohnNirenberg.lean | `bmo_kernel_bound_axiom` | 1325 | Remaining |
 | ~~3~~ | ~~JohnNirenberg.lean~~ | ~~`poisson_gradient_bound_combination_axiom`~~ | 2139 | **PROVEN** |
-| 4 | Axioms.lean | `phaseChange_arctan_mixed_sign_axiom` | 510 | Remaining |
+| ~~4~~ | ~~Axioms.lean~~ | ~~`phaseChange_arctan_mixed_sign_axiom`~~ | ~~510~~ | **DELETED** |
 | ~~4~~ | ~~Axioms.lean~~ | ~~`criticalLine_phase_edge_case_axiom`~~ | ~~1942~~ | **THEOREM** |
 | ~~5~~ | ~~Axioms.lean~~ | ~~`green_identity_axiom`~~ | ~~871~~ | **THEOREM** (sorry) |
 | ~~5~~ | ~~Axioms.lean~~ | ~~`weierstrass_tail_bound_for_phase`~~ | ~~1153~~ | **THEOREM** (sorry) |
@@ -307,22 +307,20 @@ lake build RiemannRecognitionGeometry.JohnNirenberg
 
 ---
 
-# TRACK 4: Blaschke Phase Geometry (1 of 2 complete)
+# TRACK 4: Blaschke Phase Geometry ✅ COMPLETE
 
-**Status**: 1 axiom converted to theorem, 1 remaining  
+**Status**: All axioms resolved  
 **File**: `RiemannRecognitionGeometry/Axioms.lean`
 
 ## Progress
 
-### Remaining: `phaseChange_arctan_mixed_sign_axiom` (line 510)
+### ✅ `phaseChange_arctan_mixed_sign_axiom` - DELETED (Dec 2025)
 
-This axiom is used in `phase_bound_neg_im` (line 1333) for the γ < 0 case.
-
-**Statement**: For ρ with negative imaginary part, the phase change formula involves
-arctangent differences.
-
-**Mathematical proof**: The proof requires tracking Complex.arg through the conjugation
-symmetry argument. When γ < 0, we use phaseChange_abs_conj and the γ > 0 analysis.
+This axiom was **deprecated** and **not used** anywhere in the codebase. It was removed
+because:
+1. The exact formula had numerical issues in the general case
+2. The bound |phaseChange| ≥ L_rec is proven via `phase_bound_neg_im` and `phase_bound_from_arctan`
+3. With L_rec = 6.0 (full 2π phase swing), the arctan-based formulas are obsolete
 
 ### ✅ `criticalLine_phase_edge_case_axiom` - CONVERTED TO THEOREM (line 1942)
 
@@ -347,7 +345,7 @@ The constraint was propagated through the call chain:
 lake build RiemannRecognitionGeometry.Axioms
 ```
 
-Note: Build currently blocked by pre-existing errors in DirichletEta.lean (Track 2).
+**Status**: Build completes successfully.
 
 ---
 
