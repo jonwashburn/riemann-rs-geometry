@@ -128,18 +128,6 @@ noncomputable def carleson_energy (w : ℝ → ℝ) (a b : ℝ) : ℝ :=
   ∫ x in Icc a b, ∫ y in Icc 0 (b - a),
     (y * ‖gradient_conjugate_poisson w (x, y)‖^2)
 
-/-- **AXIOM (Fefferman-Stein 1972)**: BMO→Carleson embedding.
-
-    If w has BMO norm ≤ M, then the Carleson energy satisfies:
-      E_Q ≤ C · M² · |I|
-
-    This is the Fefferman-Stein theorem connecting BMO to Carleson measures. -/
-axiom bmo_carleson_embedding
-    (w : ℝ → ℝ) (a b : ℝ) (M : ℝ) (_hM_pos : M > 0)
-    (_h_bmo : ∀ a' b' : ℝ, a' < b' →
-      (b' - a')⁻¹ * ∫ t in Icc a' b', |w t - (b' - a')⁻¹ * ∫ s in Icc a' b', w s| ≤ M) :
-    carleson_energy w a b ≤ C_FS * M^2 * (b - a)
-
 /-! ## Green's Identity Components -/
 
 /-- Structure bundling a gradient bound hypothesis for a function.

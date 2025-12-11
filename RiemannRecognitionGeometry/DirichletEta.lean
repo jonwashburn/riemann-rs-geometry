@@ -902,30 +902,100 @@ theorem altHarmonic_converges :
   simp_rw [h3]
   exact Antitone.tendsto_alternating_series_of_tendsto_zero h1 h2
 
-/-- **AXIOM**: η(1) = log(2), the alternating harmonic series (Mercator series).
+/-- The partial sums of (-1)^n / (n+1) converge to dirichletEtaReal 1. -/
+lemma tendsto_altHarmonic_dirichletEtaReal_one :
+    Filter.Tendsto (fun N => ∑ n ∈ Finset.range N, (-1 : ℝ)^n / ((n : ℝ) + 1))
+        Filter.atTop (nhds (dirichletEtaReal 1)) := by
+  have h1 : 0 < (1 : ℝ) := one_pos
+  rw [dirichletEtaReal_eq_limit 1 h1]
+  have h_eq : ∀ n : ℕ, (-1 : ℝ)^n / ((n : ℝ) + 1) = (-1 : ℝ)^n * (1 / ((n : ℝ) + 1)^(1 : ℝ)) := by
+    intro n; simp only [Real.rpow_one, one_div]; ring
+  simp_rw [h_eq]
+  exact tendsto_alternatingSeriesLimit _ _ _
 
-    **Statement**: η(1) = 1 - 1/2 + 1/3 - 1/4 + ... = log(2)
+/-- For |x| < 1: HasSum ((-1)^n x^(n+1) / (n+1)) (log(1+x)) (Mercator series). -/
+lemma hasSum_mercator_series {x : ℝ} (hx : |x| < 1) :
+    HasSum (fun n : ℕ => (-1 : ℝ)^n * x^(n+1) / ((n : ℝ) + 1)) (Real.log (1 + x)) := by
+  have hx' : |-x| < 1 := by rwa [abs_neg]
+  have h := hasSum_pow_div_log_of_abs_lt_one hx'
+  have h_log : -Real.log (1 - -x) = -Real.log (1 + x) := by ring_nf
+  rw [h_log] at h
+  have h' := h.neg
+  simp only [neg_neg] at h'
+  have h_term : ∀ n : ℕ, -((-x)^(n+1) / ((n : ℝ) + 1)) = (-1 : ℝ)^n * x^(n+1) / ((n : ℝ) + 1) := by
+    intro n
+    have h1 : (-x)^(n+1) = (-1 : ℝ)^(n+1) * x^(n+1) := neg_pow x (n+1)
+    rw [h1, pow_succ (-1 : ℝ) n]
+    ring
+  simp_rw [h_term] at h'
+  exact h'
 
-    **Mathematical content**:
-    This is the Mercator series (1668), also called the alternating harmonic series.
-    The proof uses Abel's limit theorem with the power series log(1+x) = ∑ (-1)^(n+1) x^n / n.
+/-- For 0 < x < 1: ∑' (-1)^n x^n / (n+1) = log(1+x) / x. -/
+lemma tsum_altHarmonic_pow_eq {x : ℝ} (hx_pos : 0 < x) (hx_lt : x < 1) :
+    ∑' n : ℕ, (-1 : ℝ)^n * x^n / ((n : ℝ) + 1) = Real.log (1 + x) / x := by
+  have hx_abs : |x| < 1 := abs_lt.mpr ⟨by linarith, hx_lt⟩
+  have h_mercator := hasSum_mercator_series hx_abs
+  have h_factor : ∀ n : ℕ, (-1 : ℝ)^n * x^(n+1) / ((n : ℝ) + 1) =
+      x * ((-1 : ℝ)^n * x^n / ((n : ℝ) + 1)) := by
+    intro n; rw [pow_succ x n]; ring
+  simp_rw [h_factor] at h_mercator
+  have h_tsum := h_mercator.tsum_eq
+  rw [tsum_mul_left] at h_tsum
+  have hx_ne : x ≠ 0 := ne_of_gt hx_pos
+  field_simp at h_tsum ⊢
+  linarith
 
-    **Proof sketch** (see hasSum_taylorSeries_log and tendsto_tsum_powerSeries_nhdsWithin_lt):
-    1. For |x| < 1: ∑_{n≥1} (-1)^(n+1) x^n / n = log(1+x)
-    2. The series converges at x=1 (alternating series test)
-    3. By Abel's theorem: lim_{x→1⁻} ∑ (-1)^(n+1) x^n / n = ∑ (-1)^(n+1) / n
-    4. By continuity: lim_{x→1⁻} log(1+x) = log(2)
-    5. Therefore: η(1) = ∑ (-1)^(n+1) / n = log(2)
+/-- η(1) = log(2), the alternating harmonic series (Mercator series).
 
-    **Why still an axiom**: The full proof requires connecting the power series representation
-    to our alternatingSeriesLimit definition. The series indexing and complex→real conversion
-    involve API details that vary across Mathlib versions.
+    **Proof** (Abel's limit theorem):
+    1. Partial sums ∑_{k<N} (-1)^k/(k+1) → η(1) (by definition)
+    2. By Abel's theorem: ∑' (-1)^n x^n/(n+1) → η(1) as x → 1⁻
+    3. For 0 < x < 1: ∑' (-1)^n x^n/(n+1) = log(1+x)/x (Mercator series)
+    4. By continuity: log(1+x)/x → log(2) as x → 1
+    5. By uniqueness of limits: η(1) = log(2)
 
     **Reference**: Mercator (1668); Hardy, "A Course of Pure Mathematics" §8.4 -/
-axiom dirichletEtaReal_one_axiom : dirichletEtaReal 1 = Real.log 2
+theorem dirichletEtaReal_one_eq_log_two : dirichletEtaReal 1 = Real.log 2 := by
+  have h_conv := tendsto_altHarmonic_dirichletEtaReal_one
+  let f : ℕ → ℝ := fun n => (-1 : ℝ)^n / ((n : ℝ) + 1)
+  have h_conv_f : Filter.Tendsto (fun N => ∑ i ∈ Finset.range N, f i)
+      Filter.atTop (nhds (dirichletEtaReal 1)) := h_conv
+  have h_abel := Real.tendsto_tsum_powerSeries_nhdsWithin_lt h_conv_f
+  have h_eq_log : ∀ x : ℝ, 0 < x → x < 1 → ∑' n, f n * x^n = Real.log (1 + x) / x := by
+    intro x hx_pos hx_lt
+    have h := tsum_altHarmonic_pow_eq hx_pos hx_lt
+    have h_fn_eq : ∀ n : ℕ, f n * x^n = (-1 : ℝ)^n * x^n / ((n : ℝ) + 1) := by
+      intro n; simp only [f]; ring
+    simp_rw [h_fn_eq]
+    exact h
+  have h_log_limit : Filter.Tendsto (fun x => Real.log (1 + x) / x)
+      (nhdsWithin 1 (Set.Iio 1)) (nhds (Real.log 2)) := by
+    have h_cont : ContinuousAt (fun x => Real.log (1 + x) / x) 1 := by
+      apply ContinuousAt.div
+      · exact Real.continuousAt_log (by norm_num : (1 : ℝ) + 1 ≠ 0) |>.comp
+          (continuousAt_const.add continuousAt_id)
+      · exact continuousAt_id
+      · norm_num
+    have h_val : (fun x => Real.log (1 + x) / x) 1 = Real.log 2 := by
+      simp only [one_add_one_eq_two, div_one]
+    rw [← h_val]
+    exact h_cont.continuousWithinAt
+  have h_eventually_eq : ∀ᶠ x in nhdsWithin (1 : ℝ) (Set.Iio 1), ∑' n, f n * x^n = Real.log (1 + x) / x := by
+    have h_mem : Set.Ioo (0 : ℝ) 1 ∈ nhdsWithin (1 : ℝ) (Set.Iio 1) := by
+      rw [mem_nhdsWithin]
+      refine ⟨Set.Ioo 0 2, isOpen_Ioo, ?_, ?_⟩
+      · simp only [Set.mem_Ioo]; norm_num
+      · intro x ⟨hx_mem, hx_lt⟩
+        simp only [Set.mem_Ioo] at hx_mem ⊢
+        exact ⟨hx_mem.1, hx_lt⟩
+    filter_upwards [h_mem] with x hx
+    simp only [Set.mem_Ioo] at hx
+    exact h_eq_log x hx.1 hx.2
+  have h_abel' := h_abel.congr' h_eventually_eq
+  exact tendsto_nhds_unique h_abel' h_log_limit
 
-/-- η(1) = log(2) (from axiom). -/
-lemma dirichletEtaReal_one : dirichletEtaReal 1 = Real.log 2 := dirichletEtaReal_one_axiom
+/-- η(1) = log(2). -/
+lemma dirichletEtaReal_one : dirichletEtaReal 1 = Real.log 2 := dirichletEtaReal_one_eq_log_two
 
 /-! ## Continuity of η on (0, ∞)
 

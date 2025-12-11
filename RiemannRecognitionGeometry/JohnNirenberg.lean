@@ -585,11 +585,23 @@ lemma maximalBad_disjoint (f : ℝ → ℝ) (a b : ℝ) (t : ℝ)
   · exact absurd hEq hne
   all_goals { exfalso; sorry }
 
-/-- Dyadic doubling: child average ≤ 2 × parent average. -/
+/-- Dyadic doubling: child average ≤ 2 × parent average.
+
+    **Proof**: The child has half the measure of the parent, so
+    avg_child = (μ_child)⁻¹ * ∫_child |f|
+              = 2 * μ_parent⁻¹ * ∫_child |f|
+              ≤ 2 * μ_parent⁻¹ * ∫_parent |f|  (since child ⊆ parent)
+              = 2 * avg_parent -/
 lemma DyadicInterval.avg_doubling (D : DyadicInterval) (f : ℝ → ℝ) :
     setAverage (|f ·|) D.leftChild.toSet ≤ 2 * setAverage (|f ·|) D.toSet ∧
     setAverage (|f ·|) D.rightChild.toSet ≤ 2 * setAverage (|f ·|) D.toSet := by
-  sorry
+  constructor <;> {
+    unfold setAverage
+    -- The key insight is that child measure = parent measure / 2
+    -- and child integral ≤ parent integral (since child ⊆ parent)
+    -- TODO: Complete with proper measure-integral bounds
+    sorry
+  }
 
 /-- CZ decomposition theorem (Calderón-Zygmund).
 

@@ -470,7 +470,7 @@ grep -rn "^axiom " RiemannRecognitionGeometry/*.lean
 # Key Constants (for reference)
 
 ```lean
-L_rec : ℝ := 6.0           -- Phase threshold (full 2π winding approach)
+L_rec : ℝ := 2.2           -- Phase threshold (arctan-based proofs)
 K_tail : ℝ := 2.1          -- Carleson embedding constant  
 C_geom : ℝ := 1/2          -- Green-Cauchy-Schwarz constant
 C_FS : ℝ := 51             -- Fefferman-Stein constant (Arcozzi-Domingo 2024)
@@ -479,11 +479,9 @@ U_tail : ℝ := C_geom * √K_tail  -- = 0.5 * √2.1 ≈ 0.72
 ```
 
 **Key inequalities** (proven in Basic.lean):
-- `U_tail < L_rec` : 0.72 < 6.0 ✓
-- `L_rec < 2π` : 6.0 < 6.28 ✓ (needed for phase bounds)
-
-**⚠️ Note**: With L_rec = 6.0, the arctan-based proofs need the full Blaschke phase argument
-(2π winding), not just 2*arctan(2) ≈ 2.21. Some sorries reflect this.
+- `U_tail < L_rec` : 0.72 < 2.2 ✓
+- `L_rec < π` : 2.2 < 3.14 ✓ (needed for arctan-based proofs)
+- `2 * arctan(2) > L_rec` : 2.21 > 2.2 ✓ (proven in ArctanTwoGtOnePointOne.lean)
 
 ---
 

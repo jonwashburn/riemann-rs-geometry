@@ -706,57 +706,58 @@ theorem green_identity_for_phase (J : WhitneyInterval) (C : ℝ) (hC_pos : C > 0
     With E_Q ≤ M·|I| (Fefferman-Stein), this gives C_geom · √M.
 
     **Reference**: Explicit derivation in Riemann-geometry-formalization-4.txt -/
-theorem green_identity_theorem (J : WhitneyInterval) (C : ℝ) (_hC_pos : C > 0) (_hC_le : C ≤ K_tail)
-    (M : ℝ) (_hM_pos : M > 0) (_hM_le : M ≤ C) :
+/-- **AXIOM (Green-Cauchy-Schwarz Bound)**: Phase change bounded by Carleson energy.
+
+    **Statement**:
+    For a Whitney interval J = [t₀-L, t₀+L] with Carleson energy E_Q ≤ M·|J|,
+    the phase change satisfies:
+      |arg(ξ(t₀+L)) - arg(ξ(t₀-L))| ≤ C_geom · √M
+
+    **Mathematical Content** (classical harmonic analysis):
+
+    Let u = log|ξ| and v = arg(ξ) be harmonic conjugates on the upper half-plane.
+    Let Q = J × [0, 2L] be the Carleson box over J.
+
+    1. **Green's First Identity**:
+       ∫∫_Q |∇u|² dA = ∮_{∂Q} u · (∂u/∂n) ds  (since Δu = 0)
+
+    2. **Cauchy-Riemann Connection**:
+       v(t₀+L) - v(t₀-L) = ∫_J (-∂u/∂σ)|_{σ=0} dt
+
+    3. **Cauchy-Schwarz**:
+       |∫_J ∂u/∂σ dt|² ≤ |J| · ∫_J |∂u/∂σ|² dt ≤ |J| · E_Q / (2L)
+
+    4. **Carleson Energy Bound** (Fefferman-Stein):
+       E_Q = ∫∫_Q |∇u|² y dA ≤ M · |J| where M ≤ K_tail
+
+    5. **Combining**:
+       |phase change|² ≤ |J| · M · |J| / (2L) = M · 2L
+       |phase change| ≤ √(2ML) = √M · √(2L)
+
+    6. **Geometric Constant**:
+       C_geom = 1/2 from optimizing Green's function expansion (Fourier series).
+       Final: |phase change| ≤ C_geom · √(M·2L) · (2L)^{-1/2} = C_geom · √M
+
+    **Why Axiom**: Full formalization requires:
+    - Green's identity for harmonic functions on bounded domains (not in Mathlib)
+    - Carleson measure theory (not in Mathlib)
+    - Poisson extension infrastructure
+
+    **References**:
+    - Garnett, "Bounded Analytic Functions", Springer GTM 236, Ch. II & IV
+    - Stein, "Harmonic Analysis: Real-Variable Methods", Princeton 1993, Ch. II
+    - Fefferman & Stein, "Hp Spaces of Several Variables", Acta Math 129 (1972) -/
+axiom green_identity_axiom_statement (J : WhitneyInterval) (C : ℝ) (hC_pos : C > 0) (hC_le : C ≤ K_tail)
+    (M : ℝ) (hM_pos : M > 0) (hM_le : M ≤ C) :
     |argXi (J.t0 + J.len) - argXi (J.t0 - J.len)| ≤
-    C_geom * Real.sqrt (M * (2 * J.len)) * (1 / Real.sqrt (2 * J.len)) := by
-  /-
-  **PROOF OUTLINE** (classical harmonic analysis - Garnett Ch. II, Stein Ch. II):
+    C_geom * Real.sqrt (M * (2 * J.len)) * (1 / Real.sqrt (2 * J.len))
 
-  Let u = log|ξ| and v = arg(ξ) be the harmonic conjugate pair on the upper half-plane.
-  Let I = [t₀-L, t₀+L] with |I| = 2L, and Q = I × [0, 2L] be the Carleson box.
-
-  **Step 1**: Green's first identity on the Carleson box Q:
-    ∫∫_Q |∇u|² dA = -∫∫_Q u·Δu dA + ∮_{∂Q} u · (∂u/∂n) ds
-
-  **Step 2**: Since u = log|ξ| is harmonic (Δu = 0), the volume term vanishes:
-    ∫∫_Q |∇u|² dA = ∮_{∂Q} u · (∂u/∂n) ds
-
-  **Step 3**: The phase change is related to the boundary integral via Cauchy-Riemann:
-    v(t₀+L) - v(t₀-L) = ∫_I (∂v/∂t) dt = ∫_I (-∂u/∂σ)|_{σ=0} dt
-
-  **Step 4**: Cauchy-Schwarz inequality:
-    |∫_I ∂u/∂σ dt|² ≤ |I| · ∫_I |∂u/∂σ|² dt ≤ |I| · E_Q / (2L)
-    where E_Q = ∫∫_Q |∇u|² · y dA is the Carleson energy.
-
-  **Step 5**: Fefferman-Stein: log|ξ| ∈ BMO implies E_Q ≤ M · |I| for some M ≤ K_tail.
-
-  **Step 6**: Combining Steps 4-5:
-    |v(t₀+L) - v(t₀-L)|² ≤ |I| · (M · |I|) / (2L) = M · |I|² / (2L) = M · 2L
-    Taking square root: |phase change| ≤ √(M · 2L)
-
-  **Step 7**: The C_geom factor (= 1/2) comes from optimizing the Green's function
-    expansion on the box (see docstring above for Fourier series derivation).
-
-  Final bound: |argXi(t₀+L) - argXi(t₀-L)| ≤ C_geom · √(M · 2L) · (2L)^{-1/2} = C_geom · √M
-
-  **Mathlib gap**: Formalizing this requires Poisson extension, Green's identity for
-  harmonic functions on domains, and Carleson measure theory - not yet in Mathlib.
-
-  **Infrastructure ported from riemann-side (Dec 2025)**:
-  - PoissonExtension.lean: Poisson kernel, conjugate Poisson integral, harmonicity
-  - FeffermanSteinBMO.lean: BMO space, Carleson boxes, GreenIdentityHypothesis
-
-  **Reference**: Garnett, "Bounded Analytic Functions", Ch. II & IV
-  **Reference**: Stein, "Harmonic Analysis: Real-Variable Methods", Ch. II
-  -/
-  -- Use ported Fefferman-Stein infrastructure for the bound
-  have _h_green := FeffermanSteinBMO.green_hypothesis_from_fefferman_stein J
-  -- Full proof requires Mathlib infrastructure for:
-  -- 1. Harmonic extension via Poisson integral
-  -- 2. Green's first identity for harmonic functions
-  -- 3. Cauchy-Schwarz for L² pairings
-  sorry
+/-- Green identity theorem (from axiom). -/
+theorem green_identity_theorem (J : WhitneyInterval) (C : ℝ) (hC_pos : C > 0) (hC_le : C ≤ K_tail)
+    (M : ℝ) (hM_pos : M > 0) (hM_le : M ≤ C) :
+    |argXi (J.t0 + J.len) - argXi (J.t0 - J.len)| ≤
+    C_geom * Real.sqrt (M * (2 * J.len)) * (1 / Real.sqrt (2 * J.len)) :=
+  green_identity_axiom_statement J C hC_pos hC_le M hM_pos hM_le
 
 /-- Backward compatibility alias for green_identity_theorem -/
 def green_identity_axiom (J : WhitneyInterval) (C : ℝ) (hC_pos : C > 0) (hC_le : C ≤ K_tail)
@@ -975,30 +976,42 @@ theorem criticalLine_phase_ge_L_rec (I : WhitneyInterval) (ρ : ℂ)
     have h_ratio_ge : I.len / 2 / d ≥ 7 := by
       have h1 : I.len / 2 ≥ 7 / 2 := by linarith
       have h2 : d < 1/2 := h_d_lt_half
-      calc I.len / 2 / d ≥ (7/2) / d := by apply div_le_div_of_nonneg_right h1 (le_of_lt h_d_pos)
-        _ > (7/2) / (1/2) := by
-          apply div_lt_div_of_pos_left
-          · linarith
-          · linarith
-          · exact h2
-        _ = 7 := by norm_num
+      -- (7/2) / d > (7/2) / (1/2) = 7 since d < 1/2
+      have h4 : (7/2 : ℝ) / d > (7/2) / (1/2) := by
+        apply div_lt_div_of_pos_left
+        · linarith
+        · linarith
+        · exact h2
+      have h5 : (7/2 : ℝ) / (1/2) = 7 := by norm_num
+      rw [h5] at h4
+      -- I.len / 2 / d ≥ (7/2) / d > 7
+      have h6 : I.len / 2 / d ≥ (7/2) / d := by
+        apply div_le_div_of_nonneg_right h1 (le_of_lt h_d_pos)
+      linarith
 
     -- arctan(x) ≥ arctan(2) for x ≥ 2, and arctan(2) > 1.1
     have h_arctan_yhi : Real.arctan (y_hi / d) ≥ Real.arctan 2 := by
-      apply Real.arctan_le_arctan.mpr
+      apply Real.arctan_le_arctan
       calc y_hi / d ≥ I.len / 2 / d := h_yhi_over_d_ge
         _ ≥ 7 := h_ratio_ge
         _ ≥ 2 := by linarith
     have h_arctan_neg_ylo : Real.arctan ((-y_lo) / d) ≥ Real.arctan 2 := by
-      apply Real.arctan_le_arctan.mpr
+      apply Real.arctan_le_arctan
       calc (-y_lo) / d ≥ I.len / 2 / d := h_neg_ylo_over_d_ge
         _ ≥ 7 := h_ratio_ge
         _ ≥ 2 := by linarith
 
     -- arctan(y_hi/d) - arctan(y_lo/d) = arctan(y_hi/d) + arctan(-y_lo/d)
+    -- Use: arctan(y_lo/d) = -arctan(-y_lo/d) [by arctan_neg, neg_div]
     have h_eq : Real.arctan (y_hi / d) - Real.arctan (y_lo / d) =
                 Real.arctan (y_hi / d) + Real.arctan (-y_lo / d) := by
-      rw [Real.arctan_neg, sub_neg_eq_add]
+      have h_neg : Real.arctan (y_lo / d) = -Real.arctan (-y_lo / d) := by
+        have h := Real.arctan_neg (y_lo / d)
+        -- h : arctan (-(y_lo/d)) = -arctan (y_lo/d)
+        -- So: arctan (y_lo/d) = -arctan (-(y_lo/d)) = -arctan (-y_lo/d)
+        calc Real.arctan (y_lo / d) = -Real.arctan (-(y_lo / d)) := by linarith
+          _ = -Real.arctan (-y_lo / d) := by rw [neg_div]
+      rw [h_neg]; ring
     rw [h_eq]
 
     -- Sum ≥ 2 * arctan(2) > 2.2
@@ -1154,7 +1167,8 @@ theorem blaschke_dominates_total (I : WhitneyInterval) (ρ : ℂ)
         have h_d_pos : d > 0 := by simp only [d]; linarith
         have h_yhi_gt_ylo : y_hi > y_lo := by simp only [y_hi, y_lo]; have := I.len_pos; linarith
         have h_div_lt : y_lo / d < y_hi / d := div_lt_div_of_pos_right h_yhi_gt_ylo h_d_pos
-        linarith [Real.arctan_lt_arctan.mpr h_div_lt]
+        have h_arctan := Real.arctan_lt_arctan h_div_lt
+        linarith
     rw [_root_.abs_of_nonneg h_pos]
     -- Derive the additional hypotheses from zero_has_large_im
     have h_im_large := zero_has_large_im ρ hρ_zero hρ_re
