@@ -1,9 +1,9 @@
 # Sorry Completion Plan
 
-**Version**: 2.0 (December 2025)  
+**Version**: 2.1 (December 2025)  
 **Project**: Recognition Geometry proof of the Riemann Hypothesis  
-**Current State**: ✅ 0 sorries, 19 axioms  
-**Goal**: ✅ COMPLETE - All sorries eliminated
+**Current State**: 1 sorry, 18 axioms  
+**Goal**: Eliminate all sorries
 
 ---
 
@@ -11,11 +11,33 @@
 
 | Track | Name | Sorries | Difficulty | File | Status |
 |-------|------|---------|------------|------|--------|
-| S1 | Dirichlet Eta | 0 | Medium | DirichletEta.lean | ✅ COMPLETE |
+| S1 | Dirichlet Eta | 1 | Hard | DirichletEta.lean | S1.1 ✅, S1.2 ⏳ |
 | S2 | Dyadic Intervals | 0 | Easy | JohnNirenberg.lean | ✅ COMPLETE |
 | S3 | CZ Decomposition | 0 | Medium | JohnNirenberg.lean | ✅ COMPLETE |
 | S4 | Good-λ Inequality | 0 | Hard | JohnNirenberg.lean | ✅ COMPLETE |
 | S5 | JN Integration | 0 | Medium | JohnNirenberg.lean | ✅ COMPLETE |
+
+## Remaining Sorry
+
+**`identity_principle_zeta_eta_eq`** (DirichletEta.lean:1197)
+
+```lean
+theorem identity_principle_zeta_eta_eq (s : ℝ) (hs_pos : 0 < s) (hs_lt : s < 1) :
+    dirichletEtaReal s = (1 - (2 : ℝ)^(1-s)) * (riemannZeta (s : ℂ)).re
+```
+
+**What's needed**:
+1. Prove dirichletEtaReal (alternating series limit) is real analytic on (0, ∞)
+2. Apply identity principle: agreement on (1,∞) → agreement on (0,∞)
+
+**Infrastructure already built**:
+- `differentiableAt_factor_mul_zeta`: (1-2^{1-s})ζ(s) is differentiable at s≠1
+- `analyticAt_factor_mul_zeta`: the product is analytic
+- `zeta_eta_relation_gt_one`: η(s) = (1-2^{1-s})ζ(s).re for s > 1
+- `dirichletEtaReal_one_eq`: η(1) = log(2)
+
+**Mathematical status**: This is a completely standard result (Titchmarsh §2.1).
+The formalization gap is purely technical, not mathematical.
 
 ---
 
