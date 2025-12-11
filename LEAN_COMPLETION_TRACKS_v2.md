@@ -1,8 +1,8 @@
 # Lean Formalization Completion Tracks
 
-**Version**: 2.1 (December 2025)  
+**Version**: 2.2 (December 2025)  
 **Project**: Recognition Geometry proof of the Riemann Hypothesis  
-**Build Status**: ✅ Compiles successfully with 9 sorries and 11 axioms
+**Build Status**: ✅ Compiles successfully with 11 sorries and 9 axioms
 
 ---
 
@@ -20,12 +20,12 @@
 
 ## Current State Summary
 
-### 11 Axioms (documented classical results)
+### 9 Axioms (documented classical results)
 
 **Track E Axioms** (Mathlib gaps - harmonic analysis):
 ```
 Axioms.lean:718           - green_identity_axiom_statement (Green-Cauchy-Schwarz)
-Axioms.lean:1049          - weierstrass_tail_bound_axiom_statement (Hadamard product)
+Axioms.lean:998           - weierstrass_tail_bound_axiom_statement (Hadamard product)
 FeffermanSteinBMO.lean:139 - fefferman_stein_bmo_carleson (BMO→Carleson)
 FeffermanSteinBMO.lean:159 - tail_pairing_bound_axiom (tail integral bound)
 PoissonExtension.lean:137 - bmo_carleson_embedding (BMO→Carleson embedding)
@@ -39,16 +39,20 @@ Basic.lean:497            - whitney_len_from_zero
 Basic.lean:513            - whitney_zero_centered
 ```
 
-**Dirichlet Eta axioms**:
-```
-DirichletEta.lean:925      - dirichletEtaReal_one_axiom (η(1) = log 2)
-DirichletEta.lean:1078     - identity_principle_zeta_eta_axiom (η = (1-2^{1-s})ζ on (0,1))
-```
+**Note**: `dirichletEtaReal_one_axiom` and `identity_principle_zeta_eta_axiom` 
+were converted to theorems with `sorry` (pending Abel's theorem / identity principle proofs).
 
-### 9 Sorries (proofs in progress)
+### 11 Sorries (proofs in progress)
 ```
 JohnNirenberg.lean: 9 sorries (dyadic intervals, CZ decomposition, good-λ)
+DirichletEta.lean:  2 sorries (η(1)=log2, identity principle)
 ```
+
+**Recent Progress**:
+- ✅ Fixed PoissonJensen.lean sorry (2*arctan(2) ≥ L_rec with L_rec=2.2)
+- ✅ Deleted unused/false criticalLine_phase_edge_case_axiom
+
+**Note**: All remaining sorries have clear proof sketches documented in the code.
 
 ---
 
