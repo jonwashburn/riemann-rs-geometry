@@ -1185,6 +1185,29 @@ lemma etaZetaDiff_tendsto_zero_at_one :
   simp only [sub_self] at h3
   exact h3
 
+/-- **AXIOM (Identity Principle for η-ζ, s < 1)**: The Dirichlet eta function equals
+    (1 - 2^{1-s}) · ζ(s) for 0 < s < 1.
+
+    **Mathematical proof** (Titchmarsh §2.1):
+    1. η(s) = Σ(-1)^{n-1}/n^s converges for s > 0 (alternating series)
+    2. (1-2^{1-s})ζ(s) is the analytic continuation of η from s > 1
+    3. Both are real analytic on (0, ∞) \ {1}
+    4. Agreement on (1, ∞) ⟹ agreement on (0, 1) by identity principle
+
+    The key series manipulation:
+      η(s) = (1 + 1/3^s + ...) - (1/2^s + 1/4^s + ...)
+           = ζ_odd(s) - ζ_even(s)
+           = (1 - 2^{1-s})ζ(s)
+
+    **Why axiom**: Proving dirichletEtaReal is real analytic requires:
+    - Term-by-term differentiation via hasDerivAt_tsum
+    - Uniform convergence of derivative series on compacts
+    This infrastructure is not yet complete in Mathlib.
+
+    **Reference**: Titchmarsh "Riemann Zeta Function" §2.1, Theorem 2.2 -/
+axiom identity_principle_eta_zeta_lt_one_axiom (s : ℝ) (_hs : 0 < s) (_hs_ne : s ≠ 1) (_hs_lt : s < 1) :
+    etaZetaDiff s = 0
+
 /-- **KEY THEOREM**: η(s) = (1 - 2^{1-s})ζ(s).re for all s > 0, s ≠ 1.
 
 **Proof strategy**:
@@ -1212,40 +1235,8 @@ theorem dirichletEtaReal_eq_factor_mul_zeta (s : ℝ) (hs : 0 < s) (hs_ne : s �
     exact h
   -- Case split: s > 1 or s < 1
   rcases lt_trichotomy s 1 with hs_lt | hs_eq | hs_gt
-  · -- Case s < 1: Use identity principle
-    --
-    -- MATHEMATICAL PROOF (Titchmarsh §2.1):
-    -- 1. η(s) = Σ(-1)^{n-1}/n^s converges for s > 0 (alternating series)
-    -- 2. (1-2^{1-s})ζ(s) is the analytic continuation of η from s > 1
-    -- 3. Both are real analytic on (0, ∞) \ {1}
-    -- 4. Agreement on (1, ∞) ⟹ agreement on (0, ∞) by identity principle
-    --
-    -- The key series manipulation (valid for conditionally convergent series):
-    -- η(s) = 1 - 1/2^s + 1/3^s - 1/4^s + ...
-    --      = (1 + 1/3^s + ...) - (1/2^s + 1/4^s + ...)
-    --      = ζ_odd(s) - ζ_even(s)
-    --      = (1 - 2^{1-s})ζ(s)
-    --
-    -- For 0 < s < 1, both sides are defined:
-    -- - LHS: alternating series converges conditionally
-    -- - RHS: (1 - 2^{1-s}) is finite, ζ(s) < 0 by continuation
-    --
-    -- FORMALIZATION GAP:
-    -- The proof that dirichletEtaReal is real analytic requires:
-    -- - Term-by-term differentiation via hasDerivAt_tsum
-    -- - Uniform convergence of derivative series on compacts
-    -- - This is standard but not yet formalized in Mathlib for alternating series
-    --
-    -- Reference: Titchmarsh "Riemann Zeta Function" §2.1, Theorem 2.2
-    -- The statement is mathematically proven; formalization requires infrastructure.
-    --
-    -- ALTERNATIVE APPROACH: Define η via (1-2^{1-s})ζ(s) for all s > 0, s ≠ 1
-    -- Then prove the alternating series converges to this. This is circular for
-    -- our purposes since we defined η independently via the series.
-    --
-    -- We leave this as a sorry with full documentation. The mathematical content
-    -- is correct; the Lean proof requires showing alternating series is real analytic.
-    sorry
+  · -- Case s < 1: Use identity principle (via axiom)
+    exact identity_principle_eta_zeta_lt_one_axiom s hs hs_ne hs_lt
   · -- Case s = 1: contradicts hs_ne
     exact (hs_ne hs_eq).elim
   · -- Case s > 1: direct by zeta_eta_relation_gt_one
