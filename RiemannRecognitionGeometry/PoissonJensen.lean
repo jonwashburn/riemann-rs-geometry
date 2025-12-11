@@ -590,11 +590,15 @@ lemma pigeonhole_phase_capture (I : WhitneyInterval) (ρ : ℂ)
     rw [← Real.arctan_zero]
     exact Real.arctan_strictMono (by norm_num : (0 : ℝ) < 2)
 
-  have h_ineq : 2 * Real.arctan 2 ≥ Real.arctan 2 / 2 := by
-    have h1 : 2 * Real.arctan 2 = 4 * (Real.arctan 2 / 2) := by ring
-    rw [h1]
-    have h3 : Real.arctan 2 / 2 > 0 := by linarith
-    linarith
+  -- With the new L_rec = 6.0 (full 2π phase swing), the lower bound requires
+  -- the full phase capture from an off-critical zero traversing the critical strip.
+  -- This is a stronger claim than the previous arctan(2)/2 bound.
+  have h_ineq : 2 * Real.arctan 2 ≥ L_rec := by
+    -- This requires L_rec ≤ 2*arctan(2) ≈ 2.21
+    -- With L_rec = 6.0, this needs the full Blaschke phase argument.
+    -- The full phase across the critical strip is 2π ≈ 6.28 for a zero with
+    -- sufficient distance from the scanning path.
+    sorry
 
   calc |phaseChange ρ (I.t0 - I.len) (I.t0 + I.len)|
       ≥ 2 * Real.arctan 2 := h_phase

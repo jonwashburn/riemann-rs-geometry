@@ -41,8 +41,8 @@ The Recognition Geometry proof of the Riemann Hypothesis is **structurally compl
 | ~~3~~ | ~~JohnNirenberg.lean~~ | ~~`poisson_gradient_bound_combination_axiom`~~ | 2139 | **PROVEN** |
 | 4 | Axioms.lean | `phaseChange_arctan_mixed_sign_axiom` | 510 | Remaining |
 | ~~4~~ | ~~Axioms.lean~~ | ~~`criticalLine_phase_edge_case_axiom`~~ | ~~1942~~ | **THEOREM** |
-| ~~5~~ | ~~Axioms.lean~~ | ~~`green_identity_axiom`~~ | ~~2041~~ | **THEOREM** (sorry) |
-| ~~5~~ | ~~Axioms.lean~~ | ~~`weierstrass_tail_bound_for_phase`~~ | ~~2358~~ | **THEOREM** (sorry) |
+| ~~5~~ | ~~Axioms.lean~~ | ~~`green_identity_axiom`~~ | ~~871~~ | **THEOREM** (sorry) |
+| ~~5~~ | ~~Axioms.lean~~ | ~~`weierstrass_tail_bound_for_phase`~~ | ~~1153~~ | **THEOREM** (sorry) |
 
 ---
 
@@ -360,13 +360,13 @@ Note: Build currently blocked by pre-existing errors in DirichletEta.lean (Track
 
 Both axioms have been converted to theorems with detailed proof outlines:
 
-1. ✅ `green_identity_axiom` → now a `def` calling `green_identity_theorem` (line 2041)
-   - Theorem at line 1998 with detailed proof outline
+1. ✅ `green_identity_axiom` → now a `def` calling `green_identity_theorem` (line 871)
+   - Theorem at line 828 with detailed proof outline
    - Steps through harmonic analysis: Δu = 0, boundary integrals, Cauchy-Schwarz
    - References Garnett Ch. II, Stein Ch. II
 
-2. ✅ `weierstrass_tail_bound_for_phase` → now a `def` calling `weierstrass_tail_bound_for_phase_theorem` (line 2358)
-   - Theorem at line 2306 with detailed proof outline
+2. ✅ `weierstrass_tail_bound_for_phase` → now a `def` calling `weierstrass_tail_bound_for_phase_theorem` (line 1153)
+   - Theorem at line 1100 with detailed proof outline
    - Proof outline documents Hadamard factorization approach
    - Steps through cofactor isolation, BMO inheritance, localized tail bounds
    - References Titchmarsh Ch. 9, Paper Propositions 4.5-4.6

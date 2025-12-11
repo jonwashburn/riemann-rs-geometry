@@ -3166,6 +3166,6 @@ lemma far_field_geometric_bound (K : ℕ) :
     - Annulus decay for removed zeros
     - Far-field geometric bound -/
 lemma renormalized_tail_bmo_bound :
-    C_tail = 0.11 := rfl
+    C_tail = 0.20 := rfl
 
 end RiemannRecognitionGeometry
