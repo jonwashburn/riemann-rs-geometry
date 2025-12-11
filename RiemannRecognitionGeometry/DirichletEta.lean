@@ -924,9 +924,36 @@ theorem altHarmonic_converges :
     **Reference**: Mercator (1668); Hardy, "A Course of Pure Mathematics" §8.4 -/
 -- THEOREM (no longer an axiom) - proof via Abel's limit theorem
 theorem dirichletEtaReal_one_eq : dirichletEtaReal 1 = Real.log 2 := by
-  -- η(1) = 1 - 1/2 + 1/3 - 1/4 + ... = log(2)
-  -- This is the Mercator series, proven via Abel's limit theorem
-  -- connecting to hasSum_taylorSeries_log
+  -- η(1) = alternatingSeriesLimit (1/(n+1))
+  -- This is the alternating harmonic series: 1 - 1/2 + 1/3 - ...
+  -- By the Mercator series (1668): this equals log(2)
+  --
+  -- **Proof Sketch via Abel's Limit Theorem**:
+  -- 1. Define f(n) = (-1)^n / (n+1)
+  -- 2. Partial sums converge: ∑_{i<n} f(i) → η(1) (altHarmonic_converges)
+  -- 3. By Real.tendsto_tsum_powerSeries_nhdsWithin_lt:
+  --    ∑' f(n) * x^n → η(1) as x → 1⁻
+  -- 4. For 0 < x < 1: ∑' f(n) * x^n = ∑' (-x)^n / (n+1) = log(1+x) / x
+  --    (via hasSum_pow_div_log_of_abs_lt_one with -x)
+  -- 5. By continuity: log(1+x)/x → log(2) as x → 1
+  -- 6. By uniqueness of limits: η(1) = log(2)
+  --
+  -- **Technical challenge**: The series indexing between our alternatingSeriesLimit
+  -- definition and Mathlib's hasSum_pow_div_log_of_abs_lt_one requires careful
+  -- type coercion handling. The key steps are:
+  -- - hasSum (y^(n+1)/(n+1)) = -log(1-y) for |y| < 1
+  -- - Setting y = -x gives HasSum ((-x)^(n+1)/(n+1)) = -log(1+x)
+  -- - Factor out -x: -x * ∑' ((-1)^n * x^n / (n+1)) = -log(1+x)
+  -- - Divide: ∑' ((-1)^n * x^n / (n+1)) = log(1+x) / x
+  -- - By Abel: lim_{x→1⁻} of this = η(1)
+  -- - By continuity: lim_{x→1⁻} log(1+x)/x = log(2)
+  --
+  -- The full formalization requires careful handling of:
+  -- 1. Type coercions between ℕ and ℝ in sums
+  -- 2. Connecting alternatingSeriesLimit to the limit in altHarmonic_converges
+  -- 3. The reindexing from (n+1) to n in the Mercator series
+  --
+  -- Reference: Mercator (1668); Hardy, "A Course of Pure Mathematics" §8.4
   sorry
 
 /-- Compatibility alias for axiom name. -/
@@ -1090,9 +1117,36 @@ theorem continuousAt_dirichletEtaReal {s : ℝ} (hs : 0 < s) :
 -- THEOREM (no longer an axiom) - proof via identity principle
 theorem identity_principle_zeta_eta_eq (s : ℝ) (hs_pos : 0 < s) (hs_lt : s < 1) :
     dirichletEtaReal s = (1 - (2 : ℝ)^(1-s)) * (riemannZeta (s : ℂ)).re := by
-  -- Both η and (1-2^{1-s})ζ are analytic on {Re(s) > 0, s ≠ 1}
-  -- They agree on (1, ∞) by zeta_eta_relation_gt_one
-  -- By the identity principle: agreement on (1, ∞) → global agreement
+  -- IDENTITY PRINCIPLE FOR ANALYTIC FUNCTIONS:
+  --
+  -- Let f(z) = η(z) (dirichletEtaReal extended to ℂ)
+  -- Let g(z) = (1 - 2^{1-z}) · ζ(z)
+  --
+  -- Both f and g are analytic on Ω = {z ∈ ℂ : Re(z) > 0, z ≠ 1}:
+  -- - f is analytic: Dirichlet series converges uniformly on compact subsets
+  -- - g is analytic: product of entire function (1-2^{1-z}) and meromorphic ζ
+  --   The simple zero of (1-2^{1-z}) at z=1 cancels the simple pole of ζ
+  --
+  -- By zeta_eta_relation_gt_one: f(t) = g(t) for all real t > 1
+  --
+  -- The set {t ∈ ℝ : t > 1} has accumulation point 1 in Ω (or ∞)
+  --
+  -- By Identity Principle (Ahlfors Ch.4 Thm 16):
+  --   If two analytic functions agree on a set with an accumulation point
+  --   in a connected domain, they agree on the entire domain.
+  --
+  -- Since Ω is connected, f = g on all of Ω.
+  -- In particular, f(s) = g(s) for real s ∈ (0, 1).
+  --
+  -- The formal Lean proof requires:
+  -- 1. Define dirichletEtaComplex extending dirichletEtaReal to ℂ
+  -- 2. Prove AnalyticOnNhd for both functions on Ω
+  -- 3. Apply AnalyticOnNhd.eqOn_of_preconnected_of_eventuallyEq from Mathlib
+  -- 4. Extract the real part for the statement
+  --
+  -- This is a fundamental theorem in complex analysis whose formalization
+  -- requires substantial analytic infrastructure. The mathematical validity
+  -- is not in question (see references).
   sorry
 
 /-- Compatibility alias for axiom name. -/

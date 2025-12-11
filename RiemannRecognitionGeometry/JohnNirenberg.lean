@@ -674,11 +674,114 @@ lemma DyadicInterval.child_measure_half (D : DyadicInterval) :
     rw [ENNReal.ofReal_div_of_pos (by linarith : (0:ℝ) < 2)]
     congr 1; rw [ENNReal.ofReal_ofNat]
 
-/-- Dyadic doubling: child average ≤ 2 × parent average. -/
+/-- Dyadic doubling: child average ≤ 2 × parent average.
+
+    Proof: avg_child = (μ_child)⁻¹ * ∫_child |f|
+                     = 2 * μ_parent⁻¹ * ∫_child |f|  (since μ_child = μ_parent / 2)
+                     ≤ 2 * μ_parent⁻¹ * ∫_parent |f|  (since child ⊆ parent)
+                     = 2 * avg_parent -/
 lemma DyadicInterval.avg_doubling (D : DyadicInterval) (f : ℝ → ℝ) :
     setAverage (|f ·|) D.leftChild.toSet ≤ 2 * setAverage (|f ·|) D.toSet ∧
     setAverage (|f ·|) D.rightChild.toSet ≤ 2 * setAverage (|f ·|) D.toSet := by
-  sorry
+  have ⟨hL_meas, hR_meas⟩ := D.child_measure_half
+  have hL_sub := D.leftChild_subset
+  have hR_sub := D.rightChild_subset
+
+  -- Parent measure is positive and finite (bounded interval)
+  have hlen_pos : D.length > 0 := D.length_pos
+  have hvol_parent : volume D.toSet = ENNReal.ofReal D.length := by
+    simp only [DyadicInterval.toSet, DyadicInterval.left, DyadicInterval.right,
+               DyadicInterval.length]; rw [Real.volume_Icc]; congr 1; ring
+  have hμP_ne_zero : volume D.toSet ≠ 0 := by
+    rw [hvol_parent]
+    simp only [ne_eq, ENNReal.ofReal_eq_zero, not_le]
+    exact hlen_pos
+  have hμP_ne_top : volume D.toSet ≠ ⊤ := by
+    rw [hvol_parent]; exact ENNReal.ofReal_ne_top
+
+  -- Child measures are positive and finite
+  have hμL_ne_zero : volume D.leftChild.toSet ≠ 0 := by
+    rw [hL_meas]
+    intro h; have := ENNReal.div_eq_zero_iff.mp h
+    rcases this with h1 | h2
+    · exact hμP_ne_zero h1
+    · simp at h2
+  have hμL_ne_top : volume D.leftChild.toSet ≠ ⊤ := by
+    rw [hL_meas]
+    exact (ENNReal.div_lt_top hμP_ne_top (by norm_num : (2:ENNReal) ≠ 0)).ne
+  have hμR_ne_zero : volume D.rightChild.toSet ≠ 0 := by
+    rw [hR_meas]
+    intro h; have := ENNReal.div_eq_zero_iff.mp h
+    rcases this with h1 | h2
+    · exact hμP_ne_zero h1
+    · simp at h2
+  have hμR_ne_top : volume D.rightChild.toSet ≠ ⊤ := by
+    rw [hR_meas]
+    exact (ENNReal.div_lt_top hμP_ne_top (by norm_num : (2:ENNReal) ≠ 0)).ne
+
+  -- Key: (μ child).toReal = (μ parent).toReal / 2
+  have hμL_half : (volume D.leftChild.toSet).toReal = (volume D.toSet).toReal / 2 := by
+    rw [hL_meas, ENNReal.toReal_div, ENNReal.toReal_ofNat]
+  have hμR_half : (volume D.rightChild.toSet).toReal = (volume D.toSet).toReal / 2 := by
+    rw [hR_meas, ENNReal.toReal_div, ENNReal.toReal_ofNat]
+
+  have hμP_pos : (volume D.toSet).toReal > 0 := ENNReal.toReal_pos hμP_ne_zero hμP_ne_top
+
+  -- Helper hypotheses for dif_pos
+  have hL_hyp : volume D.leftChild.toSet ≠ 0 ∧ volume D.leftChild.toSet ≠ ⊤ :=
+    ⟨hμL_ne_zero, hμL_ne_top⟩
+  have hR_hyp : volume D.rightChild.toSet ≠ 0 ∧ volume D.rightChild.toSet ≠ ⊤ :=
+    ⟨hμR_ne_zero, hμR_ne_top⟩
+  have hP_hyp : volume D.toSet ≠ 0 ∧ volume D.toSet ≠ ⊤ := ⟨hμP_ne_zero, hμP_ne_top⟩
+
+  constructor
+  · -- Left child case: avg_L ≤ 2 * avg_P
+    -- Since μ(L) = μ(P)/2, we have avg_L = 2(μ P)⁻¹ ∫_L |f| ≤ 2(μ P)⁻¹ ∫_P |f| = 2 avg_P
+    unfold setAverage
+    simp only [dif_pos hL_hyp, dif_pos hP_hyp]
+    rw [hμL_half]
+    have h_inv : ((volume D.toSet).toReal / 2)⁻¹ = 2 * (volume D.toSet).toReal⁻¹ := by
+      have hne : (volume D.toSet).toReal ≠ 0 := ne_of_gt hμP_pos
+      field_simp
+    rw [h_inv, mul_assoc]
+    apply mul_le_mul_of_nonneg_left _ (by norm_num : (0:ℝ) ≤ 2)
+    apply mul_le_mul_of_nonneg_left _ (inv_nonneg.mpr hμP_pos.le)
+    -- ∫_child |f| ≤ ∫_parent |f| by monotonicity
+    by_cases hf_int : IntegrableOn (|f ·|) D.toSet volume
+    · apply MeasureTheory.setIntegral_mono_set hf_int
+      · exact ae_of_all _ (fun _ => abs_nonneg _)
+      · exact hL_sub.eventuallyLE
+    · -- Not integrable on parent ⟹ not integrable on child (since child ⊆ parent)
+      -- But we need ∫_L |f| ≤ ∫_P |f|. Both might be junk values.
+      -- We use: if not integrable, integral_undef gives some value; show 0 ≤ 0
+      simp only [MeasureTheory.integral_undef hf_int]
+      by_cases hf_int' : IntegrableOn (|f ·|) D.leftChild.toSet volume
+      · -- Integrable on child but not parent is contradictory for nonneg functions
+        -- Actually ∫_L |f| is well-defined and ≥ 0
+        have hm : MeasurableSet D.leftChild.toSet := by
+          simp only [DyadicInterval.toSet]; exact measurableSet_Icc
+        exact setIntegral_nonneg hm (fun _ _ => abs_nonneg _)
+      · simp only [MeasureTheory.integral_undef hf_int']
+  · -- Right child case (symmetric)
+    unfold setAverage
+    simp only [dif_pos hR_hyp, dif_pos hP_hyp]
+    rw [hμR_half]
+    have h_inv : ((volume D.toSet).toReal / 2)⁻¹ = 2 * (volume D.toSet).toReal⁻¹ := by
+      have hne : (volume D.toSet).toReal ≠ 0 := ne_of_gt hμP_pos
+      field_simp
+    rw [h_inv, mul_assoc]
+    apply mul_le_mul_of_nonneg_left _ (by norm_num : (0:ℝ) ≤ 2)
+    apply mul_le_mul_of_nonneg_left _ (inv_nonneg.mpr hμP_pos.le)
+    by_cases hf_int : IntegrableOn (|f ·|) D.toSet volume
+    · apply MeasureTheory.setIntegral_mono_set hf_int
+      · exact ae_of_all _ (fun _ => abs_nonneg _)
+      · exact hR_sub.eventuallyLE
+    · simp only [MeasureTheory.integral_undef hf_int]
+      by_cases hf_int' : IntegrableOn (|f ·|) D.rightChild.toSet volume
+      · have hm : MeasurableSet D.rightChild.toSet := by
+          simp only [DyadicInterval.toSet]; exact measurableSet_Icc
+        exact setIntegral_nonneg hm (fun _ _ => abs_nonneg _)
+      · simp only [MeasureTheory.integral_undef hf_int']
 
 /-- CZ decomposition theorem (Calderón-Zygmund).
 
