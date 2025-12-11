@@ -120,10 +120,10 @@ The geometry constant C_geom = 1/2 is derived via:
 Therefore **C_geom = 1/2** from step 8-9, independent of |I|.
 
 **Numerical verification**:
-- L_rec ≈ 0.553 = arctan(2)/2
-- With K_tail = 0.19: √(K_tail/2) = √0.025 ≈ 0.158
-- U_tail = C_geom · √K_tail = √(0.05/2) ≈ 0.158
-- Required: L_rec > 2·U_tail, i.e., 0.553 > 0.316 ✓
+- L_rec ≈ 0.785 = arctan(1)
+- With K_tail = 0.23: √(K_tail/2) = √0.115 ≈ 0.339
+- U_tail = C_geom · √K_tail = (1/√2)·√0.23 ≈ 0.34
+- Required: L_rec > 2·U_tail, i.e., 0.785 > 0.68 ✓
 -/
 
 /-! ## BMO → Carleson Embedding -/

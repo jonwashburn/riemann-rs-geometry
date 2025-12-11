@@ -2919,17 +2919,19 @@ theorem actualPhaseSignal_bound (I : WhitneyInterval)
 theorem phase_decomposition_exists (I : WhitneyInterval) (ρ : ℂ)
     (_hρ_zero : completedRiemannZeta ρ = 0)
     (_hρ_im : ρ.im ∈ I.interval)
-    (h_tail_bound : let s_hi : ℂ := 1/2 + (I.t0 + I.len) * Complex.I
-                    let s_lo : ℂ := 1/2 + (I.t0 - I.len) * Complex.I
-                    let blaschke := (s_hi - ρ).arg - (s_lo - ρ).arg
+    (h_tail_bound : let d : ℝ := ρ.re - 1/2
+                    let y_hi : ℝ := I.t0 + I.len - ρ.im
+                    let y_lo : ℝ := I.t0 - I.len - ρ.im
+                    let blaschke := Real.arctan (y_lo / d) - Real.arctan (y_hi / d)
                     |actualPhaseSignal I - blaschke| ≤ U_tail) :
-    let s_hi : ℂ := 1/2 + (I.t0 + I.len) * Complex.I
-    let s_lo : ℂ := 1/2 + (I.t0 - I.len) * Complex.I
-    let blaschke := (s_hi - ρ).arg - (s_lo - ρ).arg
+    let d : ℝ := ρ.re - 1/2
+    let y_hi : ℝ := I.t0 + I.len - ρ.im
+    let y_lo : ℝ := I.t0 - I.len - ρ.im
+    let blaschke := Real.arctan (y_lo / d) - Real.arctan (y_hi / d)
     ∃ tail : ℝ,
       actualPhaseSignal I = blaschke + tail ∧
       |tail| ≤ U_tail := by
-  intro s_hi s_lo blaschke
+  intro d y_hi y_lo blaschke
   let tail := actualPhaseSignal I - blaschke
   use tail
   constructor
