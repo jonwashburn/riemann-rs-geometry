@@ -1,9 +1,9 @@
 # Sorry Completion Plan
 
-**Version**: 2.2 (December 2025)  
+**Version**: 2.3 (December 2025)  
 **Project**: Recognition Geometry proof of the Riemann Hypothesis  
-**Current State**: ✅ 0 sorries, 20 axioms  
-**Goal**: ✅ COMPLETE - All sorries eliminated
+**Current State**: 1 sorry, 19 axioms  
+**Goal**: Prove the remaining sorry
 
 ---
 
@@ -11,30 +11,37 @@
 
 | Track | Name | Sorries | Difficulty | File | Status |
 |-------|------|---------|------------|------|--------|
-| S1 | Dirichlet Eta | 0 | Hard | DirichletEta.lean | ✅ COMPLETE |
+| S1 | Dirichlet Eta | 1 | Hard | DirichletEta.lean | S1.1 ✅, S1.2 ⏳ |
 | S2 | Dyadic Intervals | 0 | Easy | JohnNirenberg.lean | ✅ COMPLETE |
 | S3 | CZ Decomposition | 0 | Medium | JohnNirenberg.lean | ✅ COMPLETE |
 | S4 | Good-λ Inequality | 0 | Hard | JohnNirenberg.lean | ✅ COMPLETE |
 | S5 | JN Integration | 0 | Medium | JohnNirenberg.lean | ✅ COMPLETE |
 
-## Resolution Summary
+## Remaining Sorry
 
-The identity principle theorem was resolved by introducing a well-documented axiom:
-
-**`dirichletEtaReal_eq_factor_mul_zeta`** (DirichletEta.lean)
+**`dirichletEtaReal_eq_factor_mul_zeta`** (DirichletEta.lean:1277)
 
 ```lean
-axiom dirichletEtaReal_eq_factor_mul_zeta (s : ℝ) (hs : 0 < s) (hs_ne : s ≠ 1) :
+theorem dirichletEtaReal_eq_factor_mul_zeta (s : ℝ) (hs : 0 < s) (hs_ne : s ≠ 1) :
     dirichletEtaReal s = (1 - (2 : ℝ)^(1-s)) * (riemannZeta (s : ℂ)).re
 ```
 
-**Why axiom**: The full proof requires:
-1. Showing the alternating series defines a real analytic function (uniform convergence on compacts)
-2. Applying the identity principle for real analytic functions
-3. Mathlib currently lacks the primitives for (1)
+**What's proven**:
+- Case s > 1: Fully proven via `etaZetaDiff_eq_zero_of_gt_one` and `zeta_eta_relation_gt_one`
+- Case s = 1: Excluded by hypothesis
 
-**Mathematical status**: This is Titchmarsh §2.1, a completely standard result.
-The axiom encapsulates the analytic continuation relationship between η and ζ.
+**What's left (the sorry)**:
+- Case 0 < s < 1: Requires showing dirichletEtaReal is real analytic
+
+**Mathematical proof** (Titchmarsh §2.1):
+1. η(s) = Σ(-1)^{n-1}/n^s converges for s > 0 (alternating series)
+2. (1-2^{1-s})ζ(s) is analytic on {Re(s) > 0}
+3. They agree on (1, ∞) ⟹ agree on (0, ∞) by identity principle
+
+**Formalization gap**:
+- Need to prove dirichletEtaReal is real analytic via term-by-term differentiation
+- Requires showing derivative series Σ(-1)^{n+1}log(n+1)/(n+1)^s converges uniformly on compacts
+- Mathlib has `hasDerivAt_tsum` but we need to apply it to alternating series
 
 ---
 
