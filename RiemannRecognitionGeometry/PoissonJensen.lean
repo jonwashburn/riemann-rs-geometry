@@ -98,6 +98,24 @@ lemma blaschkePhase_at_re (ρ : ℂ) (hγ_pos : 0 < ρ.im) :
   rw [blaschkeFactor_at_re ρ hγ_pos]
   exact Complex.arg_neg_one
 
+/-- Generalized: The phase of the Blaschke factor at t = Re(ρ) is π, for γ ≠ 0.
+    Since B(σ) = -1, arg(B(σ)) = arg(-1) = π. -/
+lemma blaschkePhase_at_re' (ρ : ℂ) (hγ_ne : ρ.im ≠ 0) :
+    blaschkePhase ρ ρ.re = Real.pi := by
+  simp only [blaschkePhase]
+  rw [blaschkeFactor_at_re' ρ hγ_ne]
+  exact Complex.arg_neg_one
+
+/-- The Blaschke phase is always ≤ π (since Complex.arg ∈ (-π, π]). -/
+lemma blaschkePhase_le_pi (ρ : ℂ) (t : ℝ) : blaschkePhase ρ t ≤ Real.pi := by
+  unfold blaschkePhase
+  exact Complex.arg_le_pi _
+
+/-- The Blaschke phase is always > -π (since Complex.arg ∈ (-π, π]). -/
+lemma blaschkePhase_gt_neg_pi (ρ : ℂ) (t : ℝ) : blaschkePhase ρ t > -Real.pi := by
+  unfold blaschkePhase
+  exact Complex.neg_pi_lt_arg _
+
 /-- The Blaschke factor evaluated at a real point t, for zero ρ = σ + iγ,
     gives a complex number on the unit circle. The key formula is:
     B(t) = (t - σ - iγ)/(t - σ + iγ)
@@ -311,16 +329,15 @@ lemma arg_unit_circle_arctan (z : ℂ) (hz_unit : Complex.abs z = 1) (hre : z.re
   rw [h_arctan_tan]
   ring
 
-/-- Helper: Im(B)/(1+Re(B)) = -γ/u for the Blaschke factor -/
-lemma blaschkeFactor_im_div_one_plus_re (ρ : ℂ) (t : ℝ)
-    (hγ_pos : 0 < ρ.im) (hne : t ≠ ρ.re) :
+/-- Generalized helper: Im(B)/(1+Re(B)) = -γ/u for the Blaschke factor (requires γ ≠ 0) -/
+lemma blaschkeFactor_im_div_one_plus_re_general (ρ : ℂ) (t : ℝ)
+    (hγ_ne : ρ.im ≠ 0) (hne : t ≠ ρ.re) :
     let B := blaschkeFactor ρ t
     let u := t - ρ.re
     let γ := ρ.im
     (1 + B.re ≠ 0) ∧ (B.im / (1 + B.re) = -γ / u) := by
   set u := t - ρ.re
   set γ := ρ.im
-  have hγ_ne : γ ≠ 0 := ne_of_gt hγ_pos
   have hu_ne : u ≠ 0 := sub_ne_zero.mpr hne
   have hne' : t ≠ ρ.re ∨ ρ.im ≠ 0 := Or.inl hne
   obtain ⟨h_re, h_im⟩ := blaschkeFactor_re_im ρ t hne'
@@ -342,6 +359,15 @@ lemma blaschkeFactor_im_div_one_plus_re (ρ : ℂ) (t : ℝ)
     rw [h_one_plus_re]
     field_simp
     ring
+
+/-- Helper: Im(B)/(1+Re(B)) = -γ/u for the Blaschke factor (requires γ > 0) -/
+lemma blaschkeFactor_im_div_one_plus_re (ρ : ℂ) (t : ℝ)
+    (hγ_pos : 0 < ρ.im) (hne : t ≠ ρ.re) :
+    let B := blaschkeFactor ρ t
+    let u := t - ρ.re
+    let γ := ρ.im
+    (1 + B.re ≠ 0) ∧ (B.im / (1 + B.re) = -γ / u) :=
+  blaschkeFactor_im_div_one_plus_re_general ρ t (ne_of_gt hγ_pos) hne
 
 /-- **Blaschke phase arctan formula**:
     arg(B(t)) = 2 * arctan(-γ/u) = -2 * arctan(γ/u)  where u = t - σ, γ = Im(ρ)
@@ -369,6 +395,38 @@ lemma blaschkePhase_arctan (ρ : ℂ) (t : ℝ) (hγ_pos : 0 < ρ.im) (hne : t �
   have hB_unit : Complex.abs B = 1 := blaschkeFactor_unimodular ρ t hne_conj
   -- 1 + Re(B) ≠ 0 and Im(B)/(1+Re(B)) = -γ/u
   have ⟨h_one_plus_ne, h_ratio⟩ := blaschkeFactor_im_div_one_plus_re ρ t hγ_pos hne
+  -- Re(B) ≠ -1
+  have hre_ne : B.re ≠ -1 := by
+    intro h_eq
+    have : 1 + B.re = 0 := by linarith
+    exact h_one_plus_ne this
+  -- Apply half-angle formula
+  have h_arg := arg_unit_circle_arctan B hB_unit hre_ne
+  -- Combine everything
+  unfold blaschkePhase
+  rw [h_arg, h_ratio]
+
+/-- **Generalized Blaschke phase arctan formula** (γ ≠ 0):
+    arg(B(t)) = 2 * arctan(-γ/u) where u = t - σ, γ = Im(ρ)
+
+    This is the same formula as blaschkePhase_arctan but requires only γ ≠ 0 (not γ > 0). -/
+lemma blaschkePhase_arctan_general (ρ : ℂ) (t : ℝ) (hγ_ne : ρ.im ≠ 0) (hne : t ≠ ρ.re) :
+    let u := t - ρ.re
+    let γ := ρ.im
+    blaschkePhase ρ t = 2 * Real.arctan (-γ / u) := by
+  set B := blaschkeFactor ρ t
+  set u := t - ρ.re with hu_def
+  set γ := ρ.im with hγ_def
+  -- B is on unit circle
+  have hne_conj : (t : ℂ) ≠ conj ρ := by
+    intro h_eq
+    have h1 : (t : ℂ).im = (conj ρ).im := by rw [h_eq]
+    simp only [Complex.ofReal_im, Complex.conj_im] at h1
+    have hγ_zero : ρ.im = 0 := by linarith
+    exact hγ_ne hγ_zero
+  have hB_unit : Complex.abs B = 1 := blaschkeFactor_unimodular ρ t hne_conj
+  -- 1 + Re(B) ≠ 0 and Im(B)/(1+Re(B)) = -γ/u
+  have ⟨h_one_plus_ne, h_ratio⟩ := blaschkeFactor_im_div_one_plus_re_general ρ t hγ_ne hne
   -- Re(B) ≠ -1
   have hre_ne : B.re ≠ -1 := by
     intro h_eq

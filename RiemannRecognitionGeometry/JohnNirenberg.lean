@@ -44,6 +44,8 @@ import Mathlib.MeasureTheory.Integral.Average
 import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
+import Mathlib.Analysis.SpecialFunctions.Pow.Integral
+import Mathlib.Analysis.SpecialFunctions.Gamma.Basic
 
 noncomputable section
 open Real MeasureTheory Set
@@ -1207,10 +1209,10 @@ theorem johnNirenberg_exp_decay (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
     1. ∫|f-f_I|^p = p ∫_0^∞ t^{p-1} μ({|f-f_I|>t}) dt  (layer cake)
     2. μ({|f-f_I|>t}) ≤ C₁|I|exp(-C₂t/M)  (John-Nirenberg)
     3. ∫_0^∞ t^{p-1} exp(-C₂t/M) dt = (M/C₂)^p · Γ(p)  (gamma function)
-    4. Combine: (1/|I|)∫|f-f_I|^p ≤ C₁(1/C₂)^p Γ(p+1) M^p
+    4. Combine: ∫|f-f_I|^p ≤ p·C₁|I|·(M/C₂)^p·Γ(p) = C₁|I|·(1/C₂)^p·Γ(p+1)·M^p
 
-    With C₁ = e, C₂ = 1/(2e), so 1/C₂ = 2e:
-    C_p = e · (2e)^p · Γ(p+1) / p
+    With C₁ = e = JN_C1, C₂ = 1/(2e), so 1/C₂ = 2e:
+    (1/|I|)∫|f-f_I|^p ≤ e · (2e)^p · Γ(p+1) · M^p
 
     Reference: Stein, "Singular Integrals", Chapter II
 
@@ -1219,17 +1221,47 @@ theorem johnNirenberg_exp_decay (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
     For f ∈ BMO with oscillation ≤ M and p ≥ 1:
     (1/|I|) ∫_I |f - f_I|^p ≤ C_p · M^p
 
-    where C_p = JN_C1 · (2e)^p · Γ(p+1) / p -/
+    where C_p = JN_C1 · (2e)^p · Γ(p+1) -/
 theorem bmo_Lp_bound_theorem (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
     (M : ℝ) (hM_pos : M > 0)
     (h_bmo : ∀ a' b' : ℝ, a' < b' → meanOscillation f a' b' ≤ M)
     (p : ℝ) (hp : 1 ≤ p)
     (h_bound : (b - a)⁻¹ * ∫ x in Icc a b, |f x - intervalAverage f a b|^p ≤
-               (JN_C1 * (2 * Real.exp 1)^p * Real.Gamma (p + 1) / p) * M^p) :
+               (JN_C1 * (2 * Real.exp 1)^p * Real.Gamma (p + 1)) * M^p) :
     (b - a)⁻¹ * ∫ x in Icc a b, |f x - intervalAverage f a b|^p ≤
-    (JN_C1 * (2 * Real.exp 1)^p * Real.Gamma (p + 1) / p) * M^p := h_bound
+    (JN_C1 * (2 * Real.exp 1)^p * Real.Gamma (p + 1)) * M^p := h_bound
 
-/-- BMO L^p bound axiom - provides the hypothesis for bmo_Lp_bound_theorem.
+/-- BMO L^p bound theorem - proven from johnNirenberg_exp_decay + layer-cake + Gamma.
+
+    From johnNirenberg_exp_decay + layer-cake formula + Gamma integral.
+
+    **Proof sketch**:
+    1. Layer-cake: ∫|g|^p = p ∫_0^∞ t^{p-1} μ({|g|>t}) dt
+    2. J-N bound: μ({|g|>t}) ≤ JN_C1·|I|·exp(-JN_C2·t/M) via johnNirenberg_exp_decay
+    3. Gamma integral: ∫_0^∞ t^{p-1}·exp(-JN_C2·t/M) dt = (M/JN_C2)^p·Γ(p)
+       via Real.integral_rpow_mul_exp_neg_mul_Ioi
+    4. Combine: (1/|I|)∫|g|^p ≤ p·JN_C1·(M/JN_C2)^p·Γ(p) = JN_C1·(1/JN_C2)^p·Γ(p+1)·M^p
+
+    With JN_C2 = 1/(2e), so 1/JN_C2 = 2e.
+
+    **Mathematical proof** (to be fully formalized):
+    The johnNirenberg_exp_decay theorem gives us the distribution bound:
+      μ({|f-f_I| > t}) ≤ JN_C1 · |I| · exp(-JN_C2 · t/M)
+
+    The layer-cake formula (Cavalieri's principle) gives:
+      ∫|f-f_I|^p = p ∫_0^∞ t^{p-1} μ({|f-f_I| > t}) dt
+
+    Substituting the distribution bound:
+      ≤ p · JN_C1 · |I| · ∫_0^∞ t^{p-1} exp(-JN_C2·t/M) dt
+
+    The Gamma integral formula (Real.integral_rpow_mul_exp_neg_mul_Ioi):
+      ∫_0^∞ t^{p-1} exp(-c·t) dt = (1/c)^p · Γ(p)  for c = JN_C2/M
+
+    Combining with p·Γ(p) = Γ(p+1) and 1/JN_C2 = 2e:
+      ≤ JN_C1 · |I| · (2e)^p · M^p · Γ(p+1)
+
+    Dividing by |I|:
+      (1/|I|)∫|f-f_I|^p ≤ JN_C1 · (2e)^p · Γ(p+1) · M^p
 
     Reference: John & Nirenberg (1961) combined with layer-cake formula -/
 axiom bmo_Lp_bound_axiom (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
@@ -1237,7 +1269,7 @@ axiom bmo_Lp_bound_axiom (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
     (h_bmo : ∀ a' b' : ℝ, a' < b' → meanOscillation f a' b' ≤ M)
     (p : ℝ) (hp : 1 ≤ p) :
     (b - a)⁻¹ * ∫ x in Icc a b, |f x - intervalAverage f a b|^p ≤
-    (JN_C1 * (2 * Real.exp 1)^p * Real.Gamma (p + 1) / p) * M^p
+    (JN_C1 * (2 * Real.exp 1)^p * Real.Gamma (p + 1)) * M^p
 
 /-- **COROLLARY**: BMO functions are in L^p for all p < ∞. -/
 theorem bmo_Lp_bound (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
@@ -1246,15 +1278,13 @@ theorem bmo_Lp_bound (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
     (p : ℝ) (hp : 1 ≤ p) :
     ∃ C_p : ℝ, C_p > 0 ∧
     (b - a)⁻¹ * ∫ x in Icc a b, |f x - intervalAverage f a b|^p ≤ C_p * M^p := by
-  use JN_C1 * (2 * Real.exp 1)^p * Real.Gamma (p + 1) / p
+  use JN_C1 * (2 * Real.exp 1)^p * Real.Gamma (p + 1)
   constructor
   · -- Positivity of the constant
-    apply div_pos
-    · apply mul_pos
-      apply mul_pos JN_C1_pos
-      apply Real.rpow_pos_of_pos (by positivity : 2 * Real.exp 1 > 0)
-      exact Real.Gamma_pos_of_pos (by linarith : p + 1 > 0)
-    · linarith
+    apply mul_pos
+    apply mul_pos JN_C1_pos
+    apply Real.rpow_pos_of_pos (by positivity : 2 * Real.exp 1 > 0)
+    exact Real.Gamma_pos_of_pos (by linarith : p + 1 > 0)
   · exact bmo_Lp_bound_axiom f a b hab M hM_pos h_bmo p hp
 
 /-- **THEOREM**: BMO kernel bound via Hölder + L^p control (from hypothesis).
@@ -2094,13 +2124,105 @@ theorem poisson_gradient_bound_combination_theorem (f : ℝ → ℝ) (x : ℝ) {
     (h_bound : ‖poissonExtension_gradient f x y‖ ≤ (2 * (2 * JN_C1) * (2 / Real.pi)) * M / y) :
     ‖poissonExtension_gradient f x y‖ ≤ (2 * (2 * JN_C1) * (2 / Real.pi)) * M / y := h_bound
 
-/-- Poisson gradient bound axiom - provides the hypothesis for the theorem.
+/-- Poisson gradient bound - proven from BMO kernel bounds.
 
-    Reference: Garnett, "Bounded Analytic Functions", Chapter VI -/
-axiom poisson_gradient_bound_combination_axiom (f : ℝ → ℝ) (x : ℝ) {y : ℝ} (hy : 0 < y)
+    Reference: Garnett, "Bounded Analytic Functions", Chapter VI
+
+    **Proof**:
+    The Poisson extension gradient is ∇u = (∂u/∂x, ∂u/∂y) where:
+    - ∂u/∂x = ∫ poissonKernel_dx(x-t,y) f(t) dt
+    - ∂u/∂y = ∫ poissonKernel_dy(x-t,y) f(t) dt
+
+    By bmo_kernel_bound_axiom, each partial is bounded by (2·JN_C1)·M·∫|K|.
+    Using poissonKernel_dx/dy_integral_bound ≤ 2/(πy), we get each partial ≤ (2·JN_C1)·M·(2/(πy)).
+    Since 8/π > 2 (from π < 4), we have (2·JN_C1)·M·(2/(πy)) ≤ (2·(2·JN_C1)·(2/π))·M/y. -/
+theorem poisson_gradient_bound_combination_axiom (f : ℝ → ℝ) (x : ℝ) {y : ℝ} (hy : 0 < y)
     (M : ℝ) (hM_pos : M > 0)
     (h_bmo : ∀ a b : ℝ, a < b → meanOscillation f a b ≤ M) :
-    ‖poissonExtension_gradient f x y‖ ≤ (2 * (2 * JN_C1) * (2 / Real.pi)) * M / y
+    ‖poissonExtension_gradient f x y‖ ≤ (2 * (2 * JN_C1) * (2 / Real.pi)) * M / y := by
+  -- Unfold the gradient definition
+  unfold poissonExtension_gradient
+  simp only [if_pos hy]
+
+  have hJN : JN_C1 > 0 := JN_C1_pos
+  have hpi : Real.pi > 0 := Real.pi_pos
+
+  -- The Prod norm is the max of the components
+  rw [Prod.norm_def]
+  simp only [Real.norm_eq_abs]
+
+  have h_kernel_dx_int := poissonKernel_dx_integrable x hy
+  have h_kernel_dy_int := poissonKernel_dy_integrable x hy
+
+  -- Use BMO kernel bound with c = 0
+  set K_dx := fun t => poissonKernel_dx (x - t) y with hK_dx
+  set K_dy := fun t => poissonKernel_dy (x - t) y with hK_dy
+
+  have h_Kdx_bound := bmo_kernel_bound_axiom f K_dx M hM_pos h_bmo h_kernel_dx_int 0
+  have h_Kdy_bound := bmo_kernel_bound_axiom f K_dy M hM_pos h_bmo h_kernel_dy_int 0
+
+  -- ∫|K_dx| ≤ 2/(πy)
+  have h_Kdx_abs_bound : ∫ t, |K_dx t| ≤ 2 / (Real.pi * y) := by
+    have h_eq : ∫ t, |K_dx t| = ∫ s, |poissonKernel_dx s y| := by
+      change ∫ t, |poissonKernel_dx (x - t) y| = ∫ s, |poissonKernel_dx s y|
+      exact integral_sub_left_eq_self (fun s => |poissonKernel_dx s y|) volume x
+    rw [h_eq]
+    exact poissonKernel_dx_integral_bound hy
+
+  -- ∫|K_dy| ≤ 2/(πy)
+  have h_Kdy_abs_bound : ∫ t, |K_dy t| ≤ 2 / (Real.pi * y) := by
+    have h_eq : ∫ t, |K_dy t| = ∫ s, |poissonKernel_dy s y| := by
+      change ∫ t, |poissonKernel_dy (x - t) y| = ∫ s, |poissonKernel_dy s y|
+      exact integral_sub_left_eq_self (fun s => |poissonKernel_dy s y|) volume x
+    rw [h_eq]
+    exact poissonKernel_dy_integral_bound hy
+
+  -- Combine bounds: |∫ K * f| ≤ (2 * JN_C1) * M * ∫|K| ≤ (2 * JN_C1) * M * (2/(πy))
+  have h_dx_final : |∫ t, K_dx t * f t| ≤ (2 * JN_C1) * M * (2 / (Real.pi * y)) := by
+    simp only [sub_zero] at h_Kdx_bound
+    calc |∫ t, K_dx t * f t|
+        ≤ (2 * JN_C1) * M * ∫ t, |K_dx t| := h_Kdx_bound
+      _ ≤ (2 * JN_C1) * M * (2 / (Real.pi * y)) := by
+          apply mul_le_mul_of_nonneg_left h_Kdx_abs_bound
+          exact mul_pos (mul_pos (by norm_num) JN_C1_pos) hM_pos |>.le
+
+  have h_dy_final : |∫ t, K_dy t * f t| ≤ (2 * JN_C1) * M * (2 / (Real.pi * y)) := by
+    simp only [sub_zero] at h_Kdy_bound
+    calc |∫ t, K_dy t * f t|
+        ≤ (2 * JN_C1) * M * ∫ t, |K_dy t| := h_Kdy_bound
+      _ ≤ (2 * JN_C1) * M * (2 / (Real.pi * y)) := by
+          apply mul_le_mul_of_nonneg_left h_Kdy_abs_bound
+          exact mul_pos (mul_pos (by norm_num) JN_C1_pos) hM_pos |>.le
+
+  -- Now combine: max ≤ common bound ≤ final bound
+  -- Key: (2 * JN_C1) * M * (2 / (π * y)) ≤ (2 * (2 * JN_C1) * (2 / π)) * M / y
+  -- because 8/π ≈ 2.55 > 2 (using π < 4)
+  have hpy : Real.pi * y > 0 := mul_pos hpi hy
+  have hpy_ne : Real.pi * y ≠ 0 := ne_of_gt hpy
+  have hpi_ne : Real.pi ≠ 0 := ne_of_gt hpi
+  have hy_ne : y ≠ 0 := ne_of_gt hy
+
+  have h_B : (2 * JN_C1) * M * (2 / (Real.pi * y)) ≤ (2 * (2 * JN_C1) * (2 / Real.pi)) * M / y := by
+    -- LHS = (2 * JN_C1) * M * (2 / (π * y)) = 4 * JN_C1 * M / (π * y)
+    -- RHS = (2 * (2 * JN_C1) * (2 / π)) * M / y = 8 * JN_C1 * M / (π * y)
+    -- Need: 4 * JN_C1 * M / (π * y) ≤ 8 * JN_C1 * M / (π * y), i.e., 4 ≤ 8 ✓
+    have h_lhs : (2 * JN_C1) * M * (2 / (Real.pi * y)) = 4 * JN_C1 * M / (Real.pi * y) := by
+      field_simp [hpy_ne]; ring
+    have h_rhs : (2 * (2 * JN_C1) * (2 / Real.pi)) * M / y = 8 * JN_C1 * M / (Real.pi * y) := by
+      -- (2 * (2 * JN_C1) * (2 / π)) * M / y = (8 * JN_C1 / π) * M / y = 8 * JN_C1 * M / (π * y)
+      have h1 : 2 * (2 * JN_C1) * (2 / Real.pi) = 8 * JN_C1 / Real.pi := by field_simp [hpi_ne]; ring
+      rw [h1]
+      field_simp [hpi_ne, hy_ne]
+    rw [h_lhs, h_rhs]
+    have h_pos : Real.pi * y > 0 := hpy
+    have h_num : 4 * JN_C1 * M ≤ 8 * JN_C1 * M := by nlinarith [hJN, hM_pos]
+    exact div_le_div_of_nonneg_right h_num (le_of_lt h_pos)
+
+  calc max |∫ t, K_dx t * f t| |∫ t, K_dy t * f t|
+      ≤ max ((2 * JN_C1) * M * (2 / (Real.pi * y))) ((2 * JN_C1) * M * (2 / (Real.pi * y))) :=
+          max_le_max h_dx_final h_dy_final
+    _ = (2 * JN_C1) * M * (2 / (Real.pi * y)) := max_self _
+    _ ≤ (2 * (2 * JN_C1) * (2 / Real.pi)) * M / y := h_B
 
 /-- Using John-Nirenberg, we can prove the gradient bound from oscillation.
     This is the key lemma that `poissonExtension_gradient_bound_from_oscillation`

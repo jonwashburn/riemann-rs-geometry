@@ -9,6 +9,7 @@ This module defines the core structures for the Recognition Geometry approach to
 
 import Mathlib.Data.Real.Basic
 import Mathlib.Data.Complex.Basic
+import Mathlib.Data.Complex.ExponentialBounds
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Arctan
 import Mathlib.NumberTheory.LSeries.RiemannZeta
 import RiemannRecognitionGeometry.Mathlib.ArctanTwoGtOnePointOne
@@ -276,18 +277,31 @@ def T0 : ℝ := 10^6
     **Citation**: Uses Trudgian 2014 for explicit S(T) bounds. -/
 def c1 : ℝ := c_kernel * (A1 * Real.log T0 + A2)
 
-/-- **Numerical axiom**: log(10^6) < 14.
+/-- Numeric theorem: `log(10^6) < 14`.
 
-    **Verification**: exp(14) ≈ 1,202,604.28 > 10^6 = 1,000,000
-    Therefore log(10^6) < 14.
-
-    **Why an axiom**: Mathlib's `Real.exp_bound` provides Taylor bounds for exp(x)
-    when |x| ≤ 1, but extending this to x = 14 requires composing many smaller
-    bounds (e.g., e^14 = (e^2)^7, then bounding e^2). While mathematically
-    straightforward, the formal proof is lengthy and not central to the main theorem.
-
-    **Numerical confidence**: log(10^6) = 6·log(10) ≈ 13.8155, well below 14. -/
-axiom log_T0_lt_14 : Real.log T0 < 14
+We prove: `log(10^6) < log(2^20) = 20·log 2 < 20·0.6931471808 < 14`.
+Uses `Real.log_two_lt_d9` from Mathlib which gives `log 2 < 0.6931471808`. -/
+theorem log_T0_lt_14 : Real.log T0 < 14 := by
+  -- T0 = 10^6 < 2^20 = 1_048_576
+  have hT0_lt_pow2 : T0 < (2 : ℝ) ^ 20 := by
+    unfold T0
+    norm_num
+  -- log is strictly increasing on (0,∞): log T0 < log (2^20)
+  have hpos_T0 : 0 < T0 := by unfold T0; positivity
+  have hlog_lt : Real.log T0 < Real.log ((2 : ℝ) ^ 20) := by
+    have hpos_pow : 0 < (2 : ℝ) ^ 20 := by positivity
+    exact Real.log_lt_log hpos_T0 hT0_lt_pow2
+  -- log (2^20) = 20 * log 2
+  have hlog_pow : Real.log ((2 : ℝ) ^ 20) = (20 : ℝ) * Real.log 2 := by
+    rw [Real.log_pow]; norm_num
+  -- Use Mathlib's explicit bound: log 2 < 0.6931471808
+  have log2_bound : Real.log 2 < 0.6931471808 := Real.log_two_lt_d9
+  -- Combine: log T0 < 20 * log 2 < 20 * 0.6931471808 = 13.86... < 14
+  calc Real.log T0
+      < Real.log ((2 : ℝ) ^ 20) := hlog_lt
+    _ = 20 * Real.log 2 := hlog_pow
+    _ < 20 * 0.6931471808 := by nlinarith [log2_bound]
+    _ < 14 := by norm_num
 
 /-- c1 is approximately 1.69.
 

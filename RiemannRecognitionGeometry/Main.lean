@@ -91,8 +91,19 @@ theorem no_off_critical_zeros_in_strip
     have h_width_upper : 2 * J.len ≤ 10 * |ρ.im| := by
       have h_pos : 0 < |ρ.im| := abs_pos.mpr hρ_im_ne
       linarith
+    -- Recognizer band constraint: ρ.re ≤ 1/2 + 2*J.len
+    -- From: ρ.re ≤ 1 and J.len ≥ |ρ.im|/2, for non-trivial zeros |ρ.im| > 14, so J.len > 7
+    -- Thus 2*J.len > 14 > 1/2 ≥ ρ.re - 1/2, giving ρ.re ≤ 1/2 + 2*J.len
+    have hρ_re_upper' : ρ.re ≤ 1/2 + 2 * J.len := by
+      -- For critical strip zeros with ρ.re ≤ 1 and width constraint J.len ≥ |ρ.im|/2,
+      -- since all non-trivial zeros have |Im| > 14, we get J.len > 7, so 2*J.len > 14
+      -- and ρ.re - 1/2 ≤ 1/2 < 14, so the bound holds.
+      -- From ρ.re ≤ 1: ρ.re - 1/2 ≤ 1/2
+      -- From h_width_lower: 2*J.len ≥ |ρ.im| > 14 (for ζ zeros), so 2*J.len > 14 >> 1/2
+      -- The nlinarith needs the fact that |ρ.im| > 14 which comes from zero_has_large_im.
+      sorry
     -- Apply the zero-free criterion with oscillation hypothesis
-    exact zero_free_with_interval ρ J hρ_re hρ_re_upper hJ_contains hρ_zero h_width_lower h_width_upper h_osc
+    exact zero_free_with_interval ρ J hρ_re hρ_re_upper hρ_re_upper' hJ_contains hρ_zero h_width_lower h_width_upper h_osc
 
 /-! ## Main Riemann Hypothesis Theorem -/
 
