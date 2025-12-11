@@ -1,21 +1,21 @@
 # Sorry Completion Plan
 
-**Version**: 1.0 (December 2025)  
+**Version**: 1.1 (December 2025)  
 **Project**: Recognition Geometry proof of the Riemann Hypothesis  
-**Current State**: 10 sorries, 9 axioms  
+**Current State**: 9 sorries, 9 axioms  
 **Goal**: Eliminate all sorries
 
 ---
 
 ## Quick Reference
 
-| Track | Name | Sorries | Difficulty | File |
-|-------|------|---------|------------|------|
-| S1 | Dirichlet Eta | 2 | Medium | DirichletEta.lean |
-| S2 | Dyadic Intervals | 2 | Easy | JohnNirenberg.lean |
-| S3 | CZ Decomposition | 2 | Medium | JohnNirenberg.lean |
-| S4 | Good-λ Inequality | 2 | Hard | JohnNirenberg.lean |
-| S5 | JN Integration | 2 | Medium | JohnNirenberg.lean |
+| Track | Name | Sorries | Difficulty | File | Status |
+|-------|------|---------|------------|------|--------|
+| S1 | Dirichlet Eta | 1 | Medium | DirichletEta.lean | S1.1 ✅ |
+| S2 | Dyadic Intervals | 2 | Easy | JohnNirenberg.lean | Pending |
+| S3 | CZ Decomposition | 2 | Medium | JohnNirenberg.lean | Pending |
+| S4 | Good-λ Inequality | 2 | Hard | JohnNirenberg.lean | Pending |
+| S5 | JN Integration | 2 | Medium | JohnNirenberg.lean | Pending |
 
 ---
 
@@ -26,29 +26,20 @@
 **Difficulty**: Medium  
 **Prerequisites**: None
 
-## S1.1 `dirichletEtaReal_one_eq` (line 930)
+## S1.1 `dirichletEtaReal_one_eq` ✅ COMPLETE
 
 **Statement**:
 ```lean
 theorem dirichletEtaReal_one_eq : dirichletEtaReal 1 = Real.log 2
 ```
 
-**Mathematical Content**:
-- η(1) = 1 - 1/2 + 1/3 - 1/4 + ... = log(2)
-- This is the Mercator series (1668)
+**Status**: ✅ PROVEN
 
-**Proof Strategy**:
-1. We have `altHarmonic_converges`: the series converges
-2. Use Mathlib's `hasSum_pow_div_log_of_abs_lt_one` for log(1+x) = Σ(-1)^(n+1)x^n/n
-3. Apply Abel's limit theorem via `Real.tendsto_tsum_powerSeries_nhdsWithin_lt`
-4. Connect our `alternatingSeriesLimit` to Mathlib's `tsum`
-
-**Key Lemmas Needed**:
-```lean
--- Connect alternatingSeriesLimit to tsum
-lemma alternatingSeriesLimit_eq_tsum (a : ℕ → ℝ) (h_dec : Antitone a) (h_lim : Tendsto a atTop (nhds 0)) :
-    alternatingSeriesLimit a h_dec h_lim = ∑' n, (-1)^n * a n
-```
+**Proof Strategy Used**:
+1. For s > 1: η(s) = (1 - 2^{1-s}) * ζ(s).re (from `zeta_eta_relation_gt_one`)
+2. As s → 1⁺: (1 - 2^{1-s}) * ζ(s).re → log(2) (from `tendsto_factor_mul_zeta_at_one`)
+3. η is continuous at 1 (from `continuousAt_dirichletEtaReal`)
+4. By uniqueness of limits: η(1) = log(2)
 
 **Reference**: Hardy, "A Course of Pure Mathematics" §8.4
 
