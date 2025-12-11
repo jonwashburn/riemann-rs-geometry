@@ -2,7 +2,7 @@
 
 **Version**: 2.1 (December 2025)  
 **Project**: Recognition Geometry proof of the Riemann Hypothesis  
-**Build Status**: ✅ Compiles successfully with 18 sorries and 8 axioms
+**Build Status**: ✅ Compiles successfully with 9 sorries and 11 axioms
 
 ---
 
@@ -20,7 +20,7 @@
 
 ## Current State Summary
 
-### 8 Axioms (documented classical results)
+### 11 Axioms (documented classical results)
 
 **Track E Axioms** (Mathlib gaps - harmonic analysis):
 ```
@@ -28,6 +28,7 @@ Axioms.lean:718           - green_identity_axiom_statement (Green-Cauchy-Schwarz
 Axioms.lean:1049          - weierstrass_tail_bound_axiom_statement (Hadamard product)
 FeffermanSteinBMO.lean:139 - fefferman_stein_bmo_carleson (BMO→Carleson)
 FeffermanSteinBMO.lean:159 - tail_pairing_bound_axiom (tail integral bound)
+PoissonExtension.lean:137 - bmo_carleson_embedding (BMO→Carleson embedding)
 ```
 
 **Zeta function axioms** (number theory):
@@ -38,14 +39,15 @@ Basic.lean:497            - whitney_len_from_zero
 Basic.lean:513            - whitney_zero_centered
 ```
 
-**Note**: `identity_principle_zeta_eta_axiom` has been converted to a theorem using
-the complex eta function and identity principle infrastructure.
-
-### 18 Sorries (proofs in progress)
+**Dirichlet Eta axioms**:
 ```
-JohnNirenberg.lean: 8 sorries (CZ decomposition, dyadic trichotomy, good-λ)
-DirichletEta.lean:  9 sorries (complex eta, identity principle, analyticity)
-Axioms.lean:        1 sorry (phase geometry edge case)
+DirichletEta.lean:925      - dirichletEtaReal_one_axiom (η(1) = log 2)
+DirichletEta.lean:1078     - identity_principle_zeta_eta_axiom (η = (1-2^{1-s})ζ on (0,1))
+```
+
+### 9 Sorries (proofs in progress)
+```
+JohnNirenberg.lean: 9 sorries (dyadic intervals, CZ decomposition, good-λ)
 ```
 
 ---

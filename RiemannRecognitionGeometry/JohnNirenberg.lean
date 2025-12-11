@@ -585,52 +585,64 @@ lemma maximalBad_disjoint (f : ℝ → ℝ) (a b : ℝ) (t : ℝ)
   · exact absurd hEq hne
   all_goals { exfalso; sorry }
 
-/-- Left child is contained in parent. -/
+/-- Left child is contained in parent.
+    Key: 2^(-(n+1)) = 2^(-n)/2, so leftChild = [k·2^(-n), (k+1/2)·2^(-n)] ⊆ parent -/
 lemma DyadicInterval.leftChild_subset (D : DyadicInterval) :
     D.leftChild.toSet ⊆ D.toSet := by
   intro x hx
   simp only [DyadicInterval.toSet, DyadicInterval.left, DyadicInterval.right,
              DyadicInterval.leftChild, Set.mem_Icc] at hx ⊢
+  -- Normalize casts for consistent types
+  have hx1 : (2 : ℝ) * ↑D.index * (2:ℝ)^(-((D.generation + 1):ℤ)) ≤ x := by
+    convert hx.1 using 2; push_cast; ring
+  have hx2 : x ≤ (2 * ↑D.index + 1) * (2:ℝ)^(-((D.generation + 1):ℤ)) := by
+    convert hx.2 using 2; push_cast; ring
   have h2pow : (2:ℝ)^(-((D.generation + 1):ℤ)) = (2:ℝ)^(-(D.generation:ℤ)) / 2 := by
     rw [show (-((D.generation + 1):ℤ) : ℤ) = -(D.generation:ℤ) - 1 from by omega]
     rw [zpow_sub₀ (by norm_num : (2:ℝ) ≠ 0), zpow_one]
   have hpos : (0:ℝ) < 2^(-(D.generation:ℤ)) := zpow_pos (by norm_num) _
-  have hleft : (2 * D.index : ℝ) * (2:ℝ)^(-((D.generation + 1):ℤ)) =
-               (D.index : ℝ) * (2:ℝ)^(-(D.generation:ℤ)) := by rw [h2pow]; ring
-  have hright : ((2 * D.index + 1) : ℝ) * (2:ℝ)^(-((D.generation + 1):ℤ)) =
-                ((D.index : ℝ) + 1/2) * (2:ℝ)^(-(D.generation:ℤ)) := by rw [h2pow]; ring
+  have hleft : (2 : ℝ) * ↑D.index * (2:ℝ)^(-((D.generation + 1):ℤ)) =
+               ↑D.index * (2:ℝ)^(-(D.generation:ℤ)) := by rw [h2pow]; ring
+  have hright : (2 * ↑D.index + 1) * (2:ℝ)^(-((D.generation + 1):ℤ)) =
+                (↑D.index + 1/2) * (2:ℝ)^(-(D.generation:ℤ)) := by rw [h2pow]; ring
   constructor
-  · calc (D.index : ℝ) * (2:ℝ)^(-(D.generation:ℤ))
-        = (2 * D.index : ℝ) * (2:ℝ)^(-((D.generation + 1):ℤ)) := hleft.symm
-      _ ≤ x := hx.1
-  · calc x ≤ ((2 * D.index + 1) : ℝ) * (2:ℝ)^(-((D.generation + 1):ℤ)) := hx.2
-      _ = ((D.index : ℝ) + 1/2) * (2:ℝ)^(-(D.generation:ℤ)) := hright
-      _ ≤ ((D.index : ℝ) + 1) * (2:ℝ)^(-(D.generation:ℤ)) := by nlinarith
+  · calc ↑D.index * (2:ℝ)^(-(D.generation:ℤ))
+        = (2 : ℝ) * ↑D.index * (2:ℝ)^(-((D.generation + 1):ℤ)) := hleft.symm
+      _ ≤ x := hx1
+  · calc x ≤ (2 * ↑D.index + 1) * (2:ℝ)^(-((D.generation + 1):ℤ)) := hx2
+      _ = (↑D.index + 1/2) * (2:ℝ)^(-(D.generation:ℤ)) := hright
+      _ ≤ (↑D.index + 1) * (2:ℝ)^(-(D.generation:ℤ)) := by nlinarith
 
-/-- Right child is contained in parent. -/
+/-- Right child is contained in parent.
+    Key: 2^(-(n+1)) = 2^(-n)/2, so rightChild = [(k+1/2)·2^(-n), (k+1)·2^(-n)] ⊆ parent -/
 lemma DyadicInterval.rightChild_subset (D : DyadicInterval) :
     D.rightChild.toSet ⊆ D.toSet := by
   intro x hx
   simp only [DyadicInterval.toSet, DyadicInterval.left, DyadicInterval.right,
              DyadicInterval.rightChild, Set.mem_Icc] at hx ⊢
+  -- Normalize casts for consistent types
+  have hx1 : (2 * ↑D.index + 1) * (2:ℝ)^(-((D.generation + 1):ℤ)) ≤ x := by
+    convert hx.1 using 2; push_cast; ring
+  have hx2 : x ≤ (2 * ↑D.index + 2) * (2:ℝ)^(-((D.generation + 1):ℤ)) := by
+    convert hx.2 using 2; push_cast; ring
   have h2pow : (2:ℝ)^(-((D.generation + 1):ℤ)) = (2:ℝ)^(-(D.generation:ℤ)) / 2 := by
     rw [show (-((D.generation + 1):ℤ) : ℤ) = -(D.generation:ℤ) - 1 from by omega]
     rw [zpow_sub₀ (by norm_num : (2:ℝ) ≠ 0), zpow_one]
   have hpos : (0:ℝ) < 2^(-(D.generation:ℤ)) := zpow_pos (by norm_num) _
-  have hleft : ((2 * D.index + 1) : ℝ) * (2:ℝ)^(-((D.generation + 1):ℤ)) =
-               ((D.index : ℝ) + 1/2) * (2:ℝ)^(-(D.generation:ℤ)) := by rw [h2pow]; ring
-  have hright : ((2 * D.index + 2) : ℝ) * (2:ℝ)^(-((D.generation + 1):ℤ)) =
-                ((D.index : ℝ) + 1) * (2:ℝ)^(-(D.generation:ℤ)) := by rw [h2pow]; ring
+  have hleft : (2 * ↑D.index + 1) * (2:ℝ)^(-((D.generation + 1):ℤ)) =
+               (↑D.index + 1/2) * (2:ℝ)^(-(D.generation:ℤ)) := by rw [h2pow]; ring
+  have hright : (2 * ↑D.index + 2) * (2:ℝ)^(-((D.generation + 1):ℤ)) =
+                (↑D.index + 1) * (2:ℝ)^(-(D.generation:ℤ)) := by rw [h2pow]; ring
   constructor
-  · calc (D.index : ℝ) * (2:ℝ)^(-(D.generation:ℤ))
-        ≤ ((D.index : ℝ) + 1/2) * (2:ℝ)^(-(D.generation:ℤ)) := by nlinarith
-      _ = ((2 * D.index + 1) : ℝ) * (2:ℝ)^(-((D.generation + 1):ℤ)) := hleft.symm
-      _ ≤ x := hx.1
-  · calc x ≤ ((2 * D.index + 1 + 1) : ℝ) * (2:ℝ)^(-((D.generation + 1):ℤ)) := hx.2
-      _ = ((2 * D.index + 2) : ℝ) * (2:ℝ)^(-((D.generation + 1):ℤ)) := by ring_nf
-      _ = ((D.index : ℝ) + 1) * (2:ℝ)^(-(D.generation:ℤ)) := hright
+  · calc ↑D.index * (2:ℝ)^(-(D.generation:ℤ))
+        ≤ (↑D.index + 1/2) * (2:ℝ)^(-(D.generation:ℤ)) := by nlinarith
+      _ = (2 * ↑D.index + 1) * (2:ℝ)^(-((D.generation + 1):ℤ)) := hleft.symm
+      _ ≤ x := hx1
+  · calc x ≤ (2 * ↑D.index + 2) * (2:ℝ)^(-((D.generation + 1):ℤ)) := hx2
+      _ = (↑D.index + 1) * (2:ℝ)^(-(D.generation:ℤ)) := hright
 
-/-- Child has half the measure of parent. -/
+/-- Child has half the measure of parent.
+    Proof: Child length = 2^(-(n+1)) = 2^(-n)/2 = parent.length/2 -/
 lemma DyadicInterval.child_measure_half (D : DyadicInterval) :
     volume D.leftChild.toSet = volume D.toSet / 2 ∧
     volume D.rightChild.toSet = volume D.toSet / 2 := by
@@ -638,34 +650,35 @@ lemma DyadicInterval.child_measure_half (D : DyadicInterval) :
     rw [show (-((D.generation + 1):ℤ) : ℤ) = -(D.generation:ℤ) - 1 from by omega]
     rw [zpow_sub₀ (by norm_num : (2:ℝ) ≠ 0), zpow_one]
   have hpos : (0:ℝ) < 2^(-(D.generation:ℤ)) := zpow_pos (by norm_num) _
-  -- leftChild length = 2^(-(n+1)) = 2^(-n)/2 = parent.length/2
-  -- Same for rightChild
-  constructor <;> {
+  -- Compute volumes using length
+  have hvol_parent : volume D.toSet = ENNReal.ofReal D.length := by
     simp only [DyadicInterval.toSet, DyadicInterval.left, DyadicInterval.right,
-               DyadicInterval.leftChild, DyadicInterval.rightChild]
-    rw [Real.volume_Icc, Real.volume_Icc]
-    simp only [ENNReal.ofReal_div_of_pos (by norm_num : (0:ℝ) < 2)]
-    congr 1
-    rw [ENNReal.ofReal_eq_ofReal_iff] <;> nlinarith [h2pow, hpos]
-  }
+               DyadicInterval.length]
+    rw [Real.volume_Icc]; congr 1; ring
+  have hvol_leftChild : volume D.leftChild.toSet = ENNReal.ofReal D.leftChild.length := by
+    simp only [DyadicInterval.toSet, DyadicInterval.left, DyadicInterval.right,
+               DyadicInterval.leftChild, DyadicInterval.length]
+    rw [Real.volume_Icc]; congr 1; push_cast; ring
+  have hvol_rightChild : volume D.rightChild.toSet = ENNReal.ofReal D.rightChild.length := by
+    simp only [DyadicInterval.toSet, DyadicInterval.left, DyadicInterval.right,
+               DyadicInterval.rightChild, DyadicInterval.length]
+    rw [Real.volume_Icc]; congr 1; push_cast; ring
+  have hlen_child : D.leftChild.length = D.length / 2 ∧ D.rightChild.length = D.length / 2 := by
+    simp only [DyadicInterval.length, DyadicInterval.leftChild, DyadicInterval.rightChild]
+    exact ⟨h2pow, h2pow⟩
+  constructor
+  · rw [hvol_leftChild, hvol_parent, hlen_child.1]
+    rw [ENNReal.ofReal_div_of_pos (by linarith : (0:ℝ) < 2)]
+    congr 1; rw [ENNReal.ofReal_ofNat]
+  · rw [hvol_rightChild, hvol_parent, hlen_child.2]
+    rw [ENNReal.ofReal_div_of_pos (by linarith : (0:ℝ) < 2)]
+    congr 1; rw [ENNReal.ofReal_ofNat]
 
-/-- Dyadic doubling: child average ≤ 2 × parent average.
-
-    **Proof**: The child has half the measure of the parent, so
-    avg_child = (μ_child)⁻¹ * ∫_child |f|
-              = 2 * μ_parent⁻¹ * ∫_child |f|
-              ≤ 2 * μ_parent⁻¹ * ∫_parent |f|  (since child ⊆ parent)
-              = 2 * avg_parent -/
+/-- Dyadic doubling: child average ≤ 2 × parent average. -/
 lemma DyadicInterval.avg_doubling (D : DyadicInterval) (f : ℝ → ℝ) :
     setAverage (|f ·|) D.leftChild.toSet ≤ 2 * setAverage (|f ·|) D.toSet ∧
     setAverage (|f ·|) D.rightChild.toSet ≤ 2 * setAverage (|f ·|) D.toSet := by
-  constructor <;> {
-    unfold setAverage
-    -- The key insight is that child measure = parent measure / 2
-    -- and child integral ≤ parent integral (since child ⊆ parent)
-    -- TODO: Complete with proper measure-integral bounds
-    sorry
-  }
+  sorry
 
 /-- CZ decomposition theorem (Calderón-Zygmund).
 

@@ -806,65 +806,14 @@ lemma L_rec_lt_pi : L_rec < Real.pi := by
   have h_pi : 3.14 < Real.pi := Real.pi_gt_314
   linarith
 
-/-- **AXIOM**: Edge case for critical line phase when s_lo - ρ is exactly on negative real axis.
-    This handles the degenerate case where ρ.im = I.t0 - I.len (zero at interval boundary).
-    In this case, s_lo - ρ has arg = π exactly, and we need to show that
-    |arg(s_hi - ρ) - π| ≥ L_rec.
-
-    **Mathematical content**: When the zero is exactly at the lower boundary of the interval,
-    the phase geometry is constrained. The bound still holds because Im(s_hi - ρ) = 2*I.len > 0
-    and the arctan formula for arg gives a quantitative bound based on the ratio Im/|Re|.
-
-    **Detailed analysis**:
-    Let s_hi - ρ have Re = 1/2 - σ < 0 and Im = 2L > 0 where σ = Re(ρ) > 1/2 and L = I.len.
-    For z ∈ Q2 (Re < 0, Im > 0), we have:
-      arg(z) = π - arctan(Im(z)/|Re(z)|) = π - arctan(2L/(σ - 1/2))
-
-    So π - arg(s_hi - ρ) = arctan(2L/(σ - 1/2)).
-
-    For this to be ≥ L_rec = arctan(2)/2 ≈ 0.55, we need:
-      arctan(2L/(σ - 1/2)) ≥ arctan(2)/2
-
-    Using tan(arctan(2)/2) = (√5 - 1)/2 ≈ 0.618 (golden ratio conjugate):
-      2L/(σ - 1/2) ≥ 0.618
-      σ - 1/2 ≤ 3.24 L
-
-    This means the zero cannot be more than ~3.24 interval-lengths to the right
-    of the critical line for the bound to hold automatically.
-
-    **Why this is an axiom**: For zeros very far from the critical line (σ >> L),
-    the phase change would be small. However, such zeros would contribute an even
-    LARGER phase change when the zero is in the interior of the interval (the main case),
-    so the overall contradiction still holds. This edge case is used only when the
-    main Q2-Q3 crossing argument fails due to Im(s_lo - ρ) = 0 exactly.
-
-    **Measure-theoretic note**: This edge case occurs only when the zero's imaginary
-    part equals exactly I.t0 - I.len, which is a measure-zero event in the continuous
-    parameter space. The main quadrant crossing proof covers all interior zeros.
-
-    **Mathematical proof** (to be formalized):
-    When h_lo_arg = π, we have ρ.im = I.t0 - I.len exactly, so Im(s_hi - ρ) = 2*I.len.
-    From the recognizer band constraint, |Re(s_hi - ρ)| = σ - 1/2 ≤ 2*I.len.
-    So the ratio Im/|Re| ≥ 1, giving arctan(Im/|Re|) ≥ π/4 > L_rec. -/
-theorem criticalLine_phase_edge_case_axiom (I : WhitneyInterval) (ρ : ℂ)
-    (hρ_re : 1/2 < ρ.re)
-    (hρ_re_upper : ρ.re ≤ 1/2 + 2 * I.len)  -- From recognizer band
-    (h_hi_re_neg : (1/2 + (I.t0 + I.len) * Complex.I - ρ).re < 0)
-    (h_hi_im_pos : (1/2 + (I.t0 + I.len) * Complex.I - ρ).im > 0)
-    (h_lo_arg : (1/2 + (I.t0 - I.len) * Complex.I - ρ).arg = Real.pi) :
-    Real.pi - (1/2 + (I.t0 + I.len) * Complex.I - ρ).arg ≥ L_rec := by
-  -- Set up notation
-  set s_hi := (1/2 : ℂ) + (I.t0 + I.len) * Complex.I
-  set L := I.len
-  set σ := ρ.re
-
-  -- From h_lo_arg = π, the zero is exactly on the boundary: ρ.im = I.t0 - L
-  -- Therefore Im(s_hi - ρ) = 2L and |Re(s_hi - ρ)| = σ - 1/2 ≤ 2L
-  -- The ratio Im/|Re| ≥ 1, so arctan(Im/|Re|) ≥ arctan(1) = π/4 > L_rec
-
-  -- The detailed proof requires Complex.arg_eq_pi_iff to extract ρ.im = I.t0 - L,
-  -- then arctan comparison. The mathematical argument is in the comment above.
-  sorry
+-- **DELETED**: criticalLine_phase_edge_case_axiom
+--
+-- This theorem was removed because:
+-- 1. It is NOT USED anywhere in the codebase (verified by grep)
+-- 2. It is MATHEMATICALLY FALSE with L_rec = 2.2:
+--    The proof claims "arctan(1) = π/4 > L_rec" but π/4 ≈ 0.785 < 2.2 = L_rec
+-- 3. The edge case (ρ.im = I.t0 - I.len exactly) is measure-zero and
+--    the main quadrant crossing theorem handles all interior zeros
 
 /-- **THEOREM**: Critical line phase ≥ L_rec (quadrant crossing argument).
 
