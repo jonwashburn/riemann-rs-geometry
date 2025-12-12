@@ -57,7 +57,7 @@ This file currently contains **structurally inconsistent content**:
 - `tail_energy` is defined as `K_tail * I.len` (independent of the function), but `fefferman_stein_bmo_carleson` quantifies over all `f` and all BMO bounds `M`, which immediately conflicts with taking `f := 0` and `M` small.
 - `tail_pairing_bound_axiom` asserts `|∫_I integrand| ≤ U_tail` for **any** integrand on **any** positive-length interval, which contradicts `integrand := 1` on large intervals.
 
-- [ ] **1.1 Decide: delete or repair `FeffermanSteinBMO.lean`.**
+- [x] **1.1 Decide: delete or repair `FeffermanSteinBMO.lean`.**
   - Preferred: **delete** it if it is not used anywhere in the main chain.
   - If it must remain, **repair** it by:
     - Redefining `tail_energy` to depend on the boundary function `f` (or its Poisson extension), not a constant.

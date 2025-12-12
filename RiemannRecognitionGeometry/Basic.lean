@@ -462,20 +462,6 @@ Recognition Geometry proof and their derivations.
 
 -/
 
-/-! ## Zero Location Axiom -/
-
-/-- **AXIOM**: All non-trivial zeta zeros have |Im| > 14.
-
-    **Mathematical content**:
-    The first non-trivial zero of ζ(s) has imaginary part ≈ 14.1347...
-    (verified computationally to billions of zeros).
-
-    This is a well-established numerical fact used throughout the literature.
-
-    **Reference**: Gram (1903); Titchmarsh, "Theory of the Riemann Zeta-Function", §9.2 -/
-axiom zero_has_large_im (ρ : ℂ) (hρ_zero : completedRiemannZeta ρ = 0) (hρ_re : 1/2 < ρ.re) :
-    |ρ.im| > 14
-
 /-- **THEOREM**: Zeros of ξ with Re > 1/2 are in the critical strip (Re < 1).
 
     This follows from the Prime Number Theorem: ζ(s) ≠ 0 for Re(s) ≥ 1.
@@ -506,65 +492,5 @@ theorem zero_in_critical_strip (ρ : ℂ) (hρ_zero : completedRiemannZeta ρ = 
   have hre : 1 ≤ ρ.re := le_of_not_lt hnot
   have hzeta_ne : riemannZeta ρ ≠ 0 := riemannZeta_ne_zero_of_one_le_re (s := ρ) hre
   exact hzeta_ne hzeta_zero
-
-/-- **AXIOM (Whitney Length Bound, inputs)**: If ρ is in the critical strip and
-    has large imaginary part, then any Whitney interval containing ρ.im has
-    length at least 7.
-
-    This is stated in “inputs form” so downstream arguments can assume:
-    - `hstrip : 0 < ρ.re ∧ ρ.re < 1`  (from a zero-free region / critical strip lemma)
-    - `hIm : 14 < |ρ.im|`            (from a height bound on first zero)
-    and proceed without needing the full origin of these facts. -/
-axiom whitney_len_from_strip_height_axiom (I : WhitneyInterval) (ρ : ℂ)
-    (_hstrip : 0 < ρ.re ∧ ρ.re < 1) (_hIm : 14 < |ρ.im|)
-    (_hρ_im : ρ.im ∈ I.interval) :
-    I.len ≥ 7
-
-/-- **THEOREM (Whitney Length Bound)**: “lemma + inputs” form. -/
-theorem whitney_len_from_strip_height (I : WhitneyInterval) (ρ : ℂ)
-    (hstrip : 0 < ρ.re ∧ ρ.re < 1) (hIm : 14 < |ρ.im|)
-    (hρ_im : ρ.im ∈ I.interval) :
-    I.len ≥ 7 :=
-  whitney_len_from_strip_height_axiom I ρ hstrip hIm hρ_im
-
-/-- Backward-compatible wrapper: derive the inputs from (1)/(2) and apply the theorem. -/
-theorem whitney_len_from_zero (I : WhitneyInterval) (ρ : ℂ)
-    (hρ_zero : completedRiemannZeta ρ = 0) (hρ_re : 1/2 < ρ.re)
-    (hρ_im : ρ.im ∈ I.interval) :
-    I.len ≥ 7 := by
-  have hstrip : 0 < ρ.re ∧ ρ.re < 1 := by
-    constructor
-    · linarith [hρ_re]
-    · exact zero_in_critical_strip ρ hρ_zero hρ_re
-  have hIm : 14 < |ρ.im| := by
-    simpa using (zero_has_large_im ρ hρ_zero hρ_re)
-  exact whitney_len_from_strip_height I ρ hstrip hIm hρ_im
-
-/-- **AXIOM (Whitney Centering Bound, inputs)**: If ρ is in the critical strip and
-    ρ.im lies in a Whitney interval, then ρ.im is not too close to the boundary:
-    it lies within the central half of the interval.
-
-    This centering is the geometric input needed to ensure both endpoint distances
-    are ≥ `I.len/2` in the arctan phase lower bound. -/
-axiom whitney_centered_from_strip_axiom (I : WhitneyInterval) (ρ : ℂ)
-    (_hstrip : 0 < ρ.re ∧ ρ.re < 1) (_hρ_im : ρ.im ∈ I.interval) :
-    |ρ.im - I.t0| ≤ I.len / 2
-
-/-- **THEOREM (Whitney Centering Bound)**: “lemma + inputs” form. -/
-theorem whitney_zero_centered_from_strip (I : WhitneyInterval) (ρ : ℂ)
-    (hstrip : 0 < ρ.re ∧ ρ.re < 1) (hρ_im : ρ.im ∈ I.interval) :
-    |ρ.im - I.t0| ≤ I.len / 2 :=
-  whitney_centered_from_strip_axiom I ρ hstrip hρ_im
-
-/-- Backward-compatible wrapper: derive the strip input and apply the theorem. -/
-theorem whitney_zero_centered (I : WhitneyInterval) (ρ : ℂ)
-    (hρ_zero : completedRiemannZeta ρ = 0) (hρ_re : 1/2 < ρ.re)
-    (hρ_im : ρ.im ∈ I.interval) :
-    |ρ.im - I.t0| ≤ I.len / 2 := by
-  have hstrip : 0 < ρ.re ∧ ρ.re < 1 := by
-    constructor
-    · linarith [hρ_re]
-    · exact zero_in_critical_strip ρ hρ_zero hρ_re
-  exact whitney_zero_centered_from_strip I ρ hstrip hρ_im
 
 end RiemannRecognitionGeometry

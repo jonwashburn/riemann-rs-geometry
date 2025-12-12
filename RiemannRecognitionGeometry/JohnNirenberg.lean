@@ -563,24 +563,7 @@ def DyadicInterval.isMaximalBadAt (D : DyadicInterval) (f : ℝ → ℝ) (t : �
 def maximalBadIntervals (f : ℝ → ℝ) (a b : ℝ) (t : ℝ) : Set DyadicInterval :=
   { D | D.isMaximalBadAt f t a b }
 
-/-- **AXIOM (Dyadic Nesting)**: A finer dyadic interval is either disjoint from
-    or contained in any coarser dyadic interval.
-
-    This is the fundamental nesting property of dyadic grids:
-    - At generation n, intervals [k·2^(-n), (k+1)·2^(-n)) partition ℝ
-    - A finer interval (generation m > n) fits exactly within one interval of generation n
-    - So if a finer interval overlaps a coarser one, it's contained in it
-
-    **Proof idea**: Let D₁ have generation n₁ > n₂ = D₂.generation (D₁ is finer).
-    The ancestor of D₁ at generation n₂ is obtained by dividing the index by 2^(n₁-n₂).
-    Either this ancestor equals D₂ (then D₁ ⊆ D₂), or they are different intervals at
-    the same generation n₂ (then disjoint by dyadic_same_gen_disjoint).
-
-    **Why still axiom**: The proof requires careful arithmetic with integer division
-    and the relationship between indices at different generations. The key is showing
-    that if D₁ ∩ D₂ ≠ ∅, then D₁'s ancestor at gen n₂ must equal D₂. -/
-axiom dyadic_nesting (D₁ D₂ : DyadicInterval) (hgen : D₁.generation > D₂.generation) :
-    Disjoint D₁.toSet D₂.toSet ∨ D₁.toSet ⊆ D₂.toSet
+/- Dyadic nesting is proven below as `dyadic_nesting`. -/
 
 /-- **THEOREM (Dyadic Same-Gen Disjoint)**: Same-generation dyadic intervals with different
     indices are disjoint.
@@ -636,6 +619,126 @@ theorem dyadic_same_gen_disjoint (D₁ D₂ : DyadicInterval)
     have hbound : (D₂.index + 1 : ℝ) * s ≤ D₁.index * s :=
       mul_le_mul_of_nonneg_right hcast (le_of_lt hs_pos)
     linarith
+
+theorem dyadic_nesting (D₁ D₂ : DyadicInterval) (hgen : D₁.generation > D₂.generation) :
+    Disjoint D₁.toSet D₂.toSet ∨ D₁.toSet ⊆ D₂.toSet := by
+  -- Let n₁ > n₂ be the generations. Set m = n₁ - n₂ and d = 2^m.
+  set n₁ : ℕ := D₁.generation
+  set n₂ : ℕ := D₂.generation
+  have hn₂_le : n₂ ≤ n₁ := Nat.le_of_lt hgen
+  set m : ℕ := n₁ - n₂
+  set d : ℤ := (2 : ℤ) ^ m
+  have hd_pos : 0 < d := by
+    have : (0 : ℤ) < (2 : ℤ) := by norm_num
+    exact pow_pos this m
+  have hd_ne0 : d ≠ 0 := ne_of_gt hd_pos
+
+  -- Define the ancestor interval A at generation n₂ containing D₁.
+  set q : ℤ := D₁.index / d
+  let A : DyadicInterval := { generation := n₂, index := q }
+
+  -- First show D₁ ⊆ A.
+  have hD₁_sub_A : D₁.toSet ⊆ A.toSet := by
+    intro x hx
+    simp only [DyadicInterval.toSet, DyadicInterval.left, DyadicInterval.right, A, Set.mem_Ico] at hx ⊢
+
+    have hs1_pos : 0 < (2 : ℝ) ^ (-(n₁ : ℤ)) := by
+      exact zpow_pos (by norm_num : (0 : ℝ) < 2) _
+
+    have hgen_eq : n₁ = n₂ + m := by
+      have : n₁ = (n₁ - n₂) + n₂ := (Nat.sub_add_cancel hn₂_le).symm
+      simpa [m, Nat.add_assoc, Nat.add_left_comm, Nat.add_comm] using this
+
+    have hzpow_scale :
+        (2 : ℝ) ^ (-(n₂ : ℤ)) = (2 : ℝ) ^ (m : ℤ) * (2 : ℝ) ^ (-(n₁ : ℤ)) := by
+      have : (-(n₂ : ℤ)) = (m : ℤ) + (-(n₁ : ℤ)) := by
+        have hn1z : (n₁ : ℤ) = (n₂ : ℤ) + (m : ℤ) := by
+          exact_mod_cast hgen_eq
+        linarith
+      calc
+        (2 : ℝ) ^ (-(n₂ : ℤ))
+            = (2 : ℝ) ^ ((m : ℤ) + (-(n₁ : ℤ))) := by simpa [this]
+        _ = (2 : ℝ) ^ (m : ℤ) * (2 : ℝ) ^ (-(n₁ : ℤ)) := by
+              simpa using
+                (zpow_add₀ (a := (2 : ℝ)) (by norm_num : (2 : ℝ) ≠ 0) (m : ℤ) (-(n₁ : ℤ)))
+
+    -- Integer inequalities for division by d: q*d ≤ index < (q+1)*d.
+    have hq_mul_le : q * d ≤ D₁.index := by
+      simpa [q] using (Int.ediv_mul_le D₁.index (b := d) hd_ne0)
+
+    have hindex_lt : D₁.index < (q + 1) * d := by
+      have hmod_lt : D₁.index % d < d := Int.emod_lt_of_pos D₁.index hd_pos
+      have hdecomp : d * (D₁.index / d) + D₁.index % d = D₁.index :=
+        Int.ediv_add_emod D₁.index d
+      have hdecomp' : d * q + D₁.index % d = D₁.index := by simpa [q] using hdecomp
+      have : D₁.index < d * q + d := by
+        have : d * q + D₁.index % d < d * q + d := add_lt_add_left hmod_lt (d * q)
+        simpa [hdecomp'] using this
+      have hmul : d * q + d = (q + 1) * d := by ring
+      simpa [hmul] using this
+
+    -- Translate those integer inequalities into inequalities on endpoints.
+    have hA_left_le_D₁_left :
+        A.index * (2 : ℝ) ^ (-(n₂ : ℤ)) ≤ D₁.index * (2 : ℝ) ^ (-(n₁ : ℤ)) := by
+      have hd_cast : ((d : ℤ) : ℝ) = (2 : ℝ) ^ (m : ℤ) := by
+        simp [d, Int.cast_pow, zpow_natCast]
+      have hq_mul_leR : ((q * d : ℤ) : ℝ) ≤ (D₁.index : ℝ) := by
+        exact_mod_cast hq_mul_le
+      calc
+        (A.index : ℝ) * (2 : ℝ) ^ (-(n₂ : ℤ))
+            = (q : ℝ) * ((2 : ℝ) ^ (m : ℤ) * (2 : ℝ) ^ (-(n₁ : ℤ))) := by
+                simp [A, hzpow_scale, mul_assoc]
+        _ = ((q : ℝ) * (2 : ℝ) ^ (m : ℤ)) * (2 : ℝ) ^ (-(n₁ : ℤ)) := by ring
+        _ = ((q * d : ℤ) : ℝ) * (2 : ℝ) ^ (-(n₁ : ℤ)) := by
+              simp [hd_cast, Int.cast_mul, mul_assoc]
+        _ ≤ (D₁.index : ℝ) * (2 : ℝ) ^ (-(n₁ : ℤ)) := by
+              exact mul_le_mul_of_nonneg_right hq_mul_leR (le_of_lt hs1_pos)
+
+    have hD₁_right_le_A_right :
+        ((D₁.index : ℝ) + 1) * (2 : ℝ) ^ (-(n₁ : ℤ)) ≤
+          ((A.index : ℝ) + 1) * (2 : ℝ) ^ (-(n₂ : ℤ)) := by
+      have hindex1_le : D₁.index + 1 ≤ (q + 1) * d := Int.add_one_le_of_lt hindex_lt
+      have hindex1_leR : ((D₁.index + 1 : ℤ) : ℝ) ≤ ((q + 1) * d : ℤ) := by
+        exact_mod_cast hindex1_le
+      have hd_cast : ((d : ℤ) : ℝ) = (2 : ℝ) ^ (m : ℤ) := by
+        simp [d, Int.cast_pow, zpow_natCast]
+      have hcast_idx1 : ((D₁.index : ℝ) + 1) = ((D₁.index + 1 : ℤ) : ℝ) := by
+        simpa [Int.cast_add, Int.cast_one, add_comm, add_left_comm, add_assoc] using
+          (Int.cast_add D₁.index 1 :
+                ((D₁.index + 1 : ℤ) : ℝ) = (D₁.index : ℝ) + ((1 : ℤ) : ℝ)).symm
+      have hcast_q1 : ((q + 1 : ℤ) : ℝ) = (q : ℝ) + 1 := by
+        have := (Int.cast_add q 1 : ((q + 1 : ℤ) : ℝ) = (q : ℝ) + ((1 : ℤ) : ℝ))
+        simpa [Int.cast_one] using this
+      calc
+        ((D₁.index : ℝ) + 1) * (2 : ℝ) ^ (-(n₁ : ℤ))
+            = ((D₁.index + 1 : ℤ) : ℝ) * (2 : ℝ) ^ (-(n₁ : ℤ)) := by
+                rw [hcast_idx1]
+        _ ≤ ((q + 1) * d : ℤ) * (2 : ℝ) ^ (-(n₁ : ℤ)) := by
+              exact mul_le_mul_of_nonneg_right hindex1_leR (le_of_lt hs1_pos)
+        _ = ((q + 1 : ℤ) : ℝ) * ((2 : ℝ) ^ (m : ℤ) * (2 : ℝ) ^ (-(n₁ : ℤ))) := by
+              simp [Int.cast_mul, hd_cast, mul_assoc]
+        _ = ((q + 1 : ℤ) : ℝ) * (2 : ℝ) ^ (-(n₂ : ℤ)) := by
+              simp [hzpow_scale, mul_assoc]
+        _ = ((A.index : ℝ) + 1) * (2 : ℝ) ^ (-(n₂ : ℤ)) := by
+              simp [A, hcast_q1]
+
+    constructor
+    · exact le_trans hA_left_le_D₁_left hx.1
+    · exact lt_of_lt_of_le hx.2 hD₁_right_le_A_right
+
+  by_cases hq_eq : q = D₂.index
+  · right
+    have hn₂ : n₂ = D₂.generation := by rfl
+    have hA_toSet : A.toSet = D₂.toSet := by
+      simp [A, hn₂, DyadicInterval.toSet, DyadicInterval.left, DyadicInterval.right, hq_eq]
+    simpa [hA_toSet] using hD₁_sub_A
+  · left
+    have hA_disj : Disjoint A.toSet D₂.toSet := by
+      have hgen_eq : A.generation = D₂.generation := by
+        have hn₂ : n₂ = D₂.generation := by rfl
+        simpa [A, hn₂]
+      exact dyadic_same_gen_disjoint A D₂ hgen_eq hq_eq
+    exact (Disjoint.mono_left hD₁_sub_A) hA_disj
 
 /-- Dyadic trichotomy: disjoint, equal, or one contains the other.
 

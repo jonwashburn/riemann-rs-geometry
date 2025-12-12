@@ -47,7 +47,6 @@ import RiemannRecognitionGeometry.Conjectures
 import RiemannRecognitionGeometry.DirichletEta
 import RiemannRecognitionGeometry.JohnNirenberg
 import RiemannRecognitionGeometry.PoissonExtension
-import RiemannRecognitionGeometry.FeffermanSteinBMO
 import Mathlib.NumberTheory.LSeries.Nonvanishing
 import Mathlib.Analysis.SpecialFunctions.Integrals
 
@@ -404,7 +403,7 @@ theorem whitney_polynomial_bound (x y γ : ℝ)
   have h_denom_pos : 1 + x * y > 0 := by linarith
 
   -- Transform: need 3(x - y) ≥ 1 + xy
-  rw [ge_iff_le, le_div_iff h_denom_pos]
+  rw [ge_iff_le, le_div_iff₀ h_denom_pos]
 
   -- Key quantities: α = -x > 0, v = x - y ≥ 1
   set α := -x with hα_def
@@ -805,7 +804,7 @@ lemma L_rec_lt_two_pi : L_rec < 2 * Real.pi := by
 /-- Backward compatibility: L_rec_lt_pi is now TRUE with L_rec = 2.2. -/
 lemma L_rec_lt_pi : L_rec < Real.pi := by
   unfold L_rec
-  have h_pi : 3.14 < Real.pi := Real.pi_gt_314
+  have h_pi : 3 < Real.pi := Real.pi_gt_three
   linarith
 
 -- **DELETED**: criticalLine_phase_edge_case_axiom
