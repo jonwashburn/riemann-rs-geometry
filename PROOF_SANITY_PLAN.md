@@ -128,11 +128,11 @@ Right now the main chain uses principal `Complex.arg` on ξ and treats it like a
 
 ## Milestone 5 — Tighten the axiom statements (make them plausibly true)
 
-- [ ] **5.1 Rewrite any axiom that is too broad.**
+- [x] **5.1 Rewrite any axiom that is too broad.**
   - Rule: if the axiom quantifies over *all* functions/integrands and returns a uniform numerical bound independent of the input, it is almost certainly inconsistent.
   - Replace such axioms with statements whose conclusions scale correctly (e.g. depend on norms and interval length).
 
-- [ ] **5.2 Add “unit tests” for each axiom family.**
+- [x] **5.2 Add “unit tests” for each axiom family.**
   - For each axiom about integrals/inequalities, add a small lemma file showing it behaves correctly on:
     - `f := 0`, `f := 1`, indicator functions, etc.
   - These are not mathematical proofs of the axiom; they are checks that the formulation isn’t *obviously* contradictory.
