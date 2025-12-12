@@ -37,7 +37,7 @@ This document is meant to be pasted back into the assistant as a **recursive pro
     - **Suspect axioms** (might be inconsistent; must be audited)
   - Save the result into this file under “Axiom registry” (append-only).
 
-- [ ] **0.2 Identify the main chain precisely.**
+- [x] **0.2 Identify the main chain precisely.**
   - Starting from `RiemannRecognitionGeometry.lean` and `RiemannRecognitionGeometry/Main.lean`, list the modules imported in the transitive closure.
   - Confirm which axioms are actually in the main chain.
   - Add a short table to this file: **axiom → file → in main chain?**
@@ -146,27 +146,89 @@ Right now the main chain uses principal `Complex.arg` on ξ and treats it like a
 Total `axiom` declarations in `RiemannRecognitionGeometry/`: **18**.
 
 #### Allowed classical analysis axioms (keep)
-- **`identity_principle_eta_zeta_lt_one_axiom`** — `RiemannRecognitionGeometry/DirichletEta.lean`\n  (Identity principle / analytic continuation input for η–ζ relation on `0<s<1`.)
-- **`bmo_carleson_embedding`** — `RiemannRecognitionGeometry/PoissonExtension.lean`\n  (Fefferman–Stein BMO→Carleson embedding; classical harmonic analysis.)
-- **`green_identity_axiom_statement`** — `RiemannRecognitionGeometry/Axioms.lean`\n  (Green/Cauchy–Schwarz phase bound; classical harmonic analysis.)
-- **`weierstrass_tail_bound_axiom_statement`** — `RiemannRecognitionGeometry/Axioms.lean`\n  (RG-specific “tail bound” / factorization estimate. Not a standard textbook axiom, but not obviously inconsistent.)
-- **`zero_has_large_im`** — `RiemannRecognitionGeometry/Basic.lean`\n  (Numerical input: first nontrivial zero height > 14; consistent with standard facts.)
+- **`identity_principle_eta_zeta_lt_one_axiom`** — `RiemannRecognitionGeometry/DirichletEta.lean`
+  (Identity principle / analytic continuation input for η–ζ relation on `0<s<1`.)
+- **`bmo_carleson_embedding`** — `RiemannRecognitionGeometry/PoissonExtension.lean`
+  (Fefferman–Stein BMO→Carleson embedding; classical harmonic analysis.)
+- **`green_identity_axiom_statement`** — `RiemannRecognitionGeometry/Axioms.lean`
+  (Green/Cauchy–Riemann/Cauchy–Schwarz phase bound; classical harmonic analysis.)
+- **`weierstrass_tail_bound_axiom_statement`** — `RiemannRecognitionGeometry/Axioms.lean`
+  (RG-specific “tail bound” / factorization estimate. Not a standard textbook axiom, but not obviously inconsistent.)
+- **`zero_has_large_im`** — `RiemannRecognitionGeometry/Basic.lean`
+  (Numerical input: first nontrivial zero height > 14; consistent with standard facts.)
 
 #### Engineering / structure axioms (keep)
-- **`whitney_len_from_strip_height_axiom`** — `RiemannRecognitionGeometry/Basic.lean`\n  (Whitney covering geometry input for length lower bound.)
-- **`whitney_centered_from_strip_axiom`** — `RiemannRecognitionGeometry/Basic.lean`\n  (Whitney covering geometry input for centering.)
-- **`dyadic_nesting`** — `RiemannRecognitionGeometry/JohnNirenberg.lean`\n  (Dyadic grid nesting; bookkeeping/structure.)
-- **`maximalBad_disjoint_axiom`** — `RiemannRecognitionGeometry/JohnNirenberg.lean`\n  (Maximal-bad intervals disjointness; CZ bookkeeping.)
-- **`DyadicInterval.avg_doubling_axiom`** — `RiemannRecognitionGeometry/JohnNirenberg.lean`\n  (Dyadic doubling of averages; elementary measure/integral bookkeeping.)
-- **`czDecomposition_axiom`** — `RiemannRecognitionGeometry/JohnNirenberg.lean`\n  (Existence of dyadic CZ decomposition; classical but treated here as infrastructure.)
-- **`czDecompFull_axiom`** — `RiemannRecognitionGeometry/JohnNirenberg.lean`\n  (Full CZ decomposition with good/bad parts; infrastructure.)
-- **`goodLambda_axiom`** — `RiemannRecognitionGeometry/JohnNirenberg.lean`\n  (Good-λ step; infrastructure for JN/BMO consequences.)
-- **`jn_first_step_axiom`** — `RiemannRecognitionGeometry/JohnNirenberg.lean`\n  (First step in John–Nirenberg; infrastructure.)
-- **`bmo_Lp_bound_axiom`** — `RiemannRecognitionGeometry/JohnNirenberg.lean`\n  (BMO→Lᵖ control; infrastructure.)
-- **`bmo_kernel_bound_axiom`** — `RiemannRecognitionGeometry/JohnNirenberg.lean`\n  (Kernel bound used in harmonic analysis chain; infrastructure.)
+- **`whitney_len_from_strip_height_axiom`** — `RiemannRecognitionGeometry/Basic.lean`
+  (Whitney covering geometry input for length lower bound.)
+- **`whitney_centered_from_strip_axiom`** — `RiemannRecognitionGeometry/Basic.lean`
+  (Whitney covering geometry input for centering.)
+- **`dyadic_nesting`** — `RiemannRecognitionGeometry/JohnNirenberg.lean`
+  (Dyadic grid nesting; bookkeeping/structure.)
+- **`maximalBad_disjoint_axiom`** — `RiemannRecognitionGeometry/JohnNirenberg.lean`
+  (Maximal-bad intervals disjointness; CZ bookkeeping.)
+- **`DyadicInterval.avg_doubling_axiom`** — `RiemannRecognitionGeometry/JohnNirenberg.lean`
+  (Dyadic doubling of averages; elementary measure/integral bookkeeping.)
+- **`czDecomposition_axiom`** — `RiemannRecognitionGeometry/JohnNirenberg.lean`
+  (Existence of dyadic CZ decomposition; classical but treated here as infrastructure.)
+- **`czDecompFull_axiom`** — `RiemannRecognitionGeometry/JohnNirenberg.lean`
+  (Full CZ decomposition with good/bad parts; infrastructure.)
+- **`goodLambda_axiom`** — `RiemannRecognitionGeometry/JohnNirenberg.lean`
+  (Good-λ step; infrastructure for JN/BMO consequences.)
+- **`jn_first_step_axiom`** — `RiemannRecognitionGeometry/JohnNirenberg.lean`
+  (First step in John–Nirenberg; infrastructure.)
+- **`bmo_Lp_bound_axiom`** — `RiemannRecognitionGeometry/JohnNirenberg.lean`
+  (BMO→Lᵖ control; infrastructure.)
+- **`bmo_kernel_bound_axiom`** — `RiemannRecognitionGeometry/JohnNirenberg.lean`
+  (Kernel bound used in harmonic analysis chain; infrastructure.)
 
 #### Suspect axioms (must audit; likely inconsistent as currently formulated)
-- **`fefferman_stein_bmo_carleson`** — `RiemannRecognitionGeometry/FeffermanSteinBMO.lean`\n  **Suspect** because `tail_energy` in that file is defined as a constant multiple of `I.len` (independent of `f`), while the axiom quantifies over all `f` and all BMO bounds `M`.\n- **`tail_pairing_bound_axiom`** — `RiemannRecognitionGeometry/FeffermanSteinBMO.lean`\n  **Inconsistent** as stated: it bounds `|∫_I integrand|` by a fixed constant for *all* `integrand` on any positive-length interval.
+- **`fefferman_stein_bmo_carleson`** — `RiemannRecognitionGeometry/FeffermanSteinBMO.lean`
+  **Suspect** because `tail_energy` in that file is defined as a constant multiple of `I.len` (independent of `f`), while the axiom quantifies over all `f` and all BMO bounds `M`.
+- **`tail_pairing_bound_axiom`** — `RiemannRecognitionGeometry/FeffermanSteinBMO.lean`
+  **Inconsistent** as stated: it bounds `|∫_I integrand|` by a fixed constant for *all* `integrand` on any positive-length interval.
+
+#### Main chain import closure (project modules only)
+Starting points:
+- `RiemannRecognitionGeometry.lean`
+- `RiemannRecognitionGeometry/Main.lean`
+
+Project modules in the transitive import closure:
+- `RiemannRecognitionGeometry.Mathlib.ArctanTwoGtOnePointOne`
+- `RiemannRecognitionGeometry.Basic`
+- `RiemannRecognitionGeometry.Axioms`
+- `RiemannRecognitionGeometry.WhitneyGeometry`
+- `RiemannRecognitionGeometry.PoissonJensen`
+- `RiemannRecognitionGeometry.CarlesonBound`
+- `RiemannRecognitionGeometry.FeffermanStein`
+- `RiemannRecognitionGeometry.JohnNirenberg`
+- `RiemannRecognitionGeometry.DirichletEta`
+- `RiemannRecognitionGeometry.PoissonExtension`
+- `RiemannRecognitionGeometry.FeffermanSteinBMO`  *(currently imported by `Axioms.lean`; this is the inconsistent module to remove/repair in Milestone 1)*
+- `RiemannRecognitionGeometry.Main`
+
+#### Axiom → file → in main chain?
+All project axioms are currently in the main chain (via `RiemannRecognitionGeometry.lean` → `Axioms.lean` imports).
+
+| axiom | file | in main chain? |
+|---|---|---|
+| `identity_principle_eta_zeta_lt_one_axiom` | `RiemannRecognitionGeometry/DirichletEta.lean` | ✅ yes |
+| `dyadic_nesting` | `RiemannRecognitionGeometry/JohnNirenberg.lean` | ✅ yes |
+| `maximalBad_disjoint_axiom` | `RiemannRecognitionGeometry/JohnNirenberg.lean` | ✅ yes |
+| `DyadicInterval.avg_doubling_axiom` | `RiemannRecognitionGeometry/JohnNirenberg.lean` | ✅ yes |
+| `czDecomposition_axiom` | `RiemannRecognitionGeometry/JohnNirenberg.lean` | ✅ yes |
+| `czDecompFull_axiom` | `RiemannRecognitionGeometry/JohnNirenberg.lean` | ✅ yes |
+| `goodLambda_axiom` | `RiemannRecognitionGeometry/JohnNirenberg.lean` | ✅ yes |
+| `jn_first_step_axiom` | `RiemannRecognitionGeometry/JohnNirenberg.lean` | ✅ yes |
+| `bmo_Lp_bound_axiom` | `RiemannRecognitionGeometry/JohnNirenberg.lean` | ✅ yes |
+| `bmo_kernel_bound_axiom` | `RiemannRecognitionGeometry/JohnNirenberg.lean` | ✅ yes |
+| `zero_has_large_im` | `RiemannRecognitionGeometry/Basic.lean` | ✅ yes |
+| `whitney_len_from_strip_height_axiom` | `RiemannRecognitionGeometry/Basic.lean` | ✅ yes |
+| `whitney_centered_from_strip_axiom` | `RiemannRecognitionGeometry/Basic.lean` | ✅ yes |
+| `fefferman_stein_bmo_carleson` | `RiemannRecognitionGeometry/FeffermanSteinBMO.lean` | ✅ yes *(problematic)* |
+| `tail_pairing_bound_axiom` | `RiemannRecognitionGeometry/FeffermanSteinBMO.lean` | ✅ yes *(problematic)* |
+| `bmo_carleson_embedding` | `RiemannRecognitionGeometry/PoissonExtension.lean` | ✅ yes |
+| `green_identity_axiom_statement` | `RiemannRecognitionGeometry/Axioms.lean` | ✅ yes |
+| `weierstrass_tail_bound_axiom_statement` | `RiemannRecognitionGeometry/Axioms.lean` | ✅ yes |
 
 ---
 
