@@ -63,7 +63,7 @@ This file currently contains **structurally inconsistent content**:
     - Redefining `tail_energy` to depend on the boundary function `f` (or its Poisson extension), not a constant.
     - Replacing `tail_pairing_bound_axiom` with a properly-scoped statement whose hypotheses imply the bound (e.g. assuming a Carleson energy bound and a normalized window test function).
 
-- [ ] **1.2 Enforce “no inconsistent axioms in build graph”.**
+- [x] **1.2 Enforce “no inconsistent axioms in build graph”.**
   - Make sure `lake build` does not compile any module that contains an inconsistent axiom.
   - If Lake builds all modules under the library by default, you must delete/repair the file rather than merely avoiding imports.
 
@@ -243,6 +243,39 @@ Corrected axiom locations:
 |---|---|---|
 | `Conjectures.green_identity_axiom_statement` | `RiemannRecognitionGeometry/Conjectures.lean` | ✅ yes |
 | `Conjectures.weierstrass_tail_bound_axiom_statement` | `RiemannRecognitionGeometry/Conjectures.lean` | ✅ yes |
+
+#### Update (2025-12-12): inconsistent axioms removed from build graph
+- Deleted the inconsistent module `RiemannRecognitionGeometry/FeffermanSteinBMO.lean` and removed its import from `RiemannRecognitionGeometry/Axioms.lean`.
+- Also reduced the axiom surface:
+  - Removed `zero_has_large_im`, `whitney_len_from_strip_height_axiom`, `whitney_centered_from_strip_axiom` (Basic.lean now has 0 axioms).
+  - Proved `dyadic_nesting` as a theorem (JohnNirenberg.lean now has 8 axioms, not 9).
+
+Updated main-chain import closure (high-level):
+- `RiemannRecognitionGeometry.Mathlib.ArctanTwoGtOnePointOne`
+- `RiemannRecognitionGeometry.Basic`
+- `RiemannRecognitionGeometry.Axioms` (imports `Conjectures`, `JohnNirenberg`, `DirichletEta`, `PoissonExtension`)
+- `RiemannRecognitionGeometry.WhitneyGeometry`
+- `RiemannRecognitionGeometry.PoissonJensen`
+- `RiemannRecognitionGeometry.CarlesonBound`
+- `RiemannRecognitionGeometry.FeffermanStein`
+- `RiemannRecognitionGeometry.Main`
+
+Updated axiom surface (all in main chain; total = 12):
+
+| axiom | file | in main chain? |
+|---|---|---|
+| `Conjectures.green_identity_axiom_statement` | `RiemannRecognitionGeometry/Conjectures.lean` | ✅ yes |
+| `Conjectures.weierstrass_tail_bound_axiom_statement` | `RiemannRecognitionGeometry/Conjectures.lean` | ✅ yes |
+| `identity_principle_eta_zeta_lt_one_axiom` | `RiemannRecognitionGeometry/DirichletEta.lean` | ✅ yes |
+| `maximalBad_disjoint_axiom` | `RiemannRecognitionGeometry/JohnNirenberg.lean` | ✅ yes |
+| `DyadicInterval.avg_doubling_axiom` | `RiemannRecognitionGeometry/JohnNirenberg.lean` | ✅ yes |
+| `czDecomposition_axiom` | `RiemannRecognitionGeometry/JohnNirenberg.lean` | ✅ yes |
+| `czDecompFull_axiom` | `RiemannRecognitionGeometry/JohnNirenberg.lean` | ✅ yes |
+| `goodLambda_axiom` | `RiemannRecognitionGeometry/JohnNirenberg.lean` | ✅ yes |
+| `jn_first_step_axiom` | `RiemannRecognitionGeometry/JohnNirenberg.lean` | ✅ yes |
+| `bmo_Lp_bound_axiom` | `RiemannRecognitionGeometry/JohnNirenberg.lean` | ✅ yes |
+| `bmo_kernel_bound_axiom` | `RiemannRecognitionGeometry/JohnNirenberg.lean` | ✅ yes |
+| `bmo_carleson_embedding` | `RiemannRecognitionGeometry/PoissonExtension.lean` | ✅ yes |
 
 ---
 
