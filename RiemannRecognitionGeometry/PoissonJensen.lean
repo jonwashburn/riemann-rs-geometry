@@ -24,6 +24,14 @@ open Real Complex ComplexConjugate
 
 namespace RiemannRecognitionGeometry
 
+/-!
+To avoid polluting the top-level `RiemannRecognitionGeometry` namespace (and to prevent
+name clashes across modules), all Poisson–Jensen specific definitions/lemmas in this file
+live in the nested namespace `RiemannRecognitionGeometry.PoissonJensen`.
+-/
+
+namespace PoissonJensen
+
 /-! ## Blaschke Factor Phase Analysis -/
 
 /-- The Blaschke factor for a zero ρ in the upper half-plane:
@@ -631,5 +639,7 @@ theorem trigger_lower_bound (I : WhitneyInterval) (B : RecognizerBand)
     exact hγ_in
 
   exact pigeonhole_phase_capture I ρ hρ_re hρ_im h_phase_bound
+
+end PoissonJensen
 
 end RiemannRecognitionGeometry

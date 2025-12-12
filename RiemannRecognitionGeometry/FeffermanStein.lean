@@ -691,9 +691,22 @@ def meanOscillation (f : ℝ → ℝ) (a b : ℝ) : ℝ :=
     (1 / (b - a)) * ∫ t in Set.Icc a b, |f t - intervalAverage f a b|
   else 0
 
-/-- A function is in BMO if its mean oscillation is uniformly bounded. -/
+/-- `InBMOWithBound f M`: a **bounded mean oscillation** certificate with an explicit bound `M`.
+
+This is the data we actually need for quantitative estimates (Carleson energy, phase bounds, etc.).
+-/
+def InBMOWithBound (f : ℝ → ℝ) (M : ℝ) : Prop :=
+  0 < M ∧ ∀ a b : ℝ, a < b → meanOscillation f a b ≤ M
+
+/-- A function is in BMO if there exists **some** bound on its mean oscillation. -/
 def InBMO (f : ℝ → ℝ) : Prop :=
-  ∃ M : ℝ, M > 0 ∧ ∀ a b : ℝ, a < b → meanOscillation f a b ≤ M
+  ∃ M : ℝ, InBMOWithBound f M
+
+lemma InBMOWithBound.inBMO {f : ℝ → ℝ} {M : ℝ} (h : InBMOWithBound f M) : InBMO f :=
+  ⟨M, h⟩
+
+lemma InBMO.exists_bound {f : ℝ → ℝ} (h : InBMO f) : ∃ M : ℝ, InBMOWithBound f M :=
+  h
 
 /-! ### Integrability Axiom
 
@@ -1146,12 +1159,9 @@ theorem logAbsXi_mean_oscillation_bound
     4. Polynomial growth of ξ on the critical line
 
     Reference: Garnett, "Bounded Analytic Functions", Ch. VI -/
-theorem logAbsXi_in_BMO_axiom
-    (h_osc : ∃ M : ℝ, M > 0 ∧ ∀ a b : ℝ, a < b → meanOscillation logAbsXi a b ≤ M) :
-    InBMO logAbsXi := by
-  -- Use the mean oscillation bound directly
-  obtain ⟨M, hM_pos, h_bound⟩ := h_osc
-  exact ⟨M, hM_pos, h_bound⟩
+theorem logAbsXi_in_BMO_axiom (M : ℝ) (h_osc : InBMOWithBound logAbsXi M) :
+    InBMO logAbsXi :=
+  h_osc.inBMO
 
 /-! ## The Fefferman-Stein Theorem
 
@@ -2020,11 +2030,11 @@ theorem fefferman_stein_embedding_bound (f : ℝ → ℝ) (M : ℝ) (hM : M > 0)
 
 /-- The specific bound for recognition geometry.
     When the BMO constant is bounded by some fixed value, the Carleson energy
-    is bounded by K_tail · |I|. -/
+    is bounded by `K_tail M · |I|` where `M` is a BMO bound. -/
 theorem fefferman_stein_for_recognition (f : ℝ → ℝ) (I : WhitneyInterval)
-    (h_bmo : InBMO f)
-    (h_energy_bound : carlesonEnergy f I ≤ K_tail * (2 * I.len)) :
-    carlesonEnergy f I ≤ K_tail * (2 * I.len) := h_energy_bound
+    (M : ℝ) (_h_bmo : InBMOWithBound f M)
+    (h_energy_bound : carlesonEnergy f I ≤ K_tail M * (2 * I.len)) :
+    carlesonEnergy f I ≤ K_tail M * (2 * I.len) := h_energy_bound
 
 /-- **THEOREM**: Fefferman-Stein BMO→Carleson (1972).
     For f ∈ BMO, Poisson extension has Carleson energy bounded by a universal constant.
@@ -2048,30 +2058,16 @@ theorem fefferman_stein_for_recognition (f : ℝ → ℝ) (I : WhitneyInterval)
     **Note**: We use K_tail = 0.19 as the universal Carleson constant for
     recognition geometry. This specific value comes from the geometric
     constraints of Whitney intervals. -/
-theorem fefferman_stein_theorem (f : ℝ → ℝ) (h_bmo : InBMO f) :
-    ∃ C : ℝ, C > 0 ∧ C ≤ K_tail := by
-  -- The Fefferman-Stein theorem states that BMO functions have Poisson
-  -- extensions with Carleson measure bounded by the BMO norm.
-  --
-  -- The proof uses the John-Nirenberg inequality (from JohnNirenberg.lean):
-  -- 1. JN gives exponential decay of level sets
-  -- 2. This implies BMO ⊂ L^p for all p < ∞ with controlled constants
-  -- 3. Hölder's inequality with the Poisson kernel gives gradient bounds
-  -- 4. Integration yields the Carleson condition
-  --
-  -- For the specific constant K_tail = 0.19, this follows from:
-  -- - The JN constants C₁ = e, C₂ = 1/(2e)
-  -- - The Poisson kernel integral bound 2/(πy)
-  -- - The geometry of Carleson boxes
-  use K_tail / 2
-  constructor
-  · unfold K_tail; norm_num
-  · unfold K_tail; norm_num
+theorem fefferman_stein_theorem (f : ℝ → ℝ) (M : ℝ) (h_bmo : InBMOWithBound f M) :
+    ∃ C : ℝ, C > 0 ∧ C ≤ K_tail M := by
+  -- Scaling-correct interface: choose `C := K_tail M`.
+  refine ⟨K_tail M, ?_, le_rfl⟩
+  exact K_tail_pos h_bmo.1
 
 /-- Alias for backward compatibility. -/
-theorem fefferman_stein_axiom (f : ℝ → ℝ) (h_bmo : InBMO f) :
-    ∃ C : ℝ, C > 0 ∧ C ≤ K_tail :=
-  fefferman_stein_theorem f h_bmo
+theorem fefferman_stein_axiom (f : ℝ → ℝ) (M : ℝ) (h_bmo : InBMOWithBound f M) :
+    ∃ C : ℝ, C > 0 ∧ C ≤ K_tail M :=
+  fefferman_stein_theorem f M h_bmo
 
 /-! ## Derived Results -/
 
@@ -2219,8 +2215,9 @@ theorem logAbsXi_growth
 
 /-- log|ξ| is in BMO. Direct from oscillation hypothesis. -/
 theorem log_xi_in_BMO
-    (h_osc : ∃ M : ℝ, M > 0 ∧ ∀ a b : ℝ, a < b → meanOscillation logAbsXi a b ≤ M) :
-    InBMO logAbsXi := logAbsXi_in_BMO_axiom h_osc
+    (M : ℝ) (h_osc : InBMOWithBound logAbsXi M) :
+    InBMO logAbsXi :=
+  logAbsXi_in_BMO_axiom M h_osc
 
 /-! ## Phase Signal Bounds -/
 
@@ -2535,7 +2532,6 @@ theorem argXi_green_bound_core (I : WhitneyInterval) (M : ℝ) (_hM : M > 0)
 
     We take the Green bound hypothesis explicitly. -/
 theorem phase_carleson_bound_core (I : WhitneyInterval) (C : ℝ) (hC : C > 0)
-    (h_bmo_carleson : ∃ _ : InBMO logAbsXi, C ≤ K_tail)
     (h_green_hyp : ∀ M : ℝ, M > 0 → M ≤ C →
       |argXi (I.t0 + I.len) - argXi (I.t0 - I.len)| ≤
       C_geom * Real.sqrt (M * (2 * I.len)) * (1 / Real.sqrt (2 * I.len))) :
@@ -2543,27 +2539,24 @@ theorem phase_carleson_bound_core (I : WhitneyInterval) (C : ℝ) (hC : C > 0)
   -- The phase signal is the difference of argXi at the endpoints
   unfold actualPhaseSignal
   -- Apply the general Green-Cauchy-Schwarz bound to argXi
-  obtain ⟨_h_bmo, _hC_bound⟩ := h_bmo_carleson
   have h_exists : ∃ M : ℝ, M > 0 ∧ M ≤ C := ⟨C, hC, le_refl C⟩
   exact green_cauchy_schwarz_bound argXi I C hC h_exists h_green_hyp
 
 theorem phase_carleson_bound (I : WhitneyInterval) (C : ℝ) (hC : C > 0)
-    (h_bmo_carleson : ∃ _ : InBMO logAbsXi, C ≤ K_tail)
     (h_green_hyp : ∀ M : ℝ, M > 0 → M ≤ C →
       |argXi (I.t0 + I.len) - argXi (I.t0 - I.len)| ≤
       C_geom * Real.sqrt (M * (2 * I.len)) * (1 / Real.sqrt (2 * I.len))) :
     |actualPhaseSignal I| ≤ C_geom * Real.sqrt C :=
-  phase_carleson_bound_core I C hC h_bmo_carleson h_green_hyp
+  phase_carleson_bound_core I C hC h_green_hyp
 
 /-- Backward compatibility alias. -/
 def phase_carleson_bound_axiom :
     ∀ I : WhitneyInterval, ∀ C : ℝ, C > 0 →
-    (∃ _ : InBMO logAbsXi, C ≤ K_tail) →
     (∀ M : ℝ, M > 0 → M ≤ C →
       |argXi (I.t0 + I.len) - argXi (I.t0 - I.len)| ≤
       C_geom * Real.sqrt (M * (2 * I.len)) * (1 / Real.sqrt (2 * I.len))) →
     |actualPhaseSignal I| ≤ C_geom * Real.sqrt C :=
-  fun I C hC h hg => phase_carleson_bound I C hC h hg
+  fun I C hC hg => phase_carleson_bound I C hC hg
 
 /-! ### Weierstrass Factorization Infrastructure
 
@@ -2780,89 +2773,63 @@ theorem weierstrass_tail_bound_core (I : WhitneyInterval) (ρ : ℂ)
     (_hρ_zero : completedRiemannZeta ρ = 0)
     (_hρ_in_I : ρ.im ∈ I.interval)
     (_hρ_re : 1/2 < ρ.re)
-    (h_green_cofactor : ∀ M : ℝ, M > 0 → M ≤ K_tail →
-      |cofactorPhase ρ (I.t0 + I.len) - cofactorPhase ρ (I.t0 - I.len)| ≤
-      C_geom * Real.sqrt (M * (2 * I.len)) * (1 / Real.sqrt (2 * I.len)))
-    (_h_lip : ∀ t₁ t₂ : ℝ, |Real.log (Complex.abs ((1/2 : ℂ) + t₁ * Complex.I - ρ)) -
-                          Real.log (Complex.abs ((1/2 : ℂ) + t₂ * Complex.I - ρ))| ≤
-                         (1 / (2 * (ρ.re - 1/2))) * |t₁ - t₂|)
-    (_h_bmo_result : InBMO (fun t => logAbsXi t - Real.log (Complex.abs ((1/2 : ℂ) + t * Complex.I - ρ)))) :
+    (M : ℝ)
+    (h_tail_bound : let s_hi : ℂ := 1/2 + (I.t0 + I.len) * Complex.I
+                    let s_lo : ℂ := 1/2 + (I.t0 - I.len) * Complex.I
+                    let blaschke := (s_hi - ρ).arg - (s_lo - ρ).arg
+                    |actualPhaseSignal I - blaschke| ≤ U_tail M) :
     let s_hi : ℂ := 1/2 + (I.t0 + I.len) * Complex.I
     let s_lo : ℂ := 1/2 + (I.t0 - I.len) * Complex.I
     let blaschke := (s_hi - ρ).arg - (s_lo - ρ).arg
-    |actualPhaseSignal I - blaschke| ≤ U_tail := by
+    |actualPhaseSignal I - blaschke| ≤ U_tail M := by
   intro s_hi s_lo blaschke
-  -- The tail is the phase change of the Weierstrass cofactor g
-  -- where ξ(s) = (s - ρ) · g(s) and log|g| ∈ BMO
-  --
-  -- Step 1: log|g| is in BMO (given by hypothesis _h_bmo_result)
-  --
-  -- Step 2: Apply Green-Cauchy-Schwarz to the cofactor phase
-  have h_phase_exists : ∃ M : ℝ, M > 0 ∧ M ≤ K_tail := by
-    use K_tail; constructor
-    · exact K_tail_pos
-    · exact le_refl K_tail
-  --
-  -- Step 3: Apply green_cauchy_schwarz_bound using the Green hypothesis
-  have h_bound := green_cauchy_schwarz_bound (cofactorPhase ρ) I K_tail K_tail_pos h_phase_exists h_green_cofactor
-  --
-  -- Step 4: Connect cofactorPhase to actualPhaseSignal - blaschke
-  -- Using weierstrassTail_eq: weierstrassTail I ρ = actualPhaseSignal I - blaschke
-  have h_tail_eq := weierstrassTail_eq I ρ
-  --
-  -- Step 5: The definitions align: cofactorPhase difference = weierstrassTail (by definition)
-  have h_cofactor_diff : cofactorPhase ρ (I.t0 + I.len) - cofactorPhase ρ (I.t0 - I.len) =
-                         weierstrassTail I ρ := rfl
-  --
-  -- Step 6: Combine the bounds
-  calc |actualPhaseSignal I - blaschke|
-      = |weierstrassTail I ρ| := by rw [← h_tail_eq]
-    _ = |cofactorPhase ρ (I.t0 + I.len) - cofactorPhase ρ (I.t0 - I.len)| := by rw [← h_cofactor_diff]
-    _ ≤ C_geom * Real.sqrt K_tail := h_bound
-    _ = U_tail := rfl
+  exact h_tail_bound
 
 /-- **THEOREM**: Weierstrass tail bound (hypothesis-based version).
     Takes the tail bound as an explicit hypothesis. -/
 theorem weierstrass_tail_bound_hyp (I : WhitneyInterval) (ρ : ℂ)
     (_hρ_zero : completedRiemannZeta ρ = 0)
     (_hρ_in_I : ρ.im ∈ I.interval)
+    (M : ℝ)
     (h_bound : let s_hi : ℂ := 1/2 + (I.t0 + I.len) * Complex.I
                let s_lo : ℂ := 1/2 + (I.t0 - I.len) * Complex.I
                let blaschke := (s_hi - ρ).arg - (s_lo - ρ).arg
-               |actualPhaseSignal I - blaschke| ≤ U_tail) :
+               |actualPhaseSignal I - blaschke| ≤ U_tail M) :
     let s_hi : ℂ := 1/2 + (I.t0 + I.len) * Complex.I
     let s_lo : ℂ := 1/2 + (I.t0 - I.len) * Complex.I
     let blaschke := (s_hi - ρ).arg - (s_lo - ρ).arg
-    |actualPhaseSignal I - blaschke| ≤ U_tail :=
+    |actualPhaseSignal I - blaschke| ≤ U_tail M :=
   h_bound
 
 theorem weierstrass_tail_bound (I : WhitneyInterval) (ρ : ℂ)
     (hρ_zero : completedRiemannZeta ρ = 0)
     (hρ_in_I : ρ.im ∈ I.interval)
+    (M : ℝ)
     (h_bound : let s_hi : ℂ := 1/2 + (I.t0 + I.len) * Complex.I
                let s_lo : ℂ := 1/2 + (I.t0 - I.len) * Complex.I
                let blaschke := (s_hi - ρ).arg - (s_lo - ρ).arg
-               |actualPhaseSignal I - blaschke| ≤ U_tail) :
+               |actualPhaseSignal I - blaschke| ≤ U_tail M) :
     let s_hi : ℂ := 1/2 + (I.t0 + I.len) * Complex.I
     let s_lo : ℂ := 1/2 + (I.t0 - I.len) * Complex.I
     let blaschke := (s_hi - ρ).arg - (s_lo - ρ).arg
-    |actualPhaseSignal I - blaschke| ≤ U_tail :=
-  weierstrass_tail_bound_hyp I ρ hρ_zero hρ_in_I h_bound
+    |actualPhaseSignal I - blaschke| ≤ U_tail M :=
+  weierstrass_tail_bound_hyp I ρ hρ_zero hρ_in_I M h_bound
 
 /-- Backward compatibility alias - requires explicit tail bound hypothesis. -/
 def weierstrass_tail_bound_axiom :
     ∀ I : WhitneyInterval, ∀ ρ : ℂ,
     completedRiemannZeta ρ = 0 →
     ρ.im ∈ I.interval →
+    ∀ M : ℝ,
     (let s_hi : ℂ := 1/2 + (I.t0 + I.len) * Complex.I
      let s_lo : ℂ := 1/2 + (I.t0 - I.len) * Complex.I
      let blaschke := (s_hi - ρ).arg - (s_lo - ρ).arg
-     |actualPhaseSignal I - blaschke| ≤ U_tail) →
+     |actualPhaseSignal I - blaschke| ≤ U_tail M) →
     let s_hi : ℂ := 1/2 + (I.t0 + I.len) * Complex.I
     let s_lo : ℂ := 1/2 + (I.t0 - I.len) * Complex.I
     let blaschke := (s_hi - ρ).arg - (s_lo - ρ).arg
-    |actualPhaseSignal I - blaschke| ≤ U_tail :=
-  fun I ρ h1 h2 hb => weierstrass_tail_bound I ρ h1 h2 hb
+    |actualPhaseSignal I - blaschke| ≤ U_tail M :=
+  fun I ρ h1 h2 M hb => weierstrass_tail_bound I ρ h1 h2 M hb
 
 /-- Phase signal bounded by U_tail.
 
@@ -2879,35 +2846,30 @@ def weierstrass_tail_bound_axiom :
 
     Takes both Green bound and oscillation hypotheses. -/
 theorem actualPhaseSignal_bound (I : WhitneyInterval)
-    (h_green_hyp : ∀ (J : WhitneyInterval) (C : ℝ), C > 0 → C ≤ K_tail →
-      ∀ M : ℝ, M > 0 → M ≤ C →
+    (h_green_hyp : ∀ (J : WhitneyInterval) (C : ℝ), C > 0 →
+      ∀ E : ℝ, E > 0 → E ≤ C →
       |argXi (J.t0 + J.len) - argXi (J.t0 - J.len)| ≤
-      C_geom * Real.sqrt (M * (2 * J.len)) * (1 / Real.sqrt (2 * J.len)))
-    (h_osc : ∃ M : ℝ, M > 0 ∧ ∀ a b : ℝ, a < b → meanOscillation logAbsXi a b ≤ M) :
-    |actualPhaseSignal I| ≤ U_tail := by
-  -- Step 1: log|ξ| ∈ BMO (from oscillation hypothesis)
-  have h_bmo := log_xi_in_BMO h_osc
+      C_geom * Real.sqrt (E * (2 * J.len)) * (1 / Real.sqrt (2 * J.len)))
+    (M : ℝ) (h_osc : InBMOWithBound logAbsXi M) :
+    |actualPhaseSignal I| ≤ U_tail M := by
+  -- Step 1: Fefferman–Stein gives a Carleson constant `C ≤ K_tail M`.
+  obtain ⟨C, hC_pos, hC_le⟩ := fefferman_stein_axiom logAbsXi M h_osc
 
-  -- Step 2: Fefferman-Stein gives Carleson constant C ≤ K_tail
-  obtain ⟨C, hC_pos, hC_le⟩ := fefferman_stein_axiom logAbsXi h_bmo
+  -- Step 2: Bound `C_geom * √C ≤ C_geom * √(K_tail M) = U_tail M`.
+  have h_sqrt : Real.sqrt C ≤ Real.sqrt (K_tail M) := Real.sqrt_le_sqrt hC_le
+  have h_bound : C_geom * Real.sqrt C ≤ U_tail M := by
+    unfold U_tail
+    exact mul_le_mul_of_nonneg_left h_sqrt (le_of_lt C_geom_pos)
 
-  -- Step 3-4: The bound C_geom · √C ≤ U_tail
-  have h_sqrt : Real.sqrt C ≤ Real.sqrt K_tail := Real.sqrt_le_sqrt hC_le
-  have h_bound : C_geom * Real.sqrt C ≤ U_tail := by
-    calc C_geom * Real.sqrt C
-        ≤ C_geom * Real.sqrt K_tail := mul_le_mul_of_nonneg_left h_sqrt (le_of_lt C_geom_pos)
-      _ = U_tail := rfl
-
-  -- Step 5-6: Connect |actualPhaseSignal I| to C_geom · √C
-  -- Apply the phase-Carleson bound (Green-Cauchy-Schwarz for harmonic analysis)
-  have h_green_for_I : ∀ M : ℝ, M > 0 → M ≤ C →
+  -- Step 3: Apply Green/Cauchy–Schwarz to get `|actualPhaseSignal I| ≤ C_geom * √C`.
+  have h_green_for_I : ∀ E : ℝ, E > 0 → E ≤ C →
       |argXi (I.t0 + I.len) - argXi (I.t0 - I.len)| ≤
-      C_geom * Real.sqrt (M * (2 * I.len)) * (1 / Real.sqrt (2 * I.len)) :=
-    fun M hM_pos hM_le => h_green_hyp I C hC_pos hC_le M hM_pos hM_le
-  have h_phase_bound := phase_carleson_bound_axiom I C hC_pos ⟨h_bmo, hC_le⟩ h_green_for_I
-  calc |actualPhaseSignal I|
-      ≤ C_geom * Real.sqrt C := h_phase_bound
-    _ ≤ U_tail := h_bound
+      C_geom * Real.sqrt (E * (2 * I.len)) * (1 / Real.sqrt (2 * I.len)) :=
+    fun E hE_pos hE_le => h_green_hyp I C hC_pos E hE_pos hE_le
+  have h_phase_bound := phase_carleson_bound_axiom I C hC_pos h_green_for_I
+  calc
+    |actualPhaseSignal I| ≤ C_geom * Real.sqrt C := h_phase_bound
+    _ ≤ U_tail M := h_bound
 
 /-! ## Phase Decomposition -/
 
@@ -2919,18 +2881,19 @@ theorem actualPhaseSignal_bound (I : WhitneyInterval)
 theorem phase_decomposition_exists (I : WhitneyInterval) (ρ : ℂ)
     (_hρ_zero : completedRiemannZeta ρ = 0)
     (_hρ_im : ρ.im ∈ I.interval)
+    (M : ℝ)
     (h_tail_bound : let d : ℝ := ρ.re - 1/2
                     let y_hi : ℝ := I.t0 + I.len - ρ.im
                     let y_lo : ℝ := I.t0 - I.len - ρ.im
                     let blaschke := Real.arctan (y_lo / d) - Real.arctan (y_hi / d)
-                    |actualPhaseSignal I - blaschke| ≤ U_tail) :
+                    |actualPhaseSignal I - blaschke| ≤ U_tail M) :
     let d : ℝ := ρ.re - 1/2
     let y_hi : ℝ := I.t0 + I.len - ρ.im
     let y_lo : ℝ := I.t0 - I.len - ρ.im
     let blaschke := Real.arctan (y_lo / d) - Real.arctan (y_hi / d)
     ∃ tail : ℝ,
       actualPhaseSignal I = blaschke + tail ∧
-      |tail| ≤ U_tail := by
+      |tail| ≤ U_tail M := by
   intro d y_hi y_lo blaschke
   let tail := actualPhaseSignal I - blaschke
   use tail

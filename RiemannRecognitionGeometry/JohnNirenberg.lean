@@ -761,25 +761,18 @@ lemma DyadicInterval.trichotomy (D₁ D₂ : DyadicInterval) :
     · left; exact hdisj
     · right; right; left; exact hsub
 
-/-- **AXIOM (Maximal Bad Disjoint)**: Maximal bad intervals are pairwise disjoint.
+/-
+**NOTE**: The definition of `isMaximalBadAt` (parent is good or outside [a,b])
+    is a LOCAL maximality condition that does NOT imply pairwise disjointness.
+    Counterexample: D₁ ⊊ D₂ can both be "maximal bad" if there are good intervals
+    between them.
 
-    **Proof idea**: By trichotomy, distinct intervals are either disjoint or
-    one contains the other. If D₁ ⊂ D₂, then D₁ is not maximal (D₂ is a larger
-    bad interval). So maximality implies disjointness.
+    The actual disjointness in CZ decomposition comes from the CONSTRUCTION
+    (stopping time process), which is encoded in the `disjoint` field of
+    `CZDecomposition`, not derived from `isMaximalBadAt`.
 
-    **Why axiom**: The proof requires showing that set containment D₁.toSet ⊂ D₂.toSet
-    implies D₁ is a dyadic descendant of D₂, which contradicts maximality.
-    This involves careful reasoning about the dyadic structure. -/
-axiom maximalBad_disjoint_axiom (f : ℝ → ℝ) (a b : ℝ) (t : ℝ)
-    (D₁ D₂ : DyadicInterval) (hD₁ : D₁.isMaximalBadAt f t a b)
-    (hD₂ : D₂.isMaximalBadAt f t a b) (hne : D₁ ≠ D₂) :
-    Disjoint D₁.toSet D₂.toSet
-
-lemma maximalBad_disjoint (f : ℝ → ℝ) (a b : ℝ) (t : ℝ)
-    (D₁ D₂ : DyadicInterval) (hD₁ : D₁.isMaximalBadAt f t a b)
-    (hD₂ : D₂.isMaximalBadAt f t a b) (hne : D₁ ≠ D₂) :
-    Disjoint D₁.toSet D₂.toSet :=
-  maximalBad_disjoint_axiom f a b t D₁ D₂ hD₁ hD₂ hne
+    A stronger definition of maximality (no larger bad interval containing D)
+    would imply disjointness, but the current definition doesn't. -/
 
 /-- Left child is contained in parent.
     Key: 2^(-(n+1)) = 2^(-n)/2, so leftChild = [k·2^(-n), (k+1/2)·2^(-n)) ⊆ parent -/
@@ -870,22 +863,86 @@ lemma DyadicInterval.child_measure_half (D : DyadicInterval) :
     rw [ENNReal.ofReal_div_of_pos (by linarith : (0:ℝ) < 2)]
     congr 1; rw [ENNReal.ofReal_ofNat]
 
-/-- **AXIOM (Dyadic Doubling)**: Child average ≤ 2 × parent average.
+/-- **THEOREM (Dyadic Doubling)**: Child average ≤ 2 × parent average.
 
-    **Proof sketch**: μ(child) = μ(parent)/2 and ∫_child |f| ≤ ∫_parent |f|, so:
+    **Proof**: μ(child) = μ(parent)/2 and ∫_child |f| ≤ ∫_parent |f|, so:
       avg_child = μ(child)⁻¹ · ∫_child = 2·μ(parent)⁻¹ · ∫_child
                 ≤ 2·μ(parent)⁻¹ · ∫_parent = 2·avg_parent
 
-    **Why axiom**: Requires careful handling of ENNReal ↔ Real conversions
-    and integral monotonicity for non-integrable functions. -/
-axiom DyadicInterval.avg_doubling_axiom (D : DyadicInterval) (f : ℝ → ℝ) :
+    Note: Requires f to be integrable on D. When f is not integrable,
+    the integral returns 0 by convention, which can lead to false inequalities. -/
+theorem DyadicInterval.avg_doubling (D : DyadicInterval) (f : ℝ → ℝ)
+    (hf_int : IntegrableOn f D.toSet) :
     setAverage (|f ·|) D.leftChild.toSet ≤ 2 * setAverage (|f ·|) D.toSet ∧
-    setAverage (|f ·|) D.rightChild.toSet ≤ 2 * setAverage (|f ·|) D.toSet
+    setAverage (|f ·|) D.rightChild.toSet ≤ 2 * setAverage (|f ·|) D.toSet := by
+  -- Key facts about measure
+  have hD_ne := D.measure_ne_zero
+  have hD_fin := D.measure_ne_top
+  have hL_ne := D.leftChild.measure_ne_zero
+  have hL_fin := D.leftChild.measure_ne_top
+  have hR_ne := D.rightChild.measure_ne_zero
+  have hR_fin := D.rightChild.measure_ne_top
+  have hL_sub := D.leftChild_subset
+  have hR_sub := D.rightChild_subset
+  have hmeas := D.child_measure_half
 
-lemma DyadicInterval.avg_doubling (D : DyadicInterval) (f : ℝ → ℝ) :
-    setAverage (|f ·|) D.leftChild.toSet ≤ 2 * setAverage (|f ·|) D.toSet ∧
-    setAverage (|f ·|) D.rightChild.toSet ≤ 2 * setAverage (|f ·|) D.toSet :=
-  DyadicInterval.avg_doubling_axiom D f
+  -- The parent measure is positive
+  have hD_pos : 0 < (volume D.toSet).toReal := ENNReal.toReal_pos hD_ne hD_fin
+
+  -- Child measure = parent measure / 2
+  have hL_half : (volume D.leftChild.toSet).toReal = (volume D.toSet).toReal / 2 := by
+    rw [hmeas.1, ENNReal.toReal_div, ENNReal.toReal_ofNat]
+  have hR_half : (volume D.rightChild.toSet).toReal = (volume D.toSet).toReal / 2 := by
+    rw [hmeas.2, ENNReal.toReal_div, ENNReal.toReal_ofNat]
+
+  -- Prove the condition for dif_pos
+  have hL_cond : volume D.leftChild.toSet ≠ 0 ∧ volume D.leftChild.toSet ≠ ⊤ := And.intro hL_ne hL_fin
+  have hD_cond : volume D.toSet ≠ 0 ∧ volume D.toSet ≠ ⊤ := And.intro hD_ne hD_fin
+  have hR_cond : volume D.rightChild.toSet ≠ 0 ∧ volume D.rightChild.toSet ≠ ⊤ := And.intro hR_ne hR_fin
+
+  -- |f| is integrable since f is
+  have hf_abs_int : IntegrableOn (|f ·|) D.toSet := hf_int.abs
+
+  constructor
+  · -- Left child case
+    unfold setAverage
+    simp only [dif_pos hL_cond, dif_pos hD_cond]
+    -- f is integrable on D, hence on leftChild ⊆ D
+    have hf_int_L : IntegrableOn (|f ·|) D.leftChild.toSet := hf_abs_int.mono_set hL_sub
+    -- ∫_L |f| ≤ ∫_D |f| by monotonicity (since |f| ≥ 0)
+    have h_int_mono : ∫ x in D.leftChild.toSet, |f x| ≤ ∫ x in D.toSet, |f x| := by
+      apply MeasureTheory.setIntegral_mono_set hf_abs_int
+      · exact ae_of_all _ (fun x => abs_nonneg _)
+      · exact hL_sub.eventuallyLE
+    have h_inv_eq : (volume D.leftChild.toSet).toReal⁻¹ = 2 * (volume D.toSet).toReal⁻¹ := by
+      rw [hL_half]
+      have hne : (volume D.toSet).toReal ≠ 0 := ne_of_gt hD_pos
+      field_simp [hne]
+    rw [h_inv_eq]
+    calc 2 * (volume D.toSet).toReal⁻¹ * ∫ x in D.leftChild.toSet, |f x|
+        ≤ 2 * (volume D.toSet).toReal⁻¹ * ∫ x in D.toSet, |f x| := by
+          apply mul_le_mul_of_nonneg_left h_int_mono
+          apply mul_nonneg (by norm_num : (2:ℝ) ≥ 0) (inv_nonneg.mpr hD_pos.le)
+      _ = 2 * ((volume D.toSet).toReal⁻¹ * ∫ x in D.toSet, |f x|) := by ring
+
+  · -- Right child case (symmetric)
+    unfold setAverage
+    simp only [dif_pos hR_cond, dif_pos hD_cond]
+    have hf_int_R : IntegrableOn (|f ·|) D.rightChild.toSet := hf_abs_int.mono_set hR_sub
+    have h_int_mono : ∫ x in D.rightChild.toSet, |f x| ≤ ∫ x in D.toSet, |f x| := by
+      apply MeasureTheory.setIntegral_mono_set hf_abs_int
+      · exact ae_of_all _ (fun x => abs_nonneg _)
+      · exact hR_sub.eventuallyLE
+    have h_inv_eq : (volume D.rightChild.toSet).toReal⁻¹ = 2 * (volume D.toSet).toReal⁻¹ := by
+      rw [hR_half]
+      have hne : (volume D.toSet).toReal ≠ 0 := ne_of_gt hD_pos
+      field_simp [hne]
+    rw [h_inv_eq]
+    calc 2 * (volume D.toSet).toReal⁻¹ * ∫ x in D.rightChild.toSet, |f x|
+        ≤ 2 * (volume D.toSet).toReal⁻¹ * ∫ x in D.toSet, |f x| := by
+          apply mul_le_mul_of_nonneg_left h_int_mono
+          apply mul_nonneg (by norm_num : (2:ℝ) ≥ 0) (inv_nonneg.mpr hD_pos.le)
+      _ = 2 * ((volume D.toSet).toReal⁻¹ * ∫ x in D.toSet, |f x|) := by ring
 
 /-- CZ decomposition theorem (Calderón-Zygmund).
 

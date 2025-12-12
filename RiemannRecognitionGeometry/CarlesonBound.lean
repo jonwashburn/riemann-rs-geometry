@@ -48,24 +48,32 @@ lemma whitney_len_pos (I : WhitneyInterval) : 0 < 2 * I.len := by
   have := I.len_pos
   linarith
 
-/-- K_tail is positive. -/
-lemma K_tail_pos : (0 : ℝ) < K_tail := by
-  unfold K_tail
-  norm_num
+/-!
+`K_tail` and `U_tail` are now **functions of a BMO bound `M`** (see `Basic.lean`).
+
+For the “tail pairing” algebra below we only need positivity/nonnegativity facts
+at a specific `M`.
+-/
+
+/-- `K_tail M` is nonnegative for all real `M`. -/
+lemma K_tail_nonneg' (M : ℝ) : 0 ≤ K_tail M := by
+  exact RiemannRecognitionGeometry.K_tail_nonneg M
+
+/-- `K_tail M` is positive when `M > 0`. -/
+lemma K_tail_pos' {M : ℝ} (hM : 0 < M) : (0 : ℝ) < K_tail M :=
+  RiemannRecognitionGeometry.K_tail_pos hM
 
 /-- C_geom is positive (C_geom = 1/2 > 0). -/
 lemma C_geom_pos : (0 : ℝ) < C_geom := by
   unfold C_geom
   norm_num
 
-/-- sqrt(K_tail) is positive. -/
-lemma sqrt_K_tail_pos : 0 < Real.sqrt K_tail := by
-  apply Real.sqrt_pos_of_pos K_tail_pos
+lemma sqrt_K_tail_pos {M : ℝ} (hM : 0 < M) : 0 < Real.sqrt (K_tail M) := by
+  apply Real.sqrt_pos_of_pos (K_tail_pos' hM)
 
-/-- U_tail is positive. -/
-lemma U_tail_pos : (0 : ℝ) < U_tail := by
+lemma U_tail_pos {M : ℝ} (hM : 0 < M) : (0 : ℝ) < U_tail M := by
   unfold U_tail
-  apply mul_pos C_geom_pos sqrt_K_tail_pos
+  exact mul_pos C_geom_pos (sqrt_K_tail_pos hM)
 
 /-! ## Classical Analysis Results
 
@@ -130,7 +138,7 @@ Therefore **C_geom = 1/2** from step 8-9, independent of |I|.
 
 /-- The Fefferman-Stein BMO → Carleson embedding constant.
     For log|ξ| in BMO(ℝ), the Carleson energy satisfies E(I) ≤ K · |I|. -/
-def BMO_Carleson_constant : ℝ := K_tail
+def BMO_Carleson_constant (M : ℝ) : ℝ := K_tail M
 
 /-- **CLASSICAL RESULT 1**: BMO → Carleson embedding (Fefferman-Stein 1972)
 
@@ -161,9 +169,9 @@ Recognition Geometry framework, this bound is established by:
 
 The hypothesis `h_energy` represents the output of steps 1-3.
 -/
-lemma bmo_carleson_embedding (gradLogXi : ℝ × ℝ → ℝ × ℝ) (I : WhitneyInterval)
-    (h_energy : boxEnergy gradLogXi I ≤ K_tail * (2 * I.len)) :
-    boxEnergy gradLogXi I ≤ K_tail * (2 * I.len) :=
+lemma bmo_carleson_embedding (M : ℝ) (gradLogXi : ℝ × ℝ → ℝ × ℝ) (I : WhitneyInterval)
+    (h_energy : boxEnergy gradLogXi I ≤ K_tail M * (2 * I.len)) :
+    boxEnergy gradLogXi I ≤ K_tail M * (2 * I.len) :=
   h_energy
 
 /-! ## Green's Identity and Cauchy-Schwarz -/
@@ -242,13 +250,13 @@ theorem green_energy_bound_for_window
 theorem green_cauchy_schwarz_explicit
     (I : WhitneyInterval)
     (E_u : ℝ)  -- Carleson energy of u (Poisson extension of log|ξ|)
-    (h_E_u_bound : E_u ≤ K_tail * (2 * I.len))
+    (M : ℝ) (h_E_u_bound : E_u ≤ K_tail M * (2 * I.len))
     (E_v : ℝ)  -- Carleson energy of v (Poisson extension of window)
     (h_E_v_bound : E_v ≤ 1 / (2 * (2 * I.len)))
     (boundary_integral : ℝ)  -- |∫_I φ(-∂_σ u)|
     (h_cauchy_schwarz : boundary_integral ≤ Real.sqrt E_u * Real.sqrt E_v)
-    (h_bound : boundary_integral ≤ C_geom * Real.sqrt K_tail) :
-    boundary_integral ≤ C_geom * Real.sqrt K_tail := h_bound
+    (h_bound : boundary_integral ≤ C_geom * Real.sqrt (K_tail M)) :
+    boundary_integral ≤ C_geom * Real.sqrt (K_tail M) := h_bound
 
 /-- Window function: a smooth bump adapted to the Whitney interval. -/
 structure WindowFunction where
@@ -354,13 +362,14 @@ This version takes the gradient field explicitly and requires:
 The proof shows how these combine via the key √|I| cancellation.
 -/
 theorem tail_pairing_bound (I : WhitneyInterval)
+    (M : ℝ)
     (gradField : ℝ × ℝ → ℝ × ℝ)
-    (h_carleson : boxEnergy gradField I ≤ K_tail * (2 * I.len))
+    (h_carleson : boxEnergy gradField I ≤ K_tail M * (2 * I.len))
     (gradTail : ℝ → ℝ)
     (h_trace : ∀ t ∈ I.interval, gradTail t = (gradField (t, 0)).1)
     (h_gcs : |∫ t in I.interval, gradTail t| ≤
         C_geom * Real.sqrt (boxEnergy gradField I) * (1 / Real.sqrt (2 * I.len))) :
-    |∫ t in I.interval, gradTail t| ≤ U_tail := by
+    |∫ t in I.interval, gradTail t| ≤ U_tail M := by
 
   have h_len_pos : 0 < 2 * I.len := whitney_len_pos I
   have h_sqrt_len_pos : 0 < Real.sqrt (2 * I.len) := Real.sqrt_pos_of_pos h_len_pos
@@ -369,31 +378,32 @@ theorem tail_pairing_bound (I : WhitneyInterval)
   let E := boxEnergy gradField I
 
   -- E ≤ K_tail * (2 * I.len) by the Carleson bound
-  have hE_bound : E ≤ K_tail * (2 * I.len) := h_carleson
+  have hE_bound : E ≤ K_tail M * (2 * I.len) := h_carleson
 
   -- √E ≤ √(K_tail * (2 * I.len))
-  have h_sqrt_E_bound : Real.sqrt E ≤ Real.sqrt (K_tail * (2 * I.len)) := by
+  have h_sqrt_E_bound : Real.sqrt E ≤ Real.sqrt (K_tail M * (2 * I.len)) := by
     apply Real.sqrt_le_sqrt hE_bound
 
   -- Key cancellation step: √(K_tail * L) * (1/√L) = √K_tail
-  have h_cancel : Real.sqrt (K_tail * (2 * I.len)) * (1 / Real.sqrt (2 * I.len)) =
-      Real.sqrt K_tail :=
-    sqrt_energy_cancellation K_tail (2 * I.len) (le_of_lt K_tail_pos) h_len_pos
+  have h_cancel :
+      Real.sqrt (K_tail M * (2 * I.len)) * (1 / Real.sqrt (2 * I.len)) =
+        Real.sqrt (K_tail M) :=
+    sqrt_energy_cancellation (K_tail M) (2 * I.len) (K_tail_nonneg' M) h_len_pos
 
   -- U_tail = C_geom * √K_tail
-  have h_utail : C_geom * Real.sqrt K_tail = U_tail := rfl
+  have h_utail : C_geom * Real.sqrt (K_tail M) = U_tail M := rfl
 
   -- Chain the inequalities to get the uniform bound
   calc |∫ t in I.interval, gradTail t|
       ≤ C_geom * Real.sqrt E * (1 / Real.sqrt (2 * I.len)) := h_gcs
-    _ ≤ C_geom * Real.sqrt (K_tail * (2 * I.len)) * (1 / Real.sqrt (2 * I.len)) := by
+    _ ≤ C_geom * Real.sqrt (K_tail M * (2 * I.len)) * (1 / Real.sqrt (2 * I.len)) := by
         apply mul_le_mul_of_nonneg_right
         apply mul_le_mul_of_nonneg_left h_sqrt_E_bound
         exact le_of_lt C_geom_pos
         apply one_div_nonneg.mpr (le_of_lt h_sqrt_len_pos)
-    _ = C_geom * (Real.sqrt (K_tail * (2 * I.len)) * (1 / Real.sqrt (2 * I.len))) := by ring
-    _ = C_geom * Real.sqrt K_tail := by rw [h_cancel]
-    _ = U_tail := h_utail
+    _ = C_geom * (Real.sqrt (K_tail M * (2 * I.len)) * (1 / Real.sqrt (2 * I.len))) := by ring
+    _ = C_geom * Real.sqrt (K_tail M) := by rw [h_cancel]
+    _ = U_tail M := h_utail
 
 /-! ## Complete Tail Bound Infrastructure -/
 
@@ -408,13 +418,14 @@ then applies the key √|I| cancellation via tail_pairing_bound.
 -/
 theorem tail_pairing_bound_with_trace
     (I : WhitneyInterval)
+    (M : ℝ)
     (gradLogXi : ℝ × ℝ → ℝ × ℝ)
-    (h_energy : boxEnergy gradLogXi I ≤ K_tail * (2 * I.len))
+    (h_energy : boxEnergy gradLogXi I ≤ K_tail M * (2 * I.len))
     (integrand : ℝ → ℝ)
     (h_trace : ∀ t ∈ I.interval, integrand t = (gradLogXi (t, 0)).1)
     (h_gcs : |∫ t in I.interval, integrand t| ≤
         C_geom * Real.sqrt (boxEnergy gradLogXi I) * (1 / Real.sqrt (2 * I.len))) :
-    |∫ t in I.interval, integrand t| ≤ U_tail := by
+    |∫ t in I.interval, integrand t| ≤ U_tail M := by
   -- Define gradTail as the boundary trace
   let gradTail : ℝ → ℝ := fun t => (gradLogXi (t, 0)).1
   -- Rewrite the integral using the trace identification
@@ -429,7 +440,7 @@ theorem tail_pairing_bound_with_trace
   -- Apply tail_pairing_bound
   calc |∫ t in I.interval, integrand t|
       = |∫ t in I.interval, gradTail t| := by rw [h_int_eq]
-    _ ≤ U_tail := tail_pairing_bound I gradLogXi h_energy gradTail (fun t _ => rfl) h_gcs'
+    _ ≤ U_tail M := tail_pairing_bound I M gradLogXi h_energy gradTail (fun t _ => rfl) h_gcs'
 
 /-- The full tail pairing bound axiom as a theorem.
 
@@ -444,20 +455,21 @@ The proof follows from:
 -/
 theorem tail_pairing_bound_full
     (I : WhitneyInterval)
+    (M : ℝ)
     (integrand : ℝ → ℝ)
     (h_integrand : ∃ gradLogXi : ℝ × ℝ → ℝ × ℝ,
-      boxEnergy gradLogXi I ≤ K_tail * (2 * I.len) ∧
+      boxEnergy gradLogXi I ≤ K_tail M * (2 * I.len) ∧
       ∀ t ∈ I.interval, integrand t = (gradLogXi (t, 0)).1)
     (h_gcs : ∀ gradLogXi : ℝ × ℝ → ℝ × ℝ,
       (∀ t ∈ I.interval, integrand t = (gradLogXi (t, 0)).1) →
       |∫ t in I.interval, integrand t| ≤
         C_geom * Real.sqrt (boxEnergy gradLogXi I) * (1 / Real.sqrt (2 * I.len))) :
-    |∫ t in I.interval, integrand t| ≤ U_tail := by
+    |∫ t in I.interval, integrand t| ≤ U_tail M := by
   -- Extract the gradient and trace identification
   obtain ⟨gradLogXi, h_energy, h_trace⟩ := h_integrand
   -- Get the Green-Cauchy-Schwarz bound for this specific gradient
   have h_gcs' := h_gcs gradLogXi h_trace
   -- Apply the version with explicit trace condition
-  exact tail_pairing_bound_with_trace I gradLogXi h_energy integrand h_trace h_gcs'
+  exact tail_pairing_bound_with_trace I M gradLogXi h_energy integrand h_trace h_gcs'
 
 end RiemannRecognitionGeometry

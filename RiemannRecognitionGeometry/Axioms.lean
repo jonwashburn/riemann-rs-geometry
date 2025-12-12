@@ -674,12 +674,12 @@ contradicting the Carleson bound.
     CarlesonBound.lean and FeffermanStein.lean.
 
     Reference: Garnett, "Bounded Analytic Functions", Ch. II & IV -/
-theorem green_identity_for_phase (J : WhitneyInterval) (C : ℝ) (hC_pos : C > 0) (hC_le : C ≤ K_tail)
-    (M : ℝ) (hM_pos : M > 0) (hM_le : M ≤ C)
+theorem green_identity_for_phase (J : WhitneyInterval) (C : ℝ) (hC_pos : C > 0)
+    (E : ℝ) (hE_pos : E > 0) (hE_le : E ≤ C)
     (h_bound : |argXi (J.t0 + J.len) - argXi (J.t0 - J.len)| ≤
-               C_geom * Real.sqrt (M * (2 * J.len)) * (1 / Real.sqrt (2 * J.len))) :
+               C_geom * Real.sqrt (E * (2 * J.len)) * (1 / Real.sqrt (2 * J.len))) :
     |argXi (J.t0 + J.len) - argXi (J.t0 - J.len)| ≤
-    C_geom * Real.sqrt (M * (2 * J.len)) * (1 / Real.sqrt (2 * J.len)) := h_bound
+    C_geom * Real.sqrt (E * (2 * J.len)) * (1 / Real.sqrt (2 * J.len)) := h_bound
 
 /-- **AXIOM (Green-Cauchy-Schwarz Bound)**: Phase change bounded by Carleson energy.
 
@@ -723,24 +723,24 @@ theorem green_identity_for_phase (J : WhitneyInterval) (C : ℝ) (hC_pos : C > 0
     - Stein, "Harmonic Analysis: Real-Variable Methods", Princeton 1993, Ch. II
     - Fefferman & Stein, "Hp Spaces of Several Variables", Acta Math 129 (1972) -/
 theorem green_identity_axiom_statement (J : WhitneyInterval) (C : ℝ) (hC_pos : C > 0)
-    (hC_le : C ≤ K_tail) (M : ℝ) (hM_pos : M > 0) (hM_le : M ≤ C) :
+    (E : ℝ) (hE_pos : E > 0) (hE_le : E ≤ C) :
     xiPhaseChange J ≤
-      C_geom * Real.sqrt (M * (2 * J.len)) * (1 / Real.sqrt (2 * J.len)) :=
-  Conjectures.green_identity_axiom_statement J C hC_pos hC_le M hM_pos hM_le
+      C_geom * Real.sqrt (E * (2 * J.len)) * (1 / Real.sqrt (2 * J.len)) :=
+  Conjectures.green_identity_axiom_statement J C hC_pos E hE_pos hE_le
 
 /-- Green identity theorem (from axiom). -/
-theorem green_identity_theorem (J : WhitneyInterval) (C : ℝ) (hC_pos : C > 0) (hC_le : C ≤ K_tail)
-    (M : ℝ) (hM_pos : M > 0) (hM_le : M ≤ C) :
+theorem green_identity_theorem (J : WhitneyInterval) (C : ℝ) (hC_pos : C > 0)
+    (E : ℝ) (hE_pos : E > 0) (hE_le : E ≤ C) :
     xiPhaseChange J ≤
-    C_geom * Real.sqrt (M * (2 * J.len)) * (1 / Real.sqrt (2 * J.len)) :=
-  green_identity_axiom_statement J C hC_pos hC_le M hM_pos hM_le
+    C_geom * Real.sqrt (E * (2 * J.len)) * (1 / Real.sqrt (2 * J.len)) :=
+  green_identity_axiom_statement J C hC_pos E hE_pos hE_le
 
 /-- Backward compatibility alias for green_identity_theorem -/
-def green_identity_axiom (J : WhitneyInterval) (C : ℝ) (hC_pos : C > 0) (hC_le : C ≤ K_tail)
-    (M : ℝ) (hM_pos : M > 0) (hM_le : M ≤ C) :
+def green_identity_axiom (J : WhitneyInterval) (C : ℝ) (hC_pos : C > 0)
+    (E : ℝ) (hE_pos : E > 0) (hE_le : E ≤ C) :
     xiPhaseChange J ≤
-    C_geom * Real.sqrt (M * (2 * J.len)) * (1 / Real.sqrt (2 * J.len)) :=
-  green_identity_theorem J C hC_pos hC_le M hM_pos hM_le
+    C_geom * Real.sqrt (E * (2 * J.len)) * (1 / Real.sqrt (2 * J.len)) :=
+  green_identity_theorem J C hC_pos E hE_pos hE_le
 
 /-- **THEOREM**: Total phase signal is bounded by U_tail.
     This is the Carleson-BMO bound on the full phase integral of log|ξ|.
@@ -754,22 +754,19 @@ def green_identity_axiom (J : WhitneyInterval) (C : ℝ) (hC_pos : C > 0) (hC_le
     The constant U_tail = C_geom · √K_tail incorporates the BMO norm bound. -/
 theorem totalPhaseSignal_bound (I : WhitneyInterval)
     (hCA : ClassicalAnalysisAssumptions)
-    (h_osc : ∃ M : ℝ, M > 0 ∧ ∀ a b : ℝ, a < b → meanOscillation logAbsXi a b ≤ M) :
-    totalPhaseSignal I ≤ U_tail := by
+    (M : ℝ) (h_osc : InBMOWithBound logAbsXi M) :
+    totalPhaseSignal I ≤ U_tail M := by
   -- `totalPhaseSignal I` is the normed phase change (mod 2π).
   unfold totalPhaseSignal
 
-  -- Step 1: log|ξ| ∈ BMO (from oscillation hypothesis)
-  have h_bmo : InBMO logAbsXi := log_xi_in_BMO h_osc
-
-  -- Step 2: Fefferman–Stein gives a Carleson constant `C ≤ K_tail`
-  obtain ⟨C, hC_pos, hC_le⟩ := fefferman_stein_axiom logAbsXi h_bmo
+  -- Step 1: Fefferman–Stein gives a Carleson constant `C ≤ K_tail M`
+  obtain ⟨C, hC_pos, hC_le⟩ := fefferman_stein_axiom logAbsXi M h_osc
 
   -- Step 3: apply the Green/Cauchy–Schwarz bound (as a bound on `xiPhaseChange`)
   have h_green_for_I :
       xiPhaseChange I ≤
         C_geom * Real.sqrt (C * (2 * I.len)) * (1 / Real.sqrt (2 * I.len)) :=
-    hCA.green_identity_axiom_statement I C hC_pos hC_le C hC_pos (le_rfl)
+    hCA.green_identity_axiom_statement I C hC_pos C hC_pos (le_rfl)
 
   -- Cancel the interval-length factor: √(C·(2L)) / √(2L) = √C.
   have h_cancel :
@@ -785,13 +782,11 @@ theorem totalPhaseSignal_bound (I : WhitneyInterval)
     rw [h_cancel] at h1
     exact h1
 
-  -- Step 4: bound `C_geom * √C ≤ C_geom * √K_tail = U_tail`
-  have h_sqrt : Real.sqrt C ≤ Real.sqrt K_tail := Real.sqrt_le_sqrt hC_le
-  have h_bound : C_geom * Real.sqrt C ≤ U_tail := by
-    calc
-      C_geom * Real.sqrt C ≤ C_geom * Real.sqrt K_tail := by
-        exact mul_le_mul_of_nonneg_left h_sqrt (le_of_lt C_geom_pos)
-      _ = U_tail := rfl
+  -- Step 4: bound `C_geom * √C ≤ C_geom * √(K_tail M) = U_tail M`
+  have h_sqrt : Real.sqrt C ≤ Real.sqrt (K_tail M) := Real.sqrt_le_sqrt hC_le
+  have h_bound : C_geom * Real.sqrt C ≤ U_tail M := by
+    unfold U_tail
+    exact mul_le_mul_of_nonneg_left h_sqrt (le_of_lt C_geom_pos)
 
   exact le_trans h_green_for_I' h_bound
 
@@ -1031,33 +1026,36 @@ theorem totalPhaseSignal_eq_xiPhaseChange (I : WhitneyInterval) :
     - Edwards, "Riemann's Zeta Function", Academic Press 1974, Ch. 2
     - Hadamard, "Étude sur les propriétés des fonctions entières" (1893) -/
 theorem weierstrass_tail_bound_axiom_statement (I : WhitneyInterval) (ρ : ℂ)
+    (M : ℝ)
     (hρ_zero : completedRiemannZeta ρ = 0) (hρ_im : ρ.im ∈ I.interval) :
     let d : ℝ := ρ.re - 1/2
     let y_hi : ℝ := I.t0 + I.len - ρ.im
     let y_lo : ℝ := I.t0 - I.len - ρ.im
     let blaschke := Real.arctan (y_lo / d) - Real.arctan (y_hi / d)
-    ‖xiPhaseChangeAngle I - (blaschke : Real.Angle)‖ ≤ U_tail :=
-  Conjectures.weierstrass_tail_bound_axiom_statement I ρ hρ_zero hρ_im
+    ‖xiPhaseChangeAngle I - (blaschke : Real.Angle)‖ ≤ U_tail M :=
+  Conjectures.weierstrass_tail_bound_axiom_statement I ρ M hρ_zero hρ_im
 
 /-- Weierstrass tail bound theorem (from axiom). -/
 theorem weierstrass_tail_bound_for_phase_theorem (I : WhitneyInterval) (ρ : ℂ)
+    (M : ℝ)
     (hρ_zero : completedRiemannZeta ρ = 0) (hρ_im : ρ.im ∈ I.interval) :
     let d : ℝ := ρ.re - 1/2
     let y_hi : ℝ := I.t0 + I.len - ρ.im
     let y_lo : ℝ := I.t0 - I.len - ρ.im
     let blaschke := Real.arctan (y_lo / d) - Real.arctan (y_hi / d)
-    ‖xiPhaseChangeAngle I - (blaschke : Real.Angle)‖ ≤ U_tail :=
-  weierstrass_tail_bound_axiom_statement I ρ hρ_zero hρ_im
+    ‖xiPhaseChangeAngle I - (blaschke : Real.Angle)‖ ≤ U_tail M :=
+  weierstrass_tail_bound_axiom_statement I ρ M hρ_zero hρ_im
 
 /-- Backward compatibility alias for weierstrass_tail_bound_for_phase_theorem -/
 def weierstrass_tail_bound_for_phase (I : WhitneyInterval) (ρ : ℂ)
+    (M : ℝ)
     (hρ_zero : completedRiemannZeta ρ = 0) (hρ_im : ρ.im ∈ I.interval) :
     let d : ℝ := ρ.re - 1/2
     let y_hi : ℝ := I.t0 + I.len - ρ.im
     let y_lo : ℝ := I.t0 - I.len - ρ.im
     let blaschke := Real.arctan (y_lo / d) - Real.arctan (y_hi / d)
-    ‖xiPhaseChangeAngle I - (blaschke : Real.Angle)‖ ≤ U_tail :=
-  weierstrass_tail_bound_for_phase_theorem I ρ hρ_zero hρ_im
+    ‖xiPhaseChangeAngle I - (blaschke : Real.Angle)‖ ≤ U_tail M :=
+  weierstrass_tail_bound_for_phase_theorem I ρ M hρ_zero hρ_im
 
 /-- **THEOREM**: When a zero exists, the total phase signal is large.
     Uses phase_decomposition_exists from FeffermanStein and criticalLine_phase_ge_L_rec.
@@ -1070,6 +1068,7 @@ def weierstrass_tail_bound_for_phase (I : WhitneyInterval) (ρ : ℂ)
 theorem blaschke_dominates_total (I : WhitneyInterval) (ρ : ℂ)
     (hRG : RGAssumptions)
     (hρ_zero : completedRiemannZeta ρ = 0)
+    (M : ℝ)
     (hρ_re : 1/2 < ρ.re)
     (hρ_re_upper : ρ.re ≤ 1/2 + 2 * I.len)
     (hρ_im : ρ.im ∈ I.interval)
@@ -1077,16 +1076,16 @@ theorem blaschke_dominates_total (I : WhitneyInterval) (ρ : ℂ)
     (hI_len_large : I.len ≥ 7)
     (h_centered : |ρ.im - I.t0| ≤ I.len / 2)
     (_hρ_im_ne : ρ.im ≠ 0) :
-    totalPhaseSignal I ≥ L_rec - U_tail := by
+    totalPhaseSignal I ≥ L_rec - U_tail M := by
   let d := ρ.re - 1/2
   let y_hi := I.t0 + I.len - ρ.im
   let y_lo := I.t0 - I.len - ρ.im
   let blaschke_fs := Real.arctan (y_lo / d) - Real.arctan (y_hi / d)
   -- Tail bound, formulated in `Real.Angle` (phase modulo 2π)
   have h_tail :
-      ‖xiPhaseChangeAngle I - (blaschke_fs : Real.Angle)‖ ≤ U_tail := by
+      ‖xiPhaseChangeAngle I - (blaschke_fs : Real.Angle)‖ ≤ U_tail M := by
     simpa [d, y_hi, y_lo, blaschke_fs] using
-      hRG.weierstrass_tail_bound_axiom_statement I ρ hρ_zero hρ_im
+      hRG.weierstrass_tail_bound_axiom_statement I ρ M hρ_zero hρ_im
 
   -- Critical line phase bound (now proven using geometric arctan)
   have h_phase_ge_abs : |blaschke_fs| ≥ L_rec := by
@@ -1161,15 +1160,15 @@ theorem blaschke_dominates_total (I : WhitneyInterval) (ρ : ℂ)
       simpa [add_comm] using h2
     exact (sub_le_iff_le_add).2 h2'
 
-  have h_rev' : ‖(blaschke_fs : Real.Angle)‖ - U_tail ≤ ‖xiPhaseChangeAngle I‖ := by
-    have h_sub : ‖(blaschke_fs : Real.Angle)‖ - U_tail ≤
+  have h_rev' : ‖(blaschke_fs : Real.Angle)‖ - U_tail M ≤ ‖xiPhaseChangeAngle I‖ := by
+    have h_sub : ‖(blaschke_fs : Real.Angle)‖ - U_tail M ≤
         ‖(blaschke_fs : Real.Angle)‖ - ‖xiPhaseChangeAngle I - (blaschke_fs : Real.Angle)‖ :=
       sub_le_sub_left h_tail ‖(blaschke_fs : Real.Angle)‖
     exact le_trans h_sub h_rev
 
   -- `‖xiPhaseChangeAngle I‖ = totalPhaseSignal I` by definition.
   have h_total : ‖xiPhaseChangeAngle I‖ = totalPhaseSignal I := by rfl
-  have h_rev'' : ‖(blaschke_fs : Real.Angle)‖ - U_tail ≤ totalPhaseSignal I := by
+  have h_rev'' : ‖(blaschke_fs : Real.Angle)‖ - U_tail M ≤ totalPhaseSignal I := by
     simpa [h_total] using h_rev'
 
   -- Combine: ‖blaschke‖ ≥ L_rec and ‖phase‖ ≥ ‖blaschke‖ - U_tail.
@@ -1203,7 +1202,8 @@ theorem zero_free_with_interval (ρ : ℂ)
     (hRG : RGAssumptions)
     (hρ_re : 1/2 < ρ.re)
     (hρ_zero : completedRiemannZeta ρ = 0)
-    (h_osc : ∃ M : ℝ, M > 0 ∧ ∀ a b : ℝ, a < b → meanOscillation logAbsXi a b ≤ M) :
+    (M : ℝ) (h_osc : InBMOWithBound logAbsXi M)
+    (hM_le : M ≤ C_tail) :
     False := by
   -- Work with a *centered* Whitney interval of half-length 7.
   -- This avoids any extra “centering” axioms: ρ.im is exactly the center.
@@ -1229,30 +1229,26 @@ theorem zero_free_with_interval (ρ : ℂ)
 
   -- Lower bound: totalPhaseSignal I0 ≥ L_rec - U_tail
   have h_dominance :=
-    blaschke_dominates_total I0 ρ hRG hρ_zero hρ_re hρ_re_upper0 hρ_im0 hρ_re_strict hI0_len_large
+    blaschke_dominates_total I0 ρ hRG hρ_zero M hρ_re hρ_re_upper0 hρ_im0 hρ_re_strict hI0_len_large
       h_centered0 hρ_im_ne
 
-  -- Upper bound: totalPhaseSignal I0 ≤ U_tail
-  have h_carleson := totalPhaseSignal_bound I0 hCA h_osc
+  -- Upper bound: totalPhaseSignal I0 ≤ U_tail M
+  have h_carleson := totalPhaseSignal_bound I0 hCA M h_osc
 
-  -- Key numerical inequality: L_rec > 2 * U_tail
-  -- With C_geom = 1/2 and K_tail = 2.1:
-  -- U_tail = (1/2) * √2.1 ≈ 0.72
-  -- L_rec = 6.0, so 2*U_tail ≈ 1.45 < 6.0 ✓
-  have h_l_rec_large : L_rec > 2 * U_tail := by
-    unfold L_rec U_tail C_geom K_tail
-    have h_sqrt21 := sqrt_21_lt  -- √2.1 < 1.5
-    -- U_tail = (1/2) * √2.1 < 0.5 * 1.5 = 0.75
-    -- 2 * U_tail < 1.5
-    -- L_rec = 6.0 > 1.5 ✓
-    have h_utail : (1/2 : ℝ) * Real.sqrt 2.1 < 0.75 := by
-      nlinarith [Real.sqrt_nonneg 2.1, h_sqrt21]
+  -- Key numeric closure: `L_rec > 2 * U_tail M`, obtained from the tracked bound `M ≤ C_tail`.
+  have h_l_rec_large : L_rec > 2 * U_tail M := by
+    have hM_nonneg : 0 ≤ M := le_of_lt h_osc.1
+    have hmono : U_tail M ≤ U_tail C_tail := U_tail_mono hM_nonneg hM_le
+    have hclose : (2 * U_tail C_tail) < L_rec := zero_free_condition_C_tail
+    have h2mono : (2 * U_tail M) ≤ (2 * U_tail C_tail) := by nlinarith
+    -- Convert to the `>` form used downstream.
+    have : (2 * U_tail M) < L_rec := lt_of_le_of_lt h2mono hclose
     linarith
 
   -- Derive contradiction:
-  -- h_dominance: totalPhaseSignal I ≥ L_rec - U_tail
-  -- h_l_rec_large: L_rec > 2*U_tail, so L_rec - U_tail > U_tail
-  -- But h_carleson: totalPhaseSignal I ≤ U_tail
+  -- h_dominance: totalPhaseSignal I ≥ L_rec - U_tail M
+  -- h_l_rec_large: L_rec > 2*(U_tail M), so L_rec - U_tail M > U_tail M
+  -- But h_carleson: totalPhaseSignal I ≤ U_tail M
   linarith
 
 /-- **MAIN THEOREM**: Local zero-free criterion (conditional).
@@ -1275,7 +1271,8 @@ theorem local_zero_free (I : WhitneyInterval) (B : RecognizerBand)
     (h_width_upper : 2 * I.len ≤ 10 * |ρ.im|)  -- Upper bound
     (hCA : ClassicalAnalysisAssumptions)
     (hRG : RGAssumptions)
-    (h_osc : ∃ M : ℝ, M > 0 ∧ ∀ a b : ℝ, a < b → meanOscillation logAbsXi a b ≤ M) :
+    (M : ℝ) (h_osc : InBMOWithBound logAbsXi M)
+    (hM_le : M ≤ C_tail) :
     False := by
   simp only [RecognizerBand.interior, Set.mem_setOf_eq] at hρ_interior
   obtain ⟨hσ_lower, hσ_upper, hγ_in⟩ := hρ_interior
@@ -1305,7 +1302,7 @@ theorem local_zero_free (I : WhitneyInterval) (B : RecognizerBand)
       _ ≤ 1/2 + 2 * I.len := by have hlen := I.len_pos; nlinarith
 
   -- Apply zero_free_with_interval with oscillation hypothesis
-  exact zero_free_with_interval ρ hCA hRG hρ_re hρ_zero h_osc
+  exact zero_free_with_interval ρ hCA hRG hρ_re hρ_zero M h_osc hM_le
 
 /-- **THEOREM**: No zeros in the interior of any recognizer band (with good interval).
     Takes the oscillation hypothesis for log|ξ|. -/
@@ -1313,10 +1310,13 @@ theorem no_interior_zeros (I : WhitneyInterval) (B : RecognizerBand)
     (hB_base : B.base = I)
     (hCA : ClassicalAnalysisAssumptions)
     (hRG : RGAssumptions)
-    (h_osc : ∃ M : ℝ, M > 0 ∧ ∀ a b : ℝ, a < b → meanOscillation logAbsXi a b ≤ M) :
+    (M : ℝ) (h_osc : InBMOWithBound logAbsXi M)
+    (hM_le : M ≤ C_tail) :
     ∀ ρ ∈ B.interior, ρ.re ≤ 1 → (2 * I.len ≥ |ρ.im|) → (2 * I.len ≤ 10 * |ρ.im|) → completedRiemannZeta ρ ≠ 0 := by
   intro ρ hρ_interior hρ_re_upper h_width_lower h_width_upper hρ_zero
-  exact local_zero_free I B hB_base ρ hρ_interior hρ_zero hρ_re_upper h_width_lower h_width_upper hCA hRG h_osc
+  exact
+    local_zero_free I B hB_base ρ hρ_interior hρ_zero hρ_re_upper h_width_lower h_width_upper hCA hRG M
+      h_osc hM_le
 
 /-! ## Verification: JohnNirenberg Results Justify FeffermanStein Axioms
 

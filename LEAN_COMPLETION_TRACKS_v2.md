@@ -2,7 +2,7 @@
 
 **Version**: 3.0 (December 2025)  
 **Project**: Recognition Geometry proof of the Riemann Hypothesis  
-**Build Status**: ✅ Compiles successfully with **0 sorries** and **12 axioms**
+**Build Status**: ✅ Compiles successfully with **0 sorries** and **10 axioms**
 
 ---
 
@@ -12,7 +12,7 @@
 |-------|------|------------|-------|--------|
 | A | Numeric Bounds | Easy | 0 sorries | ✅ **Complete** |
 | B | Arctan Geometry | Medium | 0 sorries | ✅ **Complete** |
-| C | John-Nirenberg | Hard | 8 axioms | ✅ **Complete** (axiomatized) |
+| C | John-Nirenberg | Hard | 6 axioms | ✅ **Complete** (axiomatized) |
 | D | Dirichlet Eta | Medium | 1 axiom | ✅ **Complete** (axiomatized) |
 | E | Mathlib Gaps | ✅ COMPLETE | 3 axioms | ✅ **Complete** |
 
@@ -24,7 +24,7 @@
 
 All proofs complete modulo axioms!
 
-### 12 Axioms (documented classical results)
+### 10 Axioms (documented classical results)
 
 **Basic.lean**: 0 axioms (removed; no longer needed)
 
@@ -34,21 +34,27 @@ Conjectures.lean:24       - green_identity_axiom_statement (Green-Cauchy-Schwarz
 Conjectures.lean:34       - weierstrass_tail_bound_axiom_statement (Hadamard product tail bound)
 ```
 
+### Unconditional bottleneck (now stated cleanly)
+
+The *scale-correct* analytic interface is now:
+- `InBMOWithBound logAbsXi M` (explicit mean-oscillation bound)
+- `K_tail(M) := C_FS * M^2` and `U_tail(M) := C_geom * sqrt(K_tail(M))`
+- the contradiction closes from the **numeric lemma** `2 * U_tail(C_tail) < L_rec`
+  **plus** the single remaining analytic target `M ≤ C_tail`.
+
 **DirichletEta.lean** (1 axiom - analytic continuation):
 ```
 DirichletEta.lean:1208    - identity_principle_eta_zeta_lt_one_axiom
 ```
 
-**JohnNirenberg.lean** (8 axioms - CZ decomposition):
+**JohnNirenberg.lean** (6 axioms - CZ decomposition):
 ```
-JohnNirenberg.lean:773    - maximalBad_disjoint_axiom
-JohnNirenberg.lean:881    - DyadicInterval.avg_doubling_axiom
-JohnNirenberg.lean:933    - czDecomposition_axiom
-JohnNirenberg.lean:984    - czDecompFull_axiom
-JohnNirenberg.lean:1420   - goodLambda_axiom
-JohnNirenberg.lean:1494   - jn_first_step_axiom
-JohnNirenberg.lean:1691   - bmo_Lp_bound_axiom
-JohnNirenberg.lean:1773   - bmo_kernel_bound_axiom
+JohnNirenberg.lean:990    - czDecomposition_axiom
+JohnNirenberg.lean:1041   - czDecompFull_axiom
+JohnNirenberg.lean:1477   - goodLambda_axiom
+JohnNirenberg.lean:1551   - jn_first_step_axiom
+JohnNirenberg.lean:1748   - bmo_Lp_bound_axiom
+JohnNirenberg.lean:1830   - bmo_kernel_bound_axiom
 ```
 
 **PoissonExtension.lean** (1 axiom):
@@ -64,7 +70,13 @@ PoissonExtension.lean:137 - bmo_carleson_embedding (BMO Carleson embedding)
 - ✅ Deleted inconsistent `FeffermanSteinBMO.lean` module (removed `tail_pairing_bound_axiom`)
 - ✅ Proved `zero_in_critical_strip` (Mathlib ζ nonvanishing on Re ≥ 1)
 - ✅ Proved `dyadic_nesting` (integer division + dyadic scaling)
+- ✅ Proved `DyadicInterval.avg_doubling` (removed axiom; now a theorem with integrability hypothesis)
+- ✅ Removed incorrect/unneeded `maximalBad_disjoint_axiom` (local “parent good/outside” maximality does not imply disjointness)
 - ✅ Removed `zero_has_large_im` + Whitney length/centering axioms (use a centered interval `I0` in `zero_free_with_interval`)
+- ✅ Refactored BMO interface to be scale-correct:
+  - added `InBMOWithBound f M := (0 < M) ∧ (∀ a<b, meanOscillation f a b ≤ M)`
+  - made `K_tail`/`U_tail` depend on `M`
+  - threaded `(M, h_osc : InBMOWithBound logAbsXi M, hM_le : M ≤ C_tail)` through `Axioms.lean`/`Main.lean`
 
 ---
 

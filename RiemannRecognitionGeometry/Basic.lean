@@ -122,27 +122,17 @@ end RecognizerBand
     **Closure condition**: U_tail ≈ 0.72 < 2.2 = L_rec ✓ -/
 def L_rec : ℝ := 2.2
 
-/-- K_tail: Carleson embedding constant for tail energy.
+/-!
+## Carleson/phase constants: scaling-correct interface
 
-    **Definition**: K_tail = C_FS · ∥f_tail∥²_BMO where f_tail is the
-    renormalized log|ξ| with Blaschke factors subtracted.
+The old scaffolding used a fixed numeric `K_tail`/`U_tail`.
+For an **unconditional track**, we must make the dependence on the BMO bound explicit:
 
-    **Derivation** (see riemann-geometry-formalization.txt):
-    For the renormalized tail f_tail := log|ξ| - ∑_{ρ in local box} log|B_ρ|,
-    the local BMO norm ∥f_tail∥_BMO is much smaller than the global
-    ∥log|ξ|∥_BMO because near-zero spikes are removed.
+- From Fefferman–Stein: \(E(I) \le C_{FS}\,M^2\,|I|\).
+- From Green/Cauchy–Schwarz + cancellation: phase change \(\le C_{geom}\sqrt{C_{FS}}\,M\).
 
-    **Formula-based computation** (updated Dec 2025):
-    K_tail_computed = C_FS · C_tail² = 51 · 0.067² ≈ 0.229
-
-    **Threshold verification** (with C_geom = 1/√2):
-    Required: K_tail < (L_rec/(2·C_geom))²
-    L_rec/(2·C_geom) = 6.0 / √2 ≈ 4.24
-    4.24² ≈ 18.0
-    Achieved: 2.1 < 18.0 ✓
-
-    We use K_tail = 2.1 here as a conservative bound covering the computed 2.04. -/
-def K_tail : ℝ := 2.1
+So `K_tail` and `U_tail` should be functions of a BMO bound `M`.
+-/
 
 /-! ## BMO Component Constants
 
@@ -189,20 +179,41 @@ def C_FS : ℝ := 51
     We use the accepted rigorous bound for the BMO norm of log|ζ|. -/
 def C_tail : ℝ := 0.20
 
+/-- `K_tail M`: Carleson energy constant produced from a BMO bound `M`.
+
+This is the scaling-correct Fefferman–Stein form \(K_{tail}(M)=C_{FS}\,M^2\).
+It is **not** asserted to be small unconditionally; the remaining analytic work is to
+prove an explicit bound `M ≤ M₀` strong enough to close the RG contradiction.
+-/
+def K_tail (M : ℝ) : ℝ := C_FS * M ^ 2
+
+lemma C_FS_pos : 0 < C_FS := by
+  unfold C_FS
+  norm_num
+
+lemma K_tail_nonneg (M : ℝ) : 0 ≤ K_tail M := by
+  unfold K_tail
+  nlinarith [sq_nonneg M, (le_of_lt C_FS_pos : (0 : ℝ) ≤ C_FS)]
+
+lemma K_tail_pos {M : ℝ} (hM : 0 < M) : 0 < K_tail M := by
+  unfold K_tail
+  have hM2 : 0 < M ^ 2 := pow_pos hM 2
+  nlinarith [C_FS_pos, hM2]
+
 /-- K_tail_computed: The formula-based value K_tail = C_FS · C_tail².
 
     From Riemann-geometry-formalization-3.txt:
     K_tail = C_FS · C_tail² = 51 · 0.20² = 2.04 -/
-def K_tail_computed : ℝ := C_FS * C_tail^2
+def K_tail_computed : ℝ := K_tail C_tail
 
 /-- K_tail_computed equals 2.04. -/
 lemma K_tail_computed_eq : K_tail_computed = 2.04 := by
-  unfold K_tail_computed C_FS C_tail
+  unfold K_tail_computed K_tail C_FS C_tail
   norm_num
 
-/-- The computed K_tail is within the conservative bound K_tail. -/
-lemma computed_le_K_tail : K_tail_computed < K_tail := by
-  unfold K_tail K_tail_computed C_FS C_tail
+/-- A convenient numeric upper bound for the computed constant. -/
+lemma K_tail_computed_lt_21 : K_tail_computed < (2.1 : ℝ) := by
+  unfold K_tail_computed K_tail C_FS C_tail
   norm_num
 
 /-- c_kernel: Poisson kernel integral bound for Whitney matching.
@@ -362,8 +373,11 @@ lemma C_geom_eq : C_geom = 0.5 := by
   unfold C_geom
   norm_num
 
-/-- U_tail = C_geom · √K_tail ≈ 0.218: Tail upper bound. -/
-def U_tail : ℝ := C_geom * Real.sqrt K_tail
+/-- `U_tail M`: the uniform phase/energy upper bound produced from a BMO bound `M`.
+
+This is the scaling-correct form \(U_{tail}(M)=C_{geom}\sqrt{K_{tail}(M)}\).
+-/
+def U_tail (M : ℝ) : ℝ := C_geom * Real.sqrt (K_tail M)
 
 /-- √2.1 < 1.5 (since 2.1 < 1.5² = 2.25). -/
 lemma sqrt_21_lt : Real.sqrt 2.1 < (1.5 : ℝ) := by
@@ -373,51 +387,107 @@ lemma sqrt_21_lt : Real.sqrt 2.1 < (1.5 : ℝ) := by
 
 /-! ## Key Inequality (PROVEN) -/
 
-/-- The crucial closure inequality: U_tail < L_rec.
-    This is PROVEN, not assumed.
+/-!
+### Quantitative closure in terms of an explicit bound `M₀`
 
-    With C_geom = 1/2 and K_tail = 2.1:
-    - U_tail = 0.5 * √2.1 ≈ 0.72
-    - L_rec = 2.2
-    - So L_rec > U_tail: 2.2 > 0.72 ✓
+The RG contradiction needs `L_rec > 2 * U_tail M`.
+To isolate a single analytic target, we prove the purely numeric inequality at a chosen
+`M₀` (here we use `C_tail = 0.20`), and then later only need to show `M ≤ M₀`.
+-/
 
-    Note: With L_rec = 2.2 (not 6.0), this inequality is still satisfied. -/
-theorem zero_free_condition : U_tail < L_rec := by
-  unfold U_tail L_rec C_geom K_tail
-  -- U_tail = 0.5 * √2.1 ≈ 0.72 < 2.2 = L_rec
-  have h_sqrt21 : Real.sqrt 2.1 < 1.5 := by
-    have h : (2.1 : ℝ) < 1.5^2 := by norm_num
-    rw [← Real.sqrt_sq (by norm_num : (0:ℝ) ≤ 1.5)]
-    exact Real.sqrt_lt_sqrt (by norm_num) h
-  calc (1/2 : ℝ) * Real.sqrt 2.1
-      < (1/2) * 1.5 := by nlinarith [Real.sqrt_nonneg 2.1, h_sqrt21]
-    _ = 0.75 := by norm_num
-    _ < 2.2 := by norm_num
+lemma U_tail_mono {M₁ M₂ : ℝ} (h₁ : 0 ≤ M₁) (h₂ : M₁ ≤ M₂) :
+    U_tail M₁ ≤ U_tail M₂ := by
+  -- Monotonicity through: M ↦ M^2 ↦ K_tail M = C_FS*M^2 ↦ sqrt ↦ multiply by C_geom.
+  have hM2 : M₁ ^ 2 ≤ M₂ ^ 2 := by
+    -- Avoid extra imports: expand `x^2` as `x*x` and use monotonicity of multiplication.
+    have h₂' : 0 ≤ M₂ := le_trans h₁ h₂
+    -- `mul_le_mul` needs `0 ≤ M₁` and `0 ≤ M₂`.
+    simpa [pow_two] using (mul_le_mul h₂ h₂ h₁ h₂')
+  have hK : K_tail M₁ ≤ K_tail M₂ := by
+    unfold K_tail
+    exact mul_le_mul_of_nonneg_left hM2 (le_of_lt C_FS_pos)
+  have hsqrt : Real.sqrt (K_tail M₁) ≤ Real.sqrt (K_tail M₂) := Real.sqrt_le_sqrt hK
+  have hCgeom : 0 ≤ C_geom := by
+    -- C_geom = 1/2
+    unfold C_geom
+    norm_num
+  unfold U_tail
+  exact mul_le_mul_of_nonneg_left hsqrt hCgeom
 
-/-- K_tail refined: K_tail_computed = C_FS * C_tail² = 51 * 0.04 = 2.04 < 2.1 = K_tail. -/
-lemma K_tail_from_renormalized : C_FS * C_tail^2 < K_tail := by
-  unfold C_FS C_tail K_tail
-  norm_num
+/-- Concrete numeric closure at the tracked candidate bound `C_tail = 0.20`. -/
+theorem zero_free_condition_C_tail : (2 * U_tail C_tail) < L_rec := by
+  -- Show `U_tail C_tail < 0.75` by bounding `sqrt (K_tail C_tail) < 1.5`.
+  have h_sqrt : Real.sqrt (K_tail C_tail) < (1.5 : ℝ) := by
+    have h : K_tail C_tail < (1.5 : ℝ) ^ 2 := by
+      -- K_tail C_tail = 51 * 0.20^2 = 2.04 < 2.25
+      unfold K_tail C_FS C_tail
+      norm_num
+    -- √(K_tail C_tail) < √(1.5^2) = 1.5
+    have h0 : (0 : ℝ) ≤ (K_tail C_tail) := K_tail_nonneg C_tail
+    have h15 : (0 : ℝ) ≤ (1.5 : ℝ) := by norm_num
+    -- `sqrt_lt_sqrt` needs strict positivity on the right.
+    have hpos : 0 < (1.5 : ℝ) ^ 2 := by nlinarith
+    -- Convert to the standard form.
+    have hs : Real.sqrt (K_tail C_tail) < Real.sqrt ((1.5 : ℝ) ^ 2) := Real.sqrt_lt_sqrt h0 h
+    simpa [Real.sqrt_sq h15] using hs
+  have h_utail : U_tail C_tail < (0.75 : ℝ) := by
+    unfold U_tail
+    -- U_tail C_tail = (1/2) * √(K_tail C_tail)
+    have : (C_geom : ℝ) = (1/2 : ℝ) := by
+      unfold C_geom
+      norm_num
+    rw [this]
+    nlinarith [Real.sqrt_nonneg (K_tail C_tail), h_sqrt]
+  have h075_lt : (2 : ℝ) * (0.75 : ℝ) < L_rec := by
+    unfold L_rec
+    norm_num
+  -- 2*U_tail C_tail < 2*0.75 < L_rec
+  nlinarith [h_utail, h075_lt]
 
 /-- **MAIN QUANTITATIVE THEOREM**: The key numerical inequality for the proof.
 
     L_rec - U_tail > 1.4
     2.2 - 0.725 = 1.475 > 1.4 -/
-theorem main_quantitative_threshold : L_rec - U_tail > 0 := by
-  have h := zero_free_condition
+theorem main_quantitative_threshold : L_rec - U_tail C_tail > 0 := by
+  have h2 : (2 * U_tail C_tail) < L_rec := zero_free_condition_C_tail
+  -- Since `U_tail C_tail > 0`, we have `U_tail C_tail < 2 * U_tail C_tail < L_rec`.
+  have hpos : 0 < U_tail C_tail := by
+    have hCtail_pos : 0 < C_tail := by
+      unfold C_tail
+      norm_num
+    -- `U_tail M = C_geom * sqrt (K_tail M)` and both factors are positive.
+    unfold U_tail
+    have hCgeom_pos : 0 < C_geom := by
+      unfold C_geom
+      norm_num
+    have hK_pos : 0 < K_tail C_tail := K_tail_pos hCtail_pos
+    have hsqrt_pos : 0 < Real.sqrt (K_tail C_tail) := Real.sqrt_pos_of_pos hK_pos
+    exact mul_pos hCgeom_pos hsqrt_pos
+  have hlt2 : U_tail C_tail < 2 * U_tail C_tail := by nlinarith
+  have hlt : U_tail C_tail < L_rec := lt_trans hlt2 h2
   linarith
 
 /-- The gap L_rec - U_tail is at least 1.0 (since 2.2 - 0.75 = 1.45 > 1.0). -/
-lemma quantitative_gap : L_rec - U_tail > 1.0 := by
-  have h := zero_free_condition
-  unfold U_tail L_rec C_geom K_tail at h ⊢
-  have h_sqrt21 : Real.sqrt 2.1 < 1.5 := by
-    have h' : (2.1 : ℝ) < 1.5^2 := by norm_num
-    rw [← Real.sqrt_sq (by norm_num : (0:ℝ) ≤ 1.5)]
-    exact Real.sqrt_lt_sqrt (by norm_num) h'
-  have h_utail : (1/2 : ℝ) * Real.sqrt 2.1 < 0.75 := by
-    nlinarith [Real.sqrt_nonneg 2.1, h_sqrt21]
-  linarith
+lemma quantitative_gap : L_rec - U_tail C_tail > 1.0 := by
+  -- Crude: `U_tail C_tail < 0.75`, so `L_rec - U_tail C_tail > 2.2 - 0.75 = 1.45`.
+  have h_utail : U_tail C_tail < (0.75 : ℝ) := by
+    -- reuse the proof fragment from `zero_free_condition_C_tail`
+    have h_sqrt : Real.sqrt (K_tail C_tail) < (1.5 : ℝ) := by
+      have h : K_tail C_tail < (1.5 : ℝ) ^ 2 := by
+        unfold K_tail C_FS C_tail
+        norm_num
+      have h0 : (0 : ℝ) ≤ (K_tail C_tail) := K_tail_nonneg C_tail
+      have h15 : (0 : ℝ) ≤ (1.5 : ℝ) := by norm_num
+      have hs : Real.sqrt (K_tail C_tail) < Real.sqrt ((1.5 : ℝ) ^ 2) := Real.sqrt_lt_sqrt h0 h
+      simpa [Real.sqrt_sq h15] using hs
+    unfold U_tail
+    have : (C_geom : ℝ) = (1/2 : ℝ) := by
+      unfold C_geom
+      norm_num
+    rw [this]
+    nlinarith [Real.sqrt_nonneg (K_tail C_tail), h_sqrt]
+  unfold L_rec
+  nlinarith [h_utail]
 
 /-! ## Constants Summary
 

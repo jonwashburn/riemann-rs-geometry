@@ -61,6 +61,44 @@ lemma coe_phaseLiftChange {a b : ℝ} (h : PhaseLift a b) :
 def xiPhaseChangeAngle (I : WhitneyInterval) : Real.Angle :=
   phaseXi (I.t0 + I.len) - phaseXi (I.t0 - I.len)
 
+/-- The (real-valued) Blaschke phase on the critical line associated to a putative zero `ρ`.
+
+This is the elementary arctan phase used in the RG argument.
+-/
+def rgBlaschkePhase (ρ : ℂ) (t : ℝ) : ℝ :=
+  Real.arctan ((t - ρ.im) / (ρ.re - 1/2))
+
+/-- The Blaschke phase change across a Whitney interval, as a real number.
+
+This matches the `let blaschke := ...` expression in `Conjectures.weierstrass_tail_bound_axiom_statement`.
+-/
+def rgBlaschkePhaseChange (I : WhitneyInterval) (ρ : ℂ) : ℝ :=
+  rgBlaschkePhase ρ (I.t0 - I.len) - rgBlaschkePhase ρ (I.t0 + I.len)
+
+/-- The Blaschke phase change across a Whitney interval, valued in `Real.Angle` (modulo `2π`). -/
+def rgBlaschkePhaseChangeAngle (I : WhitneyInterval) (ρ : ℂ) : Real.Angle :=
+  (rgBlaschkePhaseChange I ρ : Real.Angle)
+
+/-- The “cofactor phase” (modulo `2π`) obtained by subtracting the Blaschke phase.
+
+If one can factor out the half-plane Blaschke inner factor corresponding to `ρ`, then this is
+the boundary phase of the analytic cofactor.
+-/
+def rgCofactorPhaseAngle (ρ : ℂ) (t : ℝ) : Real.Angle :=
+  phaseXi t + (rgBlaschkePhase ρ t : Real.Angle)
+
+/-- Algebraic reduction: the Weierstrass tail angle is exactly the phase change of the cofactor phase.
+
+This isolates the analytic content needed to prove the tail bound: a Green/Carleson phase bound for the
+cofactor phase (with the *same* BMO/Carleson constant, since the Blaschke factor is unimodular on the boundary).
+-/
+lemma xiPhaseChangeAngle_sub_rgBlaschkePhaseChangeAngle (I : WhitneyInterval) (ρ : ℂ) :
+    xiPhaseChangeAngle I - rgBlaschkePhaseChangeAngle I ρ =
+      rgCofactorPhaseAngle ρ (I.t0 + I.len) - rgCofactorPhaseAngle ρ (I.t0 - I.len) := by
+  -- Unfold definitions and simplify in the additive group `Real.Angle`.
+  simp [xiPhaseChangeAngle, rgBlaschkePhaseChangeAngle, rgBlaschkePhaseChange, rgCofactorPhaseAngle,
+    rgBlaschkePhase, sub_eq_add_neg, add_assoc, add_comm, add_left_comm]
+
 /-- A real-valued size of phase change: the norm on `Real.Angle`.
 
 This is the shortest-distance representative in `[-π, π]`.

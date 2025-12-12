@@ -73,7 +73,7 @@ It does **not** claim an unconditional proof of RH in standard foundations. -/
 theorem no_off_critical_zeros_in_strip
     (hCA : ClassicalAnalysisAssumptions)
     (hRG : RGAssumptions)
-    (h_osc : ∃ M : ℝ, M > 0 ∧ ∀ a b : ℝ, a < b → meanOscillation logAbsXi a b ≤ M) :
+    (M : ℝ) (h_osc : InBMOWithBound logAbsXi M) (hM_le : M ≤ C_tail) :
     ∀ ρ : ℂ, completedRiemannZeta ρ = 0 → ρ ∈ criticalStrip → False := by
   intro ρ hρ_zero hρ_crit
   simp only [criticalStrip, Set.mem_setOf_eq] at hρ_crit
@@ -83,7 +83,7 @@ theorem no_off_critical_zeros_in_strip
   · -- 1/2 < Re(ρ) ≤ 1: use Recognition Geometry
     push_neg at h_re_gt_one
     have hρ_re : 1/2 < ρ.re := hρ_crit
-    exact zero_free_with_interval ρ hCA hRG hρ_re hρ_zero h_osc
+    exact zero_free_with_interval ρ hCA hRG hρ_re hρ_zero M h_osc hM_le
 
 /-! ## Main Riemann Hypothesis Theorem -/
 
@@ -104,7 +104,7 @@ Every zero ρ of the completed zeta function ξ(s) = Λ(s) satisfies Re(ρ) = 1/
 theorem RiemannHypothesis_recognition_geometry
     (hCA : ClassicalAnalysisAssumptions)
     (hRG : RGAssumptions)
-    (h_osc : ∃ M : ℝ, M > 0 ∧ ∀ a b : ℝ, a < b → meanOscillation logAbsXi a b ≤ M) :
+    (M : ℝ) (h_osc : InBMOWithBound logAbsXi M) (hM_le : M ≤ C_tail) :
     ∀ ρ : ℂ, completedRiemannZeta ρ = 0 → ρ.re = 1/2 := by
   intro ρ hρ
   by_contra h
@@ -117,10 +117,10 @@ theorem RiemannHypothesis_recognition_geometry
     have h1ρ_crit : (1 - ρ) ∈ criticalStrip := by
       simp only [criticalStrip, Set.mem_setOf_eq, Complex.sub_re, Complex.one_re]
       linarith
-    exact no_off_critical_zeros_in_strip hCA hRG h_osc (1 - ρ) h1ρ_zero h1ρ_crit
+    exact no_off_critical_zeros_in_strip hCA hRG M h_osc hM_le (1 - ρ) h1ρ_zero h1ρ_crit
   · exact h h_eq
   · have hρ_crit : ρ ∈ criticalStrip := by simp only [criticalStrip, Set.mem_setOf_eq]; exact h_gt
-    exact no_off_critical_zeros_in_strip hCA hRG h_osc ρ hρ hρ_crit
+    exact no_off_critical_zeros_in_strip hCA hRG M h_osc hM_le ρ hρ hρ_crit
 
 /-! ## Classical Statement -/
 
@@ -137,7 +137,7 @@ Non-trivial zeros are those with 0 < Re(s) < 1.
 theorem RiemannHypothesis_classical
     (hCA : ClassicalAnalysisAssumptions)
     (hRG : RGAssumptions)
-    (h_osc : ∃ M : ℝ, M > 0 ∧ ∀ a b : ℝ, a < b → meanOscillation logAbsXi a b ≤ M) :
+    (M : ℝ) (h_osc : InBMOWithBound logAbsXi M) (hM_le : M ≤ C_tail) :
     ∀ ρ : ℂ, riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re = 1/2 := by
   intro ρ hρ_zeta h_pos h_lt1
   have hρ_xi : completedRiemannZeta ρ = 0 := by
@@ -146,7 +146,7 @@ theorem RiemannHypothesis_classical
     have h_eq := riemannZeta_def_of_ne_zero hρ_ne_zero
     rw [hρ_zeta] at h_eq
     exact div_eq_zero_iff.mp h_eq.symm |>.resolve_right hΓ_ne
-  exact RiemannHypothesis_recognition_geometry hCA hRG h_osc ρ hρ_xi
+  exact RiemannHypothesis_recognition_geometry hCA hRG M h_osc hM_le ρ hρ_xi
 
 /-! ## Summary
 
