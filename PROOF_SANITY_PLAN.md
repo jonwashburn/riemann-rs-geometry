@@ -79,7 +79,7 @@ This file currently contains **structurally inconsistent content**:
 
 ## Milestone 2 — Make the project’s claims internally honest
 
-- [ ] **2.1 Fix “UNCONDITIONAL” labeling.**
+- [x] **2.1 Fix “UNCONDITIONAL” labeling.**
   - Theorems `RiemannHypothesis_recognition_geometry` and `RiemannHypothesis_classical` currently take `h_osc`.
   - Update docstrings/comments in `RiemannRecognitionGeometry/Main.lean`, `RiemannRecognitionGeometry/Axioms.lean`, and the bundle text files to clearly state: **RH is proved conditional on `h_osc` (global BMO bound for `logAbsXi`).**
   - Optional (recommended): rename the theorem(s) to encode the hypothesis, e.g. `RiemannHypothesis_of_logAbsXi_BMO`.

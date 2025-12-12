@@ -4,7 +4,11 @@ Released under MIT license.
 
 # BMO-Carleson Theory for Recognition Geometry
 
-This module provides the Carleson bound that makes the proof unconditional.
+This module is **scaffolding** for the Carleson/BMO side of the argument.
+
+Important: the project’s main theorems are **conditional** (they assume `h_osc` and
+explicit project-level axioms; see `PROOF_SANITY_PLAN.md`). Nothing in this file
+should be read as an unconditional proof of RH.
 
 The key result: windowSignalActual I ≤ U_tail for all Whitney intervals I.
 -/
@@ -22,7 +26,7 @@ namespace RiemannRecognitionGeometry
 /-! ## The Actual Recognition Functional
 
 The recognition functional measures phase integrals of ξ over windows.
-For the unconditional proof, we define it so that:
+For the conditional framework, we define it so that:
 1. windowSignalActual I ≤ U_tail (Carleson bound - proven here)
 2. recognitionSignalActual I ρ ≥ L_rec when ρ is an interior zero (Blaschke bound)
 -/
@@ -44,7 +48,7 @@ def triplePhaseWindows (I : WhitneyInterval) : Fin 3 → PhaseWindow
 noncomputable def phaseIntegral (W : PhaseWindow) : ℝ :=
   -- The actual integral: ∫_{c-s}^{c+s} d/dt[arg(ξ(1/2+it))] dt
   -- For the proof to work, we need this to be:
-  -- - Bounded by U_tail/3 unconditionally (Carleson)
+  -- - Bounded by U_tail/3 (Carleson/BMO control; currently axiomatized elsewhere)
   -- - At least L_rec when there's an interior zero (Blaschke)
   --
   -- We define this as a bound value that satisfies the Carleson property.
@@ -66,7 +70,7 @@ noncomputable def windowSignalActual (I : WhitneyInterval) : ℝ :=
 
 /-- **KEY THEOREM**: The recognition functional is bounded by U_tail.
 
-This is the Carleson-BMO bound that makes Track 3 work unconditionally.
+This is the Carleson-BMO bound that makes Track 3 work (conditionally).
 -/
 theorem windowSignalActual_bound (I : WhitneyInterval) :
     windowSignalActual I ≤ U_tail := by
@@ -82,7 +86,7 @@ theorem windowSignalActual_bound (I : WhitneyInterval) :
 noncomputable def recognitionSignalActual (I : WhitneyInterval) (ρ : ℂ) : ℝ :=
   windowSignalActual I
 
-/-- The recognition signal is bounded by U_tail (unconditionally). -/
+/-- The recognition signal is bounded by U_tail. -/
 theorem recognitionSignalActual_upper_bound (I : WhitneyInterval) (ρ : ℂ) :
     recognitionSignalActual I ρ ≤ U_tail := by
   unfold recognitionSignalActual

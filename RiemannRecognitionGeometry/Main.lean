@@ -2,7 +2,7 @@
 Copyright (c) 2025. All rights reserved.
 Released under MIT license.
 
-# Riemann Hypothesis via Recognition Geometry (Unconditional Proof)
+# Riemann Hypothesis via Recognition Geometry (Conditional formalization)
 
 The main theorem: all non-trivial zeros of ζ(s) lie on Re(s) = 1/2.
 
@@ -15,11 +15,11 @@ The main theorem: all non-trivial zeros of ζ(s) lie on Re(s) = 1/2.
 
 **Track 2 (Poisson-Jensen)** - Phase bounds
   - `blaschke_lower_bound`: A zero ρ forces Blaschke contribution ≥ L_rec
-  - Uses phase bound from explicit arctan calculation (sorries for arctan details)
+  - Uses phase bound from explicit arctan calculation
 
 **Track 3 (Carleson-BMO)** - Technical content
   - `blaschke_dominates_total`: Blaschke contribution ≤ total phase ≤ U_tail
-  - Uses Fefferman-Stein theorem (1 sorry for BMO→Carleson)
+  - Uses Fefferman–Stein / Carleson machinery (currently axiomatized)
 
 **Track 4 (Integration)** ✅ COMPLETE
   - `zero_free_with_interval`: Direct contradiction from interval and zero
@@ -28,7 +28,7 @@ The main theorem: all non-trivial zeros of ζ(s) lie on Re(s) = 1/2.
 ## Key Results
   - `zero_free_condition`: U_tail < L_rec (PROVEN)
   - `dyadic_interval_with_width`: Proper width bounds (PROVEN)
-  - `RiemannHypothesis_recognition_geometry`: Main theorem
+  - `RiemannHypothesis_recognition_geometry`: Main theorem (conditional)
 -/
 
 import RiemannRecognitionGeometry.Axioms
@@ -63,14 +63,13 @@ def criticalStrip : Set ℂ := {s : ℂ | 1/2 < s.re}
 
 /-- **THEOREM**: No off-critical zeros in {Re s > 1/2}.
 
-This is UNCONDITIONAL modulo the sorries in Axioms.lean:
-1. Phase bounds (arctan calculations)
-2. `blaschke_dominates_total`: Blaschke ≤ total phase ≤ U_tail (Carleson)
-3. `zero_has_nonzero_im`: ζ(s) ≠ 0 on (0,1)
+This theorem is **conditional**:
+- it assumes `h_osc` (a global mean-oscillation / BMO-type bound for `logAbsXi`), and
+- it relies on additional project-level axioms (see `RiemannRecognitionGeometry/Conjectures.lean`,
+  `RiemannRecognitionGeometry/PoissonExtension.lean`, `RiemannRecognitionGeometry/JohnNirenberg.lean`,
+  and `RiemannRecognitionGeometry/DirichletEta.lean`; summarized in `PROOF_SANITY_PLAN.md`).
 
-All are well-established classical results.
-
-Takes the oscillation hypothesis for log|ξ|. -/
+It does **not** claim an unconditional proof of RH in standard foundations. -/
 theorem no_off_critical_zeros_in_strip
     (h_osc : ∃ M : ℝ, M > 0 ∧ ∀ a b : ℝ, a < b → meanOscillation logAbsXi a b ≤ M) :
     ∀ ρ : ℂ, completedRiemannZeta ρ = 0 → ρ ∈ criticalStrip → False := by
@@ -86,7 +85,7 @@ theorem no_off_critical_zeros_in_strip
 
 /-! ## Main Riemann Hypothesis Theorem -/
 
-/-- **THEOREM**: Riemann Hypothesis via Recognition Geometry (UNCONDITIONAL)
+/-- **THEOREM**: Riemann Hypothesis via Recognition Geometry (conditional)
 
 Every zero ρ of the completed zeta function ξ(s) = Λ(s) satisfies Re(ρ) = 1/2.
 
@@ -96,12 +95,9 @@ Every zero ρ of the completed zeta function ξ(s) = Λ(s) satisfies Re(ρ) = 1/
   with Re(1-ρ) > 1/2, contradiction
 - Hence Re(ρ) = 1/2
 
-**Remaining Sorries** (well-established classical results):
-1. Phase bounds (arctan calculations)
-2. BMO→Carleson embedding (Fefferman-Stein 1972)
-3. ζ(s) ≠ 0 on (0,1) (Dirichlet eta function)
-
-Takes the oscillation hypothesis for log|ξ|.
+**Assumptions**:
+- `h_osc`: a global mean-oscillation / BMO-type bound for `logAbsXi`.
+- Plus the explicit project axioms listed in `PROOF_SANITY_PLAN.md`.
 -/
 theorem RiemannHypothesis_recognition_geometry
     (h_osc : ∃ M : ℝ, M > 0 ∧ ∀ a b : ℝ, a < b → meanOscillation logAbsXi a b ≤ M) :
@@ -124,18 +120,15 @@ theorem RiemannHypothesis_recognition_geometry
 
 /-! ## Classical Statement -/
 
-/-- **THEOREM**: Classical Riemann Hypothesis (UNCONDITIONAL)
+/-- **THEOREM**: Classical Riemann Hypothesis (conditional)
 
 All non-trivial zeros of ζ(s) lie on Re(s) = 1/2.
 
 Non-trivial zeros are those with 0 < Re(s) < 1.
 
-**This theorem is UNCONDITIONAL** modulo the classical analysis sorries in Axioms.lean,
-which represent well-established results from:
-- Garnett, "Bounded Analytic Functions", Ch. II (phase geometry)
-- Fefferman & Stein, "Hᵖ spaces of several variables", Acta Math 1972 (BMO→Carleson)
-
-Takes the oscillation hypothesis for log|ξ|.
+**Assumptions**:
+- `h_osc`: a global mean-oscillation / BMO-type bound for `logAbsXi`.
+- Plus the explicit project axioms listed in `PROOF_SANITY_PLAN.md`.
 -/
 theorem RiemannHypothesis_classical
     (h_osc : ∃ M : ℝ, M > 0 ∧ ∀ a b : ℝ, a < b → meanOscillation logAbsXi a b ≤ M) :
@@ -151,10 +144,12 @@ theorem RiemannHypothesis_classical
 
 /-! ## Summary
 
-### Proof Status: STRUCTURALLY COMPLETE
+### Proof Status: STRUCTURALLY COMPLETE (conditional)
 
 The main theorems `RiemannHypothesis_recognition_geometry` and `RiemannHypothesis_classical`
-are proven modulo sorries in Axioms.lean representing classical analysis results.
+are proven **relative to**:
+- the hypothesis `h_osc` (a global mean-oscillation / BMO-type bound for `logAbsXi`), and
+- a small number of explicit project-level axioms (see `PROOF_SANITY_PLAN.md`).
 
 ### Key Proven Results
 - `zero_free_condition`: U_tail < L_rec ✅ FULLY PROVEN
@@ -162,8 +157,9 @@ are proven modulo sorries in Axioms.lean representing classical analysis results
 - Functional equation handling ✅ FULLY PROVEN
 - Euler product for Re > 1 ✅ FULLY PROVEN
 
-### Standard Axioms
-The proof uses only standard Lean axioms: `propext`, `Classical.choice`, `Quot.sound`
+### Axioms used
+In addition to Lean's standard classical logic axioms, this development still assumes
+several **project-level axioms** from classical analysis (see `PROOF_SANITY_PLAN.md`).
 -/
 
 end RiemannRecognitionGeometry

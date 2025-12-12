@@ -2,21 +2,25 @@
 Copyright (c) 2025. All rights reserved.
 Released under MIT license.
 
-# Recognition Geometry Signal Infrastructure (Unconditional Proof)
+# Recognition Geometry Signal Infrastructure (Conditional formalization)
 
-This module provides the unconditional proof that ξ has no zeros with Re > 1/2.
+This module provides the Recognition Geometry “signal” infrastructure used to
+rule out zeros with Re > 1/2, **conditional** on:
+- an explicit oscillation/BMO hypothesis `h_osc` for `logAbsXi`, and
+- a small number of explicit project-level axioms (see `PROOF_SANITY_PLAN.md` and
+  `RiemannRecognitionGeometry/Conjectures.lean`).
 
 ## Proof Structure - CORRECTED ARCHITECTURE
 
 The proof combines two bounds on the **TOTAL** phase signal R(I):
 
 1. **Carleson Upper Bound**: |R(I)| ≤ U_tail for all intervals
-   (Fefferman-Stein BMO→Carleson embedding applied to log|ξ|)
-   With C_geom = 1/√2 and K_tail = 2.1, U_tail ≈ 1.03.
+   (Fefferman–Stein / Carleson embedding applied to log|ξ|; currently axiomatized)
+   With C_geom = 1/2 and K_tail = 2.1, U_tail ≈ 0.72.
 
 2. **Blaschke Lower Bound**: When a zero ρ exists with Im(ρ) ∈ I,
-   the Blaschke contribution B(I,ρ) ≥ L_rec = 6.0.
-   (Based on full 2π phase winding of Blaschke factor)
+   the Blaschke contribution B(I,ρ) ≥ L_rec = 2.2.
+   (Based on an explicit arctan phase lower bound)
 
 3. **Blaschke Dominance**: The Blaschke factor dominates the total phase:
    R(I) ≥ B(I,ρ) - |tail correction| ≥ L_rec when zero exists
@@ -24,7 +28,7 @@ The proof combines two bounds on the **TOTAL** phase signal R(I):
 **Key Contradiction**:
 - If zero exists: R(I) ≥ L_rec (from Blaschke dominance)
 - Always: R(I) ≤ U_tail (from Carleson)
-- But L_rec > 2 * U_tail (6.0 > 2 * 1.03 = 2.06)
+- But L_rec > 2 * U_tail (2.2 > 2 * 0.72 ≈ 1.44)
 - Contradiction!
 
 ## Mathematical Content
@@ -1164,7 +1168,7 @@ theorem zero_free_with_interval (ρ : ℂ)
   -- But h_carleson: |totalPhaseSignal I| ≤ U_tail
   linarith
 
-/-- **MAIN THEOREM**: Local zero-free criterion (UNCONDITIONAL).
+/-- **MAIN THEOREM**: Local zero-free criterion (conditional).
     If ρ is in the interior of band B and ξ(ρ) = 0, we get a contradiction.
 
     Note: The Whitney interval I must have sufficient width to capture the phase:
@@ -1173,7 +1177,8 @@ theorem zero_free_with_interval (ρ : ℂ)
     The hypothesis hρ_re_upper : ρ.re ≤ 1 comes from the critical strip property:
     all nontrivial zeros of ξ have real part in (0, 1).
 
-    Takes the oscillation hypothesis for log|ξ|. -/
+    This result is **conditional**: it assumes `h_osc` and relies on explicit
+    project-level axioms (see `PROOF_SANITY_PLAN.md`). -/
 theorem local_zero_free (I : WhitneyInterval) (B : RecognizerBand)
     (hB_base : B.base = I)
     (ρ : ℂ) (hρ_interior : ρ ∈ B.interior)
