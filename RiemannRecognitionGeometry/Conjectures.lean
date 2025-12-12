@@ -5,7 +5,7 @@ Goal: keep the “hard classical analysis” assumptions in one place so they ar
 to audit and (eventually) discharge.
 -/
 
-import RiemannRecognitionGeometry.FeffermanStein
+import RiemannRecognitionGeometry.Phase
 
 noncomputable section
 
@@ -23,7 +23,7 @@ fully formalized in Mathlib.
 -/
 axiom green_identity_axiom_statement (J : WhitneyInterval) (C : ℝ) (hC_pos : C > 0)
     (hC_le : C ≤ K_tail) (M : ℝ) (hM_pos : M > 0) (hM_le : M ≤ C) :
-    |argXi (J.t0 + J.len) - argXi (J.t0 - J.len)| ≤
+    xiPhaseChange J ≤
       C_geom * Real.sqrt (M * (2 * J.len)) * (1 / Real.sqrt (2 * J.len))
 
 /-- **AXIOM (Weierstrass Tail Bound)**: The tail contribution to phase is bounded by `U_tail`.
@@ -37,7 +37,7 @@ axiom weierstrass_tail_bound_axiom_statement (I : WhitneyInterval) (ρ : ℂ)
     let y_hi : ℝ := I.t0 + I.len - ρ.im
     let y_lo : ℝ := I.t0 - I.len - ρ.im
     let blaschke := Real.arctan (y_lo / d) - Real.arctan (y_hi / d)
-    |actualPhaseSignal I - blaschke| ≤ U_tail
+    ‖xiPhaseChangeAngle I - (blaschke : Real.Angle)‖ ≤ U_tail
 
 end Conjectures
 

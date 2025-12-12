@@ -103,7 +103,7 @@ Right now the main chain uses principal `Complex.arg` on ξ and treats it like a
     - or an integral of `Im (ξ'/ξ)` along the critical line away from zeros.
   - Keep the old `argXi` only as a convenience, but stop using it in theorems that claim analytic identities.
 
-- [ ] **3.2 Refactor `actualPhaseSignal` and downstream lemmas to use the new phase.**
+- [x] **3.2 Refactor `actualPhaseSignal` and downstream lemmas to use the new phase.**
   - Update `RiemannRecognitionGeometry/FeffermanStein.lean` and `RiemannRecognitionGeometry/Axioms.lean` so the “phase bound” theorems/axioms are stated for the new phase object.
 
 - [ ] **3.3 Add explicit “branch / continuity” hypotheses where needed.**

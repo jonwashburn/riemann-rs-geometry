@@ -26,7 +26,7 @@ structure ClassicalAnalysisAssumptions : Prop where
   green_identity_axiom_statement :
     ∀ (J : WhitneyInterval) (C : ℝ) (hC_pos : C > 0)
       (hC_le : C ≤ K_tail) (M : ℝ) (hM_pos : M > 0) (hM_le : M ≤ C),
-      |argXi (J.t0 + J.len) - argXi (J.t0 - J.len)| ≤
+      xiPhaseChange J ≤
         C_geom * Real.sqrt (M * (2 * J.len)) * (1 / Real.sqrt (2 * J.len))
 
   /-- ζ(s) ≠ 0 for real `s ∈ (0, 1)`. (Used to rule out real zeros when `Im ρ = 0`.) -/
@@ -43,7 +43,7 @@ structure RGAssumptions : Prop where
       let y_hi : ℝ := I.t0 + I.len - ρ.im
       let y_lo : ℝ := I.t0 - I.len - ρ.im
       let blaschke := Real.arctan (y_lo / d) - Real.arctan (y_hi / d)
-      |actualPhaseSignal I - blaschke| ≤ U_tail
+      ‖xiPhaseChangeAngle I - (blaschke : Real.Angle)‖ ≤ U_tail
 
 namespace Assumptions
 

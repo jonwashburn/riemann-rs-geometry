@@ -73,12 +73,12 @@ noncomputable def blaschkeContribution (I : WhitneyInterval) (ρ : ℂ) : ℝ :=
 /-- The total phase signal over a Whitney interval.
     R(I) = arg(ξ(1/2+i(t₀+L))) - arg(ξ(1/2+i(t₀-L)))
 
-    This is the actual phase change across the interval, defined directly
-    as the arg difference. By FTC this equals ∫ d/dt[arg(ξ)] dt.
-
-    We define it via actualPhaseSignal from FeffermanStein.lean for consistency. -/
+    **Important**: we model phase **modulo 2π** (as an element of `Real.Angle`)
+    and take the norm (a real number in `[0, π]`). This avoids the branch-cut
+    discontinuity of the principal `Complex.arg`.\n
+    Concretely, we use `xiPhaseChange` from `RiemannRecognitionGeometry/Phase.lean`. -/
 noncomputable def totalPhaseSignal (I : WhitneyInterval) : ℝ :=
-  actualPhaseSignal I
+  xiPhaseChange I
 
 /-! ## Phase Bound Proofs
 
@@ -724,21 +724,21 @@ theorem green_identity_for_phase (J : WhitneyInterval) (C : ℝ) (hC_pos : C > 0
     - Fefferman & Stein, "Hp Spaces of Several Variables", Acta Math 129 (1972) -/
 theorem green_identity_axiom_statement (J : WhitneyInterval) (C : ℝ) (hC_pos : C > 0)
     (hC_le : C ≤ K_tail) (M : ℝ) (hM_pos : M > 0) (hM_le : M ≤ C) :
-    |argXi (J.t0 + J.len) - argXi (J.t0 - J.len)| ≤
+    xiPhaseChange J ≤
       C_geom * Real.sqrt (M * (2 * J.len)) * (1 / Real.sqrt (2 * J.len)) :=
   Conjectures.green_identity_axiom_statement J C hC_pos hC_le M hM_pos hM_le
 
 /-- Green identity theorem (from axiom). -/
 theorem green_identity_theorem (J : WhitneyInterval) (C : ℝ) (hC_pos : C > 0) (hC_le : C ≤ K_tail)
     (M : ℝ) (hM_pos : M > 0) (hM_le : M ≤ C) :
-    |argXi (J.t0 + J.len) - argXi (J.t0 - J.len)| ≤
+    xiPhaseChange J ≤
     C_geom * Real.sqrt (M * (2 * J.len)) * (1 / Real.sqrt (2 * J.len)) :=
   green_identity_axiom_statement J C hC_pos hC_le M hM_pos hM_le
 
 /-- Backward compatibility alias for green_identity_theorem -/
 def green_identity_axiom (J : WhitneyInterval) (C : ℝ) (hC_pos : C > 0) (hC_le : C ≤ K_tail)
     (M : ℝ) (hM_pos : M > 0) (hM_le : M ≤ C) :
-    |argXi (J.t0 + J.len) - argXi (J.t0 - J.len)| ≤
+    xiPhaseChange J ≤
     C_geom * Real.sqrt (M * (2 * J.len)) * (1 / Real.sqrt (2 * J.len)) :=
   green_identity_theorem J C hC_pos hC_le M hM_pos hM_le
 
@@ -755,17 +755,45 @@ def green_identity_axiom (J : WhitneyInterval) (C : ℝ) (hC_pos : C > 0) (hC_le
 theorem totalPhaseSignal_bound (I : WhitneyInterval)
     (hCA : ClassicalAnalysisAssumptions)
     (h_osc : ∃ M : ℝ, M > 0 ∧ ∀ a b : ℝ, a < b → meanOscillation logAbsXi a b ≤ M) :
-    |totalPhaseSignal I| ≤ U_tail := by
-  -- totalPhaseSignal is now definitionally equal to actualPhaseSignal
-  -- The bound follows from the FeffermanStein machinery in actualPhaseSignal_bound
+    totalPhaseSignal I ≤ U_tail := by
+  -- `totalPhaseSignal I` is the normed phase change (mod 2π).
   unfold totalPhaseSignal
-  have h_green : ∀ (J : WhitneyInterval) (C : ℝ), C > 0 → C ≤ K_tail →
-      ∀ M : ℝ, M > 0 → M ≤ C →
-      |argXi (J.t0 + J.len) - argXi (J.t0 - J.len)| ≤
-      C_geom * Real.sqrt (M * (2 * J.len)) * (1 / Real.sqrt (2 * J.len)) :=
-    fun J C hC_pos hC_le M hM_pos hM_le =>
-      hCA.green_identity_axiom_statement J C hC_pos hC_le M hM_pos hM_le
-  exact actualPhaseSignal_bound I h_green h_osc
+
+  -- Step 1: log|ξ| ∈ BMO (from oscillation hypothesis)
+  have h_bmo : InBMO logAbsXi := log_xi_in_BMO h_osc
+
+  -- Step 2: Fefferman–Stein gives a Carleson constant `C ≤ K_tail`
+  obtain ⟨C, hC_pos, hC_le⟩ := fefferman_stein_axiom logAbsXi h_bmo
+
+  -- Step 3: apply the Green/Cauchy–Schwarz bound (as a bound on `xiPhaseChange`)
+  have h_green_for_I :
+      xiPhaseChange I ≤
+        C_geom * Real.sqrt (C * (2 * I.len)) * (1 / Real.sqrt (2 * I.len)) :=
+    hCA.green_identity_axiom_statement I C hC_pos hC_le C hC_pos (le_rfl)
+
+  -- Cancel the interval-length factor: √(C·(2L)) / √(2L) = √C.
+  have h_cancel :
+      Real.sqrt (C * (2 * I.len)) * (1 / Real.sqrt (2 * I.len)) = Real.sqrt C := by
+    have hC_nonneg : 0 ≤ C := le_of_lt hC_pos
+    have hL_pos : 0 < (2 * I.len) := by nlinarith [I.len_pos]
+    simpa using (sqrt_energy_cancellation C (2 * I.len) hC_nonneg hL_pos)
+
+  have h_green_for_I' : xiPhaseChange I ≤ C_geom * Real.sqrt C := by
+    -- Reassociate so `h_cancel` applies to the `(√(C·(2L)) * (1/√(2L)))` factor.
+    have h1 := h_green_for_I
+    rw [mul_assoc] at h1
+    rw [h_cancel] at h1
+    exact h1
+
+  -- Step 4: bound `C_geom * √C ≤ C_geom * √K_tail = U_tail`
+  have h_sqrt : Real.sqrt C ≤ Real.sqrt K_tail := Real.sqrt_le_sqrt hC_le
+  have h_bound : C_geom * Real.sqrt C ≤ U_tail := by
+    calc
+      C_geom * Real.sqrt C ≤ C_geom * Real.sqrt K_tail := by
+        exact mul_le_mul_of_nonneg_left h_sqrt (le_of_lt C_geom_pos)
+      _ = U_tail := rfl
+
+  exact le_trans h_green_for_I' h_bound
 
 /-! ## Quadrant Crossing Lemmas for Phase Bounds
 
@@ -952,9 +980,9 @@ theorem criticalLine_phase_ge_L_rec (I : WhitneyInterval) (ρ : ℂ)
   unfold L_rec
   exact h_val_ge
 
-/-- totalPhaseSignal is now definitionally actualPhaseSignal, so this is rfl. -/
-theorem totalPhaseSignal_eq_actualPhaseSignal (I : WhitneyInterval) :
-    |totalPhaseSignal I| = |actualPhaseSignal I| := rfl
+/-- `totalPhaseSignal` is definitionally `xiPhaseChange`. -/
+theorem totalPhaseSignal_eq_xiPhaseChange (I : WhitneyInterval) :
+    totalPhaseSignal I = xiPhaseChange I := rfl
 
 /-- **AXIOM (Weierstrass Tail Bound)**: The tail contribution to phase is bounded by U_tail.
 
@@ -1008,7 +1036,7 @@ theorem weierstrass_tail_bound_axiom_statement (I : WhitneyInterval) (ρ : ℂ)
     let y_hi : ℝ := I.t0 + I.len - ρ.im
     let y_lo : ℝ := I.t0 - I.len - ρ.im
     let blaschke := Real.arctan (y_lo / d) - Real.arctan (y_hi / d)
-    |actualPhaseSignal I - blaschke| ≤ U_tail :=
+    ‖xiPhaseChangeAngle I - (blaschke : Real.Angle)‖ ≤ U_tail :=
   Conjectures.weierstrass_tail_bound_axiom_statement I ρ hρ_zero hρ_im
 
 /-- Weierstrass tail bound theorem (from axiom). -/
@@ -1018,7 +1046,7 @@ theorem weierstrass_tail_bound_for_phase_theorem (I : WhitneyInterval) (ρ : ℂ
     let y_hi : ℝ := I.t0 + I.len - ρ.im
     let y_lo : ℝ := I.t0 - I.len - ρ.im
     let blaschke := Real.arctan (y_lo / d) - Real.arctan (y_hi / d)
-    |actualPhaseSignal I - blaschke| ≤ U_tail :=
+    ‖xiPhaseChangeAngle I - (blaschke : Real.Angle)‖ ≤ U_tail :=
   weierstrass_tail_bound_axiom_statement I ρ hρ_zero hρ_im
 
 /-- Backward compatibility alias for weierstrass_tail_bound_for_phase_theorem -/
@@ -1028,7 +1056,7 @@ def weierstrass_tail_bound_for_phase (I : WhitneyInterval) (ρ : ℂ)
     let y_hi : ℝ := I.t0 + I.len - ρ.im
     let y_lo : ℝ := I.t0 - I.len - ρ.im
     let blaschke := Real.arctan (y_lo / d) - Real.arctan (y_hi / d)
-    |actualPhaseSignal I - blaschke| ≤ U_tail :=
+    ‖xiPhaseChangeAngle I - (blaschke : Real.Angle)‖ ≤ U_tail :=
   weierstrass_tail_bound_for_phase_theorem I ρ hρ_zero hρ_im
 
 /-- **THEOREM**: When a zero exists, the total phase signal is large.
@@ -1049,18 +1077,19 @@ theorem blaschke_dominates_total (I : WhitneyInterval) (ρ : ℂ)
     (hI_len_large : I.len ≥ 7)
     (h_centered : |ρ.im - I.t0| ≤ I.len / 2)
     (_hρ_im_ne : ρ.im ≠ 0) :
-    |totalPhaseSignal I| ≥ L_rec - U_tail := by
-  -- Use phase_decomposition_exists from FeffermanStein
+    totalPhaseSignal I ≥ L_rec - U_tail := by
   let d := ρ.re - 1/2
   let y_hi := I.t0 + I.len - ρ.im
   let y_lo := I.t0 - I.len - ρ.im
   let blaschke_fs := Real.arctan (y_lo / d) - Real.arctan (y_hi / d)
-  -- Get the tail bound from the axiom
-  have h_tail_axiom := hRG.weierstrass_tail_bound_axiom_statement I ρ hρ_zero hρ_im
-  obtain ⟨tail, h_decomp, h_tail_bound⟩ := phase_decomposition_exists I ρ hρ_zero hρ_im h_tail_axiom
+  -- Tail bound, formulated in `Real.Angle` (phase modulo 2π)
+  have h_tail :
+      ‖xiPhaseChangeAngle I - (blaschke_fs : Real.Angle)‖ ≤ U_tail := by
+    simpa [d, y_hi, y_lo, blaschke_fs] using
+      hRG.weierstrass_tail_bound_axiom_statement I ρ hρ_zero hρ_im
 
   -- Critical line phase bound (now proven using geometric arctan)
-  have h_phase_ge : |blaschke_fs| ≥ L_rec := by
+  have h_phase_ge_abs : |blaschke_fs| ≥ L_rec := by
     -- |arctan(lo) - arctan(hi)| = arctan(hi) - arctan(lo)
     rw [abs_sub_comm]
     have h_pos : Real.arctan (y_hi / d) - Real.arctan (y_lo / d) ≥ 0 := by
@@ -1074,25 +1103,77 @@ theorem blaschke_dominates_total (I : WhitneyInterval) (ρ : ℂ)
     apply criticalLine_phase_ge_L_rec I ρ hρ_zero hρ_im hρ_re hρ_re_upper hρ_re_strict hI_len_large
       h_centered
 
+  -- Convert the Blaschke real phase to an `Angle`-norm (here it equals `|blaschke_fs|` since ≤ π)
+  have h_abs_le_pi : |blaschke_fs| ≤ Real.pi := by
+    -- `|a - b| ≤ |a| + |b|`, and `|arctan x| ≤ π/2`.
+    have hA : |Real.arctan (y_lo / d)| ≤ Real.pi / 2 := by
+      apply abs_le.2
+      constructor
+      · exact le_of_lt (Real.neg_pi_div_two_lt_arctan (y_lo / d))
+      · exact le_of_lt (Real.arctan_lt_pi_div_two (y_lo / d))
+    have hB : |Real.arctan (y_hi / d)| ≤ Real.pi / 2 := by
+      apply abs_le.2
+      constructor
+      · exact le_of_lt (Real.neg_pi_div_two_lt_arctan (y_hi / d))
+      · exact le_of_lt (Real.arctan_lt_pi_div_two (y_hi / d))
+    have h_sub : |blaschke_fs| ≤ |Real.arctan (y_lo / d)| + |Real.arctan (y_hi / d)| := by
+      -- `|a - b| = |a + (-b)| ≤ |a| + |b|`.
+      simpa [blaschke_fs, sub_eq_add_neg, abs_neg] using
+        (abs_add (Real.arctan (y_lo / d)) (-Real.arctan (y_hi / d)))
+    have h_sum : |Real.arctan (y_lo / d)| + |Real.arctan (y_hi / d)| ≤ Real.pi := by
+      nlinarith [hA, hB]
+    exact le_trans h_sub h_sum
 
-  -- From decomposition: actualPhaseSignal I = blaschke_fs + tail
-  -- Reverse triangle inequality: |a + b| ≥ |a| - |b|
-  have h_actual_ge : |actualPhaseSignal I| ≥ |blaschke_fs| - |tail| := by
-    have h1 : actualPhaseSignal I = blaschke_fs + tail := h_decomp
-    have h2 : |blaschke_fs| ≤ |actualPhaseSignal I| + |tail| := by
-      calc |blaschke_fs| = |actualPhaseSignal I - tail| := by rw [h1]; ring_nf
-        _ ≤ |actualPhaseSignal I| + |tail| := abs_sub _ _
-    linarith
+  have hp : (2 * Real.pi : ℝ) ≠ 0 := by nlinarith [Real.pi_pos]
+  have h_norm_eq_abs : ‖(blaschke_fs : Real.Angle)‖ = |blaschke_fs| := by
+    -- Use the characterization of the norm on `AddCircle (2π)`.
+    have h_half_period : |blaschke_fs| ≤ |(2 * Real.pi : ℝ)| / 2 := by
+      have hpos : 0 < (2 * Real.pi : ℝ) := by nlinarith [Real.pi_pos]
+      have hRHS : |(2 * Real.pi : ℝ)| / 2 = Real.pi := by
+        calc
+          |(2 * Real.pi : ℝ)| / 2 = (2 * Real.pi) / 2 := by simp [abs_of_pos hpos]
+          _ = Real.pi := by
+                simpa [mul_comm] using
+                  (mul_div_cancel_left₀ (Real.pi) (2 : ℝ) (two_ne_zero : (2 : ℝ) ≠ 0))
+      simpa [hRHS] using h_abs_le_pi
+    exact (AddCircle.norm_coe_eq_abs_iff (p := (2 * Real.pi)) (x := blaschke_fs) hp).2 h_half_period
 
-  -- Connect totalPhaseSignal to actualPhaseSignal
-  have h_total_eq := totalPhaseSignal_eq_actualPhaseSignal I
+  have h_phase_ge : ‖(blaschke_fs : Real.Angle)‖ ≥ L_rec := by
+    simpa [h_norm_eq_abs] using h_phase_ge_abs
 
-  -- Chain the bounds
-  calc |totalPhaseSignal I|
-      = |actualPhaseSignal I| := h_total_eq
-    _ ≥ |blaschke_fs| - |tail| := h_actual_ge
-    _ ≥ |blaschke_fs| - U_tail := by linarith [h_tail_bound]
-    _ ≥ L_rec - U_tail := by linarith [h_phase_ge]
+  -- Reverse triangle inequality in the normed group `Real.Angle`.
+  have h_rev :
+      ‖(blaschke_fs : Real.Angle)‖ - ‖xiPhaseChangeAngle I - (blaschke_fs : Real.Angle)‖ ≤
+        ‖xiPhaseChangeAngle I‖ := by
+    -- Start from `‖b‖ - ‖a‖ ≤ ‖b - a‖` and rearrange.
+    have h1 :
+        ‖(blaschke_fs : Real.Angle)‖ - ‖xiPhaseChangeAngle I‖ ≤
+          ‖xiPhaseChangeAngle I - (blaschke_fs : Real.Angle)‖ := by
+      have h0 := norm_sub_norm_le (a := (blaschke_fs : Real.Angle)) (b := xiPhaseChangeAngle I)
+      simpa [norm_sub_rev] using h0
+    have h2 :
+        ‖(blaschke_fs : Real.Angle)‖ ≤
+          ‖xiPhaseChangeAngle I - (blaschke_fs : Real.Angle)‖ + ‖xiPhaseChangeAngle I‖ :=
+      (sub_le_iff_le_add).1 h1
+    have h2' :
+        ‖(blaschke_fs : Real.Angle)‖ ≤
+          ‖xiPhaseChangeAngle I‖ + ‖xiPhaseChangeAngle I - (blaschke_fs : Real.Angle)‖ := by
+      simpa [add_comm] using h2
+    exact (sub_le_iff_le_add).2 h2'
+
+  have h_rev' : ‖(blaschke_fs : Real.Angle)‖ - U_tail ≤ ‖xiPhaseChangeAngle I‖ := by
+    have h_sub : ‖(blaschke_fs : Real.Angle)‖ - U_tail ≤
+        ‖(blaschke_fs : Real.Angle)‖ - ‖xiPhaseChangeAngle I - (blaschke_fs : Real.Angle)‖ :=
+      sub_le_sub_left h_tail ‖(blaschke_fs : Real.Angle)‖
+    exact le_trans h_sub h_rev
+
+  -- `‖xiPhaseChangeAngle I‖ = totalPhaseSignal I` by definition.
+  have h_total : ‖xiPhaseChangeAngle I‖ = totalPhaseSignal I := by rfl
+  have h_rev'' : ‖(blaschke_fs : Real.Angle)‖ - U_tail ≤ totalPhaseSignal I := by
+    simpa [h_total] using h_rev'
+
+  -- Combine: ‖blaschke‖ ≥ L_rec and ‖phase‖ ≥ ‖blaschke‖ - U_tail.
+  linarith
 
 /-! ## Main Contradiction
 
@@ -1146,12 +1227,12 @@ theorem zero_free_with_interval (ρ : ℂ)
   have hI0_len_large : I0.len ≥ 7 := by simp [I0]
   have hρ_im_ne : ρ.im ≠ 0 := zero_has_nonzero_im ρ hCA hρ_zero hρ_re
 
-  -- Lower bound: |totalPhaseSignal I0| ≥ L_rec - U_tail
+  -- Lower bound: totalPhaseSignal I0 ≥ L_rec - U_tail
   have h_dominance :=
     blaschke_dominates_total I0 ρ hRG hρ_zero hρ_re hρ_re_upper0 hρ_im0 hρ_re_strict hI0_len_large
       h_centered0 hρ_im_ne
 
-  -- Upper bound: |totalPhaseSignal I0| ≤ U_tail
+  -- Upper bound: totalPhaseSignal I0 ≤ U_tail
   have h_carleson := totalPhaseSignal_bound I0 hCA h_osc
 
   -- Key numerical inequality: L_rec > 2 * U_tail
@@ -1169,10 +1250,9 @@ theorem zero_free_with_interval (ρ : ℂ)
     linarith
 
   -- Derive contradiction:
-  -- h_dominance: |totalPhaseSignal I| ≥ L_rec - U_tail
+  -- h_dominance: totalPhaseSignal I ≥ L_rec - U_tail
   -- h_l_rec_large: L_rec > 2*U_tail, so L_rec - U_tail > U_tail
-  -- Therefore: |totalPhaseSignal I| > U_tail
-  -- But h_carleson: |totalPhaseSignal I| ≤ U_tail
+  -- But h_carleson: totalPhaseSignal I ≤ U_tail
   linarith
 
 /-- **MAIN THEOREM**: Local zero-free criterion (conditional).
