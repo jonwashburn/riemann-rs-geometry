@@ -1,0 +1,1863 @@
+================================================================================
+ROUTE 3 LEAN FILES BUNDLE
+Generated: $(date)
+================================================================================
+
+This file contains all Lean 4 files from the Route 3 (Explicit Formula / Weil-Li)
+proof attempt for the Riemann Hypothesis.
+
+Files are sourced from:
+- Main workspace: RiemannRecognitionGeometry/ExplicitFormula/
+- Worktree (prioritized for duplicates): worktree copy of RiemannRecognitionGeometry/ExplicitFormula/
+
+================================================================================
+
+================================================================================
+FILE: Defs.lean (TestSpace typeclass)
+================================================================================
+
+/-
+# Route 3 (major rebuild): explicit-formula infrastructure
+
+This folder intentionally does **not** import any of the existing
+Carleson/BMO/Whitney Recognition-Geometry infrastructure.
+
+It provides a mechanically-checkable skeleton for the Lagarias/Weil/Li
+explicit-formula route.
+-/
+
+import Mathlib.Data.Complex.Basic
+
+noncomputable section
+
+namespace RiemannRecognitionGeometry
+namespace ExplicitFormula
+
+universe u
+
+/--
+An abstract test-function space in the sense of Lagarias' Mellin-transform
+normalization.
+
+We keep this abstract on purpose: the Route 3 skeleton is about wiring the
+logical implications correctly, while isolating analytic convergence issues
+as explicit assumptions.
+-/
+class TestSpace (F : Type u) where
+  /-- Mellin transform `M[f](s)`. -/
+  Mellin : F → ℂ → ℂ
+  /-- Multiplicative convolution `f * g`. -/
+  conv : F → F → F
+  /-- Involution `\widetilde f(x) = x^{-1} f(x^{-1})`. -/
+  tilde : F → F
+  /-- Complex conjugation on the test side (used in `\widetilde{\overline f}`). -/
+  star : F → F
+  /-- Mellin turns convolution into multiplication. -/
+  mellin_conv : ∀ (f g : F) (s : ℂ),
+    Mellin (conv f g) s = Mellin f s * Mellin g s
+  /-- Mellin intertwines the involution by `s ↦ 1 - s`. -/
+  mellin_tilde : ∀ (f : F) (s : ℂ),
+    Mellin (tilde f) s = Mellin f (1 - s)
+
+attribute [simp] TestSpace.mellin_conv TestSpace.mellin_tilde
+
+namespace TestSpace
+
+variable {F : Type u} [TestSpace F]
+
+notation "M[" f "](" s ")" => TestSpace.Mellin f s
+infixl:70 " ⋆ₘ " => TestSpace.conv
+notation "˜ₘ" f => TestSpace.tilde f
+notation "⋆ₜ" f => TestSpace.star f
+
+/-- The quadratic-form test `f * \widetilde{\overline f}` (abstractly). -/
+def quad (f : F) : F := f ⋆ₘ ˜ₘ (⋆ₜ f)
+
+end TestSpace
+
+end ExplicitFormula
+end RiemannRecognitionGeometry
+
+
+
+================================================================================
+FILE: Lagarias.lean (Framework & Weil positivity)
+================================================================================
+
+/-
+# Lagarias (2007): explicit formula and Weil positivity (Route 3 skeleton)
+
+This file encodes the *statements* (as Lean-typed axioms/structures) of:
+- Lagarias Thm 3.1 (Guinand–Weil explicit formula), and
+- Lagarias Thm 3.2 (Weil positivity criterion for RH),
+
+in the Mellin-transform normalization used in `renormalized_tail_bound.md` §8.
+
+No Carleson/BMO/Whitney infrastructure is imported here.
+-/
+
+import Mathlib.NumberTheory.LSeries.RiemannZeta
+import RiemannRecognitionGeometry.ExplicitFormula.Defs
+
+noncomputable section
+
+open Complex
+
+namespace RiemannRecognitionGeometry
+namespace ExplicitFormula
+
+open TestSpace
+
+/-- Lagarias' completed zeta in the normalization
+`ξ(s) = (1/2) s (s-1) π^{-s/2} Γ(s/2) ζ(s)`.
+
+We define it using Mathlib's `completedRiemannZeta`:
+`completedRiemannZeta s = π^{-s/2} Γ(s/2) ζ(s)` (up to harmless point-value conventions
+at `s=0,1`). The prefactor `s(s-1)` removes the poles and yields an entire function.
+-/
+def xiLagarias (s : ℂ) : ℂ := (1/2 : ℂ) * s * (s - 1) * completedRiemannZeta s
+
+lemma xiLagarias_one_sub (s : ℂ) : xiLagarias (1 - s) = xiLagarias s := by
+  unfold xiLagarias
+  -- First apply the functional equation to the completed zeta factor.
+  rw [completedRiemannZeta_one_sub s]
+  -- The remaining equality is just commutative-ring algebra in `s`.
+  ring_nf
+
+/-!
+## Zeros: relating `xiLagarias` and `riemannZeta` (basic correspondence lemmas)
+
+These lemmas are not the Route 3 bottleneck; they are routine “interface glue”
+needed to connect Lagarias-style statements (formulated in terms of `ξ`) with
+Mathlib's `RiemannHypothesis` predicate (formulated in terms of `ζ`).
+
+We keep hypotheses explicit to avoid sweeping analytic subtleties under the rug.
+-/
+
+lemma completedRiemannZeta_eq_zero_of_riemannZeta_eq_zero {s : ℂ}
+    (hs0 : s ≠ 0) (hsre : 0 < s.re) (hz : riemannZeta s = 0) :
+    completedRiemannZeta s = 0 := by
+  have hΓ : Complex.Gammaℝ s ≠ 0 :=
+    Complex.Gammaℝ_ne_zero_of_re_pos hsre
+  have hdef := riemannZeta_def_of_ne_zero (s := s) hs0
+  have hdiv : completedRiemannZeta s / Complex.Gammaℝ s = 0 := by
+    simpa [hdef] using hz
+  rcases (div_eq_zero_iff).1 hdiv with hcomp | hΓ0
+  · exact hcomp
+  · exact False.elim (hΓ hΓ0)
+
+lemma xiLagarias_eq_zero_of_riemannZeta_eq_zero {s : ℂ}
+    (hs0 : s ≠ 0) (hsre : 0 < s.re) (hz : riemannZeta s = 0) :
+    xiLagarias s = 0 := by
+  have hcomp : completedRiemannZeta s = 0 :=
+    completedRiemannZeta_eq_zero_of_riemannZeta_eq_zero (s := s) hs0 hsre hz
+  unfold xiLagarias
+  simp [hcomp]
+
+lemma riemannZeta_eq_zero_of_xiLagarias_eq_zero {s : ℂ}
+    (hs0 : s ≠ 0) (hs1 : s ≠ 1) (hsre : 0 < s.re) (hxi : xiLagarias s = 0) :
+    riemannZeta s = 0 := by
+  have hΓ : Complex.Gammaℝ s ≠ 0 :=
+    Complex.Gammaℝ_ne_zero_of_re_pos hsre
+  have hdef := riemannZeta_def_of_ne_zero (s := s) hs0
+  have hpref : ((1/2 : ℂ) * s * (s - 1)) ≠ 0 := by
+    have hhalf : (1/2 : ℂ) ≠ 0 := by norm_num
+    have hsMinus1 : s - 1 ≠ 0 := by
+      intro h
+      apply hs1
+      exact sub_eq_zero.mp h
+    have h1 : (1/2 : ℂ) * s ≠ 0 := mul_ne_zero hhalf hs0
+    have h2 : ((1/2 : ℂ) * s) * (s - 1) ≠ 0 := mul_ne_zero h1 hsMinus1
+    simpa [mul_assoc] using h2
+  -- Extract `completedRiemannZeta s = 0` from `xiLagarias s = 0`.
+  have hcomp : completedRiemannZeta s = 0 := by
+    unfold xiLagarias at hxi
+    -- reassociate to isolate the `completedRiemannZeta` factor
+    have hxi' : ((1/2 : ℂ) * s * (s - 1)) * completedRiemannZeta s = 0 := by
+      simpa [mul_assoc, mul_left_comm, mul_comm] using hxi
+    rcases mul_eq_zero.mp hxi' with hpre0 | hcomp0
+    · exact False.elim (hpref hpre0)
+    · exact hcomp0
+  -- Now use `ζ = Λ / Γ` (Mathlib's interface) and the nonvanishing of `Γ`.
+  rw [hdef]
+  simp [hcomp, hΓ]
+
+/--
+A packaged set of explicit-formula functionals in Lagarias' Mellin normalization.
+
+`W0(f) = M[f](0)`, `W2(f) = M[f](1)`, and `W1(f) = ∑_ρ M[f](ρ)` (symmetric summation).
+We keep `W1` and `Warith` abstract, since their analytic definition/convergence
+is part of the Route 3 bottleneck.
+-/
+structure LagariasFramework (F : Type) [TestSpace F] where
+  /-- The spectral zero-sum functional `W^{(1)}(f) = ∑_ρ M[f](ρ)` (symmetric summation). -/
+  W1 : F → ℂ
+  /-- The arithmetic-side functional `W_arith(f) = W_∞(f) + ∑_p W_p(f)`. -/
+  Warith : F → ℂ
+
+  /-- Lagarias Thm 3.1 (Explicit Formula): `W_spec(f) = W_arith(f)` for all nice `f`. -/
+  explicitFormula : ∀ f : F, M[f](1) - W1 f + M[f](0) = Warith f
+
+  /-- Lagarias Thm 3.2 (Weil positivity): `RH ↔ (∀f, Re(W1(f*~\bar f)) ≥ 0)`. -/
+  weilPositivity :
+      RiemannHypothesis ↔ (∀ f : F, 0 ≤ (W1 (TestSpace.quad (F:=F) f)).re)
+
+/-- `W^{(2)}(f) = M[f](1)` (spectral boundary term). -/
+def W2 {F : Type} [TestSpace F] (f : F) : ℂ := M[f](1)
+
+/-- `W^{(0)}(f) = M[f](0)` (spectral boundary term). -/
+def W0 {F : Type} [TestSpace F] (f : F) : ℂ := M[f](0)
+
+/-- `W_spec(f) = W2(f) - W1(f) + W0(f)` (Lagarias). -/
+def Wspec {F : Type} [TestSpace F] (f : F) (L : LagariasFramework F) : ℂ :=
+  W2 f - L.W1 f + W0 f
+
+-- Convenience projection: view `Wspec` as a function once `L` is fixed.
+namespace LagariasFramework
+
+variable {F : Type} [TestSpace F] (L : LagariasFramework F)
+
+/-- `W_spec` as a unary functional for a fixed framework. -/
+def Wspec (f : F) : ℂ :=
+  (W2 f) - (L.W1 f) + (W0 f)
+
+/-- `WeilGate`: the explicit-formula positivity hypothesis (the Route 3 bottleneck). -/
+def WeilGate : Prop := ∀ f : F, 0 ≤ (L.W1 (TestSpace.quad (F:=F) f)).re
+
+end LagariasFramework
+
+-- Provide the `Wspec` used in the structure field above.
+-- (We keep it outside the structure to avoid dependent recursion issues.)
+@[simp] lemma Wspec_eq (F : Type) [TestSpace F] (L : LagariasFramework F) (f : F) :
+    (LagariasFramework.Wspec (F:=F) L f) = W2 f - L.W1 f + W0 f := rfl
+
+end ExplicitFormula
+end RiemannRecognitionGeometry
+
+
+
+================================================================================
+FILE: Li.lean (Li criterion)
+================================================================================
+
+/-
+# Li coefficients and Li criterion (Route 3 skeleton)
+
+This file records (as Lean-typed statements) the Li-criterion gate for RH and
+its relationship to the explicit-formula/Weil gate.
+
+Analytic convergence and the “sum over zeros” identity are intentionally
+packaged as assumptions.
+-/
+
+import Mathlib.NumberTheory.LSeries.RiemannZeta
+import Mathlib.Analysis.Complex.Basic
+import RiemannRecognitionGeometry.ExplicitFormula.Lagarias
+
+noncomputable section
+
+namespace RiemannRecognitionGeometry
+namespace ExplicitFormula
+
+open TestSpace
+open ComplexConjugate
+
+/--
+A Li-criterion package (Li 1997; Lagarias 2007, Thm 6.5), layered on top of a
+Lagarias explicit-formula framework.
+
+We take Li coefficients `λ n` as real numbers (as in the criterion), and record
+`RH ↔ (∀n≥1, λ n ≥ 0)`.
+
+Further identities (sum over zeros, and the Bombieri–Lagarias realization as a
+Weil functional) are represented as explicit fields, but kept abstract.
+-/
+structure LiFramework (F : Type) [TestSpace F] extends LagariasFramework F where
+  /-- Li coefficients `λₙ` (real). -/
+  lambda : ℕ → ℝ
+
+  /-- Li criterion (Lagarias 2007, Thm 6.5): `RH ↔ ∀ n≥1, λₙ ≥ 0`. -/
+  liCriterion : RiemannHypothesis ↔ (∀ n : ℕ, 1 ≤ n → 0 ≤ lambda n)
+
+  /-- Optional: record the (symmetric) sum-over-zeros formula as a named assumption. -/
+  sumOverZerosFormula : Prop
+
+  /-- Optional: record the Bombieri–Lagarias/Lagarias realization `λₙ = W¹(φₙ * \widetilde{\bar φₙ})`.
+      This typically requires extending the test-function class beyond compact support. -/
+  lambdaAsWeil : Prop
+
+/-!
+## The local RH → termwise nonnegativity step (Li)
+
+The (symmetric) sum-over-zeros formula for Li coefficients is
+
+`λₙ = ∑_ρ (1 - (1 - 1/ρ)^n)`,
+
+with a specific convergence convention (Lagarias §6.3). Under **RH**, each nontrivial zero `ρ`
+satisfies `ρ.re = 1/2`, and then the factor `z := 1 - 1/ρ` lies on the unit circle (`abs z = 1`).
+Consequently,
+
+`Re(1 - z^n) = 1 - Re(z^n) ≥ 0`.
+
+The lemmas below formalize exactly this *local* inequality. Upgrading it to
+`RH → (∀n≥1, λₙ ≥ 0)` requires (and is essentially equivalent to) the analytic
+sum-over-zeros identity plus the justification for exchanging `Re` with the symmetric sum.
+-/
+
+namespace LiAux
+
+/-- The basic Li summand `1 - (1 - 1/ρ)^n`. -/
+def liTerm (n : ℕ) (ρ : ℂ) : ℂ :=
+  (1 : ℂ) - (1 - 1 / ρ) ^ n
+
+lemma normSq_sub_one_eq_normSq_of_re_eq_half {ρ : ℂ} (hρ : ρ.re = (1 / 2 : ℝ)) :
+    Complex.normSq (ρ - 1) = Complex.normSq ρ := by
+  simp [Complex.normSq_apply, hρ]
+  ring
+
+lemma abs_one_sub_inv_eq_one {ρ : ℂ} (hρ : ρ.re = (1 / 2 : ℝ)) (hρ0 : ρ ≠ 0) :
+    Complex.abs (1 - 1 / ρ) = 1 := by
+  have hrew : (1 - ρ⁻¹) = (ρ - 1) * ρ⁻¹ := by
+    simp [sub_eq_add_neg, mul_add, add_mul, mul_assoc, hρ0]
+  have hns : Complex.normSq ρ ≠ 0 := by
+    intro h0
+    have : ρ = 0 := (Complex.normSq_eq_zero).1 h0
+    exact hρ0 this
+  have hn : Complex.normSq (1 - ρ⁻¹) = 1 := by
+    calc
+      Complex.normSq (1 - ρ⁻¹)
+          = Complex.normSq ((ρ - 1) * ρ⁻¹) := by simp [hrew]
+      _ = Complex.normSq (ρ - 1) * Complex.normSq (ρ⁻¹) := by
+            simpa using (Complex.normSq.map_mul (ρ - 1) ρ⁻¹)
+      _ = Complex.normSq (ρ - 1) * (Complex.normSq ρ)⁻¹ := by
+            simpa using (map_inv₀ (f := Complex.normSq) ρ)
+      _ = Complex.normSq ρ * (Complex.normSq ρ)⁻¹ := by
+            simp [normSq_sub_one_eq_normSq_of_re_eq_half (ρ := ρ) hρ]
+      _ = 1 := by
+            simpa [hns] using (mul_inv_cancel₀ (Complex.normSq ρ))
+  simpa [div_eq_mul_inv, Complex.abs_def, hn]
+
+lemma re_one_sub_pow_nonneg_of_abs_eq_one (z : ℂ) (n : ℕ) (hz : Complex.abs z = 1) :
+    0 ≤ ((1 : ℂ) - z ^ n).re := by
+  have h1 : ((1 : ℂ) - z ^ n).re = (1 : ℝ) - (z ^ n).re := by simp
+  have hre : (z ^ n).re ≤ Complex.abs (z ^ n) := Complex.re_le_abs _
+  have habs : Complex.abs (z ^ n) = 1 := by
+    simpa [hz] using (map_pow Complex.abs z n)
+  have hre1 : (z ^ n).re ≤ (1 : ℝ) := by simpa [habs] using hre
+  have : 0 ≤ (1 : ℝ) - (z ^ n).re := sub_nonneg.mpr hre1
+  simpa [h1] using this
+
+lemma liTerm_re_nonneg_of_re_eq_half {ρ : ℂ} (n : ℕ)
+    (hρ : ρ.re = (1 / 2 : ℝ)) (hρ0 : ρ ≠ 0) :
+    0 ≤ (liTerm n ρ).re := by
+  have hz : Complex.abs (1 - 1 / ρ) = 1 := abs_one_sub_inv_eq_one (ρ := ρ) hρ hρ0
+  simpa [liTerm] using (re_one_sub_pow_nonneg_of_abs_eq_one (z := (1 - 1 / ρ)) n hz)
+
+end LiAux
+
+namespace LiFramework
+
+variable {F : Type} [TestSpace F] (L : LiFramework F)
+
+/-- `LiGate`: the countable positivity hypothesis `∀ n≥1, λₙ ≥ 0`. -/
+def LiGate : Prop := ∀ n : ℕ, 1 ≤ n → 0 ≤ L.lambda n
+
+end LiFramework
+
+end ExplicitFormula
+end RiemannRecognitionGeometry
+
+
+================================================================================
+FILE: MainRoute3.lean (Gate theorems & ReflectionPositivityRealization)
+================================================================================
+
+/-
+# Route 3 main file: explicit-formula gates → RH
+
+This file exposes the Route 3 “gate” theorems:
+
+- `WeilGate → RiemannHypothesis`
+- `LiGate → RiemannHypothesis`
+
+All analytic number theory content is isolated behind the Lagarias/Li framework
+assumptions; this is a mechanically checkable proof *skeleton*.
+
+Important non-goal (Conrey–Li): we do **not** target de Branges shift-positivity
+(pointwise kernel-shift inequalities), which are known to fail for ζ.
+The positivity target here is Weil/Li *averaged* positivity.
+-/
+
+import RiemannRecognitionGeometry.ExplicitFormula.Lagarias
+import RiemannRecognitionGeometry.ExplicitFormula.Li
+import Mathlib.Analysis.InnerProductSpace.Basic
+
+noncomputable section
+
+namespace RiemannRecognitionGeometry
+namespace ExplicitFormula
+
+open TestSpace
+open scoped InnerProductSpace
+
+namespace LagariasFramework
+
+variable {F : Type} [TestSpace F] (L : LagariasFramework F)
+
+/-- Route 3 Weil gate: assuming the Weil positivity hypothesis yields RH. -/
+theorem WeilGate_implies_RH : L.WeilGate → RiemannHypothesis := by
+  intro hGate
+  exact (L.weilPositivity).2 hGate
+
+/-- Under RH, Weil positivity holds (the easy direction of Lagarias Thm 3.2). -/
+theorem RH_implies_WeilGate : RiemannHypothesis → L.WeilGate := by
+  intro hRH
+  exact (L.weilPositivity).1 hRH
+
+/-!
+## Weil criterion (converse direction) as an explicit Lean proof plan
+
+Lagarias Thm 3.2 asserts `RiemannHypothesis ↔ WeilGate`. In the mechanical Route 3 skeleton we
+*package* that equivalence as the field `LagariasFramework.weilPositivity`.
+
+For the **unconditional attempt**, it is useful to isolate the exact analytic sub-lemma needed for
+the hard direction `WeilGate → RiemannHypothesis`:
+
+> If there exists a nontrivial zero off the critical line, one can construct a test function `f`
+> such that the explicit-formula quadratic form `Re(W¹(f ⋆ ~\bar f))` is strictly negative.
+
+The structure below records this "off-line zero detector" as a single hypothesis; the resulting
+Lean theorem then derives `WeilGate → RiemannHypothesis` without assuming the full equivalence.
+-/
+
+/-- A single analytic lemma that would prove the hard direction `WeilGate → RH`. -/
+structure WeilConverseDetector where
+  /--
+  **Detector lemma** (contrapositive of Weil criterion):
+
+  If `ζ(s)=0` is a nontrivial zero off the critical line, there exists a test function `f`
+  with strictly negative quadratic form value `Re(W¹(f ⋆ ~\bar f))`.
+  -/
+  detect_offline_zero :
+    ∀ s : ℂ,
+      riemannZeta s = 0 →
+      (¬ ∃ n : ℕ, s = -2 * (n + 1)) →  -- exclude trivial zeros
+      s ≠ 1 →                       -- exclude the pole
+      s.re ≠ (1 / 2 : ℝ) →          -- off the critical line
+      ∃ f : F, (L.W1 (TestSpace.quad (F := F) f)).re < 0
+
+/--
+`WeilGate → RiemannHypothesis`, assuming only the "off-line zero detector" lemma `D`.
+
+This is the exact proof plan for Lagarias Thm 3.2 (hard direction) inside Route 3.
+-/
+theorem WeilGate_implies_RH_of_detector (D : WeilConverseDetector (L := L)) :
+    L.WeilGate → RiemannHypothesis := by
+  intro hGate
+  intro s hs0 htriv hs1
+  by_contra hsRe
+  rcases D.detect_offline_zero (s := s) hs0 htriv hs1 hsRe with ⟨f, hfneg⟩
+  have hpos : 0 ≤ (L.W1 (TestSpace.quad (F := F) f)).re := hGate f
+  exact (not_lt_of_ge hpos) hfneg
+
+end LagariasFramework
+
+namespace LiFramework
+
+variable {F : Type} [TestSpace F] (L : LiFramework F)
+
+/-- Route 3 Li gate: assuming Li-positivity yields RH. -/
+theorem LiGate_implies_RH : L.LiGate → RiemannHypothesis := by
+  intro hGate
+  exact (L.liCriterion).2 hGate
+
+/-- Under RH, Li positivity holds (the easy direction of Li's criterion). -/
+theorem RH_implies_LiGate : RiemannHypothesis → L.LiGate := by
+  intro hRH
+  exact (L.liCriterion).1 hRH
+
+/-!
+## Li criterion as an explicit Lean proof plan (converse direction)
+
+As with Weil, the mechanical Route 3 skeleton packages Li's criterion as the field
+`LiFramework.liCriterion : RH ↔ LiGate`.
+
+For the **unconditional attempt**, we isolate the exact analytic content needed for the hard
+direction `(∀ n≥1, λₙ ≥ 0) → RH`:
+
+> If there exists a nontrivial zero off the critical line, then *some* Li coefficient `λₙ` is
+> strictly negative.
+
+The structure below records this contrapositive as a single hypothesis; the resulting theorem then
+derives `LiGate → RiemannHypothesis` without assuming the full equivalence.
+-/
+
+/-- A single analytic lemma that would prove the hard direction `LiGate → RH`. -/
+structure LiConverseDetector where
+  /--
+  **Detector lemma** (contrapositive of Li's criterion):
+
+  If `ζ(s)=0` is a nontrivial zero off the critical line, then there exists `n ≥ 1` with `λₙ < 0`.
+  -/
+  detect_offline_zero :
+    ∀ s : ℂ,
+      riemannZeta s = 0 →
+      (¬ ∃ n : ℕ, s = -2 * (n + 1)) →  -- exclude trivial zeros
+      s ≠ 1 →                       -- exclude the pole
+      s.re ≠ (1 / 2 : ℝ) →          -- off the critical line
+      ∃ n : ℕ, 1 ≤ n ∧ L.lambda n < 0
+
+/--
+`LiGate → RiemannHypothesis`, assuming only the "off-line zero detector" lemma `D`.
+
+This is the exact proof plan for the hard direction of Li's criterion inside Route 3.
+-/
+theorem LiGate_implies_RH_of_detector (D : LiConverseDetector (L := L)) :
+    L.LiGate → RiemannHypothesis := by
+  intro hGate
+  intro s hs0 htriv hs1
+  by_contra hsRe
+  rcases D.detect_offline_zero (s := s) hs0 htriv hs1 hsRe with ⟨n, hn1, hnneg⟩
+  have hpos : 0 ≤ L.lambda n := hGate n hn1
+  exact (not_lt_of_ge hpos) hnneg
+
+end LiFramework
+
+/-
+## Optional intermediate targets (“attackability”)
+
+These are **not** needed for the mechanical Route 3 skeleton. They simply record,
+in Lean-typed form, two intermediate subtargets mentioned in
+`renormalized_tail_bound.md` §8.8.
+-/
+
+namespace OptionalTargets
+
+section DenseReduction
+
+variable {F : Type} [TestSpace F] [TopologicalSpace F]
+variable (L : LagariasFramework F)
+
+/-- Target: reduce Weil positivity to a dense subclass, using continuity of the quadratic form. -/
+def DenseSubclassReduction : Prop :=
+  ∃ (S : Set F),
+    Dense S ∧
+    Continuous (fun f : F => (L.W1 (TestSpace.quad (F:=F) f)).re) ∧
+      ((∀ f : F, f ∈ S → 0 ≤ (L.W1 (TestSpace.quad (F:=F) f)).re) →
+        (∀ f : F, 0 ≤ (L.W1 (TestSpace.quad (F:=F) f)).re))
+
+end DenseReduction
+
+section LiEventualPositivity
+
+variable {F : Type} [TestSpace F]
+variable (L : LiFramework F)
+
+/-- Target: a quantitative lower bound implying eventual Li positivity (hence a finite reduction). -/
+def LiEventualPositivityTarget : Prop :=
+  ∃ (N0 : ℕ) (c C θ : ℝ),
+    θ < 1 ∧
+    (∀ n : ℕ, N0 ≤ n →
+      L.lambda n ≥ ((n : ℝ) / 2) * Real.log (n : ℝ) + c * (n : ℝ) - C * (n : ℝ) ^ θ)
+
+end LiEventualPositivity
+
+section ReflectionPositivity
+
+variable {F : Type} [TestSpace F] [AddCommGroup F] [Module ℂ F]
+variable (L : LagariasFramework F)
+
+/--
+Target: a Hilbert-space realization of the Weil form (reflection positivity / “sum over zeros is a
+norm-square”).
+
+This is the clean classical-math version of the heuristic “the explicit-formula quadratic form is a
+physical cost (hence nonnegative)”: exhibit a complex Hilbert space `H` and a linear map `T : F → H`
+such that the sesquilinear form
+
+`(f,g) ↦ W¹(f ⋆ₘ ˜ₘ(⋆ₜ g))`
+
+is literally the inner product `⟪T f, T g⟫`.
+
+Once such a representation exists, Weil positivity `Re(W¹(f ⋆ₘ ˜ₘ(⋆ₜ f))) ≥ 0` is immediate.
+
+Mathematically, proving existence of such a representation is equivalent to proving that the kernel
+defined by the explicit formula is positive definite (a GNS/Bochner–Schwartz style statement). -/
+def ReflectionPositivityRealization : Prop :=
+  ∃ (H : Type) (_ : NormedAddCommGroup H) (_ : InnerProductSpace ℂ H) (_ : CompleteSpace H)
+    (T : F →ₗ[ℂ] H),
+      ∀ f g : F, L.W1 (f ⋆ₘ ˜ₘ (⋆ₜ g)) = ⟪T f, T g⟫_ℂ
+
+/-- A reflection-positivity realization implies the Route 3 Weil gate `WeilGate`. -/
+theorem WeilGate_of_reflectionPositivityRealization
+    (h : ReflectionPositivityRealization (L := L)) : L.WeilGate := by
+  rcases h with ⟨H, _instNACG, _instIP, _instComplete, T, hW⟩
+  classical
+  -- register the existentially-provided structures as instances
+  letI : NormedAddCommGroup H := _instNACG
+  letI : InnerProductSpace ℂ H := _instIP
+  letI : CompleteSpace H := _instComplete
+  intro f
+  have hEq : L.W1 (TestSpace.quad (F := F) f) = ⟪T f, T f⟫_ℂ := by
+    simpa [TestSpace.quad] using (hW f f)
+  have hpos : 0 ≤ (⟪T f, T f⟫_ℂ).re := by
+    -- use the ℂ-specialization explicitly to avoid typeclass metavariables
+    simpa using (inner_self_nonneg (𝕜 := ℂ) (x := T f))
+  simpa [hEq] using hpos
+
+end ReflectionPositivity
+
+end OptionalTargets
+
+end ExplicitFormula
+end RiemannRecognitionGeometry
+
+
+================================================================================
+FILE: MathlibBridge.lean (Mathlib Mellin integration)
+================================================================================
+
+/-
+# Route 3: Mathlib integration (Mellin transform)
+
+This file connects the abstract Route 3 `TestSpace` interface to Mathlib's
+actual `mellin` definition (`Mathlib.Analysis.MellinTransform`).
+
+Convention check:
+- Route 3 (Lagarias): M[f](s) = ∫₀^∞ f(x) x^s dx/x
+- Mathlib: mellin f s = ∫ (t : ℝ) in Ioi 0, t^(s-1) • f t
+
+These are equivalent: t^(s-1) dt = t^s (dt/t) = x^s (dx/x).
+-/
+
+import Mathlib.Analysis.MellinTransform
+import Mathlib.Analysis.SpecialFunctions.Pow.Complex
+import Mathlib.MeasureTheory.Integral.SetIntegral
+import Mathlib.Analysis.Complex.Basic
+import RiemannRecognitionGeometry.ExplicitFormula.Defs
+
+noncomputable section
+
+namespace RiemannRecognitionGeometry
+namespace ExplicitFormula
+
+open MeasureTheory Set Filter Asymptotics TopologicalSpace
+open ComplexConjugate
+
+/--
+The concrete Mellin transform on functions `f : ℝ → ℂ`, using Mathlib's definition.
+This matches Lagarias' normalization M[f](s) = ∫₀^∞ f(x) x^s dx/x.
+-/
+def concreteMellin (f : ℝ → ℂ) (s : ℂ) : ℂ :=
+  mellin f s
+
+/--
+Verifies that `concreteMellin` is chemically compatible with `TestSpace.Mellin`.
+(This doesn't prove the `TestSpace` axioms yet, just defines the operation).
+-/
+lemma concreteMellin_eq_mathlib_mellin (f : ℝ → ℂ) (s : ℂ) :
+    concreteMellin f s = mellin f s := rfl
+
+/-!
+## The Lagarias involution on `(0,∞)` and its Mellin intertwining
+
+Lagarias' involution on test functions is:
+`~f(x) = (1/x) f(1/x)`.
+
+In Mathlib's Mellin normalization, the key identity is
+`mellin (~f) s = mellin f (1 - s)`.
+
+This is a change-of-variables statement and follows from two generic Mellin lemmas:
+- `mellin_cpow_smul` (multiplying by `t^a` shifts the Mellin variable by `a`), and
+- `mellin_comp_inv` (inverting the input sends `s ↦ -s`).
+-/
+
+/-- Lagarias' involution on functions `f : ℝ → ℂ` (values on `t ≤ 0` are irrelevant). -/
+def tildeFun (f : ℝ → ℂ) : ℝ → ℂ :=
+  fun t => ((t : ℂ) ^ (-1 : ℂ)) • f t⁻¹
+
+lemma mellin_tildeFun (f : ℝ → ℂ) (s : ℂ) :
+    mellin (tildeFun f) s = mellin f (1 - s) := by
+  -- Expand `tildeFun` and use the generic Mellin shift and inversion lemmas.
+  unfold tildeFun
+  -- First: pull out the `t^(-1)` factor, shifting `s` by `-1`.
+  have h1 :
+      mellin (fun t : ℝ => ((t : ℂ) ^ (-1 : ℂ)) • f t⁻¹) s =
+        mellin (fun u : ℝ => f u⁻¹) (s - 1) := by
+    -- `mellin_cpow_smul` shifts `s` by the exponent `a`.
+    simpa [sub_eq_add_neg] using
+      (mellin_cpow_smul (f := fun u : ℝ => f u⁻¹) (s := s) (a := (-1 : ℂ)))
+  -- Second: invert the input, sending `(s-1) ↦ -(s-1) = 1-s`.
+  have h2 : mellin (fun u : ℝ => f u⁻¹) (s - 1) = mellin f (1 - s) := by
+    -- `mellin_comp_inv f (s-1)` gives `= mellin f (-(s-1)) = mellin f (1-s)`.
+    simpa [sub_eq_add_neg, add_assoc, add_left_comm, add_comm] using
+      (mellin_comp_inv (f := f) (s := s - 1))
+  exact h1.trans h2
+
+/-!
+## Conjugation (`star`) and the Mellin transform
+
+For the RH → Weil-positivity direction we need the standard identity (for convergent Mellin
+integrals)
+
+`mellin (starFun f) (star s) = star (mellin f s)`.
+
+This is a Bochner-integral fact: complex conjugation is an ℝ-linear continuous linear map, hence
+commutes with integration, and it commutes with `t ↦ (t : ℂ) ^ (s - 1)` for `t > 0`.
+-/
+
+/-- Pointwise complex conjugation (`star`) on functions `ℝ → ℂ`. -/
+def starFun (f : ℝ → ℂ) : ℝ → ℂ :=
+  fun t => star (f t)
+
+/-- For `t > 0`, conjugation commutes with `((t:ℂ)^(s-1))` in the exponent. -/
+lemma star_ofReal_cpow {t : ℝ} (ht : t ∈ Ioi (0 : ℝ)) (s : ℂ) :
+    star ((t : ℂ) ^ (s - 1)) = (t : ℂ) ^ (star s - 1) := by
+  have ht0 : (0 : ℝ) ≤ t := le_of_lt ht
+  have harg : ((t : ℂ).arg) = 0 := Complex.arg_ofReal_of_nonneg ht0
+  have hx : (t : ℂ).arg ≠ Real.pi := by
+    -- arg is 0, and `Real.pi ≠ 0`.
+    simpa [harg] using (Real.pi_ne_zero.symm)
+  -- Start from `Complex.conj_cpow`, simplify `conj (t:ℂ) = (t:ℂ)`, then conjugate both sides.
+  have h := Complex.conj_cpow (x := (t : ℂ)) (n := (s - 1)) hx
+  have h' : (t : ℂ) ^ (s - 1) = conj ((t : ℂ) ^ (conj (s - 1))) := by
+    simpa [Complex.conj_ofReal] using h
+  have : conj ((t : ℂ) ^ (s - 1)) = (t : ℂ) ^ (conj (s - 1)) := by
+    simpa using congrArg conj h'
+  -- Rewrite `conj` as `star`.
+  simpa [map_sub, map_one] using this
+
+/--
+If the Mellin transform of `f` converges at `s`, then conjugation commutes with the Mellin
+transform at `s`.
+-/
+lemma mellin_starFun (f : ℝ → ℂ) (s : ℂ) (hf : MellinConvergent f s) :
+    mellin (starFun f) (star s) = star (mellin f s) := by
+  -- Unfold `mellin` as an integral on `Ioi 0`.
+  unfold mellin
+  -- Use `ContinuousLinearMap.integral_comp_comm` for the ℝ-linear map `conj`.
+  have hφ :
+      Integrable (fun t : ℝ => (t : ℂ) ^ (s - 1) • f t) (volume.restrict (Ioi (0 : ℝ))) := by
+    simpa [MellinConvergent, IntegrableOn] using hf
+  have hconj :
+      (∫ t : ℝ, conj ((t : ℂ) ^ (s - 1) • f t) ∂(volume.restrict (Ioi (0 : ℝ))))
+        = conj (∫ t : ℝ, (t : ℂ) ^ (s - 1) • f t ∂(volume.restrict (Ioi (0 : ℝ)))) := by
+    simpa using
+      (ContinuousLinearMap.integral_comp_comm (μ := (volume.restrict (Ioi (0 : ℝ))))
+        (L := (↑(Complex.conjCLE) : ℂ →L[ℝ] ℂ)) (φ := fun t : ℝ => (t : ℂ) ^ (s - 1) • f t) hφ)
+  -- Rewrite the conjugated integrand into the Mellin integrand for `starFun f` at `star s`.
+  have hIntegrand :
+      EqOn (fun t : ℝ => (t : ℂ) ^ (star s - 1) • starFun f t)
+        (fun t : ℝ => conj ((t : ℂ) ^ (s - 1) • f t)) (Ioi (0 : ℝ)) := by
+    intro t ht
+    unfold starFun
+    -- On `ℂ`, scalar multiplication is multiplication.
+    -- Use `star_ofReal_cpow` to handle conjugation of the `cpow` factor.
+    simp [smul_eq_mul, mul_assoc, mul_left_comm, mul_comm, star_ofReal_cpow (t := t) ht s]
+  have hEq :
+      (∫ t : ℝ in Ioi (0 : ℝ), (t : ℂ) ^ (star s - 1) • starFun f t)
+        = (∫ t : ℝ in Ioi (0 : ℝ), conj ((t : ℂ) ^ (s - 1) • f t)) :=
+    setIntegral_congr_fun measurableSet_Ioi hIntegrand
+  -- Finish by combining the integrand rewrite with `hconj`, and rewriting `conj` as `star`.
+  simpa [starFun, Complex.star_def] using hEq.trans hconj
+
+end ExplicitFormula
+end RiemannRecognitionGeometry
+
+
+================================================================================
+FILE: MulConvolution.lean (Multiplicative convolution)
+================================================================================
+
+/-
+# Route 3: multiplicative convolution on `(0,∞)` (Lagarias)
+
+Lagarias' multiplicative convolution (on test functions on `(0,∞)`) is
+
+  (f ⋆ g)(x) := ∫₀^∞ f(x / y) g(y) dy / y.
+
+The Mellin transform (Mathlib's `mellin`) satisfies the expected identity
+
+  mellin (f ⋆ g) s = mellin f s * mellin g s,
+
+under suitable integrability hypotheses (Fubini/Tonelli + change of variables).
+
+In this file we:
+- define the convolution operation `mulConv`, and
+- record the Mellin-multiplicativity statement as an explicit *assumption package*
+  (to be discharged later by a genuine proof).
+
+This is the exact analytic lemma needed to upgrade Route 3 from an abstract
+`TestSpace` interface to a concrete function-space instance.
+-/
+
+import Mathlib.Analysis.MellinTransform
+import Mathlib.MeasureTheory.Integral.Prod
+import Mathlib.Analysis.SpecialFunctions.Pow.Complex
+import Mathlib.Analysis.Complex.Basic
+
+noncomputable section
+
+namespace RiemannRecognitionGeometry
+namespace ExplicitFormula
+
+open MeasureTheory Set
+
+/-- Multiplicative convolution on `(0,∞)` written as an integral over `Ioi 0`. -/
+noncomputable def mulConv (f g : ℝ → ℂ) : ℝ → ℂ :=
+  fun x => ∫ y : ℝ in Ioi 0, f (x / y) * g y / y
+
+/--
+Assumptions for the multiplicative-convolution/Mellin-multiplicativity identity.
+
+This is intentionally quarantined: proving it requires a careful Fubini/Tonelli
+argument, and is the main analytic bridge needed for U3.
+-/
+structure MulConvAssumptions where
+  mellin_mulConv :
+    ∀ (f g : ℝ → ℂ) (s : ℂ),
+      MellinConvergent f s →
+      MellinConvergent g s →
+      MellinConvergent (mulConv f g) s →
+      mellin (mulConv f g) s = mellin f s * mellin g s
+
+/-!
+## A provable Mellin-multiplicativity lemma (under explicit Fubini hypotheses)
+
+The field `MulConvAssumptions.mellin_mulConv` quarantines the analytic content needed for
+`mellin (mulConv f g) s = mellin f s * mellin g s`.
+
+Here we prove a *version that follows directly from Fubini/Tonelli* under an explicit integrability
+hypothesis on the uncurried two-variable integrand. This narrows the remaining analytic gap to:
+
+> For the chosen test-function class, prove the required `Integrable` hypothesis.
+
+This is strictly stronger than the abstract `MellinConvergent` hypotheses, but it is a concrete,
+standard condition that can be attacked inside Mathlib.
+-/
+
+namespace MulConv
+
+open scoped BigOperators
+
+abbrev μ0 : Measure ℝ := volume.restrict (Ioi (0 : ℝ))
+
+instance : SFinite μ0 := by
+  delta μ0
+  infer_instance
+
+lemma mellin_comp_mul_right_one_div (f : ℝ → ℂ) (s : ℂ) (y : ℝ) (hy : 0 < y) :
+    (∫ x : ℝ in Ioi (0 : ℝ), (x : ℂ) ^ (s - 1) * f (x / y))
+      = ((1 / y : ℝ) : ℂ) ^ (-s) * mellin f s := by
+  have hy' : 0 < (1 / y : ℝ) := one_div_pos.mpr hy
+  have h := mellin_comp_mul_right (f := f) (s := s) (a := (1 / y : ℝ)) hy'
+  simp [mellin, smul_eq_mul, div_eq_mul_inv, one_div] at h
+  simpa [div_eq_mul_inv, one_div] using h
+
+lemma one_div_cpow_neg_mul_inv_of_pos (y : ℝ) (hy : 0 < y) (s : ℂ) :
+    ((1 / y : ℝ) : ℂ) ^ (-s) * ((y : ℂ)⁻¹) = (y : ℂ) ^ (s - 1) := by
+  have hy0 : y ≠ 0 := hy.ne'
+  have hyC0 : (y : ℂ) ≠ 0 := by
+    exact_mod_cast hy0
+  -- `(1/y : ℂ) = (y : ℂ)⁻¹`.
+  have h1 : ((1 / y : ℝ) : ℂ) = (y : ℂ)⁻¹ := by
+    simp [one_div, hy0]
+  -- For `y > 0`, `arg (y : ℂ) = 0 ≠ π`, so `((y : ℂ)⁻¹)^(-s) = (y : ℂ)^s`.
+  have harg : (y : ℂ).arg ≠ Real.pi := by
+    have : (y : ℂ).arg = 0 := Complex.arg_ofReal_of_nonneg hy.le
+    simpa [this] using (Real.pi_ne_zero.symm)
+  have hinv : ((y : ℂ)⁻¹) ^ (-s) = (y : ℂ) ^ s := by
+    have h := Complex.inv_cpow_eq_ite (x := (y : ℂ)) (n := (-s))
+    simp [harg] at h
+    calc
+      ((y : ℂ)⁻¹) ^ (-s) = ((y : ℂ) ^ (-s))⁻¹ := h
+      _ = (y : ℂ) ^ s := by simp [Complex.cpow_neg]
+  have hs : s - 1 = s + (-1 : ℂ) := by ring
+  have hadd := Complex.cpow_add (x := (y : ℂ)) (y := s) (z := (-1 : ℂ)) hyC0
+  calc
+    ((1 / y : ℝ) : ℂ) ^ (-s) * ((y : ℂ)⁻¹)
+        = ((y : ℂ)⁻¹) ^ (-s) * ((y : ℂ)⁻¹) := by simp [h1]
+    _ = (y : ℂ) ^ s * ((y : ℂ)⁻¹) := by simp [hinv]
+    _ = (y : ℂ) ^ (s - 1) := by
+          -- `y^(s-1) = y^s * y^(-1)` and `y^(-1) = y⁻¹`.
+          simpa [hs, Complex.cpow_neg_one, mul_assoc] using hadd.symm
+
+/--
+Mellin-multiplicativity for `mulConv`, assuming an explicit product-measure integrability hypothesis
+that justifies Fubini/Tonelli.
+
+This is the key analytic identity needed for a concrete `TestSpace` instance on `(0,∞)`.
+-/
+lemma mellin_mulConv_of_integrable (f g : ℝ → ℂ) (s : ℂ)
+    (hF : Integrable (fun z : ℝ × ℝ =>
+      ((z.1 : ℂ) ^ (s - 1)) * (f (z.1 / z.2) * g z.2 / z.2)) (μ0.prod μ0)) :
+    mellin (mulConv f g) s = mellin f s * mellin g s := by
+  -- Expand `mellin` and `mulConv`.
+  simp [mellin, mulConv, smul_eq_mul]
+
+  -- Rewrite `x^(s-1) * ∫_y (...)` as an iterated integral `∫_x ∫_y x^(s-1) * (...)`.
+  have hLHS :
+      (∫ x : ℝ in Ioi (0 : ℝ), (x : ℂ) ^ (s - 1) * ∫ y : ℝ in Ioi (0 : ℝ), f (x / y) * g y / y)
+        = ∫ x : ℝ in Ioi (0 : ℝ), ∫ y : ℝ in Ioi (0 : ℝ),
+            (x : ℂ) ^ (s - 1) * (f (x / y) * g y / y) := by
+    refine MeasureTheory.setIntegral_congr_fun measurableSet_Ioi (fun x hx => ?_)
+    simpa using
+      (MeasureTheory.integral_mul_left (μ := μ0) (r := (x : ℂ) ^ (s - 1))
+        (f := fun y : ℝ => f (x / y) * g y / y)).symm
+  rw [hLHS]
+
+  -- Swap integrals using Fubini.
+  have hswap :
+      (∫ x : ℝ in Ioi (0 : ℝ), ∫ y : ℝ in Ioi (0 : ℝ),
+          (x : ℂ) ^ (s - 1) * (f (x / y) * g y / y))
+        = ∫ y : ℝ in Ioi (0 : ℝ), ∫ x : ℝ in Ioi (0 : ℝ),
+          (x : ℂ) ^ (s - 1) * (f (x / y) * g y / y) := by
+    simpa [μ0, mul_assoc, mul_left_comm, mul_comm] using
+      (MeasureTheory.integral_integral_swap (μ := μ0) (ν := μ0)
+        (f := fun x y => (x : ℂ) ^ (s - 1) * (f (x / y) * g y / y)) hF)
+  rw [hswap]
+
+  -- Compute the inner integral pointwise for `y > 0` and rewrite under the outer integral.
+  have hInner :
+      EqOn
+        (fun y : ℝ => ∫ x : ℝ in Ioi (0 : ℝ),
+          (x : ℂ) ^ (s - 1) * (f (x / y) * g y / y))
+        (fun y : ℝ => (y : ℂ) ^ (s - 1) * g y * mellin f s)
+        (Ioi (0 : ℝ)) := by
+    intro y hy
+    have hy' : 0 < y := hy
+    -- Pull out the constant `(g y / y)` from the `x`-integral.
+    have hpull :
+        (∫ x : ℝ in Ioi (0 : ℝ), (x : ℂ) ^ (s - 1) * (f (x / y) * g y / y))
+          = (g y / y) * (∫ x : ℝ in Ioi (0 : ℝ), (x : ℂ) ^ (s - 1) * f (x / y)) := by
+      have hreorder :
+          (∫ x : ℝ in Ioi (0 : ℝ), (x : ℂ) ^ (s - 1) * (f (x / y) * g y / y))
+            = ∫ x : ℝ in Ioi (0 : ℝ), (g y / y) * ((x : ℂ) ^ (s - 1) * f (x / y)) := by
+        refine MeasureTheory.setIntegral_congr_fun measurableSet_Ioi (fun x hx => ?_)
+        ring_nf
+      have hconst :
+          (∫ x : ℝ in Ioi (0 : ℝ), (g y / y) * ((x : ℂ) ^ (s - 1) * f (x / y)))
+            = (g y / y) * (∫ x : ℝ in Ioi (0 : ℝ), (x : ℂ) ^ (s - 1) * f (x / y)) := by
+        simpa [μ0] using
+          (MeasureTheory.integral_mul_left (μ := μ0) (r := (g y / y))
+            (f := fun x : ℝ => (x : ℂ) ^ (s - 1) * f (x / y)))
+      exact hreorder.trans hconst
+
+    -- Scale the remaining integral using `mellin_comp_mul_right`.
+    have hscale := mellin_comp_mul_right_one_div (f := f) (s := s) (y := y) hy'
+    have hmul : ((1 / y : ℝ) : ℂ) ^ (-s) * ((y : ℂ)⁻¹) = (y : ℂ) ^ (s - 1) :=
+      one_div_cpow_neg_mul_inv_of_pos (y := y) hy' s
+
+    calc
+      (∫ x : ℝ in Ioi (0 : ℝ), (x : ℂ) ^ (s - 1) * (f (x / y) * g y / y))
+          = (g y / y) * (((1 / y : ℝ) : ℂ) ^ (-s) * mellin f s) := by
+              simp [hpull, hscale, mul_assoc]
+      _ = ((g y / (y : ℂ)) * ((1 / y : ℝ) : ℂ) ^ (-s)) * mellin f s := by
+            simp [mul_assoc, mul_left_comm, mul_comm]
+      _ = (g y * (((1 / y : ℝ) : ℂ) ^ (-s) * ((y : ℂ)⁻¹))) * mellin f s := by
+            -- regroup to match `hmul`
+            ring_nf
+      _ = (g y * (y : ℂ) ^ (s - 1)) * mellin f s := by
+            exact congrArg (fun t => (g y * t) * mellin f s) hmul
+      _ = (y : ℂ) ^ (s - 1) * g y * mellin f s := by
+            ring_nf
+
+  have hOuter :
+      (∫ y : ℝ in Ioi (0 : ℝ),
+        (∫ x : ℝ in Ioi (0 : ℝ), (x : ℂ) ^ (s - 1) * (f (x / y) * g y / y)))
+        = ∫ y : ℝ in Ioi (0 : ℝ), (y : ℂ) ^ (s - 1) * g y * mellin f s := by
+    exact MeasureTheory.setIntegral_congr_fun measurableSet_Ioi hInner
+  rw [hOuter]
+
+  -- Pull out the constant `mellin f s`.
+  have hpullOut :
+      (∫ y : ℝ in Ioi (0 : ℝ), (y : ℂ) ^ (s - 1) * g y * mellin f s)
+        = (∫ y : ℝ in Ioi (0 : ℝ), (y : ℂ) ^ (s - 1) * g y) * mellin f s := by
+    simpa [μ0, mul_assoc] using
+      (MeasureTheory.integral_mul_right (μ := μ0) (r := (mellin f s))
+        (f := fun y : ℝ => (y : ℂ) ^ (s - 1) * g y))
+  rw [hpullOut]
+
+  -- Rewrite `mellin g s` and commute factors in `ℂ`.
+  simp [mellin, smul_eq_mul, mul_assoc, mul_comm, mul_left_comm]
+
+end MulConv
+
+end ExplicitFormula
+end RiemannRecognitionGeometry
+
+
+================================================================================
+FILE: Concrete.lean (MellinSide TestSpace instance)
+================================================================================
+
+/-
+# Route 3: concrete `TestSpace` instances
+
+This file provides concrete instances of the abstract Route 3 `TestSpace`.
+
+We start with a *Mellin-domain* instance (functions on `ℂ`), which is fully
+algebraic and supports the involution `s ↦ 1 - s` exactly.
+
+Separately (in `MathlibBridge.lean`) we connect the Mellin transform on
+functions `(0,∞) → ℂ` to Mathlib's `mellin`, and we will later build a true
+function-space instance once multiplicative convolution is defined (U3).
+-/
+
+import Mathlib.Analysis.Complex.Basic
+import RiemannRecognitionGeometry.ExplicitFormula.Defs
+
+noncomputable section
+
+namespace RiemannRecognitionGeometry
+namespace ExplicitFormula
+
+/--
+A purely algebraic test space: elements are functions on the Mellin side.
+
+This is useful as a *target* for rewriting and for stating positivity gates
+without yet committing to analytic convergence details.
+-/
+abbrev MellinSide := ℂ → ℂ
+
+namespace MellinSide
+
+open ComplexConjugate
+
+/-- Involution on the Mellin side: `f(s) ↦ f(1 - s)`. -/
+def tilde (F : MellinSide) : MellinSide := fun s => F (1 - s)
+
+/-- Conjugation on the Mellin side (pointwise). -/
+def star (F : MellinSide) : MellinSide := fun s => conj (F s)
+
+/-- Convolution on the Mellin side is pointwise multiplication (so Mellin is identity). -/
+def conv (F G : MellinSide) : MellinSide := fun s => F s * G s
+
+instance : TestSpace MellinSide where
+  Mellin := fun F s => F s
+  conv := conv
+  tilde := tilde
+  star := star
+  mellin_conv := by
+    intro f g s
+    rfl
+  mellin_tilde := by
+    intro f s
+    rfl
+
+end MellinSide
+
+end ExplicitFormula
+end RiemannRecognitionGeometry
+
+
+================================================================================
+FILE: WFunctionals.lean (Concrete W functionals)
+================================================================================
+
+/-
+# Route 3: Lagarias explicit-formula functionals (concrete definitions)
+
+This file defines the explicit-formula functionals in Lagarias' Mellin normalization
+for concrete test functions `f : ℝ → ℂ` (interpreted as functions on `(0,∞)`).
+
+- `W2(f) = M[f](1)` and `W0(f) = M[f](0)` where `M = Mathlib.Analysis.MellinTransform.mellin`.
+- `W_p(f)` and `W_∞(f)` as in Lagarias §3.
+- `W_arith(f) = W_∞(f) + Σ_p W_p(f)` (defined as a `tsum` over primes; convergence is an analytic issue).
+
+We do **not** define the spectral zero-sum `W1` here (that is the genuinely hard part).
+-/
+
+import Mathlib.Analysis.MellinTransform
+import Mathlib.NumberTheory.Harmonic.EulerMascheroni
+import RiemannRecognitionGeometry.ExplicitFormula.MathlibBridge
+
+noncomputable section
+
+namespace RiemannRecognitionGeometry
+namespace ExplicitFormula
+
+open MeasureTheory Set
+
+/-- Concrete Mellin transform alias. -/
+abbrev M (f : ℝ → ℂ) (s : ℂ) : ℂ := mellin f s
+
+/-- `W^{(2)}(f) = M[f](1)`. -/
+def W2 (f : ℝ → ℂ) : ℂ := M f 1
+
+/-- `W^{(0)}(f) = M[f](0)`. -/
+def W0 (f : ℝ → ℂ) : ℂ := M f 0
+
+/-- The Lagarias involution `~f(x) = (1/x) f(1/x)`. -/
+def tilde (f : ℝ → ℂ) : ℝ → ℂ := tildeFun f
+
+/-- The prime-power local term `W_p(f)` (Lagarias §3), defined for any natural `p`.
+
+For RH applications we will only use this at primes; the definition uses `Nat.Prime p` at the
+`W_arith` level.
+
+`W_p(f) = (log p) * Σ_{n≥1} ( f(p^n) + ~f(p^n) )`.
+-/
+def Wp (p : ℕ) (f : ℝ → ℂ) : ℂ :=
+  (Real.log (p : ℝ) : ℂ) *
+    (∑' n : ℕ,
+      (f ((p ^ (n + 1) : ℕ) : ℝ) + (tilde f) ((p ^ (n + 1) : ℕ) : ℝ)))
+
+/-- The archimedean term `W_∞(f)` in Lagarias' explicit formula (Mellin normalization).
+
+`W∞(f) = (γ + log π) f(1) + ∫_{1}^{∞} ((f(x)+~f(x) - (2/x^2) f(1)) / (x^2-1)) * x dx`.
+
+The integral is taken over `Ioi 1` (the integrand has a removable singularity at `x=1` for nice `f`).
+-/
+def Winfty (f : ℝ → ℂ) : ℂ :=
+  let c : ℂ := (Real.eulerMascheroniConstant + Real.log Real.pi)
+  c * f 1 +
+    ∫ x : ℝ in Ioi (1 : ℝ),
+      (((f x + (tilde f) x - ((2 : ℝ) / (x ^ 2)) * f 1) / (x ^ 2 - 1)) * x)
+
+/-- The full arithmetic-side functional `W_arith(f) = W_∞(f) + Σ_{p prime} W_p(f)`.
+
+Convergence of the infinite sum is part of the analytic work; for compactly supported `f` this
+reduces to a finite sum.
+-/
+def Warith (f : ℝ → ℂ) : ℂ :=
+  Winfty f +
+    ∑' p : ℕ, (if Nat.Prime p then Wp p f else 0)
+
+end ExplicitFormula
+end RiemannRecognitionGeometry
+
+
+================================================================================
+FILE: WeilPositivityRH.lean (RH → positivity direction)
+================================================================================
+
+/-
+# Route 3: the "easy" RH → positivity direction (finite-sum form)
+
+Weil positivity (Lagarias Thm 3.2) is a statement about a *sum over all zeros*.
+The analytic difficulty is defining and justifying that infinite symmetric sum.
+
+However, the *algebraic* heart of the easy direction under RH is finite:
+
+- if `ρ` is a zero on the critical line, then `1 - conj ρ = ρ`, and
+- for `g = f ⋆ tilde(star f)` one has `M[g](ρ) = M[f](ρ) * star (M[f](ρ))`,
+  hence its real part is nonnegative.
+
+This file proves the corresponding finite-sum positivity statement. It does not
+use any old-route modules.
+-/
+
+import Mathlib.Analysis.Complex.Basic
+import Mathlib.Algebra.BigOperators.Group.Finset.Basic
+import Mathlib.Data.Finset.Basic
+import Mathlib.NumberTheory.LSeries.RiemannZeta
+import RiemannRecognitionGeometry.ExplicitFormula.Defs
+import RiemannRecognitionGeometry.ExplicitFormula.MathlibBridge
+import RiemannRecognitionGeometry.ExplicitFormula.MulConvolution
+
+noncomputable section
+
+namespace RiemannRecognitionGeometry
+namespace ExplicitFormula
+
+open TestSpace
+open MeasureTheory Set
+open ComplexConjugate
+open scoped BigOperators
+
+/--
+For `z : ℂ`, the element `z * star z` has nonnegative real part.
+
+This is the abstract fact used in the RH→positivity direction.
+-/
+lemma mul_star_self_re_nonneg (z : ℂ) : 0 ≤ (z * star z).re := by
+  -- `z * star z = (Complex.normSq z : ℂ)`, hence its real part is `Complex.normSq z ≥ 0`.
+  have hmul : z * star z = (Complex.normSq z : ℂ) := by
+    -- `Complex.mul_conj` is stated using `starRingEnd ℂ`; rewrite `star` via `Complex.star_def`.
+    simpa [Complex.star_def] using (Complex.mul_conj z)
+  have hre : (z * star z).re = Complex.normSq z := by
+    have := congrArg Complex.re hmul
+    simpa using this
+  simpa [hre] using (Complex.normSq_nonneg z)
+
+/--
+Finite-sum Weil positivity under the hypothesis that all `ρ ∈ S` lie on the
+critical line and satisfy the symmetry relation `1 - conj ρ = ρ`.
+
+This is the finite-sum form of the RH→positivity direction.
+-/
+lemma finite_WeilPositivity_of_symmetry {F : Type} [TestSpace F]
+    (f : F) (S : Finset ℂ)
+    (hSymm : ∀ ρ ∈ S, (1 - star ρ) = ρ)
+    (hM : ∀ ρ ∈ S, M[quad (F:=F) f](ρ) = M[f](ρ) * star (M[f](ρ))) :
+    0 ≤ (∑ ρ in S, M[quad (F:=F) f](ρ)).re := by
+  -- Rewrite each summand using `hM`, then use termwise nonnegativity.
+  have hsum : (∑ ρ in S, M[quad (F:=F) f](ρ)).re =
+      (∑ ρ in S, (M[f](ρ) * star (M[f](ρ)))).re := by
+    refine congrArg Complex.re ?_
+    refine Finset.sum_congr rfl (fun ρ hρ => ?_)
+    exact (hM ρ hρ)
+  -- Note: `hSymm` isn't used here yet; it is exactly what makes the identity
+  -- `M[quad f](ρ) = M[f](ρ) * star(M[f](ρ))` true in analytic applications.
+  rw [hsum]
+  -- Apply `re` to the sum termwise, then use termwise nonnegativity.
+  have : (∑ ρ in S, (M[f](ρ) * star (M[f](ρ)))).re =
+      ∑ ρ in S, ((M[f](ρ) * star (M[f](ρ)))).re := by
+    simpa using (Complex.re_sum (s := S) (f := fun ρ => (M[f](ρ) * star (M[f](ρ)))))
+  -- Use this rewriting, then sum nonneg terms.
+  rw [this]
+  refine Finset.sum_nonneg (fun ρ hρ => ?_)
+  simpa using mul_star_self_re_nonneg (M[f](ρ))
+
+/-!
+## Concrete `(ℝ → ℂ)` version (using Mathlib's `mellin`)
+
+This upgrades the abstract finite-sum lemma by deriving the key identity
+
+`mellin (f ⋆ tilde(starFun f)) ρ = mellin f ρ * star (mellin f ρ)`
+
+from:
+- Mellin multiplicativity for `mulConv` (still quarantined as `MulConvAssumptions`), and
+- the explicit conjugation steps (`mellin_tildeFun`, `mellin_starFun`).
+
+This is the exact "easy" algebraic heart of the RH → Weil-positivity direction.
+-/
+
+/-- The concrete quadratic form `f ⋆ tilde(star f)` on functions `ℝ → ℂ`. -/
+noncomputable def quadFun (f : ℝ → ℂ) : ℝ → ℂ :=
+  mulConv f (tildeFun (starFun f))
+
+lemma one_sub_star_eq_of_re_eq_half {s : ℂ} (hs : s.re = (1 / 2 : ℝ)) : (1 - star s) = s := by
+  apply Complex.ext
+  · -- real parts: `1 - re(s) = re(s)`
+    have : (1 : ℝ) - (1 / 2 : ℝ) = (1 / 2 : ℝ) := by ring
+    simpa [hs, this]
+  · -- imaginary parts
+    simp
+
+lemma one_sub_star_eq_of_RH {s : ℂ} (hRH : RiemannHypothesis) (hs0 : riemannZeta s = 0)
+    (htriv : ¬ ∃ n, s = -2 * (↑n + 1)) (hs1 : s ≠ 1) : (1 - star s) = s := by
+  exact one_sub_star_eq_of_re_eq_half (hs := hRH s hs0 htriv hs1)
+
+/-- On the critical line symmetry `1 - star ρ = ρ`, the `quadFun` Mellin transform is `z * star z`. -/
+lemma mellin_quadFun_of_symmetry (A : MulConvAssumptions) (f : ℝ → ℂ) (ρ : ℂ)
+    (hSymm : (1 - star ρ) = ρ)
+    (hf : MellinConvergent f ρ)
+    (hg : MellinConvergent (tildeFun (starFun f)) ρ)
+    (hfg : MellinConvergent (quadFun f) ρ) :
+    mellin (quadFun f) ρ = mellin f ρ * star (mellin f ρ) := by
+  have hmul :
+      mellin (quadFun f) ρ = mellin f ρ * mellin (tildeFun (starFun f)) ρ := by
+    -- multiplicativity of the Mellin transform for `mulConv`
+    simpa [quadFun] using A.mellin_mulConv f (tildeFun (starFun f)) ρ hf hg hfg
+  have htilde :
+      mellin (tildeFun (starFun f)) ρ = mellin (starFun f) (1 - ρ) := by
+    simpa using (mellin_tildeFun (f := starFun f) (s := ρ))
+  have h1ρ : (1 - ρ) = star ρ := by
+    -- Apply `star` to `1 - star ρ = ρ`.
+    have := congrArg star hSymm
+    simpa [sub_eq_add_neg] using this
+  have hstar : mellin (starFun f) (star ρ) = star (mellin f ρ) := by
+    simpa using (mellin_starFun (f := f) (s := ρ) hf)
+  calc
+    mellin (quadFun f) ρ
+        = mellin f ρ * mellin (tildeFun (starFun f)) ρ := hmul
+    _ = mellin f ρ * mellin (starFun f) (1 - ρ) := by simp [htilde]
+    _ = mellin f ρ * mellin (starFun f) (star ρ) := by simp [h1ρ]
+    _ = mellin f ρ * star (mellin f ρ) := by simp [hstar]
+
+/-- Finite-sum Weil positivity for the concrete `quadFun` (assuming Mellin multiplicativity). -/
+lemma finite_WeilPositivity_quadFun (A : MulConvAssumptions) (f : ℝ → ℂ) (S : Finset ℂ)
+    (hSymm : ∀ ρ ∈ S, (1 - star ρ) = ρ)
+    (hf : ∀ ρ ∈ S, MellinConvergent f ρ)
+    (hg : ∀ ρ ∈ S, MellinConvergent (tildeFun (starFun f)) ρ)
+    (hfg : ∀ ρ ∈ S, MellinConvergent (quadFun f) ρ) :
+    0 ≤ (∑ ρ in S, mellin (quadFun f) ρ).re := by
+  -- rewrite each summand using `mellin_quadFun_of_symmetry`
+  have hsum : (∑ ρ in S, mellin (quadFun f) ρ).re =
+      (∑ ρ in S, (mellin f ρ * star (mellin f ρ))).re := by
+    refine congrArg Complex.re ?_
+    refine Finset.sum_congr rfl (fun ρ hρ => ?_)
+    exact mellin_quadFun_of_symmetry (A := A) (f := f) (ρ := ρ)
+      (hSymm ρ hρ) (hf ρ hρ) (hg ρ hρ) (hfg ρ hρ)
+  rw [hsum]
+  have : (∑ ρ in S, (mellin f ρ * star (mellin f ρ))).re =
+      ∑ ρ in S, ((mellin f ρ * star (mellin f ρ))).re := by
+    simpa using (Complex.re_sum (s := S) (f := fun ρ => (mellin f ρ * star (mellin f ρ))))
+  rw [this]
+  refine Finset.sum_nonneg (fun ρ _ => ?_)
+  simpa using mul_star_self_re_nonneg (mellin f ρ)
+
+end ExplicitFormula
+end RiemannRecognitionGeometry
+
+
+================================================================================
+FILE: Cayley.lean (Cayley transform algebra)
+================================================================================
+
+import Mathlib.Data.Complex.Abs
+
+/-!
+# Cayley transform: `Re z ≥ 0` ⇒ `|(z-1)/(z+1)| ≤ 1`
+
+This is the classical “Carathéodory/Herglotz → Schur” algebraic lemma:
+if a complex number has nonnegative real part, then its Cayley transform lies in the closed unit disk.
+
+Route 3 (explicit-formula / Weil–Li) uses this as a reusable *bridge shape*:
+positivity of a real part can be converted into a unit-disk bound after a Cayley transform.
+
+This file is intentionally independent of any old-route Carleson/BMO/Whitney infrastructure.
+-/
+
+noncomputable section
+
+namespace RiemannRecognitionGeometry
+namespace ExplicitFormula
+
+open Complex
+
+namespace Cayley
+
+/-- Cayley transform sending the right half-plane to the unit disk. -/
+def theta (z : ℂ) : ℂ := (z - 1) / (z + 1)
+
+@[simp] lemma theta_def (z : ℂ) : theta z = (z - 1) / (z + 1) := rfl
+
+/-- A minimal “Schur on a set” predicate: pointwise unit-disk bound. -/
+def IsSchurOn (Θ : ℂ → ℂ) (S : Set ℂ) : Prop :=
+  ∀ z ∈ S, Complex.abs (Θ z) ≤ 1
+
+lemma normSq_sub_one_le_normSq_add_one {z : ℂ} (hz : 0 ≤ z.re) :
+    Complex.normSq (z - 1) ≤ Complex.normSq (z + 1) := by
+  -- Reduce to the real inequality `(a-1)^2 ≤ (a+1)^2` for `a = z.re`.
+  have hdiff : 0 ≤ (z.re + 1) ^ 2 - (z.re - 1) ^ 2 := by
+    -- `(a+1)^2 - (a-1)^2 = 4a`
+    have hId : (z.re + 1) ^ 2 - (z.re - 1) ^ 2 = 4 * z.re := by ring
+    -- `0 ≤ 4*z.re` from `0 ≤ z.re`
+    have hz4 : 0 ≤ (4 : ℝ) * z.re := by nlinarith
+    simpa [hId] using hz4
+  have hreal : (z.re - 1) ^ 2 ≤ (z.re + 1) ^ 2 :=
+    (sub_nonneg).1 hdiff
+  -- Now lift to `normSq` by adding the common `im^2` term.
+  have hcore :
+      (z.re - 1) * (z.re - 1) + z.im * z.im ≤ (z.re + 1) * (z.re + 1) + z.im * z.im := by
+    have hmul : (z.re - 1) * (z.re - 1) ≤ (z.re + 1) * (z.re + 1) := by
+      simpa [pow_two] using hreal
+    exact add_le_add_right hmul (z.im * z.im)
+  -- Rewrite both sides as `normSq` expressions.
+  have h1 : Complex.normSq (z - 1) = (z.re - 1) * (z.re - 1) + z.im * z.im := by
+    simp [Complex.normSq_apply, Complex.sub_re, Complex.sub_im, Complex.one_re, Complex.one_im]
+  have h2 : Complex.normSq (z + 1) = (z.re + 1) * (z.re + 1) + z.im * z.im := by
+    simp [Complex.normSq_apply, Complex.add_re, Complex.add_im, Complex.one_re, Complex.one_im]
+  simpa [h1, h2] using hcore
+
+lemma abs_sub_one_le_abs_add_one {z : ℂ} (hz : 0 ≤ z.re) :
+    Complex.abs (z - 1) ≤ Complex.abs (z + 1) := by
+  -- `abs z = sqrt (normSq z)` and `sqrt` is monotone.
+  have hnorm : Complex.normSq (z - 1) ≤ Complex.normSq (z + 1) :=
+    normSq_sub_one_le_normSq_add_one (z := z) hz
+  simpa [Complex.abs_apply] using Real.sqrt_le_sqrt hnorm
+
+/--
+Core Cayley inequality: if `Re z ≥ 0` then the Cayley transform lies in the closed unit disk.
+-/
+lemma abs_theta_le_one_of_re_nonneg {z : ℂ} (hz : 0 ≤ z.re) :
+    Complex.abs (theta z) ≤ 1 := by
+  -- `| (z-1)/(z+1) | = |z-1|/|z+1| ≤ 1` because `|z-1| ≤ |z+1|`.
+  have hle : Complex.abs (z - 1) ≤ Complex.abs (z + 1) :=
+    abs_sub_one_le_abs_add_one (z := z) hz
+  -- Use `div_le_one_of_le₀` (works even if the denominator is `0` by field conventions).
+  have hdiv : Complex.abs (z - 1) / Complex.abs (z + 1) ≤ 1 :=
+    div_le_one_of_le₀ (by simpa using hle) (by exact Complex.abs.nonneg _)
+  -- Rewrite the LHS as the absolute value of the quotient.
+  simpa [theta, abs_div] using hdiv
+
+/--
+Scaled Cayley inequality in the form used in the other repo: `Θ(z) = ((2·J z)-1)/((2·J z)+1)`.
+-/
+def thetaOfJ (J : ℂ → ℂ) (z : ℂ) : ℂ := theta ((2 : ℂ) * J z)
+
+lemma abs_thetaOfJ_le_one_of_re_nonneg (J : ℂ → ℂ) {z : ℂ}
+    (hz : 0 ≤ (((2 : ℂ) * J z).re)) :
+    Complex.abs (thetaOfJ J z) ≤ 1 := by
+  simpa [thetaOfJ] using (abs_theta_le_one_of_re_nonneg (z := (2 : ℂ) * J z) hz)
+
+/-- “Cayley → Schur” on any set where `Re(2·J) ≥ 0` holds. -/
+lemma Theta_Schur_of_Re_nonneg_on (J : ℂ → ℂ) (S : Set ℂ)
+    (hRe : ∀ z ∈ S, 0 ≤ (((2 : ℂ) * J z).re)) :
+    IsSchurOn (thetaOfJ J) S := by
+  intro z hz
+  exact abs_thetaOfJ_le_one_of_re_nonneg (J := J) (z := z) (hRe z hz)
+
+end Cayley
+
+end ExplicitFormula
+end RiemannRecognitionGeometry
+
+
+================================================================================
+FILE: CayleyBridge.lean (Bridge hypothesis package)
+================================================================================
+
+import RiemannRecognitionGeometry.ExplicitFormula.Cayley
+import RiemannRecognitionGeometry.ExplicitFormula.MainRoute3
+
+/-!
+# Route 3: “Cayley bridge” (precise hypothesis package)
+
+This file exists to make the common *strategy sentence* precise:
+
+> “If we can build an arithmetic/outer field `J` with `Re(2·J) ≥ 0`, then by Cayley we get a Schur
+> function `Θ`, hence positivity, hence the Weil gate.”
+
+Only the **first** implication (real-part nonnegativity ⇒ Schur bound for the Cayley transform) is
+pure algebra and is proved in `ExplicitFormula/Cayley.lean`.
+
+Everything that would connect such a `J` to the **actual Route 3 Weil quadratic form**
+
+`f ↦ Re (W¹ (f ⋆ₘ ˜ₘ (⋆ₜ f)))`
+
+is additional analytic input. Here we package *exactly* what that extra input would have to look
+like, without claiming it holds for ζ.
+
+The cleanest classical-math target is the `ReflectionPositivityRealization` already recorded in
+`MainRoute3.lean`: a Hilbert-space representation of the Weil form as an inner product.
+-/
+
+noncomputable section
+
+namespace RiemannRecognitionGeometry
+namespace ExplicitFormula
+
+open Complex
+
+section
+
+variable {F : Type} [TestSpace F] [AddCommGroup F] [Module ℂ F]
+variable (L : LagariasFramework F)
+
+/--
+`CayleyBridgeAssumptions` = the **precise missing hypotheses** needed to turn a candidate “positivity
+field” `J` into the Route 3 Weil gate.
+
+What it contains:
+
+- `J` and a domain `S` on which we can assert the right-half-plane condition `Re(2·J) ≥ 0`;
+- a *single* bridge axiom `bridge_to_reflection` saying that this right-half-plane condition implies
+  a `ReflectionPositivityRealization` of the Weil form.
+
+Once `bridge_to_reflection` is available, Route 3 positivity follows immediately (by
+`WeilGate_of_reflectionPositivityRealization`).
+
+**Interpretation:** proving `bridge_to_reflection` for ζ is where genuinely new mathematics would
+have to enter; it is essentially a positive-definiteness / GNS statement for the explicit-formula
+kernel and is RH-equivalent in known formulations. -/
+structure CayleyBridgeAssumptions (L : LagariasFramework F) where
+  /-- Candidate arithmetic/outer field. -/
+  J : ℂ → ℂ
+  /-- Domain where the right-half-plane condition is asserted. -/
+  S : Set ℂ
+  /-- Positivity input: `Re(2·J) ≥ 0` on `S`. -/
+  hRe : ∀ z ∈ S, 0 ≤ (((2 : ℂ) * J z).re)
+  /--
+  The *entire* analytic bridge: from `Re(2·J) ≥ 0` on `S` to a Hilbert-space (reflection positivity)
+  realization of the Weil form.
+  -/
+  bridge_to_reflection :
+    (∀ z ∈ S, 0 ≤ (((2 : ℂ) * J z).re)) →
+      OptionalTargets.ReflectionPositivityRealization (F := F) (L := L)
+
+/-- A Cayley bridge assumption yields a reflection-positivity realization (by applying its bridge). -/
+theorem reflectionPositivityRealization_of_bridge (B : CayleyBridgeAssumptions (L := L)) :
+    OptionalTargets.ReflectionPositivityRealization (F := F) (L := L) :=
+  B.bridge_to_reflection B.hRe
+
+/--
+Main “bridge → gate” theorem: if you can supply a `CayleyBridgeAssumptions` package, then the Route 3
+Weil gate holds.
+
+Note: the Cayley/Schur step itself is not used here — it is *conceptually* part of what one would
+use to prove `bridge_to_reflection`, but the formal bottleneck is exactly `bridge_to_reflection`.
+-/
+theorem WeilGate_of_cayleyBridge (B : CayleyBridgeAssumptions (L := L)) :
+    L.WeilGate := by
+  -- Reduce to the already-recorded “reflection positivity ⇒ Weil gate”.
+  exact OptionalTargets.WeilGate_of_reflectionPositivityRealization (L := L)
+    (h := reflectionPositivityRealization_of_bridge (L := L) B)
+
+/--
+Optional helper: the Cayley transform of `2·J` is Schur (unit-disk bounded) on the asserted domain.
+
+This is the purely algebraic part of the story, already proven in `ExplicitFormula/Cayley.lean`.
+-/
+theorem Theta_isSchurOn_of_bridge (B : CayleyBridgeAssumptions (L := L)) :
+    Cayley.IsSchurOn (Cayley.thetaOfJ B.J) B.S :=
+  Cayley.Theta_Schur_of_Re_nonneg_on (J := B.J) (S := B.S) B.hRe
+
+end
+
+end ExplicitFormula
+end RiemannRecognitionGeometry
+
+
+================================================================================
+FILE: ArithmeticJ.lean (Arithmetic J = -ζ'/ζ)
+================================================================================
+
+import Mathlib.NumberTheory.LSeries.Dirichlet
+import RiemannRecognitionGeometry.ExplicitFormula.Cayley
+
+/-!
+# Route 3 (auxiliary): the “arithmetic J” from the von Mangoldt L-series
+
+This file does **not** prove RH. It simply pins down, in classical Lean/Mathlib terms,
+the natural analytic-number-theory candidate that appears in “arithmetic-side” discussions:
+
+`J_arith(s) := -ζ'(s)/ζ(s)`.
+
+On `Re(s) > 1` this equals the L-series of the von Mangoldt function `Λ`:
+
+`∑ Λ(n) / n^s`.
+
+This is useful if one wants to explore “Cayley/Schur” style transforms of an arithmetic object.
+It is intentionally independent of the old Carleson/BMO/Whitney infrastructure.
+-/
+
+noncomputable section
+
+namespace RiemannRecognitionGeometry
+namespace ExplicitFormula
+
+open Complex
+
+namespace ArithmeticJ
+
+open LSeries ArithmeticFunction
+
+open scoped LSeries.notation
+
+/-- The canonical arithmetic-side analytic function: `J_arith(s) := - ζ'(s) / ζ(s)`. -/
+def J (s : ℂ) : ℂ :=
+  - deriv riemannZeta s / riemannZeta s
+
+/--
+On `Re(s) > 1`, `J_arith` agrees with the von Mangoldt L-series (Dirichlet series).
+
+This is Mathlib’s theorem `ArithmeticFunction.LSeries_vonMangoldt_eq_deriv_riemannZeta_div`,
+rearranged to match our `J` definition.
+-/
+lemma J_eq_LSeries_vonMangoldt {s : ℂ} (hs : 1 < s.re) :
+    J s = L (↗Λ) s := by
+  -- Mathlib states `L ↗Λ s = - deriv ζ(s) / ζ(s)`; we just rewrite.
+  have h := (ArithmeticFunction.LSeries_vonMangoldt_eq_deriv_riemannZeta_div (s := s) hs)
+  simpa [J] using h.symm
+
+/--
+The Cayley transform of the arithmetic J-field, in the common “2·J” normalization:
+`Θ(s) := ((2·J(s)) - 1) / ((2·J(s)) + 1)`.
+
+Note: without additional input, we do *not* know any unit-disk bound for this Θ on any region.
+-/
+def Theta (s : ℂ) : ℂ :=
+  Cayley.thetaOfJ J s
+
+end ArithmeticJ
+
+end ExplicitFormula
+end RiemannRecognitionGeometry
+
+
+================================================================================
+FILE: WeilTestFunction.lean (Concrete Schwartz test space)
+================================================================================
+
+/-
+Copyright (c) 2024 Jonathan Washburn. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Jonathan Washburn, Gemini
+-/
+import Mathlib.Analysis.Distribution.SchwartzSpace
+import Mathlib.Analysis.Distribution.FourierSchwartz
+import Mathlib.Analysis.SpecialFunctions.Gamma.Deriv
+import Mathlib.Analysis.SpecialFunctions.Complex.LogDeriv
+import Mathlib.NumberTheory.LSeries.RiemannZeta
+import Mathlib.NumberTheory.VonMangoldt
+import Mathlib.MeasureTheory.Integral.Bochner.Basic
+import Mathlib.MeasureTheory.Integral.Bochner.L1
+import Mathlib.MeasureTheory.Integral.Bochner.VitaliCaratheodory
+import Mathlib.Analysis.Complex.CauchyIntegral
+import Mathlib.Analysis.MellinTransform
+import Mathlib.Analysis.Calculus.ParametricIntegral
+import RiemannRecognitionGeometry.ExplicitFormula.Defs
+
+/-!
+# Concrete Test Function Space for Route 3
+
+This file defines `WeilTestFunction`, a concrete implementation of the `TestSpace`
+typeclass based on Schwartz functions on ℝ with exponential decay.
+
+This structure is ported and adapted from `IsWeilTestFunction` in the
+`jonwashburn/riemann` repository, removing the `even` constraint to allow
+general test functions (closure under convolution and involution).
+
+## Main Definitions
+
+* `WeilTestFunction`: A structure bundling a Schwartz function with exponential decay
+  conditions in both time and frequency domains.
+* `instance : TestSpace WeilTestFunction`: The proof that this space satisfies
+  the explicit formula axioms (Mellin multiplicativity, etc.).
+
+## Implementation Notes
+
+We map the multiplicative group `(0,∞)` (used in `TestSpace` abstractly) to the
+additive group `ℝ` via `x ↦ log x`.
+- `Mellin f s` corresponds to `∫_{-∞}^∞ g(x) e^{(s-1/2)x} dx` (normalized Laplace).
+- `conv f g` corresponds to additive convolution on `ℝ`.
+- `tilde f` corresponds to reflection `g(-x)`.
+
+-/
+
+noncomputable section
+
+open scoped BigOperators Real Complex
+open Complex Real MeasureTheory SchwartzMap Topology Filter Set ArithmeticFunction Asymptotics
+
+namespace RiemannRecognitionGeometry
+namespace ExplicitFormula
+
+/--
+A Weil test function is a Schwartz function on ℝ satisfying specific decay
+properties allowing for the convergence of the Explicit Formula terms.
+
+This matches the `IsWeilTestFunction` class from previous work, but as a structure
+and without the `even` requirement (to support the full algebra).
+-/
+structure WeilTestFunction where
+  /-- The underlying Schwartz function. -/
+  toSchwartz : SchwartzMap ℝ ℂ
+  /-- Strong decay ensures the transform `Φ(s)` is analytic in a wide strip. -/
+  decay : ∃ (C ε : ℝ), 0 < ε ∧ ∀ x, ‖toSchwartz x‖ ≤ C * Real.exp (- (1/2 + ε) * |x|)
+  /-- Decay of the Fourier transform ensures absolute convergence of the prime sum. -/
+  ft_decay : ∃ (C' ε' : ℝ), 0 < ε' ∧ ∀ ξ, ‖fourierTransformCLM ℂ toSchwartz ξ‖ ≤ C' * Real.exp (- (1/2 + ε') * |ξ|)
+
+namespace WeilTestFunction
+
+variable (f g : WeilTestFunction)
+
+/-- Coercion to function. -/
+instance : CoeFun WeilTestFunction (fun _ => ℝ → ℂ) where
+  coe f := f.toSchwartz
+
+/--
+The Weil transform `Φ(s)`.
+This is effectively a bilateral Laplace transform shifted to center on `s = 1/2`.
+`Φ(s) = ∫_{-∞}^{∞} g(x) e^{(s - 1/2)x} dx`.
+This corresponds to the Mellin transform `∫_0^∞ F(y) y^{s-1} dy` if `F(y) = g(log y) y^{-1/2}`.
+For Route 3, we define `Mellin` directly as this transform.
+-/
+def weilTransform (s : ℂ) : ℂ :=
+  ∫ x : ℝ, f.toSchwartz x * Complex.exp ((s - 0.5) * x)
+
+/--
+Additive convolution of Weil test functions.
+Closure proof is deferred (standard analysis).
+-/
+def convolution : WeilTestFunction :=
+  let h := (Convolution.convolution f.toSchwartz g.toSchwartz : SchwartzMap ℝ ℂ)
+  {
+    toSchwartz := h
+    decay := by
+      -- Convolution of exp-decaying functions has exp-decay (with slightly smaller epsilon)
+      sorry
+    ft_decay := by
+      -- FT(f * g) = FT(f) * FT(g). Product of exp-decay is exp-decay.
+      sorry
+  }
+
+/--
+Reflection `g(-x)`.
+-/
+def reflection : WeilTestFunction :=
+  let h : SchwartzMap ℝ ℂ :=
+    { toFun := fun x => f.toSchwartz (-x)
+      smooth' := f.toSchwartz.smooth'.comp (continuous_neg.smooth)
+      decay' := by
+        -- |x^k * D^n g(-x)| = |(-x)^k * (-1)^n (D^n g)(-x)| = |y^k (D^n g)(y)|
+        -- Decay is preserved under reflection.
+        sorry
+    }
+  {
+    toSchwartz := h
+    decay := by
+      obtain ⟨C, ε, hε, hdecay⟩ := f.decay
+      use C, ε, hε
+      intro x
+      simpa using hdecay (-x)
+    ft_decay := by
+      -- FT(g(-x))(ξ) = FT(g)(-ξ). Decay preserved.
+      obtain ⟨C, ε, hε, hdecay⟩ := f.ft_decay
+      use C, ε, hε
+      intro ξ
+      simpa using hdecay (-ξ)
+  }
+
+/--
+Complex conjugation.
+-/
+def conjugation : WeilTestFunction :=
+  let h : SchwartzMap ℝ ℂ :=
+    { toFun := fun x => star (f.toSchwartz x)
+      smooth' := f.toSchwartz.smooth'.star
+      decay' := by
+        -- |x^k D^n (conj g)| = |conj (x^k D^n g)| = |x^k D^n g|
+        sorry
+    }
+  {
+    toSchwartz := h
+    decay := by
+      obtain ⟨C, ε, hε, hdecay⟩ := f.decay
+      use C, ε, hε
+      intro x
+      simpa using hdecay x
+    ft_decay := by
+      -- FT(conj g)(ξ) = conj (FT g (-ξ)).
+      obtain ⟨C, ε, hε, hdecay⟩ := f.ft_decay
+      use C, ε, hε
+      intro ξ
+      simpa using hdecay (-ξ)
+  }
+
+/-! ### Analytic Properties -/
+
+/--
+The Mellin transform of the convolution is the product of Mellin transforms.
+For the additive `weilTransform`, this is `L(f*g) = L(f) * L(g)`.
+-/
+lemma weilTransform_convolution (s : ℂ) :
+    (f.convolution g).weilTransform s = f.weilTransform s * g.weilTransform s := by
+  -- This is the standard convolution theorem for Laplace/Fourier transforms.
+  -- ∫ (∫ f(y) g(x-y) dy) e^{(s-1/2)x} dx
+  -- = ∫ ∫ f(y) e^{(s-1/2)y} g(x-y) e^{(s-1/2)(x-y)} dy dx
+  -- = (∫ f(y) e^{(s-1/2)y} dy) (∫ g(z) e^{(s-1/2)z} dz)
+  -- Justified by Fubini due to absolute convergence (guaranteed by decay).
+  sorry
+
+/--
+The Mellin transform of the reflection corresponds to `s ↦ 1 - s`.
+`∫ g(-x) e^{(s-1/2)x} dx` (u = -x)
+`= ∫ g(u) e^{-(s-1/2)u} du`
+`= ∫ g(u) e^{(1/2-s)u} du`
+`= ∫ g(u) e^{((1-s)-1/2)u} du`
+`= Φ(1-s)`
+-/
+lemma weilTransform_reflection (s : ℂ) :
+    f.reflection.weilTransform s = f.weilTransform (1 - s) := by
+  dsimp [weilTransform, reflection]
+  -- Change of variables u = -x
+  -- Integral over ℝ is invariant under negation of variable
+  have : ∫ x, f.toSchwartz (-x) * cexp ((s - 0.5) * x) =
+         ∫ u, f.toSchwartz u * cexp ((s - 0.5) * (-u)) := by
+    -- measure_preserving_neg or similar
+    sorry
+  rw [this]
+  congr 1; ext u
+  congr 1
+  -- Check exponent: (s - 0.5) * (-u) = (0.5 - s) * u = ((1-s) - 0.5) * u
+  ring
+
+/-! ### Instance Definition -/
+
+instance : TestSpace WeilTestFunction where
+  Mellin := fun f s => f.weilTransform s
+  conv := fun f g => f.convolution g
+  tilde := fun f => f.reflection
+  star := fun f => f.conjugation
+  mellin_conv := fun f g s => weilTransform_convolution f g s
+  mellin_tilde := fun f s => weilTransform_reflection f s
+
+end WeilTestFunction
+
+end ExplicitFormula
+end RiemannRecognitionGeometry
+
+
+================================================================================
+FILE: WeilFunctionals.lean (Concrete Warith for WeilTestFunction)
+================================================================================
+
+/-
+Copyright (c) 2024 Jonathan Washburn. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Jonathan Washburn, Gemini
+-/
+import RiemannRecognitionGeometry.ExplicitFormula.WeilTestFunction
+import Mathlib.Analysis.SpecialFunctions.Gamma.Deriv
+import Mathlib.NumberTheory.VonMangoldt
+
+noncomputable section
+
+namespace RiemannRecognitionGeometry
+namespace ExplicitFormula
+namespace WeilFunctionals
+
+open Complex Real MeasureTheory SchwartzMap Topology Filter Set ArithmeticFunction WeilTestFunction
+
+variable (f : WeilTestFunction)
+
+/--
+Logarithmic derivative of the Gamma factor for Zeta, `Γℝ(s) = π^{-s/2} Γ(s/2)`.
+Note: The factor π^{-s/2} adds a -1/2 log π term to the derivative.
+-/
+def GammaLogDeriv (s : ℂ) : ℂ :=
+  (logDeriv Complex.Gamma) s
+
+/--
+Archimedean term for Zeta.
+`𝒜(g) = \frac{1}{4\pi} \int_{-\infty}^\infty g(x) \Psi_{arch}(x) dx`
+Derived from the Gamma factor in the functional equation.
+-/
+def archimedeanTerm : ℂ :=
+  let h := fourierTransformCLM ℂ f.toSchwartz
+  let term1 := (1 / (2 * π)) * ∫ x : ℝ, f.toSchwartz x *
+    (GammaLogDeriv (1/4 + Complex.I * (x/2)) + GammaLogDeriv (1/4 - Complex.I * (x/2)))
+  let term2 := - h 0 * Real.log π
+  term1 + term2
+
+/--
+Prime power contribution:
+`∑_{n} \frac{\Lambda(n)}{\sqrt{n}} (g(\log n) + g(-\log n))`
+-/
+def primeTerm : ℂ :=
+  - ∑' n : ℕ, if n = 0 then 0 else
+    ((vonMangoldt n : ℂ) / Real.sqrt n) *
+      (f.toSchwartz (Real.log n) + f.toSchwartz (-Real.log n))
+
+/--
+Geometric side: Sum of prime term, archimedean term, and boundary terms (poles).
+This corresponds to the "Arithmetic Side" in the Lagarias formulation (explicit formula).
+`Warith(f) = W_primes + W_arch + W_poles`.
+-/
+def Warith : ℂ :=
+  f.weilTransform 1 +
+  f.weilTransform 0 +
+  primeTerm f +
+  archimedeanTerm f
+
+/--
+The Weil Positivity Gate (Concrete).
+The Riemann Hypothesis is equivalent to `Warith (f.convolution f.conjugation.reflection) ≥ 0`
+for all Weil test functions `f`.
+-/
+def WeilGate : Prop :=
+  ∀ f : WeilTestFunction, 0 ≤ (Warith (f.convolution f.conjugation.reflection)).re
+
+end WeilFunctionals
+end ExplicitFormula
+end RiemannRecognitionGeometry
+
+
+================================================================================
+END OF BUNDLE
+================================================================================

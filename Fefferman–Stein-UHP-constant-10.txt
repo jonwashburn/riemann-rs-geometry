@@ -84,3 +84,4 @@ Remark on alternative phrasing via area (square) function.
 Using Step 1 with S_2 and the identity ∫ℝ S_2(f)^2 = 2·E(f) = ||f||_2^2, one can run an
 equivalent tent-space proof; the constants book-keep to the same 10 when one uses the
 same JN → L^2 bound for the local piece and the ring/cancellation bounds for the tail.
+

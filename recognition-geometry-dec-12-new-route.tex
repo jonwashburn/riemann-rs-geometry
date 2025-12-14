@@ -1830,7 +1830,29 @@ This repository also contains an ongoing analytic-number-theory formalization bu
     \]
     This inequality is isolated as the main remaining analytic input in the boundary-certificate architecture; see \texttt{CPM.tex} and \texttt{renormalized\_tail\_bound.md} (\S5).
 
-    \item \textbf{Alternate major rebuild (explicit formula / Weil--Li positivity).} If the project pivots away from the boundary-certificate/Carleson toolbox entirely, a clean replacement ``gate'' is to recast RH as an \emph{explicit-formula positivity} problem: Weil's criterion (RH \(\Leftrightarrow\) positivity of the explicit-formula quadratic form \(W^{(1)}(f*\widetilde{\overline f})\) for all test functions \(f\)) or, equivalently, Li's criterion (RH \(\Leftrightarrow\) \(\lambda_n\ge 0\) for all Li coefficients). This route is global rather than local and avoids the \(\mu\)-Carleson packing bottleneck; see \texttt{renormalized\_tail\_bound.md} (\S8).  A cautionary note is that stronger de Branges shift-positivity conditions fail for \(\zeta\) (Conrey--Li, arXiv:math/9812166), so the positivity target must be of Weil/Li ``averaged'' type rather than pointwise.
+    \item \textbf{Alternate major rebuild (explicit formula / Weil--Li positivity).}
+    \emph{Current status (Route 3):} This ``explicit-formula gate'' route is now instantiated as a mechanically checkable Lean skeleton under \texttt{RiemannRecognitionGeometry/ExplicitFormula/}.
+    It fixes Lagarias' Mellin normalization, defines the involution \(\widetilde f\), multiplicative convolution \(f*g\) on \((0,\infty)\), and connects these to Mathlib's \texttt{mellin}.
+    The Lean development proves the gate-shape implications (e.g.\ ``Weil gate \(\Rightarrow\) \texttt{RiemannHypothesis}'' and the Li specialization), and formalizes the algebraic heart of the easy direction (RH \(\Rightarrow\) finite-sum positivity) including the required conjugation/symmetry manipulations.
+    We also proved a concrete Mellin--convolution multiplicativity lemma for the multiplicative convolution, \emph{under an explicit Fubini/Tonelli integrability hypothesis}; this replaces an opaque axiom with a standard analytic obligation.
+
+    \emph{Recent advances (December 2025):}
+    \begin{enumerate}
+        \item \textbf{Cayley transform algebra} (\texttt{Cayley.lean}): Formalized the classical lemma that \(\Re z \ge 0\) implies \(|(z-1)/(z+1)| \le 1\), providing a reusable ``positivity \(\to\) unit-disk bound'' bridge.
+
+        \item \textbf{Reflection Positivity target} (\texttt{MainRoute3.lean}): Defined \texttt{ReflectionPositivityRealization}---the statement that \(W^{(1)}(f \star \widetilde{\overline g}) = \langle Tf, Tg\rangle_H\) in some Hilbert space. Proved \texttt{WeilGate\_of\_reflectionPositivityRealization}.
+
+        \item \textbf{Cayley bridge hypothesis package} (\texttt{CayleyBridge.lean}): Formalized \texttt{CayleyBridgeAssumptions}, which precisely packages the remaining analytic gap---a candidate \(J\), domain \(S\), positivity \(\Re(2J) \ge 0\) on \(S\), and a bridge axiom to \texttt{ReflectionPositivityRealization}.
+
+        \item \textbf{Arithmetic \(J\) definition} (\texttt{ArithmeticJ.lean}): Defined \(J(s) := -\zeta'(s)/\zeta(s)\) and connected to the von Mangoldt L-series for \(\Re s > 1\).
+    \end{enumerate}
+
+    \emph{Lean module inventory (14 files):}
+    \texttt{Defs}, \texttt{Lagarias}, \texttt{Li}, \texttt{MainRoute3}, \texttt{MathlibBridge}, \texttt{MulConvolution}, \texttt{Concrete}, \texttt{WFunctionals}, \texttt{WeilPositivityRH}, \texttt{Cayley}, \texttt{CayleyBridge}, \texttt{ArithmeticJ}, \texttt{WeilTestFunction}, \texttt{WeilFunctionals}.
+
+    \emph{Main problem right now:} prove the \texttt{bridge\_to\_reflection} axiom in \texttt{CayleyBridgeAssumptions}, or directly construct a \texttt{ReflectionPositivityRealization}.
+    This requires either showing that arithmetic-side positivity \(\Re(2J(s)) \ge 0\) implies a Hilbert-space representation of the Weil form, or directly constructing such a representation.
+    This is a global (not local) target and is logically equivalent to RH in this architecture. A cautionary note is that stronger de Branges shift-positivity conditions fail for \(\zeta\) (Conrey--Li, arXiv:math/9812166), so the positivity target must be of Weil/Li ``averaged'' type rather than pointwise.
 \end{itemize}
 
 \section{Notation Index}

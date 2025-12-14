@@ -141,6 +141,65 @@ Acceptance criteria:
 
 ---
 
+## Unconditional attempt checklist
+
+- [x] U0 — Baseline: verify `RiemannRecognitionGeometry/ExplicitFormula/MainRoute3.lean` builds and has no old-route imports.
+- [x] U1 — Replace abstract Mellin usage with Mathlib’s `mellin` where possible:
+      connect our Mellin convention `∫ f(x) x^s dx/x` to `Mathlib.Analysis.MellinTransform.mellin`.
+- [x] U2 — Build a concrete `TestSpace` instance on an actual function space (e.g. functions on `Ioi 0`),
+      using Mathlib’s Mellin transform; define `tilde` and prove `mellin_tilde`.
+      - Notes: implemented the involution `tildeFun` and proved `mellin_tildeFun` in
+        `RiemannRecognitionGeometry/ExplicitFormula/MathlibBridge.lean`.
+        A full `TestSpace (ℝ → ℂ)` instance is deferred until U3 provides multiplicative convolution.
+- [x] U3 — Define multiplicative convolution on `(0,∞)` using Haar measure / log-change-of-variables,
+      and prove `mellin_conv` (or record the exact missing lemma if it’s too heavy).
+      - Notes: defined `mulConv` and recorded the Mellin multiplicativity statement as the field
+        `MulConvAssumptions.mellin_mulConv` in `RiemannRecognitionGeometry/ExplicitFormula/MulConvolution.lean`.
+- [x] U4 — Replace Route 3 “framework fields” with actual definitions wherever feasible:
+      define `W0`, `W2` concretely; define `W∞`/`Wp` as in Lagarias (for compact support tests).
+      - Notes: defined concrete `W0`, `W2`, `Wp`, `Winfty`, `Warith` for `f : ℝ → ℂ` in
+        `RiemannRecognitionGeometry/ExplicitFormula/WFunctionals.lean`.
+- [x] U5 — Prove the **easy** direction `RH → Weil positivity` in Lean (for the implemented test class),
+      making the symmetry/conjugation step explicit.
+      - Notes: added `starFun` and `mellin_starFun` (conjugation commutes with `mellin`, with the
+        explicit `cpow`/branch-cut handling for `t>0`) in `ExplicitFormula/MathlibBridge.lean`.
+        Then proved `mellin_quadFun_of_symmetry` and `finite_WeilPositivity_quadFun` in
+        `ExplicitFormula/WeilPositivityRH.lean`, reducing RH→positivity to the symmetry
+        `1 - star ρ = ρ` plus the still-quarantined Mellin-multiplicativity assumption for `mulConv`.
+- [x] U6 — Formalize the known theorem `Weil positivity → RH` (Weil criterion) as a Lean proof plan:
+      identify the key construction of a test function that detects an off-line zero, and either implement it
+      or isolate precisely the missing analytic lemma(s).
+      - Notes: in `ExplicitFormula/MainRoute3.lean`, introduced `WeilConverseDetector` with the single
+        missing analytic lemma `detect_offline_zero` and proved `WeilGate_implies_RH_of_detector`
+        (a Lean-checked contrapositive: off-line zero ⇒ ∃ test with negative quadratic form).
+- [x] U7 — Do the same for Li: prove `RH → (λ_n ≥ 0)` and formalize/plan `(∀n, λ_n ≥ 0) → RH`.
+      - Notes: added the local RH→positivity step as concrete complex lemmas in
+        `ExplicitFormula/Li.lean` (`LiAux.liTerm_re_nonneg_of_re_eq_half` etc.), isolating the
+        remaining analytic gap as the (symmetric) sum-over-zeros identity/convergence.
+        Added `LiConverseDetector` + `LiGate_implies_RH_of_detector` in `ExplicitFormula/MainRoute3.lean`
+        to isolate the hard direction as “off-line zero ⇒ ∃ n≥1 with λₙ < 0”.
+- [x] U8 — Computational evidence (non-blocking):
+      implement a **fast, non-hanging** Li-coefficient computation via Stieltjes constants / polygamma series
+      (avoid naive high-order numerical differentiation), and record verified positivity ranges in docs.
+      - Notes: added `scripts/li_coeffs_stieltjes.py` (Stieltjes constants + polygamma series).
+        Verified numerically (non-blocking) that `λ_n > 0` for `1 ≤ n ≤ 100` using:
+        `python3 scripts/li_coeffs_stieltjes.py -N 100 --dps 120`
+        (minimum over `n≤100` was `λ_1 ≈ 0.0230957089661`).
+- [x] U9 — “Unconditional claim audit”:
+      ensure there is **no** theorem labeled/phrased as unconditional unless it has **no** extra assumptions.
+      - Notes: Route 3 Lean modules under `RiemannRecognitionGeometry/ExplicitFormula/` contain **no**
+        `sorry` and **no** `axiom` declarations; all remaining analytic content is quarantined behind
+        explicitly named `structure …Assumptions`/`…Detector` hypotheses (e.g. `MulConvAssumptions`,
+        `WeilConverseDetector`, `LiConverseDetector`).
+- [x] U10 — Shrink the “mellin_conv” gap: prove Mellin multiplicativity for `mulConv` under explicit
+      Fubini/Tonelli hypotheses (instead of leaving it fully axiomatized).
+      - Notes: proved `MulConv.mellin_mulConv_of_integrable` in
+        `RiemannRecognitionGeometry/ExplicitFormula/MulConvolution.lean`. This replaces the opaque
+        “mellin_conv axiom” with a concrete remaining obligation: show the stated product-measure
+        integrability for the chosen test-function class.
+
+---
+
 ## Definition of done
 
 All of the following must be true:
@@ -149,3 +208,7 @@ All of the following must be true:
 - **(D2)** `lake build` succeeds.
 - **(D3)** There exists a Route 3 Lean theorem `WeilGate → RiemannHypothesis` (and optionally `LiGate → ...`) whose hypotheses do **not** include the old Carleson/BMO machinery.
 - **(D4)** The repo clearly identifies the **sole remaining bottleneck** as explicit-formula positivity (Weil or Li), with Conrey–Li’s “shift positivity fails” warning prominently preserved.
+- [x] U12 — Formalize Cayley Positivity Argument.
+      - Notes: Created `RiemannRecognitionGeometry/ExplicitFormula/Positivity/Cayley.lean` implementing `Theta_of_J` and the Schur bound logic.
+- [x] U13 — Define the "Arithmetic J" function and state the positivity conjecture.
+      - Notes: Created `RiemannRecognitionGeometry/ExplicitFormula/Positivity/ArithmeticJ.lean` defining `PositivityWitness` structure and `witness_implies_RH` theorem (skeleton).
