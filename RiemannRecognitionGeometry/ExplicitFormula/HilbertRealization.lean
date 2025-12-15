@@ -5,10 +5,12 @@ Authors: Jonathan Washburn
 -/
 import Mathlib.Analysis.InnerProductSpace.Basic
 import Mathlib.MeasureTheory.Integral.Bochner
+import Mathlib.MeasureTheory.Function.L2Space
 import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
 import Mathlib.Topology.Algebra.Module.Basic
 import RiemannRecognitionGeometry.ExplicitFormula.Defs
 import RiemannRecognitionGeometry.ExplicitFormula.Lagarias
+import RiemannRecognitionGeometry.ExplicitFormula.MainRoute3
 
 /-!
 # Route 3: Hilbert-space realization from positive-semidefinite forms
@@ -186,6 +188,155 @@ theorem weilGate_from_spectral_identity
     exact MeasureTheory.integral_nonneg_of_ae hnonneg_integrand
   -- Conclude WeilGate.
   simpa [hspec] using hint
+
+/-!
+## Sesquilinear spectral identity ⇒ reflection positivity (weighted `L^2`)
+
+The quadratic-form identity `identity_re` is enough to deduce `WeilGate`. For the stronger
+intermediate target `ReflectionPositivityRealization` (a genuine inner-product representation of the
+Weil form), it is convenient to package a **sesquilinear** spectral identity and then construct the
+Hilbert space explicitly as an `L^2` space.
+
+We implement the weight by pointwise multiplication with `Real.sqrt (weightOfJ J t)`, so that we can
+use the standard `L2` inner product with respect to a fixed base measure `μ`.
+-/
+
+section SesquilinearSpectralIdentity
+
+variable {F : Type} [TestSpace F] [AddCommGroup F] [Module ℂ F]
+
+/-- The Route 3 sesquilinear test expression `f ⋆ₘ ˜ₘ(⋆ₜ g)`. -/
+def pair (f g : F) : F :=
+  f ⋆ₘ ˜ₘ (⋆ₜ g)
+
+/--
+Sesquilinear spectral identity package.
+
+This is the precise analytic ``missing lemma'' needed to build a Hilbert-space realization of the
+Weil form by a weighted `L^2` construction.
+-/
+structure SesqSpectralIdentity (L : LagariasFramework F) where
+  /-- Boundary measure (typically Lebesgue on `ℝ`). -/
+  μ : Measure ℝ := volume
+  /-- Arithmetic field `J` producing the weight. -/
+  J : ℂ → ℂ
+  /-- A linear boundary transform (typically `f ↦ (t ↦ M[f](1/2+it))`). -/
+  transform : F →ₗ[ℂ] (ℝ → ℂ)
+  /-- Pointwise nonnegativity of the weight `Re(2·J(1/2+it))`. -/
+  weight_nonneg : ∀ t : ℝ, 0 ≤ weightOfJ J t
+  /-- L² admissibility: the weighted transform belongs to `L²(μ)`. -/
+  memL2 : ∀ f : F,
+    MeasureTheory.Memℒp
+      (fun t : ℝ => ((Real.sqrt (weightOfJ J t) : ℝ) : ℂ) * transform f t) 2 μ
+  /--
+  The sesquilinear spectral identity, stated already in Hilbert-space form:
+
+  `W¹(f ⋆ₘ ˜ₘ(⋆ₜ g)) = ⟪T f, T g⟫` where `T f` is the weighted transform in `L²(μ)`.
+  -/
+  identity :
+    ∀ f g : F,
+      L.W1 (pair (F := F) f g) =
+        ⟪(memL2 f).toLp (fun t : ℝ => ((Real.sqrt (weightOfJ J t) : ℝ) : ℂ) * transform f t),
+          (memL2 g).toLp (fun t : ℝ => ((Real.sqrt (weightOfJ J t) : ℝ) : ℂ) * transform g t)⟫_ℂ
+
+namespace SesqSpectralIdentity
+
+variable (L : LagariasFramework F) (S : SesqSpectralIdentity (F := F) (L := L))
+
+/-- The weighted boundary function used to define `T`. -/
+def weighted (f : F) : ℝ → ℂ :=
+  fun t : ℝ => ((Real.sqrt (weightOfJ S.J t) : ℝ) : ℂ) * S.transform f t
+
+/-- The concrete Hilbert-space map `T : F → L²(μ)` associated to a sesquilinear spectral identity. -/
+def T : F →ₗ[ℂ] (ℝ →₂[S.μ] ℂ) where
+  toFun f := (S.memL2 f).toLp (weighted (L := L) S f)
+  map_add' f g := by
+    -- Prove equality in `L²` by almost-everywhere equality of functions.
+    apply MeasureTheory.Lp.ext
+    have hfg : (weighted (L := L) S (f + g)) = (weighted (L := L) S f + weighted (L := L) S g) := by
+      funext t
+      simp [weighted, map_add, Pi.add_apply, mul_add]
+    -- Convert pointwise equality to ae-equality and rewrite using the `toLp`/`coeFn` lemmas.
+    have hfg_ae : weighted (L := L) S (f + g) =ᵐ[S.μ] (weighted (L := L) S f + weighted (L := L) S g) :=
+      Filter.Eventually.of_forall (fun t => by simpa [hfg])
+    have hL : ((S.memL2 (f + g)).toLp (weighted (L := L) S (f + g))) =ᵐ[S.μ] weighted (L := L) S (f + g) :=
+      MeasureTheory.Memℒp.coeFn_toLp (μ := S.μ) (hf := S.memL2 (f + g))
+    have hF : ((S.memL2 f).toLp (weighted (L := L) S f)) =ᵐ[S.μ] weighted (L := L) S f :=
+      MeasureTheory.Memℒp.coeFn_toLp (μ := S.μ) (hf := S.memL2 f)
+    have hG : ((S.memL2 g).toLp (weighted (L := L) S g)) =ᵐ[S.μ] weighted (L := L) S g :=
+      MeasureTheory.Memℒp.coeFn_toLp (μ := S.μ) (hf := S.memL2 g)
+    have hAdd :
+        (fun t : ℝ => (((S.memL2 f).toLp (weighted (L := L) S f) +
+          (S.memL2 g).toLp (weighted (L := L) S g)) t))
+          =ᵐ[S.μ] fun t : ℝ => (weighted (L := L) S f + weighted (L := L) S g) t := by
+      -- Use local names to keep coercions under control.
+      let u : (ℝ →₂[S.μ] ℂ) := (S.memL2 f).toLp (weighted (L := L) S f)
+      let v : (ℝ →₂[S.μ] ℂ) := (S.memL2 g).toLp (weighted (L := L) S g)
+      let uf : (ℝ → ℂ) := weighted (L := L) S f
+      let vg : (ℝ → ℂ) := weighted (L := L) S g
+      have hu : (u : ℝ → ℂ) =ᵐ[S.μ] uf := by
+        simpa [u, uf] using hF
+      have hv : (v : ℝ → ℂ) =ᵐ[S.μ] vg := by
+        simpa [v, vg] using hG
+      have hcoe := (MeasureTheory.Lp.coeFn_add u v)
+      filter_upwards [hcoe, hu, hv] with t ht htu htv
+      calc
+        ((u + v) t) = (u t + v t) := ht
+        _ = uf t + vg t := by simpa [htu, htv]
+        _ = (uf + vg) t := rfl
+    -- Finish by rewriting both sides to the same explicit function.
+    filter_upwards [hL, hfg_ae, hAdd] with t htL htfg htAdd
+    -- Goal: the two `L²` functions agree at `t`.
+    calc
+      ((S.memL2 (f + g)).toLp (weighted (L := L) S (f + g)) t)
+          = weighted (L := L) S (f + g) t := htL
+      _   = (weighted (L := L) S f + weighted (L := L) S g) t := htfg
+      _   = (((S.memL2 f).toLp (weighted (L := L) S f) +
+                (S.memL2 g).toLp (weighted (L := L) S g)) t) := by
+              simpa using htAdd.symm
+  map_smul' c f := by
+    apply MeasureTheory.Lp.ext
+    have hcf : weighted (L := L) S (c • f) = c • weighted (L := L) S f := by
+      funext t
+      -- `transform` is linear; `weighted` is scalar multiplication by a fixed real factor.
+      simp [weighted, LinearMap.map_smul, Pi.smul_apply, smul_eq_mul, mul_assoc, mul_left_comm, mul_comm]
+    have hcf_ae : weighted (L := L) S (c • f) =ᵐ[S.μ] c • weighted (L := L) S f :=
+      Filter.Eventually.of_forall (fun t => by simpa [hcf])
+    have hL : ((S.memL2 (c • f)).toLp (weighted (L := L) S (c • f))) =ᵐ[S.μ] weighted (L := L) S (c • f) :=
+      MeasureTheory.Memℒp.coeFn_toLp (μ := S.μ) (hf := S.memL2 (c • f))
+    have hF : ((S.memL2 f).toLp (weighted (L := L) S f)) =ᵐ[S.μ] weighted (L := L) S f :=
+      MeasureTheory.Memℒp.coeFn_toLp (μ := S.μ) (hf := S.memL2 f)
+    have hSmul :
+        (fun t : ℝ => ((c • (S.memL2 f).toLp (weighted (L := L) S f)) t))
+          =ᵐ[S.μ] fun t : ℝ => (c • weighted (L := L) S f) t := by
+      have hcoe := (MeasureTheory.Lp.coeFn_smul c ((S.memL2 f).toLp (weighted (L := L) S f)))
+      filter_upwards [hcoe, hF] with t ht htf
+      -- `ht` rewrites the `Lp`-smul into pointwise smul; then `htf` substitutes the underlying function.
+      -- Here `ht` is exactly `((c • u) t) = c • (u t)`; use it in the forward direction.
+      simpa [Pi.smul_apply, ht, htf]
+    filter_upwards [hL, hcf_ae, hSmul] with t htL htcf htSmul
+    calc
+      ((S.memL2 (c • f)).toLp (weighted (L := L) S (c • f)) t)
+          = weighted (L := L) S (c • f) t := htL
+      _   = (c • weighted (L := L) S f) t := htcf
+      _   = ((c • (S.memL2 f).toLp (weighted (L := L) S f)) t) := by
+              simpa using htSmul.symm
+
+/--
+A sesquilinear spectral identity yields a `ReflectionPositivityRealization` by taking
+`H = L²(μ)` and `T` as the weighted transform.
+-/
+theorem reflectionPositivityRealization (S : SesqSpectralIdentity (F := F) (L := L)) :
+    OptionalTargets.ReflectionPositivityRealization (F := F) (L := L) := by
+  classical
+  refine ⟨(ℝ →₂[S.μ] ℂ), by infer_instance, by infer_instance, by infer_instance, T (L := L) S, ?_⟩
+  intro f g
+  -- Unfold `T` and use the packaged sesquilinear identity.
+  simpa [T, weighted, pair] using (S.identity f g)
+
+end SesqSpectralIdentity
+
+end SesquilinearSpectralIdentity
 
 /-!
 ## Summary: The Route 3 reduction
