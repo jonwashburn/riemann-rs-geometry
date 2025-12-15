@@ -209,6 +209,35 @@ variable {F : Type} [TestSpace F] [AddCommGroup F] [Module ℂ F]
 def pair (f g : F) : F :=
   f ⋆ₘ ˜ₘ (⋆ₜ g)
 
+/-!
+### A small algebra lemma for the weighted `L²` construction
+
+We often want to rewrite `√w · (√w · z)` as `w · z` (and vice versa) when moving between:
+
+- the Bochner-integral form `∫ w(t) · ⟪F_f(t), F_g(t)⟫ dt`, and
+- the `L²` inner product form `⟪√w · F_f, √w · F_g⟫`.
+
+This is purely algebraic and only uses `Real.mul_self_sqrt` (hence `0 ≤ w`).
+-/
+
+private lemma sqrt_mul_sqrt_mul {w : ℝ} (hw : 0 ≤ w) (z : ℂ) :
+    ((Real.sqrt w : ℝ) : ℂ) * (((Real.sqrt w : ℝ) : ℂ) * z) = ((w : ℝ) : ℂ) * z := by
+  have hsqrt : (Real.sqrt w) * (Real.sqrt w) = w := Real.mul_self_sqrt hw
+  have hsqrtC : (((Real.sqrt w : ℝ) : ℂ) * ((Real.sqrt w : ℝ) : ℂ)) = ((w : ℝ) : ℂ) := by
+    simpa using congrArg (fun r : ℝ => (r : ℂ)) hsqrt
+  -- reassociate and rewrite `√w * √w`
+  calc
+    ((Real.sqrt w : ℝ) : ℂ) * (((Real.sqrt w : ℝ) : ℂ) * z)
+        = (((Real.sqrt w : ℝ) : ℂ) * ((Real.sqrt w : ℝ) : ℂ)) * z := by
+            simpa [mul_assoc] using
+              (mul_assoc (((Real.sqrt w : ℝ) : ℂ)) (((Real.sqrt w : ℝ) : ℂ)) z).symm
+    _   = ((w : ℝ) : ℂ) * z := by
+            simpa [hsqrtC]
+
+private lemma mul_eq_sqrt_mul_sqrt_mul {w : ℝ} (hw : 0 ≤ w) (z : ℂ) :
+    ((w : ℝ) : ℂ) * z = ((Real.sqrt w : ℝ) : ℂ) * (((Real.sqrt w : ℝ) : ℂ) * z) := by
+  simpa using (sqrt_mul_sqrt_mul (w := w) hw z).symm
+
 /--
 Sesquilinear spectral identity package.
 
@@ -238,6 +267,44 @@ structure SesqSpectralIdentity (L : LagariasFramework F) where
       L.W1 (pair (F := F) f g) =
         ⟪(memL2 f).toLp (fun t : ℝ => ((Real.sqrt (weightOfJ J t) : ℝ) : ℂ) * transform f t),
           (memL2 g).toLp (fun t : ℝ => ((Real.sqrt (weightOfJ J t) : ℝ) : ℂ) * transform g t)⟫_ℂ
+
+/--
+Sesquilinear spectral identity package (Bochner-integral form).
+
+This is the same analytic content as `SesqSpectralIdentity`, but stated in the more classical
+``explicit formula / Plancherel'' form:
+
+`W¹(pair f g) = ∫ w(t) · conj(F_f(t)) · F_g(t) dμ`,
+
+with `w(t) = Re(2·J(1/2+it))` and `F_f(t)` a boundary transform (typically the Mellin transform on
+the critical line).
+
+From this integral identity, the Hilbert-space form follows automatically by taking
+`T f := √w · F_f` as an element of `L²(μ)` and using `MeasureTheory.L2.inner_def`.
+-/
+structure SesqIntegralIdentity (L : LagariasFramework F) where
+  /-- Boundary measure (typically Lebesgue on `ℝ`). -/
+  μ : Measure ℝ := volume
+  /-- Arithmetic field `J` producing the weight `w(t) = Re(2·J(1/2+it))`. -/
+  J : ℂ → ℂ
+  /-- A linear boundary transform (typically `f ↦ (t ↦ M[f](1/2+it))`). -/
+  transform : F →ₗ[ℂ] (ℝ → ℂ)
+  /-- Pointwise nonnegativity of the weight (needed to form `Real.sqrt`). -/
+  weight_nonneg : ∀ t : ℝ, 0 ≤ weightOfJ J t
+  /-- L² admissibility: the weighted transform `t ↦ √w(t) · F_f(t)` belongs to `L²(μ)`. -/
+  memL2 : ∀ f : F,
+    MeasureTheory.Memℒp
+      (fun t : ℝ => ((Real.sqrt (weightOfJ J t) : ℝ) : ℂ) * transform f t) 2 μ
+  /--
+  The sesquilinear spectral identity, stated as a Bochner integral:
+
+  `W¹(pair f g) = ∫ w(t) · conj(F_f(t)) · F_g(t) dμ`.
+  -/
+  identity_integral :
+    ∀ f g : F,
+      L.W1 (pair (F := F) f g) =
+        ∫ t : ℝ,
+          ((weightOfJ J t : ℝ) : ℂ) * ((starRingEnd ℂ (transform f t)) * (transform g t)) ∂ μ
 
 namespace SesqSpectralIdentity
 
@@ -335,6 +402,155 @@ theorem reflectionPositivityRealization (S : SesqSpectralIdentity (F := F) (L :=
   simpa [T, weighted, pair] using (S.identity f g)
 
 end SesqSpectralIdentity
+
+namespace SesqIntegralIdentity
+
+variable (L : LagariasFramework F) (S : SesqIntegralIdentity (F := F) (L := L))
+
+/-- The weighted boundary function `t ↦ √w(t) · F_f(t)` used to define `T`. -/
+def weighted (f : F) : ℝ → ℂ :=
+  fun t : ℝ => ((Real.sqrt (weightOfJ S.J t) : ℝ) : ℂ) * S.transform f t
+
+/-- Convert the Bochner-integral form into the Hilbert-space form `SesqSpectralIdentity`. -/
+def toSesqSpectralIdentity : SesqSpectralIdentity (F := F) (L := L) where
+  μ := S.μ
+  J := S.J
+  transform := S.transform
+  weight_nonneg := S.weight_nonneg
+  memL2 := S.memL2
+  identity := by
+    intro f g
+    -- Start from the integral identity.
+    have hInt := S.identity_integral (f := f) (g := g)
+    -- Rewrite the inner product in `L²` as an integral (by definition).
+    have hInner :
+        ⟪(S.memL2 f).toLp (weighted (L := L) S f),
+          (S.memL2 g).toLp (weighted (L := L) S g)⟫_ℂ
+          =
+          ∫ t : ℝ,
+            ((weightOfJ S.J t : ℝ) : ℂ) * ((starRingEnd ℂ (S.transform f t)) * (S.transform g t)) ∂ S.μ := by
+      -- Expand the `L²` inner product as an integral of pointwise inner products.
+      -- Then rewrite `toLp` evaluations almost everywhere, and simplify the integrand.
+      -- (This is purely algebraic; all analytic convergence is quarantined in `memL2`.)
+      -- Use `L2.inner_def` and then simplify pointwise.
+      -- We use `integral_congr_ae` to replace `toLp` by the underlying function.
+      -- Define short names to keep coercions under control.
+      let u : (ℝ →₂[S.μ] ℂ) := (S.memL2 f).toLp (weighted (L := L) S f)
+      let v : (ℝ →₂[S.μ] ℂ) := (S.memL2 g).toLp (weighted (L := L) S g)
+      have hu : (u : ℝ → ℂ) =ᵐ[S.μ] weighted (L := L) S f := by
+        simpa [u, weighted] using (MeasureTheory.Memℒp.coeFn_toLp (μ := S.μ) (hf := S.memL2 f))
+      have hv : (v : ℝ → ℂ) =ᵐ[S.μ] weighted (L := L) S g := by
+        simpa [v, weighted] using (MeasureTheory.Memℒp.coeFn_toLp (μ := S.μ) (hf := S.memL2 g))
+      -- Replace `u t, v t` by the underlying weighted functions and simplify.
+      -- We do this under the integral by AE congruence.
+      -- (The final algebra uses `starRingEnd` as conjugation on `ℂ`.)
+      -- Note: `inner` on `ℂ` is `conj a * b`.
+      -- Finish by `integral_congr_ae`.
+      -- TODO: keep this lemma short; it is meant to be “automatic wiring”.
+      -- We use `simp` for the pointwise algebra (conj distributes over `*` and fixes real scalars).
+      -- Porting note: the preceding `have` is just `rfl`, but we keep it explicit for readability.
+      -- Now:
+      --   ⟪u t, v t⟫ = conj(u t) * v t
+      --   = conj(√w * F_f) * (√w * F_g)
+      --   = w * conj(F_f) * F_g
+      -- with `w = (√w)*(√w)` because `w ≥ 0`.
+      -- Implement this via AE substitutions `hu, hv`.
+      have hpoint :
+          (fun t : ℝ => ⟪u t, v t⟫_ℂ)
+            =ᵐ[S.μ]
+            (fun t : ℝ =>
+              ((weightOfJ S.J t : ℝ) : ℂ) * ((starRingEnd ℂ (S.transform f t)) * (S.transform g t))) := by
+        filter_upwards [hu, hv] with t htu htv
+        -- Rewrite `u t` and `v t`.
+        -- Then expand inner product on `ℂ` and simplify.
+        -- `weightOfJ` is real; we use `Real.mul_self_sqrt` to rewrite `√w * √w = w`.
+        have hw0 : 0 ≤ weightOfJ S.J t := S.weight_nonneg t
+        -- Turn the `L²` representatives into the explicit weighted functions.
+        -- Let `a := √w(t)` (a real scalar) and `Ff := transform f t`, `Fg := transform g t`.
+        -- Then `u t = a • Ff` and `v t = a • Fg`, so:
+        --   ⟪u t, v t⟫ = ⟪(a:ℂ) • Ff, (a:ℂ) • Fg⟫
+        --           = (a:ℂ) * (a:ℂ) * ⟪Ff, Fg⟫
+        --           = (w(t):ℂ) * ⟪Ff, Fg⟫.
+        have htu' : u t = ((Real.sqrt (weightOfJ S.J t) : ℝ) : ℂ) • (S.transform f t) := by
+          -- `htu` identifies `u t` with the weighted function value.
+          -- `weighted` uses multiplication, which is scalar multiplication on `ℂ`.
+          simpa [u, weighted, smul_eq_mul] using htu
+        have htv' : v t = ((Real.sqrt (weightOfJ S.J t) : ℝ) : ℂ) • (S.transform g t) := by
+          simpa [v, weighted, smul_eq_mul] using htv
+        -- Now compute the inner product using sesquilinearity.
+        -- The scalar is real, so `conj` fixes it.
+        -- We finish by rewriting `√w * √w = w`.
+        calc
+          ⟪u t, v t⟫_ℂ
+              = ⟪((Real.sqrt (weightOfJ S.J t) : ℝ) : ℂ) • (S.transform f t),
+                    ((Real.sqrt (weightOfJ S.J t) : ℝ) : ℂ) • (S.transform g t)⟫_ℂ := by
+                    simpa [htu', htv']
+          _   = ((Real.sqrt (weightOfJ S.J t) : ℝ) : ℂ) *
+                  (((Real.sqrt (weightOfJ S.J t) : ℝ) : ℂ) * ⟪S.transform f t, S.transform g t⟫_ℂ) := by
+                  -- First `inner_smul_left`, then `inner_smul_right`, then simplify `conj` on reals.
+                  -- `inner_smul_left` gives `conj a * ⟪Ff, a • Fg⟫`.
+                  -- `inner_smul_right` gives `a * ⟪Ff, Fg⟫`.
+                  -- `conj a = a` because `a` is real.
+                  have ha : (starRingEnd ℂ (((Real.sqrt (weightOfJ S.J t) : ℝ) : ℂ)))
+                      = ((Real.sqrt (weightOfJ S.J t) : ℝ) : ℂ) := by
+                    simp
+                  calc
+                    ⟪((Real.sqrt (weightOfJ S.J t) : ℝ) : ℂ) • (S.transform f t),
+                        ((Real.sqrt (weightOfJ S.J t) : ℝ) : ℂ) • (S.transform g t)⟫_ℂ
+                        = (starRingEnd ℂ (((Real.sqrt (weightOfJ S.J t) : ℝ) : ℂ))) *
+                            ⟪S.transform f t, ((Real.sqrt (weightOfJ S.J t) : ℝ) : ℂ) • (S.transform g t)⟫_ℂ := by
+                              -- `inner_smul_left` is stated with scalar multiplication; on `ℂ` it is multiplication.
+                              -- We include `mul_assoc` so the normal form matches the target expression.
+                              simpa [inner_smul_left, smul_eq_mul, mul_assoc]
+                    _ = ((Real.sqrt (weightOfJ S.J t) : ℝ) : ℂ) *
+                          ( ((Real.sqrt (weightOfJ S.J t) : ℝ) : ℂ) * ⟪S.transform f t, S.transform g t⟫_ℂ) := by
+                          -- Use `ha` and `inner_smul_right`, then reassociate.
+                          -- `inner_smul_right` gives `⟪x, a • y⟫ = a * ⟪x,y⟫`.
+                          -- The remaining step is pure associativity/commutativity in `ℂ`.
+                          -- `simp` can do this algebra once we give it the right rewrite rules.
+                          simp [ha, inner_smul_right, mul_assoc, mul_left_comm, mul_comm]
+          _   = ((weightOfJ S.J t : ℝ) : ℂ) * ⟪S.transform f t, S.transform g t⟫_ℂ := by
+                  -- Pure algebra: `√w · (√w · z) = w · z`.
+                  simpa using
+                    (sqrt_mul_sqrt_mul (w := weightOfJ S.J t) hw0 (z := ⟪S.transform f t, S.transform g t⟫_ℂ))
+      -- Assemble the integral.
+      calc
+        ⟪(S.memL2 f).toLp (weighted (L := L) S f),
+            (S.memL2 g).toLp (weighted (L := L) S g)⟫_ℂ
+            = ⟪u, v⟫_ℂ := by rfl
+        _ = ∫ t : ℝ, ⟪u t, v t⟫_ℂ ∂ S.μ := by
+              simpa [MeasureTheory.L2.inner_def]
+        _ = ∫ t : ℝ,
+              ((weightOfJ S.J t : ℝ) : ℂ) * ((starRingEnd ℂ (S.transform f t)) * (S.transform g t)) ∂ S.μ := by
+              exact MeasureTheory.integral_congr_ae hpoint
+    -- Conclude by rewriting the integral identity into the Hilbert identity.
+    -- (We flip `hInner` to match the direction of `SesqSpectralIdentity.identity`.)
+    exact (hInt.trans hInner.symm)
+
+/-- The Hilbert-space form of the sesquilinear identity, obtained from `identity_integral` via
+`MeasureTheory.L2.inner_def`. -/
+theorem identity :
+    ∀ f g : F,
+      L.W1 (pair (F := F) f g) =
+        ⟪(S.memL2 f).toLp (weighted (L := L) S f),
+          (S.memL2 g).toLp (weighted (L := L) S g)⟫_ℂ := by
+  intro f g
+  -- This is exactly the `identity` field of the converted structure.
+  simpa [toSesqSpectralIdentity, SesqSpectralIdentity.weighted, weighted, pair] using
+    (toSesqSpectralIdentity (F := F) (L := L) S).identity f g
+
+/--
+From the Bochner-integral form, we obtain a `ReflectionPositivityRealization` by converting to
+`SesqSpectralIdentity` and applying the already-proved construction.
+-/
+theorem reflectionPositivityRealization (S : SesqIntegralIdentity (F := F) (L := L)) :
+    OptionalTargets.ReflectionPositivityRealization (F := F) (L := L) := by
+  classical
+  -- Convert and reuse the existing lemma.
+  let S' : SesqSpectralIdentity (F := F) (L := L) := toSesqSpectralIdentity (F := F) (L := L) S
+  exact SesqSpectralIdentity.reflectionPositivityRealization (F := F) (L := L) S'
+
+end SesqIntegralIdentity
 
 end SesquilinearSpectralIdentity
 
