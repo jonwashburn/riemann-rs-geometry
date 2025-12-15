@@ -4,6 +4,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jonathan Washburn
 -/
 import Mathlib.Analysis.InnerProductSpace.Basic
+import Mathlib.MeasureTheory.Integral.Bochner
+import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
 import Mathlib.Topology.Algebra.Module.Basic
 import RiemannRecognitionGeometry.ExplicitFormula.Defs
 import RiemannRecognitionGeometry.ExplicitFormula.Lagarias
@@ -37,7 +39,7 @@ The "bridge to reflection" problem factors as:
 
 noncomputable section
 
-open Complex ComplexConjugate
+open Complex ComplexConjugate MeasureTheory
 
 namespace RiemannRecognitionGeometry
 namespace ExplicitFormula
@@ -105,6 +107,24 @@ For the Weil form `B(f,g) := W¹(f ⋆ₘ ˜ₘ(⋆ₜ g))`, we need a **spectra
 Once this identity is established, positivity follows immediately from `Re(2·J) ≥ 0`.
 -/
 
+/-- The standard parameterization of the critical line: `t ↦ 1/2 + i t`. -/
+def criticalLine (t : ℝ) : ℂ :=
+  (1 / 2 : ℂ) + (t : ℂ) * Complex.I
+
+@[simp] lemma criticalLine_re (t : ℝ) : (criticalLine t).re = (1 / 2 : ℝ) := by
+  simp [criticalLine]
+
+@[simp] lemma criticalLine_im (t : ℝ) : (criticalLine t).im = t := by
+  simp [criticalLine]
+
+/-- The canonical weight extracted from an arithmetic field `J`: `t ↦ Re(2·J(1/2+it))`. -/
+def weightOfJ (J : ℂ → ℂ) (t : ℝ) : ℝ :=
+  (((2 : ℂ) * J (criticalLine t)).re)
+
+/-- The canonical transform on the critical line: `t ↦ M[f](1/2+it)`. -/
+def mellinOnCriticalLine {F : Type} [TestSpace F] (f : F) (t : ℝ) : ℂ :=
+  M[f](criticalLine t)
+
 /--
 The spectral identity hypothesis: the Weil form can be expressed as an integral
 with `Re(2·J)` as a nonnegative weight.
@@ -115,15 +135,27 @@ This is the genuine analytic content needed to close Route 3. Proving it require
 - Matching the Mellin normalization to the convolution/involution definitions
 -/
 structure SpectralIdentity (F : Type) [TestSpace F] (L : LagariasFramework F) where
+  /-- The boundary measure (typically Lebesgue on `ℝ`, or Haar after Cayley). -/
+  μ : Measure ℝ := volume
   /-- The "J-field" function appearing in the weight. -/
   J : ℂ → ℂ
-  /-- The transform that maps test functions to boundary values. -/
-  transform : F → (ℝ → ℂ)
-  /-- The spectral identity: W¹ on reflection-squares = weighted L² norm. -/
-  identity : ∀ (f : F),
-    L.W1 (TestSpace.quad (F := F) f) =
-      ∫ t : ℝ, (((2 : ℂ) * J ((1/2 : ℂ) + t * Complex.I)).re : ℂ) *
-        Complex.normSq (transform f t)
+  /-- The boundary transform used in the spectral representation (default: `t ↦ M[f](1/2+it)`). -/
+  transform : F → ℝ → ℂ := mellinOnCriticalLine
+  /-- Measurability of the transform (needed to form Bochner integrals). -/
+  measurable_transform : ∀ f : F, Measurable (transform f)
+  /-- Integrability of the energy density `t ↦ weightOfJ J t * ‖transform f t‖²`. -/
+  integrable_energy : ∀ f : F, Integrable (fun t : ℝ => weightOfJ J t * Complex.normSq (transform f t)) μ
+  /--
+  The spectral identity (quadratic form version):
+
+  `Re(W¹(f ⋆ₘ ˜ₘ(⋆ₜ f))) = ∫ Re(2·J(1/2+it)) · |transform f t|² dμ`.
+
+  We state this as an equality of real numbers, since `WeilGate` is formulated in terms of `re`.
+  -/
+  identity_re :
+    ∀ f : F,
+      (L.W1 (TestSpace.quad (F := F) f)).re =
+        ∫ t : ℝ, (weightOfJ J t) * Complex.normSq (transform f t) ∂ μ
 
 variable {F : Type} [TestSpace F]
 
@@ -134,17 +166,26 @@ This is THE KEY LEMMA that closes Route 3.
 theorem weilGate_from_spectral_identity
     (L : LagariasFramework F)
     (S : SpectralIdentity F L)
-    (hRe : ∀ t : ℝ, 0 ≤ (((2 : ℂ) * S.J ((1/2 : ℂ) + t * Complex.I)).re)) :
+    (hRe : ∀ t : ℝ, 0 ≤ weightOfJ S.J t) :
     L.WeilGate := by
   intro f
-  -- Use the spectral identity
-  have hspec := S.identity f
-  -- The RHS is an integral of nonnegative terms:
-  -- Re(2·J) ≥ 0 by hypothesis
-  -- |transform f|² = normSq ≥ 0 always
-  -- Product of nonnegative = nonnegative
-  -- Integral of nonnegative = nonnegative
-  sorry -- Requires integral_nonneg from Mathlib
+  -- Rewrite the target using the spectral identity.
+  have hspec : (L.W1 (TestSpace.quad (F := F) f)).re =
+      ∫ t : ℝ, (weightOfJ S.J t) * Complex.normSq (S.transform f t) ∂ S.μ := by
+    simpa [SpectralIdentity.transform, SpectralIdentity.μ] using (S.identity_re f)
+  -- Prove the integral is nonnegative.
+  have hnonneg_integrand :
+      (∀ᵐ t ∂ S.μ, 0 ≤ (weightOfJ S.J t) * Complex.normSq (S.transform f t)) := by
+    refine Filter.Eventually.of_forall (fun t => ?_)
+    have hw : 0 ≤ weightOfJ S.J t := hRe t
+    have hn : 0 ≤ Complex.normSq (S.transform f t) := by
+      exact Complex.normSq_nonneg _
+    exact mul_nonneg hw hn
+  have hint : 0 ≤ ∫ t : ℝ, (weightOfJ S.J t) * Complex.normSq (S.transform f t) ∂ S.μ := by
+    -- real-valued Bochner integral reduces to the usual real integral
+    exact MeasureTheory.integral_nonneg_of_ae hnonneg_integrand
+  -- Conclude WeilGate.
+  simpa [hspec] using hint
 
 /-!
 ## Summary: The Route 3 reduction
