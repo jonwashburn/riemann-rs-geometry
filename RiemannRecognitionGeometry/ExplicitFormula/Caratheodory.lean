@@ -11,6 +11,8 @@ import Mathlib.Data.Complex.Abs
 import Mathlib.Data.Fintype.BigOperators
 import Mathlib.MeasureTheory.Measure.MeasureSpace
 import Mathlib.MeasureTheory.Integral.Bochner
+import Mathlib.Analysis.SpecificLimits.Basic
+import Mathlib.Topology.Order.OrderClosed
 import Mathlib.Topology.MetricSpace.Basic
 import Mathlib.Topology.Algebra.InfiniteSum.Basic
 
@@ -388,21 +390,39 @@ lemma caratheodoryKernel_herglotz_eq_eval (ζ : ℂ) (hζ : Complex.abs ζ = 1)
   have hζ_conj_ne : starRingEnd ℂ ζ - starRingEnd ℂ w ≠ 0 := by rw [hζ_inv]; exact hconj_ne
   simp only [caratheodoryKernel, herglotzKernel, map_div₀, map_add, map_sub]
   rw [hζ_inv]
-  -- The numerator of K_{H_ζ} is:
-  -- (ζ+z)/(ζ-z) + (ζ⁻¹+conj(w))/(ζ⁻¹-conj(w))
-  -- = [(ζ+z)(ζ⁻¹-conj(w)) + (ζ⁻¹+conj(w))(ζ-z)] / [(ζ-z)(ζ⁻¹-conj(w))]
-  -- Numerator expansion uses ζ·ζ⁻¹ = 1:
-  -- (ζ+z)(ζ⁻¹-conj(w)) + (ζ⁻¹+conj(w))(ζ-z) = 2 - 2·z·conj(w) = 2(1 - z·conj(w))
-  -- So K_{H_ζ} = 2(1-z·conj(w)) / [(ζ-z)(ζ⁻¹-conj(w))(1-z·conj(w))]
-  --            = 2 / [(ζ-z)(ζ⁻¹-conj(w))]
   have hprod : (ζ - z) * (ζ⁻¹ - starRingEnd ℂ w) ≠ 0 := mul_ne_zero hz_ne hconj_ne
-  -- The proof requires showing the algebraic identity K_{H_ζ}(z,w) = 2/((ζ-z)(ζ⁻¹-w̄))
-  -- This is a standard result but the algebraic verification is tedious
-  -- The key steps are:
-  -- 1. H_ζ(z) + conj(H_ζ(w)) = [(ζ+z)/(ζ-z)] + [(ζ⁻¹+w̄)/(ζ⁻¹-w̄)]
-  -- 2. Numerator simplifies to 2(1-z·w̄) using ζ·ζ⁻¹ = 1
-  -- 3. K_{H_ζ} = 2(1-z·w̄) / [(ζ-z)(ζ⁻¹-w̄)(1-z·w̄)] = 2 / [(ζ-z)(ζ⁻¹-w̄)]
-  sorry
+  -- Step 1: Show that the numerator (ζ+z)(ζ⁻¹-w̄) + (ζ⁻¹+w̄)(ζ-z) = 2(1 - zw̄)
+  have hnumer : (ζ + z) * (ζ⁻¹ - starRingEnd ℂ w) + (ζ⁻¹ + starRingEnd ℂ w) * (ζ - z) =
+      2 * (1 - z * starRingEnd ℂ w) := by
+    -- Expand using ζ·ζ⁻¹ = 1
+    calc (ζ + z) * (ζ⁻¹ - starRingEnd ℂ w) + (ζ⁻¹ + starRingEnd ℂ w) * (ζ - z)
+        = ζ * ζ⁻¹ - ζ * starRingEnd ℂ w + z * ζ⁻¹ - z * starRingEnd ℂ w +
+          (ζ⁻¹ * ζ - ζ⁻¹ * z + starRingEnd ℂ w * ζ - starRingEnd ℂ w * z) := by ring
+      _ = 1 - ζ * starRingEnd ℂ w + z * ζ⁻¹ - z * starRingEnd ℂ w +
+          (1 - ζ⁻¹ * z + starRingEnd ℂ w * ζ - starRingEnd ℂ w * z) := by
+          rw [hζζ_inv, mul_comm ζ⁻¹ ζ, hζζ_inv]
+      _ = 2 - 2 * z * starRingEnd ℂ w := by ring
+      _ = 2 * (1 - z * starRingEnd ℂ w) := by ring
+  -- Step 2: Combine the fractions
+  -- LHS = ((ζ+z)/(ζ-z) + (ζ⁻¹+w̄)/(ζ⁻¹-w̄)) / (1 - z·w̄)
+  --     = [(ζ+z)(ζ⁻¹-w̄) + (ζ⁻¹+w̄)(ζ-z)] / [(ζ-z)(ζ⁻¹-w̄)(1 - z·w̄)]
+  --     = 2(1 - z·w̄) / [(ζ-z)(ζ⁻¹-w̄)(1 - z·w̄)]
+  --     = 2 / [(ζ-z)(ζ⁻¹-w̄)]
+  -- Note: div_add_div gives a + c·b in numerator, so we need to account for order
+  have hnumer' : (ζ + z) * (ζ⁻¹ - starRingEnd ℂ w) + (ζ - z) * (ζ⁻¹ + starRingEnd ℂ w) =
+      2 * (1 - z * starRingEnd ℂ w) := by
+    have h := hnumer
+    calc (ζ + z) * (ζ⁻¹ - starRingEnd ℂ w) + (ζ - z) * (ζ⁻¹ + starRingEnd ℂ w)
+        = (ζ + z) * (ζ⁻¹ - starRingEnd ℂ w) + (ζ⁻¹ + starRingEnd ℂ w) * (ζ - z) := by ring
+      _ = 2 * (1 - z * starRingEnd ℂ w) := hnumer
+  have hstep : (ζ + z) / (ζ - z) + (ζ⁻¹ + starRingEnd ℂ w) / (ζ⁻¹ - starRingEnd ℂ w) =
+      2 * (1 - z * starRingEnd ℂ w) / ((ζ - z) * (ζ⁻¹ - starRingEnd ℂ w)) := by
+    rw [div_add_div _ _ hz_ne hconj_ne, hnumer']
+  rw [hstep, div_div]
+  -- Goal: 2*(1-zw̄) / ((ζ-z) * (ζ⁻¹-w̄) * (1-zw̄)) = 2 / ((ζ-z) * (ζ⁻¹-w̄))
+  rw [mul_comm ((ζ - z) * (ζ⁻¹ - starRingEnd ℂ w)) (1 - z * starRingEnd ℂ w)]
+  rw [mul_comm 2 (1 - z * starRingEnd ℂ w)]
+  rw [mul_div_mul_left 2 ((ζ - z) * (ζ⁻¹ - starRingEnd ℂ w)) h1_ne]
 
 /--
 The Carathéodory kernel of a Herglotz function is positive semidefinite.
@@ -416,16 +436,94 @@ The proof relies on `caratheodoryKernel_herglotz_eq_eval` which shows:
 theorem caratheodoryKernel_herglotz_positive (ζ : ℂ) (hζ : Complex.abs ζ = 1) :
     IsPositiveDefiniteKernelOn (caratheodoryKernel (herglotzKernel ζ)) unitDisk := by
   intro n x hx c
-  -- The proof follows from:
-  -- 1. K_{H_ζ}(z,w) = 2 / ((ζ-z)(conj(ζ)-conj(w))) by caratheodoryKernel_herglotz_eq_eval
-  -- 2. The point evaluation kernel 1/((ζ-z)(conj(ζ)-conj(w))) is positive by eval_kernel_positive
-  -- 3. Therefore 2 * (positive) = positive
-  --
-  -- The key algebraic step is showing that K_{H_ζ} has the required factorization.
-  -- Once that is established, the positivity follows immediately.
-  have heval := eval_kernel_positive ζ hζ n x hx c
-  -- The detailed proof requires the algebraic identity from caratheodoryKernel_herglotz_eq_eval
-  sorry
+  -- Step 1: Show that K_{H_ζ}(z,w) = 2 / ((ζ-z)(conj(ζ)-conj(w))) = 2 * (eval kernel)
+  have hform : ∀ i j : Fin n,
+      caratheodoryKernel (herglotzKernel ζ) (x i) (x j) =
+        2 * (1 / ((ζ - x i) * (starRingEnd ℂ ζ - starRingEnd ℂ (x j)))) := by
+    intro i j
+    rw [caratheodoryKernel_herglotz_eq_eval ζ hζ (x i) (x j) (hx i) (hx j)]
+    ring
+  -- Step 2: Factor out the 2 from the sum
+  have hfactor : ∀ i j : Fin n,
+      c i * starRingEnd ℂ (c j) * caratheodoryKernel (herglotzKernel ζ) (x i) (x j) =
+      2 * (c i * starRingEnd ℂ (c j) * (1 / ((ζ - x i) * (starRingEnd ℂ ζ - starRingEnd ℂ (x j))))) := by
+    intro i j
+    rw [hform i j]
+    ring
+  -- Turn the double sum into `2 * (eval-kernel quadratic form)` without expanding `re`.
+  simp_rw [hfactor]
+  let S : ℂ :=
+    ∑ i : Fin n, ∑ j : Fin n,
+      c i * starRingEnd ℂ (c j) *
+        (1 / ((ζ - x i) * (starRingEnd ℂ ζ - starRingEnd ℂ (x j))))
+  have hS : 0 ≤ S.re := by
+    -- this is exactly `eval_kernel_positive`
+    simpa [S] using eval_kernel_positive ζ hζ n x hx c
+  have hsum : (∑ i : Fin n, ∑ j : Fin n,
+        (2 : ℂ) *
+          (c i * starRingEnd ℂ (c j) *
+            (1 / ((ζ - x i) * (starRingEnd ℂ ζ - starRingEnd ℂ (x j)))))) = (2 : ℂ) * S := by
+    classical
+    -- pull `2` out of the inner sum, then out of the outer sum
+    have hinner :
+        (∑ i : Fin n, ∑ j : Fin n,
+            (2 : ℂ) *
+              (c i * starRingEnd ℂ (c j) *
+                (1 / ((ζ - x i) * (starRingEnd ℂ ζ - starRingEnd ℂ (x j)))))) =
+          ∑ i : Fin n, (2 : ℂ) * (∑ j : Fin n,
+            c i * starRingEnd ℂ (c j) *
+              (1 / ((ζ - x i) * (starRingEnd ℂ ζ - starRingEnd ℂ (x j))))) := by
+      refine Finset.sum_congr rfl ?_
+      intro i _
+      simpa [Finset.mul_sum] using
+        (Finset.mul_sum (s := (Finset.univ : Finset (Fin n)))
+          (f := fun j =>
+            c i * starRingEnd ℂ (c j) *
+              (1 / ((ζ - x i) * (starRingEnd ℂ ζ - starRingEnd ℂ (x j)))))
+          (a := (2 : ℂ))).symm
+    calc
+      (∑ i : Fin n, ∑ j : Fin n,
+          (2 : ℂ) *
+            (c i * starRingEnd ℂ (c j) *
+              (1 / ((ζ - x i) * (starRingEnd ℂ ζ - starRingEnd ℂ (x j)))))) =
+          ∑ i : Fin n, (2 : ℂ) * (∑ j : Fin n,
+            c i * starRingEnd ℂ (c j) *
+              (1 / ((ζ - x i) * (starRingEnd ℂ ζ - starRingEnd ℂ (x j))))) := hinner
+      _ = (2 : ℂ) * S := by
+        -- outer pull-out
+        simp [S, Finset.mul_sum]
+  -- finish: real part scales by `2` (a real scalar)
+  have hre2 : ∀ z : ℂ, ((2 : ℂ) * z).re = 2 * z.re := by
+    intro z
+    simp [Complex.mul_re]
+  -- Goal is `0 ≤ (∑∑ 2 * ...).re`. Rewrite the double sum to `(2:ℂ) * S` and use `hS`.
+  have hreEq :
+      ((∑ i : Fin n, ∑ j : Fin n,
+          (2 : ℂ) *
+            (c i * starRingEnd ℂ (c j) *
+              (1 / ((ζ - x i) * (starRingEnd ℂ ζ - starRingEnd ℂ (x j)))))) : ℂ).re
+        =
+      (((2 : ℂ) * S).re) := by
+    simpa using congrArg Complex.re hsum
+  -- `simp` knows `0 ≤ ((2:ℂ) * S).re` is equivalent to `0 ≤ S.re` since `2 > 0`.
+  have h2S' : 0 ≤ ((2 : ℂ) * S).re := by
+    -- rewrite to `0 ≤ 2 * S.re` and use `hS`
+    have : 0 ≤ 2 * S.re := mul_nonneg (by norm_num : (0 : ℝ) ≤ 2) hS
+    simpa [hre2] using this
+  -- now close the goal
+  -- (the goal is the LHS of `hreEq`)
+  -- so we rewrite it to the RHS and apply `h2S'`.
+  have : 0 ≤ ((∑ i : Fin n, ∑ j : Fin n,
+          (2 : ℂ) *
+            (c i * starRingEnd ℂ (c j) *
+              (1 / ((ζ - x i) * (starRingEnd ℂ ζ - starRingEnd ℂ (x j)))))) : ℂ).re := by
+    -- Rewrite the goal using `hreEq` and close with `h2S'`.
+    -- We use `rw` so we don't let `simp` cancel the factor `2`.
+    -- `hreEq` : (sum).re = ((2:ℂ) * S).re
+    -- so `rw [hreEq]` turns the goal into `0 ≤ ((2:ℂ) * S).re`.
+    rw [hreEq]
+    exact h2S'
+  simpa using this
 
 /-!
 ## Main Theorem
