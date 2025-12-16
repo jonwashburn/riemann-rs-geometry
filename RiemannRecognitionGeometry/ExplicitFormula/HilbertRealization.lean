@@ -276,6 +276,48 @@ def pair (f g : F) : F :=
   g ⋆ₘ ˜ₘ (⋆ₜ f)
 
 /-!
+### Measure-first sesquilinear identity (preferred)
+
+For the completed Riemann ξ-function, the naive pointwise density
+
+`t ↦ Re(2·J(1/2+it)) = Re(-(ξ'/ξ)(1/2+it))`
+
+vanishes almost everywhere on the critical line (away from zeros), by symmetry.  Consequently,
+the right conceptual target for Route 3 is **measure-first**:
+
+`W¹(pair f g) = ⟪Tf, Tg⟫` in `L²(μ)` for some positive measure `μ`,
+
+where any density `w(t) dt` should be treated as an optional absolute-continuity upgrade.
+
+This structure records exactly that Hilbert-space identity, without any pointwise weight.
+-/
+
+/--
+Measure-first sesquilinear spectral identity:
+
+there is a measure `μ` and a linear boundary transform `transform` such that the Weil form is the
+`L²(μ)` inner product of the transformed test functions.
+
+This is the cleanest intermediate target for Route 3 (and matches the “boundary measure” picture).
+-/
+structure SesqMeasureIdentity (L : LagariasFramework F) where
+  /-- Boundary measure (need not be absolutely continuous). -/
+  μ : Measure ℝ := volume
+  /-- A ℂ-linear boundary transform (typically `t ↦ M[f](1/2+it)` in a concrete instantiation). -/
+  transform : F →ₗ[ℂ] (ℝ → ℂ)
+  /-- L² admissibility: the transformed functions lie in `L²(μ)`. -/
+  memL2 : ∀ f : F, MeasureTheory.Memℒp (transform f) 2 μ
+  /--
+  The sesquilinear identity in Hilbert-space form:
+
+  `W¹(pair f g) = ⟪Tf, Tg⟫` where `Tf` is the `L²(μ)` class of `transform f`.
+  -/
+  identity :
+    ∀ f g : F,
+      L.W1 (pair (F := F) f g) =
+        ⟪(memL2 f).toLp (transform f), (memL2 g).toLp (transform g)⟫_ℂ
+
+/-!
 ### A small algebra lemma for the weighted `L²` construction
 
 We often want to rewrite `√w · (√w · z)` as `w · z` (and vice versa) when moving between:
@@ -651,6 +693,101 @@ theorem reflectionPositivityRealization (S : SesqSpectralIdentity (F := F) (L :=
   simpa [T, weighted, pair] using (S.identity f g)
 
 end SesqSpectralIdentity
+
+namespace SesqMeasureIdentity
+
+variable {F : Type} [TestSpace F] [AddCommGroup F] [Module ℂ F]
+variable (L : LagariasFramework F) (S : SesqMeasureIdentity (F := F) (L := L))
+
+/-- The canonical Hilbert-space map `T : F → L²(μ)` for a measure-first identity. -/
+def T : F →ₗ[ℂ] (ℝ →₂[S.μ] ℂ) where
+  toFun f := (S.memL2 f).toLp (S.transform f)
+  map_add' f g := by
+    -- Prove equality in `L²` by almost-everywhere equality of functions.
+    apply MeasureTheory.Lp.ext
+    have hfg : (S.transform (f + g)) = (S.transform f + S.transform g) := by
+      -- extensionality in the function space `ℝ → ℂ`
+      ext t
+      simp [LinearMap.map_add]
+    have hfg_ae :
+        (S.transform (f + g)) =ᵐ[S.μ] (S.transform f + S.transform g) :=
+      Filter.Eventually.of_forall (fun t => by simpa [hfg])
+    have hL :
+        ((S.memL2 (f + g)).toLp (S.transform (f + g))) =ᵐ[S.μ] S.transform (f + g) :=
+      MeasureTheory.Memℒp.coeFn_toLp (μ := S.μ) (hf := S.memL2 (f + g))
+    have hF :
+        ((S.memL2 f).toLp (S.transform f)) =ᵐ[S.μ] S.transform f :=
+      MeasureTheory.Memℒp.coeFn_toLp (μ := S.μ) (hf := S.memL2 f)
+    have hG :
+        ((S.memL2 g).toLp (S.transform g)) =ᵐ[S.μ] S.transform g :=
+      MeasureTheory.Memℒp.coeFn_toLp (μ := S.μ) (hf := S.memL2 g)
+    have hAdd :
+        (fun t : ℝ =>
+            (((S.memL2 f).toLp (S.transform f) +
+                (S.memL2 g).toLp (S.transform g)) t))
+          =ᵐ[S.μ] fun t : ℝ => (S.transform f + S.transform g) t := by
+      -- Use the coercion lemma for `Lp` addition.
+      let u : (ℝ →₂[S.μ] ℂ) := (S.memL2 f).toLp (S.transform f)
+      let v : (ℝ →₂[S.μ] ℂ) := (S.memL2 g).toLp (S.transform g)
+      have hu : (u : ℝ → ℂ) =ᵐ[S.μ] S.transform f := by
+        simpa [u] using hF
+      have hv : (v : ℝ → ℂ) =ᵐ[S.μ] S.transform g := by
+        simpa [v] using hG
+      have hcoe := (MeasureTheory.Lp.coeFn_add u v)
+      filter_upwards [hcoe, hu, hv] with t ht htu htv
+      calc
+        ((u + v) t) = (u t + v t) := ht
+        _ = (S.transform f t + S.transform g t) := by simpa [htu, htv]
+        _ = (S.transform f + S.transform g) t := rfl
+    filter_upwards [hL, hfg_ae, hAdd] with t htL htfg htAdd
+    calc
+      ((S.memL2 (f + g)).toLp (S.transform (f + g)) t)
+          = S.transform (f + g) t := htL
+      _   = (S.transform f + S.transform g) t := htfg
+      _   = (((S.memL2 f).toLp (S.transform f) +
+                (S.memL2 g).toLp (S.transform g)) t) := by
+              simpa using htAdd.symm
+  map_smul' c f := by
+    apply MeasureTheory.Lp.ext
+    have hcf : S.transform (c • f) = c • S.transform f := by
+      ext t
+      simp [LinearMap.map_smul, Pi.smul_apply, smul_eq_mul]
+    have hcf_ae : S.transform (c • f) =ᵐ[S.μ] c • S.transform f :=
+      Filter.Eventually.of_forall (fun t => by simpa [hcf])
+    have hL :
+        ((S.memL2 (c • f)).toLp (S.transform (c • f))) =ᵐ[S.μ] S.transform (c • f) :=
+      MeasureTheory.Memℒp.coeFn_toLp (μ := S.μ) (hf := S.memL2 (c • f))
+    have hF :
+        ((S.memL2 f).toLp (S.transform f)) =ᵐ[S.μ] S.transform f :=
+      MeasureTheory.Memℒp.coeFn_toLp (μ := S.μ) (hf := S.memL2 f)
+    have hSmul :
+        (fun t : ℝ => ((c • (S.memL2 f).toLp (S.transform f)) t))
+          =ᵐ[S.μ] fun t : ℝ => (c • S.transform f) t := by
+      have hcoe := (MeasureTheory.Lp.coeFn_smul c ((S.memL2 f).toLp (S.transform f)))
+      filter_upwards [hcoe, hF] with t ht htf
+      -- `ht` rewrites pointwise; then substitute the underlying function using `htf`.
+      simpa [Pi.smul_apply, ht, htf]
+    filter_upwards [hL, hcf_ae, hSmul] with t htL htcf htSmul
+    calc
+      ((S.memL2 (c • f)).toLp (S.transform (c • f)) t)
+          = S.transform (c • f) t := htL
+      _   = (c • S.transform f) t := htcf
+      _   = ((c • (S.memL2 f).toLp (S.transform f)) t) := by
+              simpa using htSmul.symm
+
+/--
+A measure-first sesquilinear identity yields a `ReflectionPositivityRealization` by taking
+`H = L²(μ)` and `T` as the `L²`-class of the boundary transform.
+-/
+theorem reflectionPositivityRealization (S : SesqMeasureIdentity (F := F) (L := L)) :
+    OptionalTargets.ReflectionPositivityRealization (F := F) (L := L) := by
+  classical
+  refine ⟨(ℝ →₂[S.μ] ℂ), by infer_instance, by infer_instance, by infer_instance, T (L := L) S, ?_⟩
+  intro f g
+  -- Unfold `T` and use the packaged identity.
+  simpa [T] using (S.identity f g)
+
+end SesqMeasureIdentity
 
 namespace SesqIntegralIdentity
 

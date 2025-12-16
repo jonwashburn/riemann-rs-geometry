@@ -1769,7 +1769,7 @@ The author thanks the Mathlib community and Lean~4 developers for their tooling 
 This paper references two Lean developments:
 (i) a companion Recognition Geometry core library (RG0--RG7) under \texttt{IndisputableMonolith/RecogGeom} (not vendored in this repository snapshot), and
 (ii) the analytic-number-theory instantiation contained \emph{in this repository} under \texttt{RiemannRecognitionGeometry/}.
-At the time of writing, \texttt{RiemannRecognitionGeometry/} consists of 37 project modules (17{,}082 lines), with 11 explicit \texttt{axiom} declarations and one remaining \texttt{sorry} (in \texttt{RiemannRecognitionGeometry/ExplicitFormula/Caratheodory.lean}); see the Appendix and the Route~3 addendum for details.
+At the time of writing, \texttt{RiemannRecognitionGeometry/} consists of 40 project modules (18{,}192 lines), with 9 explicit \texttt{axiom} declarations and 0 remaining \texttt{sorry}s; see the Appendix and the Route~3 addendum for details.
 
 % ======================================================================
 % APPENDIX
@@ -1851,22 +1851,25 @@ The RH formalization lives under \texttt{RiemannRecognitionGeometry/} and curren
 \textbf{Route 3 file (\texttt{ExplicitFormula/})} & \textbf{Lines} \\
 \hline
 \texttt{ArithmeticJ.lean} & 62 \\
-\texttt{Caratheodory.lean} & 642 \\
+\texttt{Caratheodory.lean} & 925 \\
 \texttt{Cayley.lean} & 99 \\
-\texttt{CayleyBridge.lean} & 100 \\
-\texttt{Concrete.lean} & 58 \\
-\texttt{Defs.lean} & 62 \\
-\texttt{HilbertRealization.lean} & 852 \\
+\texttt{CayleyBridge.lean} & 150 \\
+\texttt{CompletedJ.lean} & 228 \\
+\texttt{Concrete.lean} & 61 \\
+\texttt{Defs.lean} & 64 \\
+\texttt{HilbertRealization.lean} & 984 \\
 \texttt{Lagarias.lean} & 150 \\
 \texttt{Li.lean} & 126 \\
 \texttt{MainRoute3.lean} & 239 \\
 \texttt{MathlibBridge.lean} & 153 \\
 \texttt{MulConvolution.lean} & 216 \\
-\texttt{Route3FubiniTonelliLemmas.lean} & 93 \\
-\texttt{Route3HypBundle.lean} & 101 \\
-\texttt{Route3Targets.lean} & 55 \\
+\texttt{Route3FubiniTonelliLemmas.lean} & 96 \\
+\texttt{Route3HypBundle.lean} & 167 \\
+\texttt{Route3Targets.lean} & 46 \\
+\texttt{SchwartzTestSpace.lean} & 68 \\
+\texttt{SpectralIdentityAlgebra.lean} & 48 \\
 \texttt{WFunctionals.lean} & 71 \\
-\texttt{WeilFunctionals.lean} & 69 \\
+\texttt{WeilFunctionals.lean} & 305 \\
 \texttt{WeilPositivityRH.lean} & 159 \\
 \texttt{WeilTestFunction.lean} & 346 \\
 \texttt{WeilTestFunctionProofs.lean} & 1{,}100 \\
@@ -1875,7 +1878,7 @@ The RH formalization lives under \texttt{RiemannRecognitionGeometry/} and curren
 \end{center}
 
 \noindent
-\textbf{Current Lean status (this repository)}: 11 explicit \texttt{axiom} declarations and 1 remaining \texttt{sorry} (in \texttt{ExplicitFormula/Caratheodory.lean}).
+\textbf{Current Lean status (this repository)}: 9 explicit \texttt{axiom} declarations and 0 remaining \texttt{sorry}s. (The sole Route~3 ``standard theorem axiom'' is the Herglotz representation theorem in \texttt{ExplicitFormula/Caratheodory.lean}.)
 
 \section{Addendum: Boundary Certificate Program (Zeta) --- Project Status}
 
@@ -1902,7 +1905,7 @@ This repository also contains an ongoing analytic-number-theory formalization bu
     \emph{Current status (Route 3):} This ``explicit-formula gate'' route is now instantiated as a mechanically checkable Lean skeleton under \texttt{RiemannRecognitionGeometry/ExplicitFormula/}.
     It fixes Lagarias' Mellin normalization, defines the involution \(\widetilde f\), multiplicative convolution \(f*g\) on \((0,\infty)\), and connects these to Mathlib's \texttt{mellin}.
     The Lean development proves the gate-shape implications (e.g.\ ``Weil gate \(\Rightarrow\) \texttt{RiemannHypothesis}'' and the Li specialization), and formalizes the algebraic heart of the easy direction (RH \(\Rightarrow\) finite-sum positivity) including the required conjugation/symmetry manipulations.
-    We proved a concrete Mellin--convolution multiplicativity lemma for the multiplicative convolution, \emph{under an explicit Fubini/Tonelli integrability hypothesis}, reducing the remaining analytic gap to verifying the needed integrability for the chosen test-function class (the concrete \texttt{TestSpace} instance in \texttt{Route3Targets.lean} still treats Mellin multiplicativity as an axiom for now).
+    We proved a concrete Mellin--convolution multiplicativity lemma for the multiplicative convolution, \emph{under an explicit Fubini/Tonelli integrability hypothesis}, reducing the remaining analytic gap to verifying the needed integrability for the chosen test-function class. The original ``ambient'' target \texttt{Route3Targets.lean} keeps \texttt{TestSpace} abstract for \texttt{F := \(\mathbb{R}\to\mathbb{C}\)}, but we now also provide a Lean-friendly \emph{log-Schwartz/Fourier} \texttt{TestSpace} instance on \texttt{SchwartzMap \(\mathbb{R}\) \(\mathbb{C}\)} in \texttt{SchwartzTestSpace.lean}.
 
     \emph{Recent advances (December 2025):}
     \begin{enumerate}
@@ -1910,23 +1913,25 @@ This repository also contains an ongoing analytic-number-theory formalization bu
 
         \item \textbf{Reflection Positivity target} (\texttt{MainRoute3.lean}): Defined \texttt{ReflectionPositivityRealization}---the statement that \(W^{(1)}(f \star \widetilde{\overline g}) = \langle Tf, Tg\rangle_H\) in some Hilbert space. Proved \texttt{WeilGate\_of\_reflectionPositivityRealization}.
 
-        \item \textbf{Cayley bridge hypothesis package} (\texttt{CayleyBridge.lean}): Formalized \texttt{CayleyBridgeAssumptions}, which precisely packages the remaining analytic gap---a candidate \(J\), domain \(S\), positivity \(\Re(2J) \ge 0\) on \(S\), and a bridge axiom to \texttt{ReflectionPositivityRealization}.
+        \item \textbf{Cayley bridge hypothesis package} (\texttt{CayleyBridge.lean}): Formalized \texttt{CayleyBridgeAssumptions}, which packages the remaining analytic gap---a candidate \(J\), domain \(S\), positivity \(\Re(2J) \ge 0\) on \(S\), and a bridge axiom to \texttt{ReflectionPositivityRealization}. We also added a \emph{measure-first} variant \texttt{CayleyMeasureBridgeAssumptions} whose bridge target is a measure-first spectral identity (\texttt{SesqMeasureIdentity}), reflecting the fact that the completed \(\xi\)-channel does not naturally provide a pointwise Lebesgue density on the critical line.
 
         \item \textbf{Arithmetic \(J\) definition} (\texttt{ArithmeticJ.lean}): Defined \(J(s) := -\zeta'(s)/\zeta(s)\) and connected to the von Mangoldt L-series for \(\Re s > 1\).
 
-        \item \textbf{Spectral identity as an explicit \(L^2\) / Bochner integral} (\texttt{HilbertRealization.lean}): Introduced companion ``spectral identity'' structures stated both as an \(L^2\) inner product and as a Bochner integral
-        \(W^{(1)}(\mathrm{pair}(f,g)) = \int w(t)\,\overline{F_f(t)}\,F_g(t)\,d\mu(t)\),
-        and proved that the sesquilinear identity yields \texttt{ReflectionPositivityRealization} via the concrete map \(T f := \sqrt{w}\,F_f \in L^2(\mu)\) and \texttt{L2.inner\_def}.
+        \item \textbf{Spectral identity (measure-first)} (\texttt{HilbertRealization.lean}): Introduced a preferred \emph{measure-first} package \texttt{SesqMeasureIdentity} recording directly that
+        \(W^{(1)}(\mathrm{pair}(f,g))=\langle Tf,Tg\rangle_{L^2(\mu)}\)
+        for some boundary measure \(\mu\), and proved this yields \texttt{ReflectionPositivityRealization}. The older weight-based \(L^2\)/Bochner-integral structures remain available as an \emph{optional absolute-continuity upgrade}.
+
+        \item \textbf{Lean-friendly test space (log-Schwartz/Fourier)} (\texttt{SchwartzTestSpace.lean}): Provided a concrete \texttt{TestSpace} instance on Schwartz functions using Fourier transform identities, allowing Route~3 algebra to run without assuming Mellin/Fubini infrastructure on all functions \(\mathbb{R}\to\mathbb{C}\).
     \end{enumerate}
 
-    \emph{Lean module inventory (20 files, \texttt{RiemannRecognitionGeometry/ExplicitFormula/}):}
+    \emph{Lean module inventory (23 files, \texttt{RiemannRecognitionGeometry/ExplicitFormula/}):}
     \texttt{Defs}, \texttt{MathlibBridge}, \texttt{MulConvolution}, \texttt{Route3Targets}, \texttt{Route3HypBundle}, \texttt{Route3FubiniTonelliLemmas},
     \texttt{Lagarias}, \texttt{Li}, \texttt{WeilFunctionals}, \texttt{WFunctionals}, \texttt{WeilPositivityRH},
     \texttt{WeilTestFunction}, \texttt{WeilTestFunctionProofs}, \texttt{MainRoute3}, \texttt{HilbertRealization}, \texttt{Caratheodory}, \texttt{Concrete},
-    \texttt{ArithmeticJ}, \texttt{Cayley}, \texttt{CayleyBridge}.
+    \texttt{ArithmeticJ}, \texttt{CompletedJ}, \texttt{Cayley}, \texttt{CayleyBridge}, \texttt{SchwartzTestSpace}, \texttt{SpectralIdentityAlgebra}.
 
-    \emph{Main problem right now:} prove the \texttt{bridge\_to\_reflection} axiom in \texttt{CayleyBridgeAssumptions}, or directly construct a \texttt{ReflectionPositivityRealization}.
-    This requires either showing that arithmetic-side positivity \(\Re(2J(s)) \ge 0\) implies a Hilbert-space representation of the Weil form, or directly constructing such a representation.
+    \emph{Main problem right now:} prove the bridge axiom (either \texttt{bridge\_to\_reflection} or the measure-first \texttt{bridge\_to\_measure}) for the arithmetic \(\xi/\zeta\) channel, or directly construct a \texttt{ReflectionPositivityRealization} / \texttt{SesqMeasureIdentity}.
+    This is logically equivalent to RH in this architecture.
     This is a global (not local) target and is logically equivalent to RH in this architecture. A cautionary note is that stronger de Branges shift-positivity conditions fail for \(\zeta\) (Conrey--Li, arXiv:math/9812166), so the positivity target must be of Weil/Li ``averaged'' type rather than pointwise.
 \end{itemize}
 
@@ -1992,20 +1997,23 @@ The bridge axiom can thus be replaced by:
 
 \subsection{How to get positivity from \(\Re(2J) \ge 0\): the spectral identity}
 
+(\emph{Important correction.}) For the completed \(\xi\)-channel one has \(\xi(\tfrac12+it)\in\mathbb{R}\) for real \(t\), hence \(\xi'(\tfrac12+it)\in i\mathbb{R}\) away from zeros and
+\(\Re(-\xi'/\xi(\tfrac12+it))=0\) a.e.\ if interpreted pointwise. Thus the correct Route~3 target is \textbf{measure-first}.
+
 The target is a representation of the form:
 \[
-    W^{(1)}\!\bigl(f \star_m \widetilde{\overline{f}}\bigr) 
-    = \int \Re\bigl(2 \cdot J(\text{boundary point})\bigr) \cdot |F_f(\text{boundary point})|^2 \, d\nu,
+    W^{(1)}\!\bigl(f \star_m \widetilde{\overline{g}}\bigr)
+    = \int_{\mathbb{R}} \overline{F_f(t)}\,F_g(t)\, d\mu(t),
 \]
 where:
 \begin{itemize}
     \item \(F_f\) is whatever transform the Route~3 normalizations use (Mellin + involution + Cayley),
-    \item \(\nu\) is the natural boundary measure (Lebesgue on the critical-line parameter, or Haar on the unit circle after Cayley).
+    \item \(\mu\) is a boundary spectral measure/distribution (Lebesgue/Haar only after an absolute-continuity upgrade).
 \end{itemize}
 
 Once this identity is established, positivity is immediate:
 \begin{itemize}
-    \item \(\Re(2J) \ge 0\),
+    \item \(\mu \ge 0\),
     \item \(|F_f|^2 \ge 0\),
     \item integral of nonnegative \(\Rightarrow\) nonnegative.
 \end{itemize}
@@ -2013,7 +2021,7 @@ Once this identity is established, positivity is immediate:
 So the bridge-to-reflection problem reduces to:
 
 \begin{quote}
-\textbf{Prove the spectral identity that expresses the Weil form on ``reflection squares'' as an \(L^2\) norm with weight \(\Re(2J)\).}
+\textbf{Prove the measure-first spectral identity \(W^{(1)}(\mathrm{pair}(f,g))=\int \overline{F_f}F_g\,d\mu\), and then prove \(\mu\ge0\) for the arithmetic \(\xi/\zeta\) channel (RH-equivalent).}
 \end{quote}
 
 \subsection{The Herglotz/Carath\'eodory bridge}
@@ -2025,9 +2033,9 @@ There are two equivalent classical routes.
 If \(F(s) = 2J(s)\) is holomorphic on a right half-plane and \(\Re F(s) \ge 0\), then \(F\) admits a Herglotz-type representation with a \textbf{positive measure} \(\mu\) on the boundary. The Weil pairing becomes:
 \[
     W^{(1)}\!\bigl(f \star_m \widetilde{\overline{g}}\bigr) 
-    = \int (\mathcal{M}f) \cdot \overline{(\mathcal{M}g)} \cdot w \, d\nu,
+    = \int_{\mathbb{R}} \overline{F_f(t)}\,F_g(t)\, d\mu(t),
 \]
-for some weight \(w\) built from boundary values of \(\Re(2J)\). If \(w \ge 0\), take
+with \(\mu\ge0\). If additionally \(d\mu = w\,d\nu\) (absolute continuity), one can rewrite this in the familiar weighted-\(L^2\) form and take
 \[
     H = L^2(w \, d\nu), \qquad (Tf)(\cdot) = (\mathcal{M}f)(\cdot) \sqrt{w(\cdot)}.
 \]

@@ -66,6 +66,57 @@ structure CayleyBridgeAssumptions (L : LagariasFramework F) where
     (∀ z ∈ S, 0 ≤ (((2 : ℂ) * J z).re)) →
       OptionalTargets.ReflectionPositivityRealization (F := F) (L := L)
 
+/-!
+## Measure-first bridge variant (preferred)
+
+The original `CayleyBridgeAssumptions` packages the Route‑3 bottleneck as:
+
+`Re(2·J) ≥ 0` ⇒ `ReflectionPositivityRealization`.
+
+After the “weight is 0 a.e.” correction for the completed ξ-channel, the cleaner intermediate target
+is **measure-first**: produce a `SesqMeasureIdentity` (an `L²(μ)` representation of the Weil form)
+and then obtain reflection positivity mechanically.
+
+This structure records that measure-first formulation of the same bottleneck.
+-/
+
+/--
+`CayleyMeasureBridgeAssumptions` = a measure-first version of the Route‑3 bridge.
+
+It asks for a single bridge axiom producing a `SesqMeasureIdentity` from the half-plane condition
+`Re(2·J) ≥ 0` on a domain `S`.
+
+Once such a `SesqMeasureIdentity` exists, `ReflectionPositivityRealization` follows immediately by
+`SesqMeasureIdentity.reflectionPositivityRealization`.
+-/
+structure CayleyMeasureBridgeAssumptions (L : LagariasFramework F) where
+  /-- Candidate arithmetic/outer field. -/
+  J : ℂ → ℂ
+  /-- Domain where the right-half-plane condition is asserted. -/
+  S : Set ℂ
+  /-- Positivity input: `Re(2·J) ≥ 0` on `S`. -/
+  hRe : ∀ z ∈ S, 0 ≤ (((2 : ℂ) * J z).re)
+  /--
+  The analytic bridge (measure-first): from `Re(2·J) ≥ 0` on `S` to a `SesqMeasureIdentity` for the
+  Weil form.
+  -/
+  bridge_to_measure :
+    (∀ z ∈ S, 0 ≤ (((2 : ℂ) * J z).re)) →
+      SesqMeasureIdentity (F := F) (L := L)
+
+/-- A measure-bridge package yields a reflection-positivity realization by `L²(μ)` construction. -/
+theorem reflectionPositivityRealization_of_measureBridge (B : CayleyMeasureBridgeAssumptions (L := L)) :
+    OptionalTargets.ReflectionPositivityRealization (F := F) (L := L) := by
+  classical
+  have Sμ : SesqMeasureIdentity (F := F) (L := L) := B.bridge_to_measure B.hRe
+  exact SesqMeasureIdentity.reflectionPositivityRealization (F := F) (L := L) Sμ
+
+/-- Measure-bridge ⇒ Weil gate (via reflection positivity). -/
+theorem WeilGate_of_measureBridge (B : CayleyMeasureBridgeAssumptions (L := L)) :
+    L.WeilGate := by
+  exact OptionalTargets.WeilGate_of_reflectionPositivityRealization (L := L)
+    (h := reflectionPositivityRealization_of_measureBridge (L := L) B)
+
 /-- A Cayley bridge assumption yields a reflection-positivity realization (by applying its bridge). -/
 theorem reflectionPositivityRealization_of_bridge (B : CayleyBridgeAssumptions (L := L)) :
     OptionalTargets.ReflectionPositivityRealization (F := F) (L := L) :=
@@ -97,4 +148,3 @@ end
 
 end ExplicitFormula
 end RiemannRecognitionGeometry
-

@@ -75,6 +75,34 @@ structure Assumptions where
   fubini_tonelli :
     Route3FubiniTonelliObligations (F := F) (μ := volume) (w := w) (transform := transform)
 
+/-!
+## Measure-first Route 3 hypothesis bundle (preferred)
+
+For the completed ξ-channel, the naive pointwise density `t ↦ Re(2·J(1/2+it))` is zero a.e. on the
+critical line (away from zeros). The correct Route‑3 target is therefore **measure-first**:
+package the Weil form as an `L²(μ)` inner product against some boundary measure `μ`.
+
+This structure records exactly that statement, without mentioning a pointwise weight.
+-/
+
+structure AssumptionsMeasure where
+  /-- The Lagarias explicit-formula framework (`W¹`, etc.). -/
+  L : LagariasFramework F
+  /-- Boundary measure (need not be absolutely continuous). -/
+  μ : Measure ℝ := volume
+  /-- Route 3 boundary transform (assumed ℂ-linear). -/
+  transform : F →ₗ[ℂ] (ℝ → ℂ)
+  /-- (Normalization) `transform` agrees with the critical-line Mellin transform. -/
+  transform_eq_mellinOnCriticalLine :
+    ∀ f : F, transform f = fun t : ℝ => mellinOnCriticalLine (F := F) f t
+  /-- L² admissibility: the transformed functions lie in `L²(μ)`. -/
+  memL2 : ∀ f : F, MeasureTheory.Memℒp (transform f) 2 μ
+  /-- The measure-first sesquilinear identity (Hilbert-space form). -/
+  identity :
+    ∀ f g : F,
+      L.W1 (pair (F := F) f g) =
+        ⟪(memL2 f).toLp (transform f), (memL2 g).toLp (transform g)⟫_ℂ
+
 /-- Concrete Route 3 hypothesis bundle value, built from `Assumptions`. -/
 def H (A : Assumptions) : Route3SesqIntegralHypBundle (F := F) A.L where
   μ := volume
@@ -108,6 +136,30 @@ theorem WeilGate (A : Assumptions) : A.L.WeilGate :=
 /-- Route 3: the Weil gate implies `RiemannHypothesis` (Lagarias Thm 3.2, packaged). -/
 theorem RH (A : Assumptions) : RiemannHypothesis :=
   LagariasFramework.WeilGate_implies_RH (L := A.L) (WeilGate A)
+
+/-! ### Measure-first Route 3 pipeline -/
+
+/-- Package measure-first assumptions as a `SesqMeasureIdentity`. -/
+def Sμ (A : AssumptionsMeasure) : SesqMeasureIdentity (F := F) (L := A.L) where
+  μ := A.μ
+  transform := A.transform
+  memL2 := A.memL2
+  identity := A.identity
+
+/-- Route 3 (measure-first): sesquilinear identity yields a reflection-positivity realization. -/
+theorem reflectionPositivityRealizationμ (A : AssumptionsMeasure) :
+    OptionalTargets.ReflectionPositivityRealization (F := F) (L := A.L) := by
+  classical
+  exact SesqMeasureIdentity.reflectionPositivityRealization (F := F) (L := A.L) (Sμ A)
+
+/-- Route 3 (measure-first): reflection positivity implies the Weil gate `WeilGate`. -/
+theorem WeilGateμ (A : AssumptionsMeasure) : A.L.WeilGate :=
+  OptionalTargets.WeilGate_of_reflectionPositivityRealization (F := F) (L := A.L)
+    (reflectionPositivityRealizationμ A)
+
+/-- Route 3 (measure-first): the Weil gate implies `RiemannHypothesis`. -/
+theorem RHμ (A : AssumptionsMeasure) : RiemannHypothesis :=
+  LagariasFramework.WeilGate_implies_RH (L := A.L) (WeilGateμ A)
 
 end Route3
 
