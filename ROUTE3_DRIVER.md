@@ -12,9 +12,10 @@
 2. After completing a task, mark it `[x]` and immediately start the next `[ ]`.
 3. If you finish all tasks, add new ones based on the remaining work.
 4. Run `lake build` after any Lean file change.
-5. **Never ask for permission** – just execute.
-6. **Never summarize what you'll do** – just do it.
-7. If stuck for >2 attempts on one task, skip it and note why.
+5. If you add/strengthen **any** hypothesis/axiom (including hypothesis-bundle fields), **update the Assumption Ledger** below immediately.
+6. **Never ask for permission** – just execute.
+7. Keep summaries to ≤2 sentences; prefer code + checkboxes over narration.
+8. If stuck for >2 attempts on one task, skip it and note why.
 
 ---
 
@@ -22,13 +23,35 @@
 
 | Metric | Value |
 |--------|-------|
-| Global Axioms in ExplicitFormula path | 1 (Fourier inversion in ZetaInstantiation.lean) |
+| Global `axiom` declarations in `ExplicitFormula/*` | 1 (`mellin_dirichlet_fourier_inversion` in `ZetaInstantiation.lean`) |
 | Sorry in ExplicitFormula/*.lean | 0 ✅ |
 | Hypothesis bundles (classical analysis) | AllComponentAssumptions, RightEdgePhaseLimitAssumptions, contour-limit hyps |
 | Component identities needed | 3 (`det2`, `outer`, `ratio`) |
 | Component identities proved | 3/3 fully proved ✅ (det2 ✅, outer ✅, ratio ✅) |
 | Assembly theorem | ✅ PROVED |
 | Last `lake build` | ✅ |
+| “Unconditional” blockers to audit | `ZetaPSCHypotheses.det2_ne_zero_strip` is **RH-strength / circular** given current `det2_zeta` placeholder |
+
+---
+
+## 📌 ASSUMPTION LEDGER (COUNTS TOWARD “UNCONDITIONAL”)
+
+This section is the **single source of truth** for what is still assumed (even if it is not written as a Lean `axiom`).
+
+- **Literal Lean axioms (in `ExplicitFormula/*`)**:
+  - `ZetaInstantiation.mellin_dirichlet_fourier_inversion`: Mellin/Fourier inversion for Dirichlet terms (classical; likely dischargable from Mathlib `mellin_inversion` once test-function regularity is bridged).
+
+- **ζ instantiation hypotheses (bundled, but still assumptions)**: `ZetaPSCHypotheses` in `ZetaInstantiation.lean`
+  - `boundaryPhase_diff`: differentiability of the chosen boundary phase (classical analysis).
+  - `boundaryPhase_repr`: critical-line phase representation (branch/arg bookkeeping; classical but delicate).
+  - `phase_velocity`: phase–velocity identity relating `θ'(t)` to `μ_spec` (classical/spectral input).
+  - `det2_ne_zero_strip`: **NOT acceptable as “unconditional”** if it is equivalent to RH for the chosen `det2_zeta`.
+
+- **Definition consistency audit (must stay consistent with bundles)**:
+  - Current placeholder `det2_zeta := ζ(s) * Γ(s/2) * π^(s/2)` does **not** match the intended “prime-sum log-derivative” identity (which naturally targets `ζ`).
+  - Before instantiating `Det2PrimeTermAssumptions` for ζ, reconcile:
+    - either redefine `det2_zeta := riemannZeta` (and keep `outer_zeta` as the Gamma/pi factor), **or**
+    - keep the current `det2_zeta` and adjust the “log-deriv = vonMangoldt L-series” assumption accordingly.
 
 ---
 
@@ -80,7 +103,9 @@ The proof chain is complete with 0 sorry. Remaining work: instantiate hypothesis
   - ✅ det2_zeta_ne_zero_of_re_gt_one, det2_zeta_differentiable
   - ✅ xi_zeta_differentiable
   - ✅ logDeriv_zeta_eq_neg_vonMangoldt_LSeries
-  - Remaining classical inputs: ZetaPSCHypotheses fields
+  - Remaining inputs: `ZetaPSCHypotheses` fields (see Assumption Ledger; **one is RH-strength and must be fixed**)
+- [ ] **Reconcile `det2_zeta` vs prime-sum identity**: make `det2_zeta` compatible with `Det2PrimeTermAssumptions.logDeriv_det2_eq_neg_vonMangoldt`
+- [ ] **Eliminate / replace RH-strength `det2_ne_zero_strip`**: ensure ζ instantiation does not assume RH-equivalent nonvanishing
 - [ ] **Instantiate Det2PrimeTermAssumptions for ζ**: Still needs Fourier inversion axiom proof.
 - [ ] **Instantiate OuterArchimedeanAssumptions for ζ**: Needs digamma/archimedean identity.
 - [ ] **Instantiate RatioBoundaryPhaseAssumptions for ζ**: Needs contour shift, critical line sum.
@@ -174,5 +199,6 @@ lake env lean /tmp/test.lean 2>&1 | tail -30
 - **Fixed** `xi_diff` sorry. Status: 1 axiom, 0 sorry in ZetaInstantiation.lean. Build ✅.
 - Verified Mathlib has `mellin_inversion` (requires `MellinConvergent`, `VerticalIntegrable`, `ContinuousAt`).
 - Axiom reduction path: prove test function regularity → apply `mellin_inversion`.
+- Added an Assumption Ledger to prevent “hidden axioms” (bundle fields) from being mistaken as progress toward unconditional RH; flagged `det2_zeta` vs prime-sum mismatch and RH-strength `det2_ne_zero_strip`.
 
 
