@@ -69,8 +69,8 @@ structure PSCComponents where
   outer : ℂ → ℂ
   /-- The completed Riemann xi function ξ(s). -/
   xi : ℂ → ℂ
-  /-- det₂ is nonzero on Re s > 1/2. -/
-  det2_ne_zero : ∀ s : ℂ, 1/2 < s.re → det2 s ≠ 0
+  /-- det₂ is nonzero in the Euler-product region Re(s) > 1 (needed for right-edge log-derivatives). -/
+  det2_ne_zero : ∀ s : ℂ, 1 < s.re → det2 s ≠ 0
   /-- O is nonzero on Re s > 1/2. -/
   outer_ne_zero : ∀ s : ℂ, 1/2 < s.re → outer s ≠ 0
   /-- det₂ is differentiable on Re s > 1/2. -/
@@ -119,17 +119,18 @@ where J = det₂/(O·ξ) is the PSC ratio.
 
 This is a direct application of Mathlib's `logDeriv_div` and `logDeriv_mul`.
 -/
-theorem log_deriv_decomposition (P : PSCComponents) (s : ℂ) (hs : 1/2 < s.re)
+theorem log_deriv_decomposition (P : PSCComponents) (s : ℂ) (hs : 1 < s.re)
     (hxi : P.xi s ≠ 0) :
     logDeriv P.xi s =
       logDeriv P.det2 s - logDeriv P.outer s - logDeriv (PSCRatio P) s := by
+  have hs_half : (1 / 2 : ℝ) < s.re := by linarith
   -- J = det₂ / (O · ξ), so logDeriv J = logDeriv det₂ - logDeriv O - logDeriv ξ
   -- Rearranging: logDeriv ξ = logDeriv det₂ - logDeriv O - logDeriv J
   have hdet2 : P.det2 s ≠ 0 := P.det2_ne_zero s hs
-  have houter : P.outer s ≠ 0 := P.outer_ne_zero s hs
-  have hdiff_det2 : DifferentiableAt ℂ P.det2 s := P.det2_diff s hs
-  have hdiff_outer : DifferentiableAt ℂ P.outer s := P.outer_diff s hs
-  have hdiff_xi : DifferentiableAt ℂ P.xi s := P.xi_diff s hs hxi
+  have houter : P.outer s ≠ 0 := P.outer_ne_zero s hs_half
+  have hdiff_det2 : DifferentiableAt ℂ P.det2 s := P.det2_diff s hs_half
+  have hdiff_outer : DifferentiableAt ℂ P.outer s := P.outer_diff s hs_half
+  have hdiff_xi : DifferentiableAt ℂ P.xi s := P.xi_diff s hs_half hxi
   have hdiff_outer_xi : DifferentiableAt ℂ (fun z => P.outer z * P.xi z) s :=
     hdiff_outer.mul hdiff_xi
   have houter_xi : P.outer s * P.xi s ≠ 0 := mul_ne_zero houter hxi

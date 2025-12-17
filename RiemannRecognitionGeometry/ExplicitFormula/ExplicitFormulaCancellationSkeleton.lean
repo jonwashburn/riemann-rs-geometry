@@ -123,13 +123,13 @@ theorem rightEdgeIntegrand_eq_decomp
     (P : PSCComponents)
     (h : F)
     (hxi : LC.xi = P.xi)
-    (hc : (1 / 2 : ℝ) < LC.c)
+    (hc_gt_one : 1 < LC.c)
     (hxi_ne : ∀ t : ℝ, P.xi ((LC.c : ℂ) + (t : ℂ) * Complex.I) ≠ 0) :
     rightEdgeIntegrand LC h = rightEdgeIntegrand_decomp LC P h := by
   funext t
   -- Apply `log_deriv_decomposition` at `s = c + it`.
-  have hs : (1 / 2 : ℝ) < (((LC.c : ℂ) + (t : ℂ) * Complex.I)).re := by
-    simpa using hc
+  have hs : (1 : ℝ) < (((LC.c : ℂ) + (t : ℂ) * Complex.I)).re := by
+    simpa using hc_gt_one
   have hdecomp :
       logDeriv P.xi ((LC.c : ℂ) + (t : ℂ) * Complex.I) =
         logDeriv P.det2 ((LC.c : ℂ) + (t : ℂ) * Complex.I) -
@@ -196,17 +196,17 @@ theorem rightEdge_integral_identity_iff_decomp
     (P : PSCComponents)
     (h : F)
     (hxi : LC.xi = P.xi)
-    (hc : (1 / 2 : ℝ) < LC.c)
+    (hc_gt_one : 1 < LC.c)
     (hxi_ne : ∀ t : ℝ, P.xi ((LC.c : ℂ) + (t : ℂ) * Complex.I) ≠ 0) :
     rightEdge_integral_identity (LC := LC) (P := P) h ↔
       rightEdge_integral_identity_decomp (LC := LC) (P := P) h := by
   have hh :
       rightEdgeIntegrand LC h = rightEdgeIntegrand_decomp LC P h :=
-    rightEdgeIntegrand_eq_decomp (LC := LC) (P := P) (h := h) hxi hc hxi_ne
+    rightEdgeIntegrand_eq_decomp (LC := LC) (P := P) (h := h) hxi hc_gt_one hxi_ne
   have htilde :
       rightEdgeIntegrand LC (TestSpace.tilde (F := F) h) =
         rightEdgeIntegrand_decomp LC P (TestSpace.tilde (F := F) h) :=
-    rightEdgeIntegrand_eq_decomp (LC := LC) (P := P) (h := (TestSpace.tilde (F := F) h)) hxi hc hxi_ne
+    rightEdgeIntegrand_eq_decomp (LC := LC) (P := P) (h := (TestSpace.tilde (F := F) h)) hxi hc_gt_one hxi_ne
   constructor <;> intro H
   · simpa [rightEdge_integral_identity, rightEdge_integral_identity_decomp, hh, htilde] using H
   · simpa [rightEdge_integral_identity, rightEdge_integral_identity_decomp, hh, htilde] using H

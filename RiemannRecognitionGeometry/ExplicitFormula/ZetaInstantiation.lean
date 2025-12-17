@@ -255,8 +255,6 @@ Some require additional hypotheses about the phase function.
 structure ZetaPSCHypotheses where
   /-- Boundary phase is differentiable (Riemann-Siegel theta). -/
   boundaryPhase_diff : ∀ t : ℝ, DifferentiableAt ℝ boundaryPhase_zeta t
-  /-- det2_zeta is non-zero in the critical strip (conditional on RH). -/
-  det2_ne_zero_strip : ∀ s : ℂ, 1/2 < s.re → det2_zeta s ≠ 0
   /-- Boundary phase representation. -/
   boundaryPhase_repr : ∀ᵐ t : ℝ ∂volume,
     det2_zeta (1/2 + I * t) / (outer_zeta (1/2 + I * t) * xi_zeta (1/2 + I * t)) =
@@ -270,7 +268,7 @@ def PSCComponents_zeta (H : ZetaPSCHypotheses) : ContourToBoundary.PSCComponents
   det2 := det2_zeta
   outer := outer_zeta
   xi := xi_zeta
-  det2_ne_zero := H.det2_ne_zero_strip
+  det2_ne_zero := fun s hs => det2_zeta_ne_zero_of_re_gt_one hs
   outer_ne_zero := fun s hs => outer_zeta_ne_zero hs
   det2_diff := fun s hs => by
     apply det2_zeta_differentiable
@@ -296,7 +294,6 @@ def PSCComponents_zeta (H : ZetaPSCHypotheses) : ContourToBoundary.PSCComponents
 
 **Remaining classical hypotheses (ZetaPSCHypotheses):**
 - boundaryPhase_diff: Riemann-Siegel theta is differentiable
-- det2_ne_zero_strip: det2_zeta non-zero in strip (needs RH or explicit formula)
 - boundaryPhase_repr: phase representation on critical line
 - phase_velocity: phase-velocity identity
 

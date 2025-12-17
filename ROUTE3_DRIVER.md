@@ -30,7 +30,7 @@
 | Component identities proved | 3/3 fully proved ✅ (det2 ✅, outer ✅, ratio ✅) |
 | Assembly theorem | ✅ PROVED |
 | Last `lake build` | ✅ |
-| “Unconditional” blockers to audit | `ZetaPSCHypotheses.det2_ne_zero_strip` is **RH-strength / circular** given current `det2_zeta` placeholder |
+| “Unconditional” blockers to audit | Verify ζ-instantiation hypotheses are not RH-strength; `PSCComponents.det2_ne_zero` now only requires **Re(s) > 1** |
 
 ---
 
@@ -45,7 +45,7 @@ This section is the **single source of truth** for what is still assumed (even i
   - `boundaryPhase_diff`: differentiability of the chosen boundary phase (classical analysis).
   - `boundaryPhase_repr`: critical-line phase representation (branch/arg bookkeeping; classical but delicate).
   - `phase_velocity`: phase–velocity identity relating `θ'(t)` to `μ_spec` (classical/spectral input).
-  - `det2_ne_zero_strip`: **NOT acceptable as “unconditional”** if it is equivalent to RH for the chosen `det2_zeta`.
+  - (Removed) `det2_ne_zero_strip`: **eliminated** by weakening `PSCComponents.det2_ne_zero` to only require `Re(s) > 1`.
 
 - **Definition consistency audit (must stay consistent with bundles)**:
   - Current placeholder `det2_zeta := ζ(s) * Γ(s/2) * π^(s/2)` does **not** match the intended “prime-sum log-derivative” identity (which naturally targets `ζ`).
@@ -200,5 +200,6 @@ lake env lean /tmp/test.lean 2>&1 | tail -30
 - Verified Mathlib has `mellin_inversion` (requires `MellinConvergent`, `VerticalIntegrable`, `ContinuousAt`).
 - Axiom reduction path: prove test function regularity → apply `mellin_inversion`.
 - Added an Assumption Ledger to prevent “hidden axioms” (bundle fields) from being mistaken as progress toward unconditional RH; flagged `det2_zeta` vs prime-sum mismatch and RH-strength `det2_ne_zero_strip`.
+- Removed the RH-strength `det2_ne_zero_strip` circularity by weakening `PSCComponents.det2_ne_zero` to only require `Re(s) > 1` (right-edge region).
 
 
