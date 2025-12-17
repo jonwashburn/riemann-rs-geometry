@@ -103,9 +103,9 @@ The proof chain is complete with 0 sorry. Remaining work: instantiate hypothesis
   - ✅ det2_zeta_ne_zero_of_re_gt_one, det2_zeta_differentiable
   - ✅ xi_zeta_differentiable
   - ✅ logDeriv_zeta_eq_neg_vonMangoldt_LSeries
-  - Remaining inputs: `ZetaPSCHypotheses` fields (see Assumption Ledger; **one is RH-strength and must be fixed**)
+  - Remaining inputs: `ZetaPSCHypotheses` fields (see Assumption Ledger)
 - [ ] **Reconcile `det2_zeta` vs prime-sum identity**: make `det2_zeta` compatible with `Det2PrimeTermAssumptions.logDeriv_det2_eq_neg_vonMangoldt`
-- [ ] **Eliminate / replace RH-strength `det2_ne_zero_strip`**: ensure ζ instantiation does not assume RH-equivalent nonvanishing
+- [x] **Eliminate / replace RH-strength `det2_ne_zero_strip`**: fixed by restricting `PSCComponents.det2_ne_zero` to `Re(s) > 1` and removing `det2_ne_zero_strip`
 - [ ] **Instantiate Det2PrimeTermAssumptions for ζ**: Still needs Fourier inversion axiom proof.
 - [ ] **Instantiate OuterArchimedeanAssumptions for ζ**: Needs digamma/archimedean identity.
 - [ ] **Instantiate RatioBoundaryPhaseAssumptions for ζ**: Needs contour shift, critical line sum.
