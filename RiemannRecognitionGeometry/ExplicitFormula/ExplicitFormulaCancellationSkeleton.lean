@@ -1,5 +1,6 @@
 import RiemannRecognitionGeometry.ExplicitFormula.LagariasContour
 import RiemannRecognitionGeometry.ExplicitFormula.ContourToBoundary
+import Mathlib.Analysis.Normed.Group.InfiniteSum
 import Mathlib.MeasureTheory.Integral.IntegralEqImproper
 import Mathlib.MeasureTheory.Integral.DominatedConvergence
 import Mathlib.NumberTheory.VonMangoldt
@@ -1047,71 +1048,89 @@ theorem det2_fullIntegral_eq_neg_primePowerSum_of_assumptions
     intro t
     apply A.logDeriv_det2_eq_neg_vonMangoldt
     simp only [add_re, ofReal_re, mul_re, ofReal_im, I_re, mul_zero, I_im, mul_one, sub_zero]
-    exact hc_gt_one
+    linarith
 
   -- Step 3: Define the per-term integrand function.
-  let F : ℕ → ℝ → ℂ := fun n t =>
+  let Fn : ℕ → ℝ → ℂ := fun n t =>
     M[h]((LC.c : ℂ) + (t : ℂ) * I) *
       (ArithmeticFunction.vonMangoldt n : ℂ) *
       (n : ℂ)^(-(((LC.c : ℂ) + (t : ℂ) * I)))
 
   -- Step 4: The L-series expansion gives the integrand as a tsum.
-  -- LSeries f s = ∑' n, f n * n^{-s}
-  -- So M[h](s) * (-L(Λ, s)) = - ∑' n, M[h](s) * Λ(n) * n^{-s} = - ∑' n, F n t
+  -- LSeries f s = ∑' n, term f s n = ∑' n, if n = 0 then 0 else f n / n^s.
+  -- So M[h](s) * (-L(Λ, s)) = - ∑' n, M[h](s) * Λ(n) * n^{-s} = - ∑' n, Fn n t.
   have hIntegrand : ∀ t : ℝ,
       M[h]((LC.c : ℂ) + (t : ℂ) * I) * logDeriv P.det2 ((LC.c : ℂ) + (t : ℂ) * I) =
-        - ∑' n : ℕ, F n t := by
+        - ∑' n : ℕ, Fn n t := by
     intro t
     rw [hLseries t]
-    -- LSeries (fun n => Λ(n)) s = ∑' n, Λ(n) * n^{-s}
-    simp only [LSeries, neg_mul, tsum_neg]
-    congr 1
-    ext n
-    ring
+    -- Cancel the outer minus sign, then expand `LSeries`.
+    rw [mul_neg]
+    -- `tsum_neg`/`tsum_mul_left` hold unconditionally for `tsum` (even without summability).
+    apply (neg_inj).1
+    simp only [LSeries]
+    -- Move the constant `M[h](c+it)` inside the `tsum`.
+    rw [← tsum_mul_left]
+    -- Eliminate any redundant double negations created by rewriting.
+    simp only [neg_neg]
+    -- Help typeclass inference by fixing the codomain explicitly to `ℂ`.
+    refine (tsum_congr (α := ℂ) (β := ℕ) ?_)
+    intro n
+    simp only [LSeries.term, Fn]
+    by_cases hn : n = 0
+    · subst hn
+      -- term f s 0 = 0, and Fn 0 t = 0 because Λ(0) = 0
+      simp [ArithmeticFunction.map_zero]
+    · simp only [hn, ↓reduceIte]
+      -- f n / n^s = f n * n^{-s}
+      rw [div_eq_mul_inv, ← cpow_neg]
+      ring
 
   -- Step 5: Apply Fubini (integral-tsum exchange).
-  -- ∫ (- ∑' F n t) dt = - ∑' ∫ F n t dt
+  -- ∫ (- ∑' Fn n t) dt = - ∑' ∫ Fn n t dt
   -- This uses A.integrable_term and A.summable_integral_norm.
   have hFubini :
-      (∫ t : ℝ, (- ∑' n : ℕ, F n t) ∂ volume) =
-        - ∑' n : ℕ, (∫ t : ℝ, F n t ∂ volume) := by
-    rw [integral_neg]
+      (∫ t : ℝ, (- ∑' n : ℕ, Fn n t) ∂ volume) =
+        - ∑' n : ℕ, (∫ t : ℝ, Fn n t ∂ volume) := by
+    rw [MeasureTheory.integral_neg]
     congr 1
     -- Apply integral_tsum_of_summable_integral_norm
     -- Need: integrability of each F n and summability of ∫ ‖F n‖
-    have hInt : ∀ n : ℕ, Integrable (F n) (volume : Measure ℝ) := by
+    have hInt : ∀ n : ℕ, Integrable (Fn n) (volume : Measure ℝ) := by
       intro n
       by_cases hn : n = 0
       · -- n = 0: Λ(0) = 0, so F 0 = 0
-        simp only [F, hn, Nat.cast_zero, ArithmeticFunction.vonMangoldt_zero,
-          CharP.cast_eq_zero, zero_mul, mul_zero]
-        exact integrable_zero _ _ _
+        have hFn0 : Fn n = fun _ => 0 := by
+          funext t
+          simp only [Fn, hn, Nat.cast_zero, ArithmeticFunction.map_zero, Complex.ofReal_zero,
+            zero_mul, mul_zero]
+        simpa [hFn0] using (integrable_zero : Integrable (fun _ : ℝ => (0 : ℂ)) (volume : Measure ℝ))
       · -- n ≥ 1
         have hn' : 1 ≤ n := Nat.one_le_iff_ne_zero.mpr hn
         exact A.integrable_term h n hn'
-    have hSum : Summable (fun n : ℕ => ∫ t : ℝ, ‖F n t‖ ∂ volume) :=
+    have hSum : Summable (fun n : ℕ => ∫ t : ℝ, ‖Fn n t‖ ∂ volume) :=
       A.summable_integral_norm h
     exact (MeasureTheory.integral_tsum_of_summable_integral_norm hInt hSum).symm
 
   -- Step 6: Apply Fourier inversion to each n ≥ 1 term.
-  -- ∫ F n t dt = ∫ M[h](c+it) * Λ(n) * n^{-(c+it)} dt
+  -- ∫ Fn n t dt = ∫ M[h](c+it) * Λ(n) * n^{-(c+it)} dt
   --            = Λ(n) * ∫ M[h](c+it) * n^{-(c+it)} dt
   --            = Λ(n) * (2π/√n) * testValue h (log n)
   have hFourierTerm : ∀ n : ℕ, 1 ≤ n →
-      (∫ t : ℝ, F n t ∂ volume) =
+      (∫ t : ℝ, Fn n t ∂ volume) =
         (ArithmeticFunction.vonMangoldt n : ℂ) *
           ((2 * Real.pi / Real.sqrt n) * testValue h (Real.log n)) := by
     intro n hn
     -- Factor out the constant Λ(n)
     have hconst :
-        (∫ t : ℝ, F n t ∂ volume) =
+        (∫ t : ℝ, Fn n t ∂ volume) =
           (ArithmeticFunction.vonMangoldt n : ℂ) *
             (∫ t : ℝ, M[h]((LC.c : ℂ) + (t : ℂ) * I) *
               (n : ℂ)^(-(((LC.c : ℂ) + (t : ℂ) * I))) ∂ volume) := by
-      simp only [F]
+      simp only [Fn]
       rw [← integral_mul_left]
       congr 1
-      ext t
+      funext t
       ring
     rw [hconst]
     -- Apply Fourier inversion
@@ -1120,30 +1139,33 @@ theorem det2_fullIntegral_eq_neg_primePowerSum_of_assumptions
 
   -- Step 7: Simplify the tsum using hFourierTerm.
   have hTsumSimp :
-      (∑' n : ℕ, (∫ t : ℝ, F n t ∂ volume)) =
+      (∑' n : ℕ, (∫ t : ℝ, Fn n t ∂ volume)) =
         (2 * Real.pi) * ∑' n : ℕ,
           if n = 0 then 0 else
             ((ArithmeticFunction.vonMangoldt n : ℂ) / Real.sqrt n) * testValue h (Real.log n) := by
-    congr 1
-    ext n
+    rw [← tsum_mul_left]
+    apply tsum_congr
+    intro n
     by_cases hn : n = 0
     · -- n = 0: both sides are 0
-      simp only [hn, if_true]
-      simp only [F, Nat.cast_zero, ArithmeticFunction.vonMangoldt_zero,
-        CharP.cast_eq_zero, zero_mul, mul_zero, integral_zero]
+      subst hn
+      simp only [if_true]
+      have hzero : (fun t => Fn 0 t) = fun _ => 0 := by
+        funext t
+        simp only [Fn, Nat.cast_zero, ArithmeticFunction.map_zero, Complex.ofReal_zero, zero_mul, mul_zero]
+      simp [hzero]
     · -- n ≥ 1
       simp only [if_neg hn]
       have hn' : 1 ≤ n := Nat.one_le_iff_ne_zero.mpr hn
       rw [hFourierTerm n hn']
       -- Simplify: Λ(n) * ((2π/√n) * testValue) = (2π) * (Λ(n)/√n) * testValue
       have hne : (Real.sqrt n : ℂ) ≠ 0 := by
-        simp only [ne_eq, ofReal_eq_zero, Real.sqrt_eq_zero']
-        omega
+        simp [Complex.ofReal_eq_zero, Real.sqrt_ne_zero', Nat.cast_pos, hn]
       field_simp
       ring
 
   -- Step 8: Define the per-term integrand for tilde h.
-  let F_tilde : ℕ → ℝ → ℂ := fun n t =>
+  let Fn_tilde : ℕ → ℝ → ℂ := fun n t =>
     M[(TestSpace.tilde (F := F) h)]((LC.c : ℂ) + (t : ℂ) * I) *
       (ArithmeticFunction.vonMangoldt n : ℂ) *
       (n : ℂ)^(-(((LC.c : ℂ) + (t : ℂ) * I)))
@@ -1152,68 +1174,84 @@ theorem det2_fullIntegral_eq_neg_primePowerSum_of_assumptions
   have hIntegrand_tilde : ∀ t : ℝ,
       M[(TestSpace.tilde (F := F) h)]((LC.c : ℂ) + (t : ℂ) * I) *
           logDeriv P.det2 ((LC.c : ℂ) + (t : ℂ) * I) =
-        - ∑' n : ℕ, F_tilde n t := by
+        - ∑' n : ℕ, Fn_tilde n t := by
     intro t
     rw [hLseries t]
-    simp only [LSeries, neg_mul, tsum_neg]
-    congr 1
-    ext n
-    ring
+    rw [mul_neg]
+    apply (neg_inj).1
+    simp only [LSeries]
+    rw [← tsum_mul_left]
+    simp only [neg_neg]
+    refine (tsum_congr (α := ℂ) (β := ℕ) ?_)
+    intro n
+    simp only [LSeries.term, Fn_tilde]
+    by_cases hn : n = 0
+    · subst hn
+      simp [ArithmeticFunction.map_zero]
+    · simp only [hn, ↓reduceIte]
+      rw [div_eq_mul_inv, ← cpow_neg]
+      ring
 
   have hFubini_tilde :
-      (∫ t : ℝ, (- ∑' n : ℕ, F_tilde n t) ∂ volume) =
-        - ∑' n : ℕ, (∫ t : ℝ, F_tilde n t ∂ volume) := by
-    rw [integral_neg]
+      (∫ t : ℝ, (- ∑' n : ℕ, Fn_tilde n t) ∂ volume) =
+        - ∑' n : ℕ, (∫ t : ℝ, Fn_tilde n t ∂ volume) := by
+    rw [MeasureTheory.integral_neg]
     congr 1
-    have hInt : ∀ n : ℕ, Integrable (F_tilde n) (volume : Measure ℝ) := by
+    have hInt : ∀ n : ℕ, Integrable (Fn_tilde n) (volume : Measure ℝ) := by
       intro n
       by_cases hn : n = 0
-      · simp only [F_tilde, hn, Nat.cast_zero, ArithmeticFunction.vonMangoldt_zero,
-          CharP.cast_eq_zero, zero_mul, mul_zero]
-        exact integrable_zero _ _ _
+      · have hFn0 : Fn_tilde n = fun _ => 0 := by
+          funext t
+          simp only [Fn_tilde, hn, Nat.cast_zero, ArithmeticFunction.map_zero, Complex.ofReal_zero,
+            zero_mul, mul_zero]
+        simpa [hFn0] using (integrable_zero : Integrable (fun _ : ℝ => (0 : ℂ)) (volume : Measure ℝ))
       · have hn' : 1 ≤ n := Nat.one_le_iff_ne_zero.mpr hn
         exact A.integrable_term (TestSpace.tilde (F := F) h) n hn'
-    have hSum : Summable (fun n : ℕ => ∫ t : ℝ, ‖F_tilde n t‖ ∂ volume) :=
+    have hSum : Summable (fun n : ℕ => ∫ t : ℝ, ‖Fn_tilde n t‖ ∂ volume) :=
       A.summable_integral_norm (TestSpace.tilde (F := F) h)
     exact (MeasureTheory.integral_tsum_of_summable_integral_norm hInt hSum).symm
 
   have hFourierTerm_tilde : ∀ n : ℕ, 1 ≤ n →
-      (∫ t : ℝ, F_tilde n t ∂ volume) =
+      (∫ t : ℝ, Fn_tilde n t ∂ volume) =
         (ArithmeticFunction.vonMangoldt n : ℂ) *
           ((2 * Real.pi / Real.sqrt n) * testValue (TestSpace.tilde (F := F) h) (Real.log n)) := by
     intro n hn
     have hconst :
-        (∫ t : ℝ, F_tilde n t ∂ volume) =
+        (∫ t : ℝ, Fn_tilde n t ∂ volume) =
           (ArithmeticFunction.vonMangoldt n : ℂ) *
             (∫ t : ℝ, M[(TestSpace.tilde (F := F) h)]((LC.c : ℂ) + (t : ℂ) * I) *
               (n : ℂ)^(-(((LC.c : ℂ) + (t : ℂ) * I))) ∂ volume) := by
-      simp only [F_tilde]
+      simp only [Fn_tilde]
       rw [← integral_mul_left]
       congr 1
-      ext t
+      funext t
       ring
     rw [hconst]
-    have hFI := A.fourier_inversion_tilde (TestSpace.tilde (F := F) h) n hn
+    have hFI := A.fourier_inversion (TestSpace.tilde (F := F) h) n hn
     rw [hFI]
 
   have hTsumSimp_tilde :
-      (∑' n : ℕ, (∫ t : ℝ, F_tilde n t ∂ volume)) =
+      (∑' n : ℕ, (∫ t : ℝ, Fn_tilde n t ∂ volume)) =
         (2 * Real.pi) * ∑' n : ℕ,
           if n = 0 then 0 else
             ((ArithmeticFunction.vonMangoldt n : ℂ) / Real.sqrt n) *
               testValue (TestSpace.tilde (F := F) h) (Real.log n) := by
-    congr 1
-    ext n
+    rw [← tsum_mul_left]
+    apply tsum_congr
+    intro n
     by_cases hn : n = 0
-    · simp only [hn, if_true]
-      simp only [F_tilde, Nat.cast_zero, ArithmeticFunction.vonMangoldt_zero,
-        CharP.cast_eq_zero, zero_mul, mul_zero, integral_zero]
+    · subst hn
+      simp only [if_true]
+      have hzero : (fun t => Fn_tilde 0 t) = fun _ => 0 := by
+        funext t
+        simp only [Fn_tilde, Nat.cast_zero, ArithmeticFunction.map_zero, Complex.ofReal_zero,
+          zero_mul, mul_zero]
+      simp [hzero]
     · simp only [if_neg hn]
       have hn' : 1 ≤ n := Nat.one_le_iff_ne_zero.mpr hn
       rw [hFourierTerm_tilde n hn']
       have hne : (Real.sqrt n : ℂ) ≠ 0 := by
-        simp only [ne_eq, ofReal_eq_zero, Real.sqrt_eq_zero']
-        omega
+        simp [Complex.ofReal_eq_zero, Real.sqrt_ne_zero', Nat.cast_pos, hn]
       field_simp
       ring
 
@@ -1226,13 +1264,46 @@ theorem det2_fullIntegral_eq_neg_primePowerSum_of_assumptions
         + (∫ t : ℝ, M[(TestSpace.tilde (F := F) h)]((LC.c : ℂ) + (t : ℂ) * I) *
             logDeriv P.det2 ((LC.c : ℂ) + (t : ℂ) * I) ∂ volume) := by
           rfl
-    _ = (∫ t : ℝ, (- ∑' n : ℕ, F n t) ∂ volume)
-        + (∫ t : ℝ, (- ∑' n : ℕ, F_tilde n t) ∂ volume) := by
+    _ = (∫ t : ℝ, (- ∑' n : ℕ, Fn n t) ∂ volume)
+        + (∫ t : ℝ, (- ∑' n : ℕ, Fn_tilde n t) ∂ volume) := by
           congr 1
-          · ext t; exact hIntegrand t
-          · ext t; exact hIntegrand_tilde t
-    _ = (- ∑' n : ℕ, (∫ t : ℝ, F n t ∂ volume))
-        + (- ∑' n : ℕ, (∫ t : ℝ, F_tilde n t ∂ volume)) := by
+          ·
+            -- Rewrite the integrand using `hIntegrand`.
+            have hfg :
+                (fun t : ℝ =>
+                    M[h]((LC.c : ℂ) + (t : ℂ) * I) *
+                      logDeriv P.det2 ((LC.c : ℂ) + (t : ℂ) * I)) =
+                  fun t : ℝ => (- ∑' n : ℕ, Fn n t) := by
+              funext t
+              exact hIntegrand t
+            simpa [hfg]
+          ·
+            have hfg :
+                (fun t : ℝ =>
+                    M[(TestSpace.tilde (F := F) h)]((LC.c : ℂ) + (t : ℂ) * I) *
+                      logDeriv P.det2 ((LC.c : ℂ) + (t : ℂ) * I)) =
+                  fun t : ℝ => (- ∑' n : ℕ, Fn_tilde n t) := by
+              funext t
+              exact hIntegrand_tilde t
+            -- The goal's LHS may already be simplified using `TestSpace.mellin_tilde`,
+            -- so rewrite it back into `M[˜ₘh](c+it)` form before using `hfg`.
+            have hgoal :
+                (∫ t : ℝ,
+                    M[h](1 - ((LC.c : ℂ) + (t : ℂ) * I)) *
+                      logDeriv P.det2 ((LC.c : ℂ) + (t : ℂ) * I) ∂ volume) =
+                  ∫ t : ℝ, (- ∑' n : ℕ, Fn_tilde n t) ∂ volume := by
+              have hIntEq :
+                  (fun t : ℝ =>
+                      M[h](1 - ((LC.c : ℂ) + (t : ℂ) * I)) *
+                        logDeriv P.det2 ((LC.c : ℂ) + (t : ℂ) * I)) =
+                    fun t : ℝ => (- ∑' n : ℕ, Fn_tilde n t) := by
+                funext t
+                -- `simp` uses `TestSpace.mellin_tilde` to rewrite `M[˜ₘh](c+it)` into `M[h](1-(c+it))`.
+                simpa using (hIntegrand_tilde t)
+              simpa [hIntEq]
+            simpa using hgoal
+    _ = (- ∑' n : ℕ, (∫ t : ℝ, Fn n t ∂ volume))
+        + (- ∑' n : ℕ, (∫ t : ℝ, Fn_tilde n t ∂ volume)) := by
           rw [hFubini, hFubini_tilde]
     _ = - ((2 * Real.pi) * ∑' n : ℕ, if n = 0 then 0 else
             ((ArithmeticFunction.vonMangoldt n : ℂ) / Real.sqrt n) * testValue h (Real.log n))
@@ -1244,19 +1315,126 @@ theorem det2_fullIntegral_eq_neg_primePowerSum_of_assumptions
           if n = 0 then 0 else
             ((ArithmeticFunction.vonMangoldt n : ℂ) / Real.sqrt n) *
               (testValue h (Real.log n) + testValue (TestSpace.tilde (F := F) h) (Real.log n)) := by
-          rw [neg_mul, neg_mul]
-          ring_nf
-          congr 1
-          rw [← tsum_add]
-          · congr 1
-            ext n
+          -- A controlled algebraic finish: define the two Dirichlet series and use `tsum_add`.
+          let sH : ℕ → ℂ := fun n =>
+            if n = 0 then 0 else
+              ((ArithmeticFunction.vonMangoldt n : ℂ) / Real.sqrt n) * testValue h (Real.log n)
+          let sT : ℕ → ℂ := fun n =>
+            if n = 0 then 0 else
+              ((ArithmeticFunction.vonMangoldt n : ℂ) / Real.sqrt n) *
+                testValue (TestSpace.tilde (F := F) h) (Real.log n)
+          -- Summability of the two series (derived from `summable_integral_norm`).
+          have hSummableIntegral :
+              Summable (fun n : ℕ => (∫ t : ℝ, Fn n t ∂ (volume : Measure ℝ))) := by
+            refine Summable.of_norm_bounded
+              (g := fun n : ℕ => ∫ t : ℝ, ‖Fn n t‖ ∂ (volume : Measure ℝ))
+              (A.summable_integral_norm h) ?_
+            intro n
+            simpa using (MeasureTheory.norm_integral_le_integral_norm (Fn n))
+          have hSummableIntegral_tilde :
+              Summable (fun n : ℕ => (∫ t : ℝ, Fn_tilde n t ∂ (volume : Measure ℝ))) := by
+            refine Summable.of_norm_bounded
+              (g := fun n : ℕ => ∫ t : ℝ, ‖Fn_tilde n t‖ ∂ (volume : Measure ℝ))
+              (A.summable_integral_norm (TestSpace.tilde (F := F) h)) ?_
+            intro n
+            simpa using (MeasureTheory.norm_integral_le_integral_norm (Fn_tilde n))
+          have hSummableSeries : Summable sH := by
+            have hs :
+                (fun n : ℕ => sH n) =
+                  fun n : ℕ =>
+                    ((1 / (2 * Real.pi) : ℂ) * (∫ t : ℝ, Fn n t ∂ (volume : Measure ℝ))) := by
+              funext n
+              by_cases hn : n = 0
+              · subst hn
+                have hzero : (∫ t : ℝ, Fn 0 t ∂ (volume : Measure ℝ)) = 0 := by
+                  have : (fun t => Fn 0 t) = fun _ => 0 := by
+                    funext t
+                    simp only [Fn, Nat.cast_zero, ArithmeticFunction.map_zero, Complex.ofReal_zero,
+                      zero_mul, mul_zero]
+                  simpa [this] using (integral_zero : (∫ t : ℝ, (0 : ℂ) ∂ (volume : Measure ℝ)) = 0)
+                simp [sH, hzero]
+              · have hn' : 1 ≤ n := Nat.one_le_iff_ne_zero.mpr hn
+                simp [sH, hn]  -- unfold `sH`
+                rw [hFourierTerm n hn']
+                field_simp [Real.pi_ne_zero, hn]
+                ring
+            simpa [hs] using (hSummableIntegral.const_smul (1 / (2 * Real.pi) : ℂ))
+          have hSummableSeries_tilde : Summable sT := by
+            have hs :
+                (fun n : ℕ => sT n) =
+                  fun n : ℕ =>
+                    ((1 / (2 * Real.pi) : ℂ) * (∫ t : ℝ, Fn_tilde n t ∂ (volume : Measure ℝ))) := by
+              funext n
+              by_cases hn : n = 0
+              · subst hn
+                have hzero : (∫ t : ℝ, Fn_tilde 0 t ∂ (volume : Measure ℝ)) = 0 := by
+                  have : (fun t => Fn_tilde 0 t) = fun _ => 0 := by
+                    funext t
+                    simp only [Fn_tilde, Nat.cast_zero, ArithmeticFunction.map_zero, Complex.ofReal_zero,
+                      zero_mul, mul_zero]
+                  simpa [this] using (integral_zero : (∫ t : ℝ, (0 : ℂ) ∂ (volume : Measure ℝ)) = 0)
+                simp [sT, hzero]
+              · have hn' : 1 ≤ n := Nat.one_le_iff_ne_zero.mpr hn
+                simp [sT, hn]  -- unfold `sT`
+                rw [hFourierTerm_tilde n hn']
+                field_simp [Real.pi_ne_zero, hn]
+                ring
+            simpa [hs] using (hSummableIntegral_tilde.const_smul (1 / (2 * Real.pi) : ℂ))
+          have hTsum : (∑' n : ℕ, sH n) + (∑' n : ℕ, sT n) = ∑' n : ℕ, (sH n + sT n) := by
+            simpa using (tsum_add hSummableSeries hSummableSeries_tilde).symm
+          have hTerm :
+              (fun n : ℕ => sH n + sT n) =
+                fun n : ℕ =>
+                  if n = 0 then 0 else
+                    ((ArithmeticFunction.vonMangoldt n : ℂ) / Real.sqrt n) *
+                      (testValue h (Real.log n) + testValue (TestSpace.tilde (F := F) h) (Real.log n)) := by
+            funext n
             by_cases hn : n = 0
-            · simp only [hn, if_true, add_zero]
-            · simp only [if_neg hn]
+            · subst hn
+              simp [sH, sT]
+            ·
+              simp [sH, sT, hn]
+              -- `a * c + b * c = (a + b) * c`
               ring
-          -- Need summability for the tsum_add
-          · exact Summable.of_norm (A.summable_integral_norm h)
-          · exact Summable.of_norm (A.summable_integral_norm (TestSpace.tilde (F := F) h))
+          -- Now close by rewriting everything in terms of `sH`, `sT`, and `hTsum/hTerm`.
+          have hA :
+              (∑' n : ℕ,
+                    if n = 0 then 0 else
+                      testValue h (Real.log n) * ((ArithmeticFunction.vonMangoldt n : ℂ) / Real.sqrt n)) =
+                ∑' n : ℕ, sH n := by
+            refine tsum_congr ?_
+            intro n
+            by_cases hn : n = 0
+            · subst hn; simp [sH]
+            · simp [sH, hn, mul_comm, mul_left_comm, mul_assoc]
+          have hB :
+              (∑' n : ℕ,
+                    if n = 0 then 0 else
+                      testValue (TestSpace.tilde (F := F) h) (Real.log n) *
+                        ((ArithmeticFunction.vonMangoldt n : ℂ) / Real.sqrt n)) =
+                ∑' n : ℕ, sT n := by
+            refine tsum_congr ?_
+            intro n
+            by_cases hn : n = 0
+            · subst hn; simp [sT]
+            · simp [sT, hn, mul_comm, mul_left_comm, mul_assoc]
+          have hC :
+              (∑' n : ℕ,
+                    if n = 0 then 0 else
+                      (testValue h (Real.log n) +
+                          testValue (TestSpace.tilde (F := F) h) (Real.log n)) *
+                        ((ArithmeticFunction.vonMangoldt n : ℂ) / Real.sqrt n)) =
+                ∑' n : ℕ, (sH n + sT n) := by
+            refine tsum_congr ?_
+            intro n
+            by_cases hn : n = 0
+            · subst hn; simp [sH, sT]
+            · simp [sH, sT, hn, add_mul, mul_add, mul_comm, mul_left_comm, mul_assoc]
+          -- Use `hTsum` and `hTerm` to finish.
+          -- (At this point, all `tsum`s have the same index and only ring arithmetic remains.)
+          -- Replace the three `tsum`s with `sH`, `sT`, and `sH+sT`.
+          simp [hA, hB, hC, hTsum, hTerm, mul_add, add_assoc, add_left_comm, add_comm,
+            mul_assoc, mul_left_comm, mul_comm]
 
 /-!
 ### Outer (Archimedean) component identity
