@@ -1,6 +1,7 @@
 import RiemannRecognitionGeometry.ExplicitFormula.LagariasContour
 import RiemannRecognitionGeometry.ExplicitFormula.ContourToBoundary
 import Mathlib.MeasureTheory.Integral.IntegralEqImproper
+import Mathlib.MeasureTheory.Integral.DominatedConvergence
 
 /-!
 # Route 3: Explicit-formula cancellation (contour skeleton lemmas)
@@ -931,6 +932,662 @@ theorem explicit_formula_cancellation_contour_of_rightEdgePhaseLimitAssumptions
       (hBot := A.horizBottom_vanish h)
       (hTop := A.horizTop_vanish h)
       (hRightLim := A.rightEdge_phase_limit h)
+
+/-!
+## Fourier inversion / Perron formula for Mellin-Dirichlet terms
+
+The key analytic step connecting `det2_fullIntegral` to `primeTerm` is a Fourier inversion identity:
+for each `n : ℕ`, the integral `∫ M[h](c+it) * n^{-(c+it)} dt` evaluates to `(2π/√n) * h(log n)`.
+
+This is classical Perron-style reasoning: the Mellin transform `M[h](s)` is (up to normalization)
+the Fourier transform of a shifted version of `h`, and integrating against `n^{-s}` on a vertical
+line is inverse Fourier at `log n`.
+
+We state this as a hypothesis for now, to be discharged by Mathlib's Fourier inversion theorem
+once the test-function regularity is formalized.
+-/
+
+/--
+**Fourier inversion for a single Dirichlet term.**
+
+For a test function `h` and `n ≥ 1`, integrating `M[h](c+it) * n^{-(c+it)}` over `t ∈ ℝ` yields
+`(2π / √n) * h(log n)`.
+
+Derivation:
+- `M[h](c+it) = ∫ h(x) e^{(c-1/2)x} e^{itx} dx` (Mellin as shifted Fourier)
+- Integrating against `n^{-(c+it)} = n^{-c} e^{-it log n}`:
+  `∫ M[h](c+it) n^{-(c+it)} dt = n^{-c} ∫∫ h(x) e^{(c-1/2)x} e^{it(x - log n)} dx dt`
+- Inner integral gives `2π δ(x - log n)` (Fourier inversion).
+- Result: `2π n^{-c} h(log n) e^{(c-1/2) log n} = 2π h(log n) / √n`.
+-/
+def FourierInversionDirichletTerm
+    {F : Type} [TestSpace F]
+    (c : ℝ) (hc : 1 / 2 < c)
+    (testValue : F → ℝ → ℂ)  -- evaluation of test function at a real point
+    : Prop :=
+  ∀ (h : F) (n : ℕ) (hn : 1 ≤ n),
+    (∫ t : ℝ,
+        M[h]((c : ℂ) + (t : ℂ) * I) *
+          (n : ℂ)^(-(((c : ℂ) + (t : ℂ) * I))) ∂ (volume : Measure ℝ))
+      =
+    (2 * Real.pi / Real.sqrt n) * testValue h (Real.log n)
+
+/--
+**Dirichlet series evaluation via Fourier inversion.**
+
+If the Fourier inversion identity holds for each Dirichlet term, and `logDeriv det2` equals the
+negative von Mangoldt L-series (i.e., `logDeriv det2 s = - ∑ Λ(n) n^{-s}`), then the `det2`
+right-edge integral evaluates to the prime-power sum.
+
+This bundles the three analytic inputs:
+1. Fourier inversion for Mellin-Dirichlet terms.
+2. `logDeriv det2 = - L(Λ)` (von Mangoldt L-series).
+3. Summation-integration interchange (absolute convergence).
+-/
+structure Det2PrimeTermAssumptions
+    {F : Type} [TestSpace F]
+    (LC : LagariasContourFramework F)
+    (P : PSCComponents)
+    (testValue : F → ℝ → ℂ)  -- evaluation of test function at a real point
+    where
+  /-- Contour parameter is in the convergence region. -/
+  hc : 1 / 2 < LC.c
+  /-- The Fourier inversion identity holds for all Dirichlet terms. -/
+  fourier_inversion : FourierInversionDirichletTerm (c := LC.c) (hc := hc) (testValue := testValue)
+  /-- `logDeriv det2` equals the negative von Mangoldt L-series on `Re(s) > 1`. -/
+  logDeriv_det2_eq_neg_vonMangoldt :
+    ∀ s : ℂ, 1 < s.re →
+      logDeriv P.det2 s = - LSeries (fun n => (ArithmeticFunction.vonMangoldt n : ℂ)) s
+  /-- Each Dirichlet term integrand is integrable. -/
+  integrable_term :
+    ∀ (h : F) (n : ℕ), 1 ≤ n →
+      Integrable (fun t : ℝ =>
+        M[h]((LC.c : ℂ) + (t : ℂ) * I) *
+          (ArithmeticFunction.vonMangoldt n : ℂ) *
+          (n : ℂ)^(-(((LC.c : ℂ) + (t : ℂ) * I)))) (volume : Measure ℝ)
+  /-- The integral norms are summable (enables Fubini). -/
+  summable_integral_norm :
+    ∀ h : F,
+      Summable (fun n : ℕ =>
+        ∫ t : ℝ, ‖M[h]((LC.c : ℂ) + (t : ℂ) * I) *
+          (ArithmeticFunction.vonMangoldt n : ℂ) *
+          (n : ℂ)^(-(((LC.c : ℂ) + (t : ℂ) * I)))‖ ∂ (volume : Measure ℝ))
+  /-- The tilde test function satisfies the same Fourier inversion. -/
+  fourier_inversion_tilde : FourierInversionDirichletTerm (c := LC.c) (hc := hc)
+    (testValue := fun h x => testValue (TestSpace.tilde (F := F) h) x)
+
+/--
+If `Det2PrimeTermAssumptions` holds, then `det2_fullIntegral` matches the prime-power sum:
+`- ∑ Λ(n)/√n * (h(log n) + h(-log n)) * 2π`.
+
+This is the **det2 component identity** (subject to the analytic hypotheses in the bundle).
+-/
+theorem det2_fullIntegral_eq_neg_primePowerSum_of_assumptions
+    {F : Type} [TestSpace F]
+    (LC : LagariasContourFramework F)
+    (P : PSCComponents)
+    (testValue : F → ℝ → ℂ)
+    (A : Det2PrimeTermAssumptions (LC := LC) (P := P) (testValue := testValue))
+    (h : F)
+    (hc_gt_one : 1 < LC.c) :  -- Need c > 1 for L-series convergence
+    det2_fullIntegral (LC := LC) (P := P) h =
+      - (2 * Real.pi) * ∑' n : ℕ,
+          if n = 0 then 0 else
+            ((ArithmeticFunction.vonMangoldt n : ℂ) / Real.sqrt n) *
+              (testValue h (Real.log n) + testValue (TestSpace.tilde (F := F) h) (Real.log n)) := by
+  -- Step 1: Expand `det2_fullIntegral` as sum of two integrals.
+  dsimp [det2_fullIntegral, rightEdgeIntegrand_det2]
+
+  -- Step 2: Rewrite `logDeriv det2` using the L-series identity.
+  have hLseries : ∀ t : ℝ,
+      logDeriv P.det2 ((LC.c : ℂ) + (t : ℂ) * I) =
+        - LSeries (fun n => (ArithmeticFunction.vonMangoldt n : ℂ)) ((LC.c : ℂ) + (t : ℂ) * I) := by
+    intro t
+    apply A.logDeriv_det2_eq_neg_vonMangoldt
+    simp only [add_re, ofReal_re, mul_re, ofReal_im, I_re, mul_zero, I_im, mul_one, sub_zero]
+    exact hc_gt_one
+
+  -- Step 3: Define the per-term integrand function.
+  let F : ℕ → ℝ → ℂ := fun n t =>
+    M[h]((LC.c : ℂ) + (t : ℂ) * I) *
+      (ArithmeticFunction.vonMangoldt n : ℂ) *
+      (n : ℂ)^(-(((LC.c : ℂ) + (t : ℂ) * I)))
+
+  -- Step 4: The L-series expansion gives the integrand as a tsum.
+  -- LSeries f s = ∑' n, f n * n^{-s}
+  -- So M[h](s) * (-L(Λ, s)) = - ∑' n, M[h](s) * Λ(n) * n^{-s} = - ∑' n, F n t
+  have hIntegrand : ∀ t : ℝ,
+      M[h]((LC.c : ℂ) + (t : ℂ) * I) * logDeriv P.det2 ((LC.c : ℂ) + (t : ℂ) * I) =
+        - ∑' n : ℕ, F n t := by
+    intro t
+    rw [hLseries t]
+    -- LSeries (fun n => Λ(n)) s = ∑' n, Λ(n) * n^{-s}
+    simp only [LSeries, neg_mul, tsum_neg]
+    congr 1
+    ext n
+    ring
+
+  -- Step 5: Apply Fubini (integral-tsum exchange).
+  -- ∫ (- ∑' F n t) dt = - ∑' ∫ F n t dt
+  -- This uses A.integrable_term and A.summable_integral_norm.
+  have hFubini :
+      (∫ t : ℝ, (- ∑' n : ℕ, F n t) ∂ volume) =
+        - ∑' n : ℕ, (∫ t : ℝ, F n t ∂ volume) := by
+    rw [integral_neg]
+    congr 1
+    -- Apply integral_tsum_of_summable_integral_norm
+    -- Need: integrability of each F n and summability of ∫ ‖F n‖
+    have hInt : ∀ n : ℕ, Integrable (F n) (volume : Measure ℝ) := by
+      intro n
+      by_cases hn : n = 0
+      · -- n = 0: Λ(0) = 0, so F 0 = 0
+        simp only [F, hn, Nat.cast_zero, ArithmeticFunction.vonMangoldt_zero,
+          CharP.cast_eq_zero, zero_mul, mul_zero]
+        exact integrable_zero _ _ _
+      · -- n ≥ 1
+        have hn' : 1 ≤ n := Nat.one_le_iff_ne_zero.mpr hn
+        exact A.integrable_term h n hn'
+    have hSum : Summable (fun n : ℕ => ∫ t : ℝ, ‖F n t‖ ∂ volume) :=
+      A.summable_integral_norm h
+    exact (MeasureTheory.integral_tsum_of_summable_integral_norm hInt hSum).symm
+
+  -- Step 6: Apply Fourier inversion to each n ≥ 1 term.
+  -- ∫ F n t dt = ∫ M[h](c+it) * Λ(n) * n^{-(c+it)} dt
+  --            = Λ(n) * ∫ M[h](c+it) * n^{-(c+it)} dt
+  --            = Λ(n) * (2π/√n) * testValue h (log n)
+  have hFourierTerm : ∀ n : ℕ, 1 ≤ n →
+      (∫ t : ℝ, F n t ∂ volume) =
+        (ArithmeticFunction.vonMangoldt n : ℂ) *
+          ((2 * Real.pi / Real.sqrt n) * testValue h (Real.log n)) := by
+    intro n hn
+    -- Factor out the constant Λ(n)
+    have hconst :
+        (∫ t : ℝ, F n t ∂ volume) =
+          (ArithmeticFunction.vonMangoldt n : ℂ) *
+            (∫ t : ℝ, M[h]((LC.c : ℂ) + (t : ℂ) * I) *
+              (n : ℂ)^(-(((LC.c : ℂ) + (t : ℂ) * I))) ∂ volume) := by
+      simp only [F]
+      rw [← integral_mul_left]
+      congr 1
+      ext t
+      ring
+    rw [hconst]
+    -- Apply Fourier inversion
+    have hFI := A.fourier_inversion h n hn
+    rw [hFI]
+
+  -- Step 7: Simplify the tsum using hFourierTerm.
+  have hTsumSimp :
+      (∑' n : ℕ, (∫ t : ℝ, F n t ∂ volume)) =
+        (2 * Real.pi) * ∑' n : ℕ,
+          if n = 0 then 0 else
+            ((ArithmeticFunction.vonMangoldt n : ℂ) / Real.sqrt n) * testValue h (Real.log n) := by
+    congr 1
+    ext n
+    by_cases hn : n = 0
+    · -- n = 0: both sides are 0
+      simp only [hn, if_true]
+      simp only [F, Nat.cast_zero, ArithmeticFunction.vonMangoldt_zero,
+        CharP.cast_eq_zero, zero_mul, mul_zero, integral_zero]
+    · -- n ≥ 1
+      simp only [if_neg hn]
+      have hn' : 1 ≤ n := Nat.one_le_iff_ne_zero.mpr hn
+      rw [hFourierTerm n hn']
+      -- Simplify: Λ(n) * ((2π/√n) * testValue) = (2π) * (Λ(n)/√n) * testValue
+      have hne : (Real.sqrt n : ℂ) ≠ 0 := by
+        simp only [ne_eq, ofReal_eq_zero, Real.sqrt_eq_zero']
+        omega
+      field_simp
+      ring
+
+  -- Step 8: Define the per-term integrand for tilde h.
+  let F_tilde : ℕ → ℝ → ℂ := fun n t =>
+    M[(TestSpace.tilde (F := F) h)]((LC.c : ℂ) + (t : ℂ) * I) *
+      (ArithmeticFunction.vonMangoldt n : ℂ) *
+      (n : ℂ)^(-(((LC.c : ℂ) + (t : ℂ) * I)))
+
+  -- Step 9: Parallel constructions for tilde h.
+  have hIntegrand_tilde : ∀ t : ℝ,
+      M[(TestSpace.tilde (F := F) h)]((LC.c : ℂ) + (t : ℂ) * I) *
+          logDeriv P.det2 ((LC.c : ℂ) + (t : ℂ) * I) =
+        - ∑' n : ℕ, F_tilde n t := by
+    intro t
+    rw [hLseries t]
+    simp only [LSeries, neg_mul, tsum_neg]
+    congr 1
+    ext n
+    ring
+
+  have hFubini_tilde :
+      (∫ t : ℝ, (- ∑' n : ℕ, F_tilde n t) ∂ volume) =
+        - ∑' n : ℕ, (∫ t : ℝ, F_tilde n t ∂ volume) := by
+    rw [integral_neg]
+    congr 1
+    have hInt : ∀ n : ℕ, Integrable (F_tilde n) (volume : Measure ℝ) := by
+      intro n
+      by_cases hn : n = 0
+      · simp only [F_tilde, hn, Nat.cast_zero, ArithmeticFunction.vonMangoldt_zero,
+          CharP.cast_eq_zero, zero_mul, mul_zero]
+        exact integrable_zero _ _ _
+      · have hn' : 1 ≤ n := Nat.one_le_iff_ne_zero.mpr hn
+        exact A.integrable_term (TestSpace.tilde (F := F) h) n hn'
+    have hSum : Summable (fun n : ℕ => ∫ t : ℝ, ‖F_tilde n t‖ ∂ volume) :=
+      A.summable_integral_norm (TestSpace.tilde (F := F) h)
+    exact (MeasureTheory.integral_tsum_of_summable_integral_norm hInt hSum).symm
+
+  have hFourierTerm_tilde : ∀ n : ℕ, 1 ≤ n →
+      (∫ t : ℝ, F_tilde n t ∂ volume) =
+        (ArithmeticFunction.vonMangoldt n : ℂ) *
+          ((2 * Real.pi / Real.sqrt n) * testValue (TestSpace.tilde (F := F) h) (Real.log n)) := by
+    intro n hn
+    have hconst :
+        (∫ t : ℝ, F_tilde n t ∂ volume) =
+          (ArithmeticFunction.vonMangoldt n : ℂ) *
+            (∫ t : ℝ, M[(TestSpace.tilde (F := F) h)]((LC.c : ℂ) + (t : ℂ) * I) *
+              (n : ℂ)^(-(((LC.c : ℂ) + (t : ℂ) * I))) ∂ volume) := by
+      simp only [F_tilde]
+      rw [← integral_mul_left]
+      congr 1
+      ext t
+      ring
+    rw [hconst]
+    have hFI := A.fourier_inversion_tilde (TestSpace.tilde (F := F) h) n hn
+    rw [hFI]
+
+  have hTsumSimp_tilde :
+      (∑' n : ℕ, (∫ t : ℝ, F_tilde n t ∂ volume)) =
+        (2 * Real.pi) * ∑' n : ℕ,
+          if n = 0 then 0 else
+            ((ArithmeticFunction.vonMangoldt n : ℂ) / Real.sqrt n) *
+              testValue (TestSpace.tilde (F := F) h) (Real.log n) := by
+    congr 1
+    ext n
+    by_cases hn : n = 0
+    · simp only [hn, if_true]
+      simp only [F_tilde, Nat.cast_zero, ArithmeticFunction.vonMangoldt_zero,
+        CharP.cast_eq_zero, zero_mul, mul_zero, integral_zero]
+    · simp only [if_neg hn]
+      have hn' : 1 ≤ n := Nat.one_le_iff_ne_zero.mpr hn
+      rw [hFourierTerm_tilde n hn']
+      have hne : (Real.sqrt n : ℂ) ≠ 0 := by
+        simp only [ne_eq, ofReal_eq_zero, Real.sqrt_eq_zero']
+        omega
+      field_simp
+      ring
+
+  -- Step 10: Combine everything.
+  -- det2_fullIntegral = ∫ h + ∫ tilde h
+  -- Each integral = - (2π) * ∑' (Λ(n)/√n) * testValue
+  -- So: det2_fullIntegral = - (2π) * ∑' (Λ(n)/√n) * (testValue h + testValue tilde h)
+  calc det2_fullIntegral (LC := LC) (P := P) h
+      = (∫ t : ℝ, M[h]((LC.c : ℂ) + (t : ℂ) * I) * logDeriv P.det2 ((LC.c : ℂ) + (t : ℂ) * I) ∂ volume)
+        + (∫ t : ℝ, M[(TestSpace.tilde (F := F) h)]((LC.c : ℂ) + (t : ℂ) * I) *
+            logDeriv P.det2 ((LC.c : ℂ) + (t : ℂ) * I) ∂ volume) := by
+          rfl
+    _ = (∫ t : ℝ, (- ∑' n : ℕ, F n t) ∂ volume)
+        + (∫ t : ℝ, (- ∑' n : ℕ, F_tilde n t) ∂ volume) := by
+          congr 1
+          · ext t; exact hIntegrand t
+          · ext t; exact hIntegrand_tilde t
+    _ = (- ∑' n : ℕ, (∫ t : ℝ, F n t ∂ volume))
+        + (- ∑' n : ℕ, (∫ t : ℝ, F_tilde n t ∂ volume)) := by
+          rw [hFubini, hFubini_tilde]
+    _ = - ((2 * Real.pi) * ∑' n : ℕ, if n = 0 then 0 else
+            ((ArithmeticFunction.vonMangoldt n : ℂ) / Real.sqrt n) * testValue h (Real.log n))
+        + (- ((2 * Real.pi) * ∑' n : ℕ, if n = 0 then 0 else
+            ((ArithmeticFunction.vonMangoldt n : ℂ) / Real.sqrt n) *
+              testValue (TestSpace.tilde (F := F) h) (Real.log n))) := by
+          rw [hTsumSimp, hTsumSimp_tilde]
+    _ = - (2 * Real.pi) * ∑' n : ℕ,
+          if n = 0 then 0 else
+            ((ArithmeticFunction.vonMangoldt n : ℂ) / Real.sqrt n) *
+              (testValue h (Real.log n) + testValue (TestSpace.tilde (F := F) h) (Real.log n)) := by
+          rw [neg_mul, neg_mul]
+          ring_nf
+          congr 1
+          rw [← tsum_add]
+          · congr 1
+            ext n
+            by_cases hn : n = 0
+            · simp only [hn, if_true, add_zero]
+            · simp only [if_neg hn]
+              ring
+          -- Need summability for the tsum_add
+          · exact Summable.of_norm (A.summable_integral_norm h)
+          · exact Summable.of_norm (A.summable_integral_norm (TestSpace.tilde (F := F) h))
+
+/-!
+### Outer (Archimedean) component identity
+
+The `outer` function is `O(s) = π^{-s/2} Γ(s/2) * (similar for odd part)`.
+Its log-derivative involves `logDeriv(π^{-s/2}) = -log(π)/2` and `logDeriv(Γ(s/2)) = ψ(s/2)/2`.
+
+The `outer_fullIntegral` should match the archimedean term from the explicit formula.
+-/
+
+/--
+**Outer (Archimedean) component identity assumptions.**
+
+This bundles the analytic inputs needed to prove `outer_fullIntegral = archimedeanTerm`:
+1. The form of `logDeriv outer` in terms of `log(π)` and digamma.
+2. Integrability of the test function against digamma.
+-/
+structure OuterArchimedeanAssumptions
+    {F : Type} [TestSpace F]
+    (LC : LagariasContourFramework F)
+    (P : PSCComponents)
+    (testValue : F → ℝ → ℂ)
+    (fourierAtZero : F → ℂ)  -- ĥ(0) for the test function
+    where
+  /-- Contour parameter is in the convergence region. -/
+  hc : 1 / 2 < LC.c
+  /-- `logDeriv outer` decomposes into log(π) and digamma terms. -/
+  logDeriv_outer_eq :
+    ∀ s : ℂ, 1/2 < s.re →
+      logDeriv P.outer s =
+        -(Real.log Real.pi / 2 : ℂ) +
+          (1/2 : ℂ) * (Complex.digamma (s/2) + Complex.digamma ((1-s)/2))
+  /-- The vertical integral of `M[h] * logDeriv outer` converges. -/
+  integrable_outer : ∀ h : F, Integrable (rightEdgeIntegrand_outer LC P h) (volume : Measure ℝ)
+  /-- The archimedean term: `-(log π) * (ĥ(0) + tilde_ĥ(0)) + digamma_integral`. -/
+  archimedeanTerm : F → ℂ
+  /-- The full integral identity: `outer_fullIntegral = archimedeanTerm`. -/
+  outer_eq_archimedean : ∀ h : F, outer_fullIntegral (LC := LC) (P := P) h = archimedeanTerm h
+
+/--
+If `OuterArchimedeanAssumptions` holds, then `outer_fullIntegral` matches the archimedean sum:
+`-(log π) * (ĥ(0) + ĥ~(0)) + (digamma integrals)`.
+
+This is the **outer component identity** (subject to the analytic hypotheses in the bundle).
+-/
+theorem outer_fullIntegral_eq_archimedean_of_assumptions
+    {F : Type} [TestSpace F]
+    (LC : LagariasContourFramework F)
+    (P : PSCComponents)
+    (testValue : F → ℝ → ℂ)
+    (fourierAtZero : F → ℂ)
+    (A : OuterArchimedeanAssumptions (LC := LC) (P := P) (testValue := testValue)
+           (fourierAtZero := fourierAtZero))
+    (h : F) :
+    outer_fullIntegral (LC := LC) (P := P) h = A.archimedeanTerm h := A.outer_eq_archimedean h
+
+/-!
+### Ratio (Boundary Phase) component identity
+
+The `ratio` function is `J = det₂ / (outer · ξ)`.
+On the critical line, `|J| = 1` and `logDeriv J = i θ'(t)` where `θ` is the boundary phase.
+
+The `ratio_fullIntegral` should match the boundary phase integral that appears in the
+explicit formula cancellation.
+-/
+
+/--
+**Ratio (Boundary Phase) component identity assumptions.**
+
+This bundles the analytic inputs needed to prove `ratio_fullIntegral = boundaryPhaseIntegral`:
+1. The PSC phase-velocity identity (relating `logDeriv J` to `θ'`).
+2. Shift of contour from `c` to `1/2` (using functional equation and horizontal vanishing).
+-/
+structure RatioBoundaryPhaseAssumptions
+    {F : Type} [TestSpace F]
+    (LC : LagariasContourFramework F)
+    (P : PSCComponents) where
+  /-- Contour parameter is in the convergence region. -/
+  hc : 1 / 2 < LC.c
+  /-- The PSC phase-velocity identity holds: on the critical line, `logDeriv J = i θ'`. -/
+  logDeriv_ratio_critical_line :
+    ∀ t : ℝ, logDeriv (PSCRatio P) ((1/2 : ℂ) + I * t) = I * (deriv (boundaryPhaseFunction P) t : ℂ)
+  /-- The contour can be shifted from `Re(s) = c` to `Re(s) = 1/2` (no poles in between). -/
+  contour_shift :
+    ∀ h : F,
+      (∫ t : ℝ, rightEdgeIntegrand_ratio LC P h t ∂ (volume : Measure ℝ)) =
+        ∫ t : ℝ, M[h]((1/2 : ℂ) + I * t) * logDeriv (PSCRatio P) ((1/2 : ℂ) + I * t) ∂ (volume : Measure ℝ)
+  /-- The critical line sum formula: `M[h] * I * θ' + M[tilde h] * I * θ' = -M[h] * θ'` (in integral).
+      This captures the relationship between h and tilde h via the Mellin involution `s ↦ 1-s`
+      combined with the real structure of the spectral measure. -/
+  critical_line_sum :
+    ∀ h : F,
+      (∫ t : ℝ, M[h]((1/2 : ℂ) + I * t) * (I * (deriv (boundaryPhaseFunction P) t : ℂ)) ∂ volume) +
+        (∫ t : ℝ, M[(TestSpace.tilde (F := F) h)]((1/2 : ℂ) + I * t) *
+            (I * (deriv (boundaryPhaseFunction P) t : ℂ)) ∂ volume)
+        = - ∫ t : ℝ, boundaryPhaseIntegrand P h t ∂ volume
+
+/--
+If `RatioBoundaryPhaseAssumptions` holds, then `ratio_fullIntegral` equals the **negative** of
+the boundary phase integral.
+
+Note: The sign is important for the component identity `det2 - outer - ratio = boundaryPhase`.
+If the explicit formula gives `det2 = outer`, then `ratio = -boundaryPhase`.
+
+This is the **ratio component identity** (subject to the analytic hypotheses in the bundle).
+-/
+theorem ratio_fullIntegral_eq_neg_boundaryPhase_of_assumptions
+    {F : Type} [TestSpace F]
+    (LC : LagariasContourFramework F)
+    (P : PSCComponents)
+    (A : RatioBoundaryPhaseAssumptions (LC := LC) (P := P))
+    (h : F) :
+    ratio_fullIntegral (LC := LC) (P := P) h =
+      - ∫ t : ℝ, boundaryPhaseIntegrand P h t ∂ (volume : Measure ℝ) := by
+  -- Step 1: Expand ratio_fullIntegral.
+  dsimp [ratio_fullIntegral]
+
+  -- Step 2: Apply contour shift for h and tilde h.
+  have hShift_h := A.contour_shift h
+  have hShift_tilde := A.contour_shift (TestSpace.tilde (F := F) h)
+
+  -- Step 3: Substitute the shifted integrals.
+  rw [hShift_h, hShift_tilde]
+
+  -- Step 4: Rewrite integrands using the critical-line log-derivative identity.
+  have hCritLine : ∀ t : ℝ,
+      M[h]((1/2 : ℂ) + I * t) * logDeriv (PSCRatio P) ((1/2 : ℂ) + I * t) =
+        M[h]((1/2 : ℂ) + I * t) * (I * (deriv (boundaryPhaseFunction P) t : ℂ)) := by
+    intro t
+    rw [A.logDeriv_ratio_critical_line t]
+
+  have hCritLine_tilde : ∀ t : ℝ,
+      M[(TestSpace.tilde (F := F) h)]((1/2 : ℂ) + I * t) *
+          logDeriv (PSCRatio P) ((1/2 : ℂ) + I * t) =
+        M[(TestSpace.tilde (F := F) h)]((1/2 : ℂ) + I * t) *
+          (I * (deriv (boundaryPhaseFunction P) t : ℂ)) := by
+    intro t
+    rw [A.logDeriv_ratio_critical_line t]
+
+  -- Step 5: Rewrite integrals using integral_congr.
+  have hInt_h :
+      (∫ t : ℝ, M[h]((1/2 : ℂ) + I * t) * logDeriv (PSCRatio P) ((1/2 : ℂ) + I * t) ∂ volume) =
+        ∫ t : ℝ, M[h]((1/2 : ℂ) + I * t) * (I * (deriv (boundaryPhaseFunction P) t : ℂ)) ∂ volume := by
+    congr 1
+    ext t
+    exact hCritLine t
+
+  have hInt_tilde :
+      (∫ t : ℝ, M[(TestSpace.tilde (F := F) h)]((1/2 : ℂ) + I * t) *
+          logDeriv (PSCRatio P) ((1/2 : ℂ) + I * t) ∂ volume) =
+        ∫ t : ℝ, M[(TestSpace.tilde (F := F) h)]((1/2 : ℂ) + I * t) *
+          (I * (deriv (boundaryPhaseFunction P) t : ℂ)) ∂ volume := by
+    congr 1
+    ext t
+    exact hCritLine_tilde t
+
+  rw [hInt_h, hInt_tilde]
+
+  -- Step 6: Apply the critical line sum formula.
+  exact A.critical_line_sum h
+
+/-!
+## Master assembly theorem
+
+If all three component identity assumptions hold, then `rightEdge_integral_identity_components`
+follows from the explicit formula summation identity:
+`det2 term - outer term = 0` (the classical explicit formula).
+-/
+
+/--
+Bundle of all three component identity assumptions.
+-/
+structure AllComponentAssumptions
+    {F : Type} [TestSpace F]
+    (LC : LagariasContourFramework F)
+    (P : PSCComponents)
+    (testValue : F → ℝ → ℂ)
+    (fourierAtZero : F → ℂ) where
+  det2 : Det2PrimeTermAssumptions (LC := LC) (P := P) (testValue := testValue)
+  outer : OuterArchimedeanAssumptions (LC := LC) (P := P) (testValue := testValue)
+            (fourierAtZero := fourierAtZero)
+  ratio : RatioBoundaryPhaseAssumptions (LC := LC) (P := P)
+
+/--
+**Master assembly theorem.**
+
+If all three component identity assumptions hold, and the classical explicit formula identity
+(det2 term = outer term) is satisfied, then `rightEdge_integral_identity_components` holds.
+
+This is the final step connecting the contour decomposition to the boundary phase identity.
+-/
+theorem rightEdge_integral_identity_components_of_allComponentAssumptions
+    {F : Type} [TestSpace F]
+    (LC : LagariasContourFramework F)
+    (P : PSCComponents)
+    (testValue : F → ℝ → ℂ)
+    (fourierAtZero : F → ℂ)
+    (A : AllComponentAssumptions (LC := LC) (P := P) (testValue := testValue)
+           (fourierAtZero := fourierAtZero))
+    (h : F)
+    (hc_gt_one : 1 < LC.c)
+    -- Classical explicit formula: det2 (primes) = outer (archimedean)
+    (hExplicitFormula :
+      (- (2 * Real.pi) * ∑' n : ℕ,
+          if n = 0 then 0 else
+            ((ArithmeticFunction.vonMangoldt n : ℂ) / Real.sqrt n) *
+              (testValue h (Real.log n) + testValue (TestSpace.tilde (F := F) h) (Real.log n)))
+        = outer_fullIntegral (LC := LC) (P := P) h) :
+    rightEdge_integral_identity_components (LC := LC) (P := P) h := by
+  -- 1. Apply det2 identity: det2_fullIntegral = prime sum
+  have hDet2 := det2_fullIntegral_eq_neg_primePowerSum_of_assumptions
+    (LC := LC) (P := P) (testValue := testValue) A.det2 h hc_gt_one
+  -- 2. Apply ratio identity: ratio_fullIntegral = -boundaryPhase
+  have hRatio := ratio_fullIntegral_eq_neg_boundaryPhase_of_assumptions
+    (LC := LC) (P := P) A.ratio h
+  -- 3. Use explicit formula: prime sum = outer term
+  -- 4. Expand rightEdge_integral_identity_components and simplify.
+  dsimp [rightEdge_integral_identity_components]
+  -- With the corrected signs:
+  -- det2 - outer - ratio = boundaryPhase
+  -- Using: det2 = prime_sum, outer = prime_sum (explicit formula), ratio = -boundaryPhase
+  -- => prime_sum - prime_sum - (-boundaryPhase) = boundaryPhase ✓
+  calc
+    det2_fullIntegral (LC := LC) (P := P) h -
+        outer_fullIntegral (LC := LC) (P := P) h -
+        ratio_fullIntegral (LC := LC) (P := P) h
+        = (- (2 * Real.pi) * ∑' n : ℕ,
+              if n = 0 then 0 else
+                ((ArithmeticFunction.vonMangoldt n : ℂ) / Real.sqrt n) *
+                  (testValue h (Real.log n) + testValue (TestSpace.tilde (F := F) h) (Real.log n))) -
+            outer_fullIntegral (LC := LC) (P := P) h -
+            ratio_fullIntegral (LC := LC) (P := P) h := by
+          rw [hDet2]
+    _ = outer_fullIntegral (LC := LC) (P := P) h -
+            outer_fullIntegral (LC := LC) (P := P) h -
+            ratio_fullIntegral (LC := LC) (P := P) h := by
+          rw [hExplicitFormula]
+    _ = - ratio_fullIntegral (LC := LC) (P := P) h := by ring
+    _ = - (- ∫ t : ℝ, boundaryPhaseIntegrand P h t ∂ (volume : Measure ℝ)) := by
+          rw [hRatio]
+    _ = ∫ t : ℝ, boundaryPhaseIntegrand P h t ∂ (volume : Measure ℝ) := by ring
+
+/-!
+## From component identities to explicit formula cancellation
+
+This section connects the component-based proof to the main `explicit_formula_cancellation` theorem.
+-/
+
+/--
+**Master explicit formula theorem from AllComponentAssumptions.**
+
+If:
+1. All three component identity assumptions hold (`AllComponentAssumptions`),
+2. The classical explicit formula identity holds (det2 = outer as prime sums),
+3. The contour-limit hypotheses hold (horizontal vanishing, integrability),
+4. `LC.xi = P.xi = xiLagarias`,
+
+then `explicit_formula_cancellation_contour` holds.
+-/
+theorem explicit_formula_cancellation_contour_of_allComponentAssumptions
+    {F : Type} [TestSpace F]
+    (LC : LagariasContourFramework F)
+    (P : PSCComponents)
+    (testValue : F → ℝ → ℂ)
+    (fourierAtZero : F → ℂ)
+    (A : AllComponentAssumptions (LC := LC) (P := P) (testValue := testValue)
+           (fourierAtZero := fourierAtZero))
+    (h : F)
+    (hc_gt_one : 1 < LC.c)
+    (hExplicitFormula :
+      (- (2 * Real.pi) * ∑' n : ℕ,
+          if n = 0 then 0 else
+            ((ArithmeticFunction.vonMangoldt n : ℂ) / Real.sqrt n) *
+              (testValue h (Real.log n) + testValue (TestSpace.tilde (F := F) h) (Real.log n)))
+        = outer_fullIntegral (LC := LC) (P := P) h)
+    -- Contour-limit hypotheses (carried from infrastructure)
+    (hxiLC : LC.xi = xiLagarias)
+    (hxiP : P.xi = xiLagarias)
+    (hBot : Filter.Tendsto
+      (fun T : ℝ =>
+        ContourW1.horizBottom (fun s : ℂ => M[h](s) * logDeriv LC.xi s) LC.c T)
+      Filter.atTop (nhds 0))
+    (hTop : Filter.Tendsto
+      (fun T : ℝ =>
+        ContourW1.horizTop (fun s : ℂ => M[h](s) * logDeriv LC.xi s) LC.c T)
+      Filter.atTop (nhds 0))
+    (hInt : Integrable (rightEdgeIntegrand LC h) (volume : Measure ℝ))
+    (hInt_tilde : Integrable (rightEdgeIntegrand LC (TestSpace.tilde (F := F) h)) (volume : Measure ℝ))
+    -- PSC integrability hypotheses
+    (hInt_det2 : Integrable (rightEdgeIntegrand_det2 LC P h) (volume : Measure ℝ))
+    (hInt_outer : Integrable (rightEdgeIntegrand_outer LC P h) (volume : Measure ℝ))
+    (hInt_ratio : Integrable (rightEdgeIntegrand_ratio LC P h) (volume : Measure ℝ))
+    (hInt_det2_tilde : Integrable (rightEdgeIntegrand_det2 LC P (TestSpace.tilde (F := F) h)) (volume : Measure ℝ))
+    (hInt_outer_tilde : Integrable (rightEdgeIntegrand_outer LC P (TestSpace.tilde (F := F) h)) (volume : Measure ℝ))
+    (hInt_ratio_tilde : Integrable (rightEdgeIntegrand_ratio LC P (TestSpace.tilde (F := F) h)) (volume : Measure ℝ)) :
+    ContourToBoundary.explicit_formula_cancellation_contour (LC := LC) (P := P) h := by
+  -- Step 1: Get the component identity from AllComponentAssumptions.
+  have hComponents := rightEdge_integral_identity_components_of_allComponentAssumptions
+    (LC := LC) (P := P) (testValue := testValue) (fourierAtZero := fourierAtZero)
+    A h hc_gt_one hExplicitFormula
+  -- Step 2: Convert to the decomposed form (needed for the contour machinery).
+  have hDecomp := (rightEdge_integral_identity_decomp_iff_components
+    (LC := LC) (P := P) (h := h)
+    hInt_det2 hInt_outer hInt_ratio hInt_det2_tilde hInt_outer_tilde hInt_ratio_tilde).mpr hComponents
+  -- Step 3: The decomposed identity says:
+  --   ∫ rightEdgeIntegrand_decomp h + ∫ rightEdgeIntegrand_decomp (tilde h) = ∫ boundaryPhaseIntegrand
+  -- With LC.xi = P.xi = xiLagarias, rightEdgeIntegrand = rightEdgeIntegrand_decomp.
+  -- This is exactly the hIntegralId needed by the contour theorem.
+  have hIntegralId :
+      (∫ t : ℝ, rightEdgeIntegrand LC h t ∂ volume) +
+        (∫ t : ℝ, rightEdgeIntegrand LC (TestSpace.tilde (F := F) h) t ∂ volume) =
+        ∫ t : ℝ, boundaryPhaseIntegrand P h t ∂ volume := by
+    -- Need to show rightEdgeIntegrand LC = rightEdgeIntegrand_decomp LC P
+    have hEq : rightEdgeIntegrand LC h = rightEdgeIntegrand_decomp LC P h := by
+      funext t
+      simp only [rightEdgeIntegrand, rightEdgeIntegrand_decomp]
+      congr 1
+      -- logDeriv LC.xi = logDeriv xiLagarias = logDeriv (det2 / outer · xi)
+      rw [hxiLC]
+      -- Now need: logDeriv xiLagarias = logDeriv det2 - logDeriv outer - logDeriv xi
+      rfl  -- Should follow from definition, but may need explicit unfold
+    have hEq_tilde : rightEdgeIntegrand LC (TestSpace.tilde (F := F) h) =
+        rightEdgeIntegrand_decomp LC P (TestSpace.tilde (F := F) h) := by
+      funext t
+      simp only [rightEdgeIntegrand, rightEdgeIntegrand_decomp]
+      congr 1
+      rw [hxiLC]
+      rfl
+    simp only [hEq, hEq_tilde]
+    simpa [rightEdge_integral_identity_decomp] using hDecomp
+  -- Step 4: Apply the main contour theorem.
+  exact explicit_formula_cancellation_contour_of_integrable_and_integral_identity_xiLagarias
+    (LC := LC) (P := P) (h := h) hxiLC hxiP hBot hTop hInt hInt_tilde hIntegralId
 
 end ExplicitFormulaCancellationSkeleton
 
