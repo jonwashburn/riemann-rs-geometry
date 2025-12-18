@@ -1,4 +1,4 @@
-/-!
+/-
 # Route 3: a concrete `TestSpace` instance from Schwartz/Fourier (log-coordinates)
 
 This file implements the “log‑Schwartz/Fourier” idea in a Lean-friendly way:

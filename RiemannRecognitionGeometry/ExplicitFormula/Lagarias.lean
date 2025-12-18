@@ -11,6 +11,7 @@ No Carleson/BMO/Whitney infrastructure is imported here.
 -/
 
 import Mathlib.NumberTheory.LSeries.RiemannZeta
+import Mathlib.NumberTheory.LSeries.Dirichlet
 import Mathlib.Analysis.Calculus.LogDeriv
 import Mathlib.Analysis.Calculus.Deriv.Shift
 import RiemannRecognitionGeometry.ExplicitFormula.Defs
@@ -32,6 +33,47 @@ We define it using Mathlib's `completedRiemannZeta`:
 at `s=0,1`). The prefactor `s(s-1)` removes the poles and yields an entire function.
 -/
 def xiLagarias (s : ℂ) : ℂ := (1/2 : ℂ) * s * (s - 1) * completedRiemannZeta s
+
+/-!
+## Basic nonvanishing on the Euler-product half-plane
+
+These are routine glue facts used when specializing contour identities to the classical ζ-data.
+-/
+
+/-- `completedRiemannZeta` has no zeros on `Re(s) > 1` (via the Euler product for `riemannZeta`). -/
+lemma completedRiemannZeta_ne_zero_of_re_gt_one {s : ℂ} (hs : 1 < s.re) :
+    completedRiemannZeta s ≠ 0 := by
+  have hζ_ne : riemannZeta s ≠ 0 := riemannZeta_ne_zero_of_one_lt_re hs
+  have hΓ_ne : Complex.Gammaℝ s ≠ 0 :=
+    Complex.Gammaℝ_ne_zero_of_re_pos (by linarith : 0 < s.re)
+  have hs_ne_zero : s ≠ 0 := by
+    intro h
+    have : (1 : ℝ) < (0 : ℝ) := by simpa [h] using hs
+    linarith
+  have h_def := riemannZeta_def_of_ne_zero (s := s) hs_ne_zero
+  intro hΛ
+  -- If `completedRiemannZeta s = 0`, then `riemannZeta s = 0` since `Gammaℝ s ≠ 0`.
+  rw [h_def] at hζ_ne
+  have : completedRiemannZeta s / Complex.Gammaℝ s = 0 := by simp [hΛ]
+  exact hζ_ne this
+
+/-- Lagarias' ξ is nonzero on `Re(s) > 1`. -/
+lemma xiLagarias_ne_zero_of_re_gt_one {s : ℂ} (hs : 1 < s.re) : xiLagarias s ≠ 0 := by
+  unfold xiLagarias
+  have hhalf : (1/2 : ℂ) ≠ 0 := by norm_num
+  have hs0 : s ≠ 0 := by
+    intro h
+    have : (1 : ℝ) < (0 : ℝ) := by simpa [h] using hs
+    linarith
+  have hs1 : s - 1 ≠ 0 := by
+    have hs1' : s ≠ 1 := by
+      intro h
+      have : (1 : ℝ) < (1 : ℝ) := by simpa [h] using hs
+      linarith
+    exact sub_ne_zero.mpr hs1'
+  have hΛ : completedRiemannZeta s ≠ 0 := completedRiemannZeta_ne_zero_of_re_gt_one (s := s) hs
+  -- `xiLagarias s = (1/2) * s * (s-1) * completedRiemannZeta s`
+  exact mul_ne_zero (mul_ne_zero (mul_ne_zero hhalf hs0) hs1) hΛ
 
 lemma xiLagarias_one_sub (s : ℂ) : xiLagarias (1 - s) = xiLagarias s := by
   unfold xiLagarias

@@ -6,6 +6,8 @@ import Mathlib.MeasureTheory.Integral.DominatedConvergence
 import Mathlib.NumberTheory.VonMangoldt
 import Mathlib.NumberTheory.LSeries.Basic
 
+set_option maxHeartbeats 800000
+
 /-!
 # Route 3: Explicit-formula cancellation (contour skeleton lemmas)
 
@@ -29,6 +31,16 @@ namespace ExplicitFormulaCancellationSkeleton
 
 open ContourToBoundary
 open Filter intervalIntegral
+
+/-!
+## Local digamma definition
+
+Some Mathlib versions do not expose a named `Complex.digamma`.  For the purposes of Route 3, we only
+need a symbol for the Gamma log-derivative.  We define it here as `logDeriv Complex.Gamma`.
+-/
+
+/-- Digamma function `ψ(z) := (Γ'/Γ)(z)` as the log-derivative of `Complex.Gamma`. -/
+def digamma (z : ℂ) : ℂ := logDeriv Complex.Gamma z
 
 /-!
 ## Bundling the remaining analytic gap
@@ -1015,9 +1027,6 @@ structure Det2PrimeTermAssumptions
         ∫ t : ℝ, ‖M[h]((LC.c : ℂ) + (t : ℂ) * I) *
           (ArithmeticFunction.vonMangoldt n : ℂ) *
           (n : ℂ)^(-(((LC.c : ℂ) + (t : ℂ) * I)))‖ ∂ (volume : Measure ℝ))
-  /-- The tilde test function satisfies the same Fourier inversion. -/
-  fourier_inversion_tilde : FourierInversionDirichletTerm (c := LC.c) (hc := hc)
-    (testValue := fun h x => testValue (TestSpace.tilde (F := F) h) x)
 
 /--
 If `Det2PrimeTermAssumptions` holds, then `det2_fullIntegral` matches the prime-power sum:
@@ -1433,8 +1442,11 @@ theorem det2_fullIntegral_eq_neg_primePowerSum_of_assumptions
           -- Use `hTsum` and `hTerm` to finish.
           -- (At this point, all `tsum`s have the same index and only ring arithmetic remains.)
           -- Replace the three `tsum`s with `sH`, `sT`, and `sH+sT`.
-          simp [hA, hB, hC, hTsum, hTerm, mul_add, add_assoc, add_left_comm, add_comm,
+          simp [hA, hB, hC, hTerm, mul_add, add_assoc, add_left_comm, add_comm,
             mul_assoc, mul_left_comm, mul_comm]
+          -- Finish the remaining linear identity by rewriting the combined `tsum` and using ring arithmetic.
+          rw [← hTsum]
+          ring
 
 /-!
 ### Outer (Archimedean) component identity
@@ -1459,16 +1471,6 @@ structure OuterArchimedeanAssumptions
     (testValue : F → ℝ → ℂ)
     (fourierAtZero : F → ℂ)  -- ĥ(0) for the test function
     where
-  /-- Contour parameter is in the convergence region. -/
-  hc : 1 / 2 < LC.c
-  /-- `logDeriv outer` decomposes into log(π) and digamma terms. -/
-  logDeriv_outer_eq :
-    ∀ s : ℂ, 1/2 < s.re →
-      logDeriv P.outer s =
-        -(Real.log Real.pi / 2 : ℂ) +
-          (1/2 : ℂ) * (Complex.digamma (s/2) + Complex.digamma ((1-s)/2))
-  /-- The vertical integral of `M[h] * logDeriv outer` converges. -/
-  integrable_outer : ∀ h : F, Integrable (rightEdgeIntegrand_outer LC P h) (volume : Measure ℝ)
   /-- The archimedean term: `-(log π) * (ĥ(0) + tilde_ĥ(0)) + digamma_integral`. -/
   archimedeanTerm : F → ℂ
   /-- The full integral identity: `outer_fullIntegral = archimedeanTerm`. -/
@@ -1516,7 +1518,9 @@ structure RatioBoundaryPhaseAssumptions
   hc : 1 / 2 < LC.c
   /-- The PSC phase-velocity identity holds: on the critical line, `logDeriv J = i θ'`. -/
   logDeriv_ratio_critical_line :
-    ∀ t : ℝ, logDeriv (PSCRatio P) ((1/2 : ℂ) + I * t) = I * (deriv (boundaryPhaseFunction P) t : ℂ)
+    ∀ t : ℝ,
+      logDeriv (PSCRatio P) ((1/2 : ℂ) + I * t) =
+        I * ((deriv (boundaryPhaseFunction P) t : ℝ) : ℂ)
   /-- The contour can be shifted from `Re(s) = c` to `Re(s) = 1/2` (no poles in between). -/
   contour_shift :
     ∀ h : F,
@@ -1527,9 +1531,10 @@ structure RatioBoundaryPhaseAssumptions
       combined with the real structure of the spectral measure. -/
   critical_line_sum :
     ∀ h : F,
-      (∫ t : ℝ, M[h]((1/2 : ℂ) + I * t) * (I * (deriv (boundaryPhaseFunction P) t : ℂ)) ∂ volume) +
+      (∫ t : ℝ,
+          M[h]((1/2 : ℂ) + I * t) * (I * ((deriv (boundaryPhaseFunction P) t : ℝ) : ℂ)) ∂ volume) +
         (∫ t : ℝ, M[(TestSpace.tilde (F := F) h)]((1/2 : ℂ) + I * t) *
-            (I * (deriv (boundaryPhaseFunction P) t : ℂ)) ∂ volume)
+            (I * ((deriv (boundaryPhaseFunction P) t : ℝ) : ℂ)) ∂ volume)
         = - ∫ t : ℝ, boundaryPhaseIntegrand P h t ∂ volume
 
 /--
@@ -1562,7 +1567,7 @@ theorem ratio_fullIntegral_eq_neg_boundaryPhase_of_assumptions
   -- Step 4: Rewrite integrands using the critical-line log-derivative identity.
   have hCritLine : ∀ t : ℝ,
       M[h]((1/2 : ℂ) + I * t) * logDeriv (PSCRatio P) ((1/2 : ℂ) + I * t) =
-        M[h]((1/2 : ℂ) + I * t) * (I * (deriv (boundaryPhaseFunction P) t : ℂ)) := by
+        M[h]((1/2 : ℂ) + I * t) * (I * ((deriv (boundaryPhaseFunction P) t : ℝ) : ℂ)) := by
     intro t
     rw [A.logDeriv_ratio_critical_line t]
 
@@ -1570,14 +1575,15 @@ theorem ratio_fullIntegral_eq_neg_boundaryPhase_of_assumptions
       M[(TestSpace.tilde (F := F) h)]((1/2 : ℂ) + I * t) *
           logDeriv (PSCRatio P) ((1/2 : ℂ) + I * t) =
         M[(TestSpace.tilde (F := F) h)]((1/2 : ℂ) + I * t) *
-          (I * (deriv (boundaryPhaseFunction P) t : ℂ)) := by
+          (I * ((deriv (boundaryPhaseFunction P) t : ℝ) : ℂ)) := by
     intro t
     rw [A.logDeriv_ratio_critical_line t]
 
   -- Step 5: Rewrite integrals using integral_congr.
   have hInt_h :
       (∫ t : ℝ, M[h]((1/2 : ℂ) + I * t) * logDeriv (PSCRatio P) ((1/2 : ℂ) + I * t) ∂ volume) =
-        ∫ t : ℝ, M[h]((1/2 : ℂ) + I * t) * (I * (deriv (boundaryPhaseFunction P) t : ℂ)) ∂ volume := by
+        ∫ t : ℝ,
+          M[h]((1/2 : ℂ) + I * t) * (I * ((deriv (boundaryPhaseFunction P) t : ℝ) : ℂ)) ∂ volume := by
     congr 1
     ext t
     exact hCritLine t
@@ -1586,7 +1592,7 @@ theorem ratio_fullIntegral_eq_neg_boundaryPhase_of_assumptions
       (∫ t : ℝ, M[(TestSpace.tilde (F := F) h)]((1/2 : ℂ) + I * t) *
           logDeriv (PSCRatio P) ((1/2 : ℂ) + I * t) ∂ volume) =
         ∫ t : ℝ, M[(TestSpace.tilde (F := F) h)]((1/2 : ℂ) + I * t) *
-          (I * (deriv (boundaryPhaseFunction P) t : ℂ)) ∂ volume := by
+          (I * ((deriv (boundaryPhaseFunction P) t : ℝ) : ℂ)) ∂ volume := by
     congr 1
     ext t
     exact hCritLine_tilde t
@@ -1738,7 +1744,7 @@ theorem explicit_formula_cancellation_contour_of_allComponentAssumptions
   -- Step 2: Convert to the decomposed form (needed for the contour machinery).
   have hDecomp := (rightEdge_integral_identity_decomp_iff_components
     (LC := LC) (P := P) (h := h)
-    hInt_det2 hInt_outer hInt_ratio hInt_det2_tilde hInt_outer_tilde hInt_ratio_tilde).mpr hComponents
+    hInt_det2 hInt_det2_tilde hInt_outer hInt_outer_tilde hInt_ratio hInt_ratio_tilde).mpr hComponents
   -- Step 3: The decomposed identity says:
   --   ∫ rightEdgeIntegrand_decomp h + ∫ rightEdgeIntegrand_decomp (tilde h) = ∫ boundaryPhaseIntegrand
   -- With LC.xi = P.xi = xiLagarias, rightEdgeIntegrand = rightEdgeIntegrand_decomp.
@@ -1748,21 +1754,23 @@ theorem explicit_formula_cancellation_contour_of_allComponentAssumptions
         (∫ t : ℝ, rightEdgeIntegrand LC (TestSpace.tilde (F := F) h) t ∂ volume) =
         ∫ t : ℝ, boundaryPhaseIntegrand P h t ∂ volume := by
     -- Need to show rightEdgeIntegrand LC = rightEdgeIntegrand_decomp LC P
-    have hEq : rightEdgeIntegrand LC h = rightEdgeIntegrand_decomp LC P h := by
-      funext t
-      simp only [rightEdgeIntegrand, rightEdgeIntegrand_decomp]
-      congr 1
-      -- logDeriv LC.xi = logDeriv xiLagarias = logDeriv (det2 / outer · xi)
-      rw [hxiLC]
-      -- Now need: logDeriv xiLagarias = logDeriv det2 - logDeriv outer - logDeriv xi
-      rfl  -- Should follow from definition, but may need explicit unfold
-    have hEq_tilde : rightEdgeIntegrand LC (TestSpace.tilde (F := F) h) =
-        rightEdgeIntegrand_decomp LC P (TestSpace.tilde (F := F) h) := by
-      funext t
-      simp only [rightEdgeIntegrand, rightEdgeIntegrand_decomp]
-      congr 1
-      rw [hxiLC]
-      rfl
+    have hxi : LC.xi = P.xi := hxiLC.trans hxiP.symm
+    have hxi_ne :
+        ∀ t : ℝ, P.xi ((LC.c : ℂ) + (t : ℂ) * I) ≠ 0 := by
+      intro t
+      -- Reduce to the concrete ξ on the Euler-product half-plane.
+      -- (Here `Re(c + it) = c > 1`, so ξ has no zeros.)
+      have hs : (1 : ℝ) < (((LC.c : ℂ) + (t : ℂ) * I)).re := by
+        simpa using hc_gt_one
+      -- Rewrite `P.xi` to `xiLagarias`, then use its nonvanishing on `Re(s) > 1`.
+      simpa [hxiP] using (xiLagarias_ne_zero_of_re_gt_one (s := (LC.c : ℂ) + (t : ℂ) * I) hs)
+    have hEq : rightEdgeIntegrand LC h = rightEdgeIntegrand_decomp LC P h :=
+      rightEdgeIntegrand_eq_decomp (LC := LC) (P := P) (h := h) hxi hc_gt_one hxi_ne
+    have hEq_tilde :
+        rightEdgeIntegrand LC (TestSpace.tilde (F := F) h) =
+          rightEdgeIntegrand_decomp LC P (TestSpace.tilde (F := F) h) :=
+      rightEdgeIntegrand_eq_decomp (LC := LC) (P := P) (h := (TestSpace.tilde (F := F) h))
+        hxi hc_gt_one hxi_ne
     simp only [hEq, hEq_tilde]
     simpa [rightEdge_integral_identity_decomp] using hDecomp
   -- Step 4: Apply the main contour theorem.

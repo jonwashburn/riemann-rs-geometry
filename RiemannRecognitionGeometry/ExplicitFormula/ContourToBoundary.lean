@@ -73,8 +73,8 @@ structure PSCComponents where
   det2_ne_zero : ∀ s : ℂ, 1 < s.re → det2 s ≠ 0
   /-- O is nonzero on Re s > 1/2. -/
   outer_ne_zero : ∀ s : ℂ, 1/2 < s.re → outer s ≠ 0
-  /-- det₂ is differentiable on Re s > 1/2. -/
-  det2_diff : ∀ s : ℂ, 1/2 < s.re → DifferentiableAt ℂ det2 s
+  /-- det₂ is differentiable on the Euler-product half-plane `Re(s) > 1`. -/
+  det2_diff : ∀ s : ℂ, 1 < s.re → DifferentiableAt ℂ det2 s
   /-- O is differentiable on Re s > 1/2. -/
   outer_diff : ∀ s : ℂ, 1/2 < s.re → DifferentiableAt ℂ outer s
   /-- ξ is differentiable on Re s > 1/2 (away from zeros, for log-deriv). -/
@@ -128,7 +128,7 @@ theorem log_deriv_decomposition (P : PSCComponents) (s : ℂ) (hs : 1 < s.re)
   -- Rearranging: logDeriv ξ = logDeriv det₂ - logDeriv O - logDeriv J
   have hdet2 : P.det2 s ≠ 0 := P.det2_ne_zero s hs
   have houter : P.outer s ≠ 0 := P.outer_ne_zero s hs_half
-  have hdiff_det2 : DifferentiableAt ℂ P.det2 s := P.det2_diff s hs_half
+  have hdiff_det2 : DifferentiableAt ℂ P.det2 s := P.det2_diff s hs
   have hdiff_outer : DifferentiableAt ℂ P.outer s := P.outer_diff s hs_half
   have hdiff_xi : DifferentiableAt ℂ P.xi s := P.xi_diff s hs_half hxi
   have hdiff_outer_xi : DifferentiableAt ℂ (fun z => P.outer z * P.xi z) s :=
