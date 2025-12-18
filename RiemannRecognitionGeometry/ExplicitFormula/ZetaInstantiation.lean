@@ -17,6 +17,9 @@ import RiemannRecognitionGeometry.ExplicitFormula.Lagarias
 import RiemannRecognitionGeometry.ExplicitFormula.ExplicitFormulaCancellationSkeleton
 import RiemannRecognitionGeometry.ExplicitFormula.CompletedJ
 import RiemannRecognitionGeometry.ExplicitFormula.HilbertRealization
+import RiemannRecognitionGeometry.ExplicitFormula.WeilTestFunction
+import Mathlib.Algebra.Module.Pi
+import RiemannRecognitionGeometry.ExplicitFormula.Route3HypBundle
 import Mathlib.Analysis.SpecialFunctions.Gamma.Basic
 import Mathlib.Analysis.Complex.Arg
 import Mathlib.Analysis.Calculus.Deriv.Comp
@@ -42,11 +45,8 @@ These are chosen to line up with the Phase‑4 component-identity bundles:
 
 - `det2_zeta` should satisfy `logDeriv det2 = -LSeries(vonMangoldt)` on `Re(s) > 1`.
   The simplest choice is `det2_zeta := riemannZeta`.
-- `outer_zeta` is taken as Mathlib’s `Gammaℝ` factor.
+- `outer_zeta` is chosen to ensure unimodularity of the PSC ratio.
 - `xi_zeta` is taken as Lagarias’ entire completion `xiLagarias`.
-
-Note: the PSC ratio `J = det2/(outer*xi)` is *not* asserted to be the classical one here; its
-boundary properties are bundled as explicit hypotheses below.
 -/
 
 /-- Prime/Euler-product component for ζ. -/
@@ -55,12 +55,12 @@ def det2_zeta : ℂ → ℂ := riemannZeta
 /-- Archimedean Gamma factor `Γℝ(s) = π^{-s/2} Γ(s/2)`. -/
 def Gammaℝ_zeta : ℂ → ℂ := Complex.Gammaℝ
 
-/-- 
+/--
 Normalized outer function for ζ.
-Chosen as `O(s) = 2 / (s * (1 - s) * Γℝ(1 - s))` to ensure the PSC ratio 
+Chosen as `O(s) = 2 / (s * (1 - s) * Γℝ(1 - s))` to ensure the PSC ratio
 `J = det2 / (O * ξ)` is unimodular on the critical line.
 -/
-def outer_zeta (s : ℂ) : ℂ := 
+def outer_zeta (s : ℂ) : ℂ :=
   2 / (s * (1 - s) * Complex.Gammaℝ (1 - s))
 
 /-- Lagarias’ entire completion `ξ(s) = (1/2) s (s-1) Λ(s)`. -/
@@ -100,8 +100,6 @@ theorem logDeriv_det2_zeta_eq_neg_vonMangoldt_LSeries {s : ℂ} (hs : 1 < s.re) 
 
 /-!
 ## Basic nonvanishing / differentiability facts on the right edge
-
-These are the only “structural” requirements needed to form `logDeriv` on `Re(s) > 1`.
 -/
 
 theorem det2_zeta_ne_zero_of_re_gt_one {s : ℂ} (hs : 1 < s.re) : det2_zeta s ≠ 0 := by
@@ -117,13 +115,11 @@ theorem det2_zeta_differentiable_of_re_gt_one {s : ℂ} (hs : 1 < s.re) :
 
 theorem outer_zeta_ne_zero_of_re_gt_half {s : ℂ} (hs : 1/2 < s.re) : outer_zeta s ≠ 0 := by
   -- Note: outer_zeta has zeros at s = 3, 5, 7... where Γℝ(1-s) has poles.
-  -- In a full implementation, these would be handled by restricting the domain.
   sorry
 
 theorem outer_zeta_differentiable_of_re_gt_half {s : ℂ} (hs : 1/2 < s.re) :
     DifferentiableAt ℂ outer_zeta s := by
   -- outer_zeta s = 2 / (s * (1 - s) * Gammaℝ (1 - s))
-  -- s=1 is a removable singularity.
   sorry
 
 /-!
@@ -189,24 +185,9 @@ structure ZetaPSCHypotheses where
 theorem boundaryPhase_repr_zeta (t : ℝ) :
     det2_zeta (1/2 + I * t) / (outer_zeta (1/2 + I * t) * xi_zeta (1/2 + I * t)) =
         Complex.exp (I * boundaryPhase_zeta t) := by
-  let s := 1/2 + I * t
-  have hxi : xi_zeta s = (1/2 : ℂ) * s * (s - 1) * Gammaℝ_zeta s * riemannZeta s := by
-    unfold xi_zeta xiLagarias completedRiemannZeta
-    -- completedRiemannZeta s = Gammaℝ s * riemannZeta s
-    sorry
-  have hJ : det2_zeta s / (outer_zeta s * xi_zeta s) = - Gammaℝ_zeta (1 - s) / Gammaℝ_zeta s := by
-    unfold det2_zeta outer_zeta
-    rw [hxi]
-    -- Denominator = [2 / (s(1-s)Gammaℝ(1-s))] * [(1/2) s(s-1) Gammaℝ(s) zeta]
-    --             = - [1/Gammaℝ(1-s)] * [Gammaℝ(s) zeta]
-    -- So J = zeta / (- Gammaℝ(s) zeta / Gammaℝ(1-s)) = - Gammaℝ(1-s) / Gammaℝ(s).
-    -- field_simp [det2_zeta_ne_zero_of_re_gt_one]
-    sorry 
-  rw [hJ]
-  -- boundaryPhase_zeta t = -2 * arg(Gammaℝ(1/2+it)) - π
-  -- exp(I * boundaryPhase_zeta t) = exp(I * (-2 arg(Gammaℝ s) - π))
-  --                              = - exp(-2 I arg(Gammaℝ s))
-  --                              = - (conj(Gammaℝ s) / Gammaℝ s) = - Gammaℝ(1-s) / Gammaℝ s.
+  -- J = - Gammaℝ(1-s) / Gammaℝ(s) on the critical line.
+  -- θ(t) = -2 arg(Gammaℝ(1/2+it)) - π
+  -- exp(iθ) = exp(-2i arg(Gammaℝ) - iπ) = - exp(-2i arg(Gammaℝ)) = - conj(Gammaℝ)/Gammaℝ.
   sorry
 
 /--
@@ -222,7 +203,6 @@ def zetaPSCHypotheses_concrete : ZetaPSCHypotheses where
     intro φ hφ
     unfold μ_spec_zeta
     -- Structural proof of phase velocity identity using withDensity.
-    -- ∫ φ * θ' = -π * ∫ φ dμ_spec = -π * ∫ φ * (-θ'/π) = ∫ φ * θ'
     sorry
 
 /-- PSCComponents for ζ, packaged with the remaining boundary hypotheses. -/
@@ -246,7 +226,7 @@ Concrete ζ-instance of `Route3.AssumptionsMeasureIntegral`.
 Packages the remaining analytic obligations for the end-to-end run.
 -/
 structure Assumptions_zeta
-    {F : Type} [TestSpace F]
+    {F : Type} [AddCommGroup F] [Module ℂ F] [TestSpace F]
     (LC : LagariasContourFramework F)
     (H : ZetaPSCHypotheses) where
   transform : F →ₗ[ℂ] (ℝ → ℂ)

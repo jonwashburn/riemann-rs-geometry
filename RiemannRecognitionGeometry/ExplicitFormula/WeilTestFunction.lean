@@ -345,9 +345,13 @@ theorem weilTransform_conjugation (f : WeilTestFunction) (s : ℂ) :
     (conjugation f).weilTransform s = starRingEnd ℂ (f.weilTransform (starRingEnd ℂ s)) := by
   unfold weilTransform conjugation
   simp only [conjSchwartz_apply, starRingEnd_apply]
-  -- Use property that star commutes with integral for integrable functions
-  -- (We assume integrability here as part of the skeleton)
-  sorry
+  -- Use property that star commutes with integral for integrable functions.
+  -- We assume integrability here as part of the skeleton.
+  -- In a full proof, this would follow from exponential decay.
+  have h_eq : ∫ (x : ℝ), star (f.toSchwartz x) * cexp ((s - 0.5) * ↑x) = 
+               star (∫ (x : ℝ), f.toSchwartz x * cexp ((star s - 0.5) * ↑x)) := by
+    sorry
+  exact h_eq
 
 instance : TestSpace WeilTestFunction where
   Mellin := weilTransform
@@ -356,9 +360,9 @@ instance : TestSpace WeilTestFunction where
   star := conjugation
   mellin_conv := by
     intro f g s
-    -- This requires enough decay for s.re. 
-    -- For now, we reuse the critical-strip proof as a placeholder.
-    -- In a full proof, this would be proved for the convergence strip of f and g.
+    -- This requires enough decay for s.re.
+    -- For now, we provide the identity modulo the integrability/Fubini check.
+    apply weilTransform_convolution_of_integrable
     sorry
   mellin_tilde := weilTransform_reflection
   mellin_star := weilTransform_conjugation
