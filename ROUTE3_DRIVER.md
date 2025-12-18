@@ -34,13 +34,23 @@ remaining classical/analytic inputs as theorems (ideally without adding new axio
   assumption-surface change.
 
 ### Track B — Mellin/Fourier + det₂ analytic obligations (good for a faster model)
-- **Goal**: Discharge `ZetaDet2AnalyticAssumptions.fourier_inversion` for the concrete Schwartz test
-  space and eliminate it from the Ledger.
-- **Primary files**: `ExplicitFormula/SchwartzTestSpace.lean`, `ExplicitFormula/ZetaDet2Schwartz.lean`
-  (optionally add `ExplicitFormula/ZetaFourierInversionSchwartz.lean`).
-- **Output contract**: Provide a theorem (no new global axioms) building
-  `FourierInversionDirichletTerm ...` for Schwartz; then simplify
-  `zetaDet2AnalyticAssumptions_schwartz` so it no longer takes `hFI` as an input.
+- **Goal**: Discharge `ZetaDet2AnalyticAssumptions.fourier_inversion` for a concrete Schwartz-based
+  `TestSpace` (no new global axioms), then remove it from the Assumption Ledger.
+- **Primary files**:
+  - `ExplicitFormula/SchwartzTestSpace.lean` (definition/normalization of `TestSpace.Mellin`)
+  - `ExplicitFormula/ZetaDet2Schwartz.lean` (consumes `fourier_inversion`)
+  - (optional) new: `ExplicitFormula/ZetaFourierInversionSchwartz.lean` (contains the actual proof)
+- **Interface to discharge**:
+  - `ExplicitFormulaCancellationSkeleton.FourierInversionDirichletTerm (c := LC.c) (testValue := mellinOnCriticalLine ...)`
+- **Normalization warning (do first)**:
+  - `SchwartzMap.fourierTransformCLM` is defined via `Real.fourierIntegral`, whose kernel is built from
+    `Real.fourierChar` (i.e. includes a `2π` in the exponential). Meanwhile `n^{-(c+it)}` contributes
+    `exp(-i t log n)`. Track B must align these (`log n` vs `log n/(2π)`), either by rescaling
+    `SchwartzTestSpace.Mellin` or by rewriting the Fourier-inversion target accordingly.
+- **Output contract**:
+  - Add a lemma producing `FourierInversionDirichletTerm` for Schwartz,
+  - update `ZetaInstantiation.Schwartz.zetaDet2AnalyticAssumptions_schwartz` so it no longer takes `hFI`,
+  - keep builds green for `ZetaDet2Schwartz` and `ZetaInstantiation`.
 
 ### Track C — Boundary phase + right-edge limit + sesquilinear identity (hard analysis)
 - **Goal**: Discharge ζ boundary-phase hypotheses, the right-edge contour limit hypotheses, and the
@@ -86,6 +96,8 @@ This section is the **single source of truth** for what is still assumed (even i
   - `fourier_inversion`: Fourier inversion for Mellin–Dirichlet terms (analytic input).
   - `integrable_term`: integrability of each Dirichlet term integrand.
   - `summable_integral_norm`: summability of the integral norms (Fubini/Tonelli gate).
+  - (Track‑B note) this depends on **Fourier normalization** (`Real.fourierChar` has a `2π`), so the
+    `log n` placement in `FourierInversionDirichletTerm` must match the chosen `TestSpace.Mellin`.
 
 - **outer (archimedean) instantiation hypotheses**: **none** (at the current skeleton stage).
   - `OuterArchimedeanAssumptions` was trimmed to only the field actually used downstream (`outer_fullIntegral = archimedeanTerm`), and the ζ instance takes `archimedeanTerm := outer_fullIntegral` (definitionally true).
@@ -186,15 +198,32 @@ The proof chain is complete with 0 sorry. Remaining work: instantiate hypothesis
   - Keep the build green and the Ledger accurate as assumptions are removed/weakened.
 
 #### Track B (Mellin/Fourier / det₂)
-- [ ] **Fourier inversion for Schwartz**: prove `ZetaDet2AnalyticAssumptions.fourier_inversion` for `F := SchwartzMap ℝ ℂ` and eliminate it from the Ledger.
-  - Suggested deliverable: a lemma producing
-    `ExplicitFormulaCancellationSkeleton.FourierInversionDirichletTerm (F := SchwartzMap ℝ ℂ) (c := LC.c) ...`
-    from Mathlib’s Mellin/Fourier inversion, wired to our `TestSpace.M` / `mellinOnCriticalLine`.
-  - Then update `ZetaInstantiation.Schwartz.zetaDet2AnalyticAssumptions_schwartz` to *not* take `hFI`.
+- [ ] **Normalization audit (Fourier kernel vs `n^{-it}`)**:
+  - Confirm `SchwartzMap.fourierTransformCLM` uses `Real.fourierChar` (kernel `exp(-2π i t ξ)`).
+  - Rewrite `n^{-(c+it)}` as `n^{-c} * exp(-i t log n)` and record the matching Fourier frequency
+    `ξ := (Real.log n) / (2 * Real.pi)`.
+- [ ] **Choose the Track‑B alignment strategy** (pick one; document the choice here):
+  - **Option B1 (preferred)**: rescale `SchwartzTestSpace.Mellin` so `M[h](σ+it)` samples the Fourier
+    transform at `t/(2π)` (or equivalent), making the Dirichlet kernel match without changing the
+    statement of `FourierInversionDirichletTerm`.
+  - **Option B2**: keep `SchwartzTestSpace.Mellin` as-is, and instead prove a rewritten
+    `FourierInversionDirichletTerm` lemma that uses `log n / (2π)` (then refactor call sites if needed).
+- [ ] **Prove Fourier inversion for Schwartz**:
+  - Deliverable: `fourierInversionDirichletTerm_schwartz` in a new file
+    `ExplicitFormula/ZetaFourierInversionSchwartz.lean` producing
+    `ExplicitFormulaCancellationSkeleton.FourierInversionDirichletTerm (F := SchwartzMap ℝ ℂ) ...`.
+  - Use Mathlib’s Schwartz Fourier inversion infrastructure:
+    `Mathlib.Analysis.Distribution.FourierSchwartz` (`SchwartzMap.fourierTransformCLE`,
+    `Continuous.fourier_inversion`, `Continuous.fourier_inversion_inv`).
+- [ ] **Integrate**:
+  - Update `ZetaInstantiation.Schwartz.zetaDet2AnalyticAssumptions_schwartz` so it no longer takes `hFI`.
+  - Update the Assumption Ledger: remove `ZetaDet2AnalyticAssumptions.fourier_inversion`.
 
 #### Track C (phase / right-edge limit / sesquilinear identity)
-- [ ] **Concrete ζ phase hypotheses**: build a concrete `ZetaPSCHypotheses` (define `boundaryPhase`, choose `μ_spec`) and prove:
-  - `boundaryPhase_diff`, `boundaryPhase_repr`, `phase_velocity`.
+- [x] **Concrete ζ phase hypotheses**: built `boundaryPhase_zeta`, `μ_spec_zeta`, and `zetaPSCHypotheses_concrete` in `ZetaInstantiation.lean`. (Proofs are `sorry`.)
+- [ ] **Prove boundaryPhase_diff for ζ**: show that the Riemann-Siegel theta (or its chosen representation) is differentiable.
+- [ ] **Prove boundaryPhase_repr for ζ**: verify the unimodular phase representation of the PSC ratio.
+- [ ] **Prove phase_velocity for ζ**: relate the boundary phase derivative to the spectral measure.
 - [ ] **Ratio identity**: prove `ZetaRatioAnalyticAssumptions.ratio_eq_neg_boundaryPhase` (or replace it by a smaller, more natural lemma + bundle refactor).
 - [ ] **Right-edge phase limit**: build `RightEdgePhaseLimitAssumptions` for `PSCComponents_zeta` and a concrete `LagariasContourFramework`.
   - Helper constructors: `ExplicitFormula/ZetaRightEdgePhaseLimit.lean`
@@ -319,4 +348,7 @@ lake env lean /tmp/test.lean 2>&1 | tail -30
 - Phase 4 completed: ζ bundle constructors are in place; added Phase 5 checkboxes for discharging the remaining analytic obligations.
 - Phase 5 started: removed the last `ExplicitFormula/*` global `axiom` by bundling Fourier inversion as an explicit analytic hypothesis.
 - Updated `ROUTE3_DRIVER.md` to a multi-track plan (A/B/C): Track A integrates; Tracks B/C discharge remaining classical/analytic obligations.
+- [Session] Track C: Defined concrete `boundaryPhase_zeta` and `μ_spec_zeta` in `ZetaInstantiation.lean`; built `zetaPSCHypotheses_concrete` instance.
 
+
+- [Session] Track C: Defined concrete  and  in ; built  instance.
