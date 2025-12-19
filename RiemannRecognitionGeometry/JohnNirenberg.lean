@@ -1090,11 +1090,12 @@ theorem czDecompFull_exists_theorem (f : ℝ → ℝ) (a b : ℝ) (_hab : a < b)
     requires detailed technical work with Mathlib's measure theory API.
 
     **Reference**: Stein, "Harmonic Analysis", Ch. I, Thm 4 -/
-axiom czDecompFull_axiom (f : ℝ → ℝ) (a b : ℝ) (_hab : a < b)
-    (_hf_int : IntegrableOn f (Icc a b))
-    (t : ℝ) (_ht_pos : t > 0)
-    (_ht_above_avg : t > (b - a)⁻¹ * ∫ x in Icc a b, |f x|) :
-    ∃ _cz : CZDecompFull f (Icc a b) t, True
+theorem czDecompFull_axiom (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
+    (hf_int : IntegrableOn f (Icc a b))
+    (t : ℝ) (ht_pos : t > 0)
+    (ht_above_avg : t > (b - a)⁻¹ * ∫ x in Icc a b, |f x|) :
+    ∃ _cz : CZDecompFull f (Icc a b) t, True :=
+  jnAssumptions.czDecompFull_axiom f a b hab hf_int t ht_pos ht_above_avg
 
 /-- The full CZ decomposition exists with good/bad function split. -/
 theorem czDecompFull_exists (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
