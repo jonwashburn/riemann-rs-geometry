@@ -50,6 +50,60 @@ import Mathlib.Analysis.SpecialFunctions.Gamma.Basic
 noncomputable section
 open Real MeasureTheory Set
 
+/--
+Remaining analytic inputs for the Calderón-Zygmund and John-Nirenberg theory.
+
+This bundles the “hard analysis” facts that are currently assumed into a single surface,
+instead of scattering multiple independent `axiom`s across the file.
+-/
+structure JohnNirenbergAssumptions : Prop where
+  /-- **AXIOM (Calderón-Zygmund Decomposition)**: Standard CZ decomposition at level t. -/
+  czDecomposition_axiom (f : ℝ → ℝ) (a b : ℝ) (_hab : a < b)
+      (_hf_int : IntegrableOn f (Icc a b))
+      (t : ℝ) (_ht_pos : t > 0)
+      (_ht_above_avg : t > (b - a)⁻¹ * ∫ x in Icc a b, |f x|) :
+      ∃ _cz : CZDecomposition f (Icc a b) t, True
+
+  /-- **AXIOM (CZ Good/Bad Split)**: Full CZ decomposition with good/bad function split. -/
+  czDecompFull_axiom (f : ℝ → ℝ) (a b : ℝ) (_hab : a < b)
+      (_hf_int : IntegrableOn f (Icc a b))
+      (t : ℝ) (_ht_pos : t > 0)
+      (_ht_above_avg : t > (b - a)⁻¹ * ∫ x in Icc a b, |f x|) :
+      ∃ _cz : CZDecompFull f (Icc a b) t, True
+
+  /-- **AXIOM (Good-λ Inequality)**: The key measure-theoretic bound for John-Nirenberg. -/
+  goodLambda_axiom (f : ℝ → ℝ) (a b : ℝ) (_hab : a < b)
+      (M : ℝ) (_hM_pos : M > 0)
+      (_h_bmo : ∀ a' b' : ℝ, a' < b' → meanOscillation f a' b' ≤ M)
+      (t : ℝ) (_ht : t > M) :
+      volume {x ∈ Icc a b | |f x - intervalAverage f a b| > t} ≤
+      ENNReal.ofReal (1/2) * volume {x ∈ Icc a b | |f x - intervalAverage f a b| > t - M}
+
+  /-- **AXIOM (JN Base Case)**: First step of John-Nirenberg (k=1 case). -/
+  jn_first_step_axiom (f : ℝ → ℝ) (a b : ℝ) (_hab : a < b)
+      (M : ℝ) (_hM_pos : M > 0)
+      (_h_bmo : ∀ a' b' : ℝ, a' < b' → meanOscillation f a' b' ≤ M) :
+      volume {x ∈ Icc a b | |f x - intervalAverage f a b| > M} ≤
+      ENNReal.ofReal ((b - a) / 2)
+
+  /-- **AXIOM (BMO L^p Bound)**: BMO functions are in L^p for all 1 ≤ p < ∞. -/
+  bmo_Lp_bound_axiom (f : ℝ → ℝ) (a b : ℝ) (_hab : a < b)
+      (M : ℝ) (_hM_pos : M > 0)
+      (_h_bmo : ∀ a' b' : ℝ, a' < b' → meanOscillation f a' b' ≤ M)
+      (p : ℝ) (_hp : 1 ≤ p) :
+      (b - a)⁻¹ * ∫ x in Icc a b, |f x - intervalAverage f a b|^p ≤
+      (JN_C1 * (2 * Real.exp 1)^p * Real.Gamma (p + 1)) * M^p
+
+  /-- **AXIOM (BMO Kernel Bound)**: BMO functions have controlled kernel integrals. -/
+  bmo_kernel_bound_axiom (f : ℝ → ℝ) (K : ℝ → ℝ)
+      (M : ℝ) (_hM_pos : M > 0)
+      (_h_bmo : ∀ a b : ℝ, a < b → meanOscillation f a b ≤ M)
+      (_hK_int : Integrable K)
+      (c : ℝ) :
+      |∫ t, K t * (f t - c)| ≤ (2 * JN_C1) * M * ∫ t, |K t|
+
+axiom jnAssumptions : JohnNirenbergAssumptions
+
 namespace RiemannRecognitionGeometry
 
 /-! ## Numerical Constants
@@ -984,11 +1038,12 @@ theorem DyadicInterval.avg_doubling (D : DyadicInterval) (f : ℝ → ℝ)
 
     **Reference**: Stein, "Harmonic Analysis", Ch. I, Thm 4;
                    Grafakos, "Classical Fourier Analysis", §5.1 -/
-axiom czDecomposition_axiom (f : ℝ → ℝ) (a b : ℝ) (_hab : a < b)
-    (_hf_int : IntegrableOn f (Icc a b))
-    (t : ℝ) (_ht_pos : t > 0)
-    (_ht_above_avg : t > (b - a)⁻¹ * ∫ x in Icc a b, |f x|) :
-    ∃ _cz : CZDecomposition f (Icc a b) t, True
+theorem czDecomposition_axiom (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
+    (hf_int : IntegrableOn f (Icc a b))
+    (t : ℝ) (ht_pos : t > 0)
+    (ht_above_avg : t > (b - a)⁻¹ * ∫ x in Icc a b, |f x|) :
+    ∃ _cz : CZDecomposition f (Icc a b) t, True :=
+  jnAssumptions.czDecomposition_axiom f a b hab hf_int t ht_pos ht_above_avg
 
 /-- **THEOREM**: Full CZ Decomposition with good/bad function split (from hypothesis).
 
