@@ -12,6 +12,8 @@ open Real Complex MeasureTheory
 
 namespace CofactorCRGreenS2Interfaces
 
+open Filter
+
 /-!
 # Port scaffold: minimal analytic interfaces for the S2-only CR/Green wall
 
@@ -77,6 +79,22 @@ structure PhaseVelocityBoundaryTrace (L : CofactorPhaseLift) (F : PhaseVelocityF
     ∀ (I : WhitneyInterval) (ρ : ℂ) (t : ℝ),
       t ∈ Set.uIcc (I.t0 - I.len) (I.t0 + I.len) →
         F.dPhase I ρ t = (gradField I ρ (t, 0)).1
+
+/-- Subgate S2a1-BT-Poisson (non-vacuous): the phase velocity is the **boundary limit**
+of the x-derivative of the conjugate Poisson extension of `cofactorLogAbs ρ`.
+
+This ties the boundary-term gate to the same Poisson-model field whose Carleson-box energy defines
+`cofactorEbox_poisson`. -/
+structure PhaseVelocityBoundaryTracePoisson (L : CofactorPhaseLift) (F : PhaseVelocityFTC L) : Prop where
+  /-- As `y → 0⁺`, the x-component of `∇(conjugate Poisson)[cofactorLogAbs ρ] (t,y)` tends to
+  the phase velocity `θ'(t)`. -/
+  tendsto_dx_conjPoisson :
+    ∀ (I : WhitneyInterval) (ρ : ℂ) (t : ℝ),
+      t ∈ Set.uIcc (I.t0 - I.len) (I.t0 + I.len) →
+        Tendsto
+          (fun y : ℝ =>
+            (PoissonExtension.gradient_conjugate_poisson (cofactorLogAbs ρ) (t, y)).1)
+          (nhdsWithin (0 : ℝ) (Set.Ioi 0)) (nhds (F.dPhase I ρ t))
 
 /-- Subgate A (S2a): an **FTC/trace gate** for the default real phase representative.
 

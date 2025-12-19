@@ -2719,9 +2719,12 @@ The Cauchy--Riemann identity \(\partial_x v=-\partial_y u\) in $\Omega$ then yie
         The remaining hard work is to prove these gates from an actual Green identity on Whitney boxes (including boundary-term control).
         For the boundary-term gate, Lean’s most direct Port-level hook is
         \texttt{Port.CofactorCRGreenS2Interfaces.PhaseVelocityBoundaryTrace} (a 2D trace field whose boundary trace equals the phase velocity, cf.\ Lemma~\ref{lem:cr_boundary_trace_equiv}).
+        To avoid vacuity, one in fact needs an energy-tied version asserting that this boundary trace arises as the boundary limit \(y\downarrow0\) of the Poisson-model field used to define the Carleson-box energy
+        \(\texttt{cofactorEbox\_poisson}\); this is isolated in Lean as
+        \texttt{Port.CofactorCRGreenS2Interfaces.PhaseVelocityBoundaryTracePoisson}.
         For semantic faithfulness one can alternatively package a log-branch Cauchy--Riemann identity as
         \texttt{RiemannRecognitionGeometry/Port/CRBoundaryTraceInterfaces.lean} (\texttt{CRBoundaryTraceLog}), which implies the direct trace hook.
-        The current “boxed wall” in the driver is the direct trace hook \texttt{PhaseVelocityBoundaryTrace}.
+        The current “boxed wall” in the driver is the Poisson-model boundary-limit hook \texttt{PhaseVelocityBoundaryTracePoisson}.
     \end{itemize}
 
     \item \textbf{B2 (Oscillation certificate for \(\log|\xi|\)).}

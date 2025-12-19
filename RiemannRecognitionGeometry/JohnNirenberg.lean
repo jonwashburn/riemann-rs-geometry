@@ -657,7 +657,7 @@ theorem dyadic_nesting (D₁ D₂ : DyadicInterval) (hgen : D₁.generation > D�
         linarith
       calc
         (2 : ℝ) ^ (-(n₂ : ℤ))
-            = (2 : ℝ) ^ ((m : ℤ) + (-(n₁ : ℤ))) := by simpa [this]
+            = (2 : ℝ) ^ ((m : ℤ) + (-(n₁ : ℤ))) := by simp [this]
         _ = (2 : ℝ) ^ (m : ℤ) * (2 : ℝ) ^ (-(n₁ : ℤ)) := by
               simpa using
                 (zpow_add₀ (a := (2 : ℝ)) (by norm_num : (2 : ℝ) ≠ 0) (m : ℤ) (-(n₁ : ℤ)))
@@ -703,12 +703,9 @@ theorem dyadic_nesting (D₁ D₂ : DyadicInterval) (hgen : D₁.generation > D�
       have hd_cast : ((d : ℤ) : ℝ) = (2 : ℝ) ^ (m : ℤ) := by
         simp [d, Int.cast_pow, zpow_natCast]
       have hcast_idx1 : ((D₁.index : ℝ) + 1) = ((D₁.index + 1 : ℤ) : ℝ) := by
-        simpa [Int.cast_add, Int.cast_one, add_comm, add_left_comm, add_assoc] using
-          (Int.cast_add D₁.index 1 :
-                ((D₁.index + 1 : ℤ) : ℝ) = (D₁.index : ℝ) + ((1 : ℤ) : ℝ)).symm
+        simp [Int.cast_add, Int.cast_one, add_comm, add_left_comm, add_assoc]
       have hcast_q1 : ((q + 1 : ℤ) : ℝ) = (q : ℝ) + 1 := by
-        have := (Int.cast_add q 1 : ((q + 1 : ℤ) : ℝ) = (q : ℝ) + ((1 : ℤ) : ℝ))
-        simpa [Int.cast_one] using this
+        simp [Int.cast_add, Int.cast_one]
       calc
         ((D₁.index : ℝ) + 1) * (2 : ℝ) ^ (-(n₁ : ℤ))
             = ((D₁.index + 1 : ℤ) : ℝ) * (2 : ℝ) ^ (-(n₁ : ℤ)) := by
@@ -736,7 +733,7 @@ theorem dyadic_nesting (D₁ D₂ : DyadicInterval) (hgen : D₁.generation > D�
     have hA_disj : Disjoint A.toSet D₂.toSet := by
       have hgen_eq : A.generation = D₂.generation := by
         have hn₂ : n₂ = D₂.generation := by rfl
-        simpa [A, hn₂]
+        simp [A, hn₂]
       exact dyadic_same_gen_disjoint A D₂ hgen_eq hq_eq
     exact (Disjoint.mono_left hD₁_sub_A) hA_disj
 

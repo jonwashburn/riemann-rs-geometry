@@ -55,7 +55,7 @@ lemma coe_phaseLiftChange {a b : ℝ} (h : PhaseLift a b) :
   have hb : b ∈ Set.Icc a b := ⟨h.hab, le_rfl⟩
   unfold phaseLiftChange
   -- `((x - y : ℝ) : Real.Angle) = (x : Real.Angle) - (y : Real.Angle)`.
-  simpa [Real.Angle.coe_sub, h.coe_lift_eq a ha, h.coe_lift_eq b hb]
+  simp [Real.Angle.coe_sub, h.coe_lift_eq a ha, h.coe_lift_eq b hb]
 
 /-- Phase change across a Whitney interval, valued in `Real.Angle` (i.e. modulo `2π`). -/
 def xiPhaseChangeAngle (I : WhitneyInterval) : Real.Angle :=
@@ -124,8 +124,7 @@ lemma xiPhaseChange_le_pi (I : WhitneyInterval) : xiPhaseChange I ≤ Real.pi :=
       |(2 * Real.pi : ℝ)| / 2 = (2 * Real.pi) / 2 := by simp [abs_of_pos hpos]
       _ = Real.pi := by
             -- rewrite as `π * 2 / 2`
-            simpa [mul_comm] using
-              (mul_div_cancel_left₀ (Real.pi) (2 : ℝ) (two_ne_zero : (2 : ℝ) ≠ 0))
+            simp [mul_comm]
   -- `xiPhaseChange I = ‖xiPhaseChangeAngle I‖`.
   simpa [xiPhaseChange, hRHS] using h
 

@@ -51,10 +51,10 @@ If none of these happens, the session is a failure: immediately downgrade the bo
 
 \[
 \boxed{
-\textbf{B1′′a / S2a1-BT (boundary trace identity for the cofactor phase velocity):}\quad
-\exists\ \texttt{L : CofactorPhaseLift},\ \exists\ \texttt{F : PhaseVelocityFTC L},\ \exists\ \texttt{h : PhaseVelocityBoundaryTrace L F},
+\textbf{B1′′a / S2a1-BT-Poisson (boundary trace identity tied to the Poisson energy model):}\quad
+\exists\ \texttt{L : CofactorPhaseLift},\ \exists\ \texttt{F : PhaseVelocityFTC L},\ \exists\ \texttt{h : PhaseVelocityBoundaryTracePoisson L F},
 \\
-\text{so that the phase velocity }\theta'_{I,\rho}\text{ is identified as a boundary trace of a 2D field on Whitney boxes.}
+\text{so that the phase velocity }\theta'_{I,\rho}\text{ is identified as the }y\downarrow0\text{ boundary limit of the Poisson-model field defining }\texttt{cofactorEbox\_poisson.}
 }
 \]
 
@@ -75,19 +75,17 @@ Together they imply the strong cofactor CR/Green bound `CofactorCRGreenAssumptio
 - `PhaseVelocityFTC` (S2a1): an FTC-valid (integrable) phase velocity density `dθ/dt` for that lift on Whitney bases.
 These rebuild the bundled gate via `GreenTraceIdentity.of_lift_and_ftc`.
 
-**Boundary-term gate (this is now the boxed target):**
-the minimal Port-level hook is `PhaseVelocityBoundaryTrace (L := L) (F := F)`, i.e. existence of a
-2D field whose boundary trace equals the phase velocity.
+**Boundary-term gate (boxed target, non-vacuous):**
+the direct Port-level hook `PhaseVelocityBoundaryTrace` is too weak by itself (you can “fake” the boundary value).
+So we now box the stronger, energy-tied interface
+`PhaseVelocityBoundaryTracePoisson (L := L) (F := F)` in
+`RiemannRecognitionGeometry/Port/CofactorCRGreenS2Interfaces.lean`, which asserts the phase velocity is the
+**boundary limit** \(y\downarrow0\) of the x-component of the conjugate Poisson gradient for `cofactorLogAbs ρ`
+(the same Poisson-model field whose Carleson energy defines `cofactorEbox_poisson`).
 
 For semantic faithfulness, there is also a “log-branch CR identity” archetype in
 `RiemannRecognitionGeometry/Port/CRBoundaryTraceInterfaces.lean`:
-`CRBoundaryTraceInterfaces.CRBoundaryTraceLog`, which implies `PhaseVelocityBoundaryTrace` via
-`phaseVelocityBoundaryTrace_of_CRBoundaryTraceLog`.
-
-**Non-vacuity note (important):**
-`PhaseVelocityBoundaryTrace` by itself does not yet force the trace field to be the *same* harmonic
-field whose Carleson-box energy is `cofactorEbox_poisson`. In an actual discharge, the trace field must
-be tied to that energy model (Poisson/conjugate-Poisson / Green identity on Whitney boxes).
+`CRBoundaryTraceInterfaces.CRBoundaryTraceLog` (sufficient to imply a boundary-trace hook once the model is wired).
 
 **Decomposition (now formalized as a reusable lemma):**
 the *algebraic* core “(pairing bound) + (remainder bound) ⇒ (boundary bound)” is now in
@@ -272,6 +270,7 @@ When we hit any of these milestones, create a new dated snapshot `recognition-ge
 - **2025-12-18**: Add a distributional splice note: once A1b is phrased via \(d\theta\), A1a should be phrased as a Stieltjes pairing \(\int F_h\,d\theta\), and the algebraic splice uses Lemma~`\ref{lem:splice_completion_algebra_distributional}`.
 - **2025-12-18**: Re-box the single current hard wall away from Route-3 Nevanlinna regularity (routine in the ζ-gauge) and onto the actual RG analytic bottleneck: the CR/Green “energy → phase” bound `Port.HardyDirichletCRGreen cofactorEbox_poisson`.
 - **2025-12-18**: Mine `riemann-finish`’s `CRGreenOuter.lean` for the minimal subgates (pairing bound + remainder bound ⇒ boundary bound; then Carleson budget ⇒ uniform bound) and port the *algebraic* core into this repo as a reusable lemma.
+- **2025-12-19**: Chip the RG boundary-term gate: re-box the single hard wall to the *direct* Port hook `PhaseVelocityBoundaryTrace` (and treat `CRBoundaryTraceLog` as an archetype sufficient condition). Add a paper lemma clarifying the equivalent boundary-trace forms (x-derivative vs normal-derivative) so the written proof matches the Lean interface choice.
 
 ## Next edits (short queue)
 
@@ -294,6 +293,7 @@ When we hit any of these milestones, create a new dated snapshot `recognition-ge
 - [x] Refactor the Route~3 theorem chain assumptions to match splice completion (positive \(\mu_{\mathrm{spec}}\), factorization \(F_{\mathrm{pair}}=\overline{F_f}F_g\), normalization), and update the corresponding assumption labels/ledger text.
 - [x] Split A1 into A1a–A1d (paper + driver), and update A1’s status/plan to track which pieces are “cite Lagarias” vs genuinely new.
 - [x] Make A1b (phase–velocity) explicit in both driver and paper, matching the Lean interface and clarifying the density interpretation.
+- [ ] Strengthen the boundary-term gate interface to be non-vacuous: tie the `PhaseVelocityBoundaryTrace` “trace field” to the same 2D harmonic field whose Carleson-box energy defines `cofactorEbox_poisson` (Poisson/conjugate-Poisson model + boundary trace as a limit, not point-evaluation).
 
 ## Assumption Ledger (paper-facing map)
 
@@ -508,5 +508,6 @@ These are “hard elements” that will take multiple iterations. Keep each item
 - **2025-12-19**: Further shrink: split the bundled S2a gate into two explicit subgates (`CofactorPhaseLift` and `PhaseVelocityFTC`), and added `GreenTraceIdentity.of_lift_and_ftc` to rebuild the bundled trace gate from the smaller pieces.
 - **2025-12-19**: Re-boxed the single “Current hard wall” to the boundary-term gate: the log-branch CR boundary trace identity interface `CRBoundaryTraceInterfaces.CRBoundaryTraceLog` (Lean file `Port/CRBoundaryTraceInterfaces.lean`), which implies the generic `PhaseVelocityBoundaryTrace` hook.
 - **2025-12-19**: Refined the boxed wall to the *direct* Port-level boundary-term hook `PhaseVelocityBoundaryTrace` (in `Port/CofactorCRGreenS2Interfaces.lean`), and demoted `CRBoundaryTraceLog` to a semantic “archetype sufficient condition” implying it. Added a non-vacuity note: in any discharge, the trace field must be tied to the same energy model defining `cofactorEbox_poisson`.
+- **2025-12-19**: Strengthened the boxed wall again (honesty): replaced the too-weak trace hook by the Poisson-model boundary-limit gate `PhaseVelocityBoundaryTracePoisson` (in `Port/CofactorCRGreenS2Interfaces.lean`), which ties the phase velocity to the \(y\downarrow0\) boundary limit of the conjugate Poisson gradient of `cofactorLogAbs` (the same field defining `cofactorEbox_poisson`).
 
 

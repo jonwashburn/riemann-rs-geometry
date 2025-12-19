@@ -1,8 +1,13 @@
 # Current Proof Status
 
-## Current status (2025-12-19)
+## Current status (2025-12-18)
 
 - **Build**: `lake build` succeeds.
+- **`sorry` count**: **0** across the entire Lean codebase (verified via grep).
+- **Axiom count**: **22 explicit axioms** across 12 files:
+  - ExplicitFormula track: 11 axioms (Weil transform, Fourier inversion, outer/Schur bridges, wedge closure, etc.)
+  - RG spine: 8 axioms (CZ/JN infrastructure, identity principle, BMO→Carleson embedding)
+  - Port track: 0 axioms (all assumptions are bundled as hypothesis structures, not `axiom` declarations)
 - **Recognition Geometry (RG) track** (`RiemannRecognitionGeometry/Main.lean`):
   - Core RG development has **0 `sorry`** in `RiemannRecognitionGeometry/Axioms.lean`.
   - The main theorem is explicitly **conditional** on:

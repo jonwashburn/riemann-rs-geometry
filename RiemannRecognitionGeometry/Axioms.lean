@@ -679,8 +679,8 @@ contradicting the Carleson bound.
     CarlesonBound.lean and FeffermanStein.lean.
 
     Reference: Garnett, "Bounded Analytic Functions", Ch. II & IV -/
-theorem green_identity_for_phase (J : WhitneyInterval) (C : ℝ) (hC_pos : C > 0)
-    (E : ℝ) (hE_pos : E > 0) (hE_le : E ≤ C)
+theorem green_identity_for_phase (J : WhitneyInterval) (C : ℝ) (_hC_pos : C > 0)
+    (E : ℝ) (_hE_pos : E > 0) (_hE_le : E ≤ C)
     (h_bound : |argXi (J.t0 + J.len) - argXi (J.t0 - J.len)| ≤
                C_geom * Real.sqrt (E * (2 * J.len)) * (1 / Real.sqrt (2 * J.len))) :
     |argXi (J.t0 + J.len) - argXi (J.t0 - J.len)| ≤
@@ -876,9 +876,9 @@ lemma L_rec_lt_pi : L_rec < Real.pi := by
     **Note**: The constraint `hρ_re_upper` comes from the recognizer band definition
     where Λ_rec ≤ 2, giving σ ≤ 1/2 + 2*L. -/
 theorem criticalLine_phase_ge_L_rec (I : WhitneyInterval) (ρ : ℂ)
-    (hρ_zero : completedRiemannZeta ρ = 0)  -- ρ is a zeta zero
-    (hρ_im : ρ.im ∈ I.interval) (hρ_re : 1/2 < ρ.re)
-    (hρ_re_upper : ρ.re ≤ 1/2 + 2 * I.len)
+    (_hρ_zero : completedRiemannZeta ρ = 0)  -- ρ is a zeta zero
+    (_hρ_im : ρ.im ∈ I.interval) (hρ_re : 1/2 < ρ.re)
+    (_hρ_re_upper : ρ.re ≤ 1/2 + 2 * I.len)
     (hρ_re_strict : ρ.re < 1)  -- Critical strip bound: d < 1/2
     (hI_len_large : I.len ≥ 7)  -- From |ρ.im| > 14 for actual zeros
     (h_centered : |ρ.im - I.t0| ≤ I.len / 2) :
@@ -1148,8 +1148,7 @@ theorem blaschke_dominates_total (I : WhitneyInterval) (ρ : ℂ)
         calc
           |(2 * Real.pi : ℝ)| / 2 = (2 * Real.pi) / 2 := by simp [abs_of_pos hpos]
           _ = Real.pi := by
-                simpa [mul_comm] using
-                  (mul_div_cancel_left₀ (Real.pi) (2 : ℝ) (two_ne_zero : (2 : ℝ) ≠ 0))
+                simp [mul_comm]
       simpa [hRHS] using h_abs_le_pi
     exact (AddCircle.norm_coe_eq_abs_iff (p := (2 * Real.pi)) (x := blaschke_fs) hp).2 h_half_period
 
@@ -1303,8 +1302,7 @@ theorem blaschke_dominates_total_centered (ρ : ℂ)
         calc
           |(2 * Real.pi : ℝ)| / 2 = (2 * Real.pi) / 2 := by simp [abs_of_pos hpos]
           _ = Real.pi := by
-                simpa [mul_comm] using
-                  (mul_div_cancel_left₀ (Real.pi) (2 : ℝ) (two_ne_zero : (2 : ℝ) ≠ 0))
+                simp [mul_comm]
       simpa [hRHS] using h_abs_le_pi
     exact (AddCircle.norm_coe_eq_abs_iff (p := (2 * Real.pi)) (x := blaschke_fs) hp).2 h_half_period
 
@@ -1413,7 +1411,7 @@ theorem local_zero_free (I : WhitneyInterval) (B : RecognizerBand)
     (hB_base : B.base = I)
     (ρ : ℂ) (hρ_interior : ρ ∈ B.interior)
     (hρ_zero : completedRiemannZeta ρ = 0)
-    (hρ_re_upper : ρ.re ≤ 1)  -- Critical strip constraint
+    (_hρ_re_upper : ρ.re ≤ 1)  -- Critical strip constraint
     (h_width_lower : 2 * I.len ≥ |ρ.im|)   -- Lower bound: interval width ≥ |γ|
     (h_width_upper : 2 * I.len ≤ 10 * |ρ.im|)  -- Upper bound
     (hCA : ClassicalAnalysisAssumptions)

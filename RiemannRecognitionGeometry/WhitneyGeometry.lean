@@ -44,7 +44,7 @@ scale contains points with real part σ.
 -/
 
 /-- For σ ∈ (1/2, 1], find the appropriate dyadic scale. -/
-def findScale (σ : ℝ) (hσ_lower : 1/2 < σ) (hσ_upper : σ ≤ 1) : ℤ :=
+def findScale (σ : ℝ) (_hσ_lower : 1/2 < σ) (_hσ_upper : σ ≤ 1) : ℤ :=
   -- We need L such that λ_rec · L ≤ σ - 1/2 ≤ Λ_rec · L
   -- With λ_rec = 1/3 and Λ_rec = 3/2, we need L ≈ (σ - 1/2)
   -- Use k = ⌈-log₂(3(σ - 1/2))⌉
@@ -292,7 +292,7 @@ band coverage (which doesn't work for large zeros).
 -/
 
 /-- For any nonzero γ, find the scale j such that 2^(-j) ∈ [|γ|, 2|γ|). -/
-def scaleForGamma (γ : ℝ) (hγ : γ ≠ 0) : ℤ :=
+def scaleForGamma (γ : ℝ) (_hγ : γ ≠ 0) : ℤ :=
   -Int.ceil (Real.logb 2 |γ|)
 
 /-- For any nonzero γ and scale j, find the index m such that γ ∈ [m·2^(-j), (m+1)·2^(-j)). -/

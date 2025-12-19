@@ -1,4 +1,4 @@
-/-!
+/-
 # Port glue: bundle S2 (trace + pairing) assumptions into the bundled CR/Green targets
 
 This file is purely “wiring”:
