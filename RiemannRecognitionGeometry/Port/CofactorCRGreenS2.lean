@@ -1,4 +1,5 @@
 import RiemannRecognitionGeometry.Port.CofactorCRGreenS2Interfaces
+import RiemannRecognitionGeometry.Port.CofactorOuterLogBranch
 
 noncomputable section
 
@@ -14,14 +15,16 @@ namespace CofactorCRGreenS2
 This avoids differentiating the principal-branch `arg` and instead works with a genuine real-valued
 lift `θ` whose coercion agrees with the cofactor `Real.Angle` phase on the Whitney base. -/
 def Assumptions : Prop :=
-  ∃ T : CofactorCRGreenS2Interfaces.GreenTraceIdentity,
-    CofactorCRGreenS2Interfaces.PairingBound T
+  ∃ h : CofactorOuterLogBranch.CofactorOuterLogBranch,
+    CofactorCRGreenS2Interfaces.PairingBound (CofactorOuterLogBranch.greenTraceIdentity h)
 
 /-- `S2a` + `S2b` ⇒ the strong cofactor CR/Green bound. -/
 theorem cofactorCRGreenAssumptionsStrong_of_S2 (h : Assumptions) :
     CofactorCRGreenAssumptionsStrong := by
-  rcases h with ⟨T, hB⟩
-  exact CofactorCRGreenS2Interfaces.cofactorCRGreenAssumptionsStrong_of_greenTrace_and_pairing T hB
+  rcases h with ⟨hOLB, hB⟩
+  exact
+    CofactorCRGreenS2Interfaces.cofactorCRGreenAssumptionsStrong_of_greenTrace_and_pairing
+      (CofactorOuterLogBranch.greenTraceIdentity hOLB) hB
 
 /-- `S2` (trace + pairing) also discharges the weaker energy-based cofactor CR/Green API by
 composing `S2 → Strong → Weak`. -/

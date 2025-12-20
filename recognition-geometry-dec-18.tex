@@ -1835,7 +1835,7 @@ We omit file-by-file line counts here because the Lean development is under acti
 This repository also contains an ongoing analytic-number-theory formalization built around a \emph{boundary certificate} strategy (as in \texttt{CPM.tex}). The current status can be summarized as follows.
 
 \begin{itemize}
-    \item \textbf{Deprecated target (renormalized-tail BMO).} A previously tracked goal was a uniform small-\(\mathrm{BMO}\) bound for a renormalized tail of \(\log|\xi(\tfrac12+it)|\) defined by subtracting finitely many local zero terms in dyadic annuli \(B(I,K)\). As stated, a uniform bound with a small numerical constant cannot hold: for Whitney half-length \(L>2/3\) the annulus selection is empty (since every zeta zero satisfies \(\Re\rho<1\), hence \(\sigma_\rho=\Re\rho-1/2<1/2\)), and critical-line zeros produce a universal local mean-oscillation floor unless they are renormalized out.
+    \item \textbf{Deprecated target (renormalized-tail BMO).} A previously tracked goal was a uniform small-\(\mathrm{BMO}\) bound for a renormalized tail of \(\log|\zeta(\tfrac12+it)|\) defined by subtracting finitely many local zero terms in dyadic annuli \(B(I,K)\). As stated, a uniform bound with a small numerical constant cannot hold: for Whitney half-length \(L>2/3\) the annulus selection is empty (since every zeta zero satisfies \(\Re\rho<1\), hence \(\sigma_\rho=\Re\rho-1/2<1/2\)), and critical-line zeros produce a universal local mean-oscillation floor unless they are renormalized out.
 
     \item \textbf{What is provable unconditionally (height-dependent control).} One can obtain fully explicit, height-dependent Carleson-box bounds for the off-line zero measure
     \[
@@ -2726,16 +2726,17 @@ The Cauchy--Riemann identity \(\partial_x v=-\partial_y u\) in $\Omega$ then yie
         \emph{Holistic packaging (recommended).} Rather than treating this Poisson pairing/trace identity as an orphan gate, we can package the intended analytic object as a single named interface:
         \texttt{RiemannRecognitionGeometry/Port/CofactorOuterLogBranch.lean} defines
         \texttt{Port.CofactorOuterLogBranch.CofactorOuterLogBranch}, which bundles (i) a real-valued phase lift, (ii) an FTC-valid phase velocity, and (iii) the Poisson pairing gate tied to the same Poisson-model energy.
-        This is the “outer/log-branch normalization” viewpoint: there should exist a holomorphic nonvanishing cofactor with a log branch \(u+iv\) whose boundary real part is \(\log|\xi(\tfrac12+it)|\) (our \texttt{cofactorLogAbs}) and whose boundary imaginary part provides the cofactor phase lift.
+        This is the “outer/log-branch normalization” viewpoint: there should exist a holomorphic nonvanishing cofactor with a log branch \(u+iv\) whose boundary real part is \(\log|\zeta(\tfrac12+it)|\) (our \texttt{cofactorLogAbs}) and whose boundary imaginary part provides the cofactor phase lift.
         For semantic faithfulness one can alternatively package a log-branch Cauchy--Riemann identity as
         \texttt{RiemannRecognitionGeometry/Port/CRBoundaryTraceInterfaces.lean} (\texttt{CRBoundaryTraceLog}), which implies the direct trace hook.
         In the driver, the current “boxed wall” is upgraded to this holistic outer/log-branch package (since it implies the Poisson pairing hook and matches the intended analytic meaning).
     \end{itemize}
 
-    \item \textbf{B2 (Oscillation certificate for \(\log|\xi|\)).}
+    \item \textbf{B2 (Oscillation certificate for \(\log|\zeta|\)).}
     The RG theorem also assumes an explicit oscillation/BMO certificate
-    \(\exists M,\ \mathrm{InBMOWithBound}(\log|\xi|)\,M \wedge M\le C_{\mathrm{tail}}\)
+    \(\exists M,\ \mathrm{InBMOWithBound}(\log|\zeta|)\,M \wedge M\le C_{\mathrm{tail}}\)
     (the \texttt{OscillationTarget} in \texttt{RiemannRecognitionGeometry/Assumptions.lean}).
+    \emph{Remark.} This must be phrased for \(\log|\zeta|\) (or an explicitly gamma-renormalized avatar), not for the completed \(\xi/\Lambda\)-channel: the archimedean \(\Gamma_{\mathbb R}\)-factor contributes a linear-in-\(|t|\) drift term in \(\log|\Lambda(\tfrac12+it)|\), which violates global BMO.
 
     \item \textbf{B3 (Classical-analysis axioms still present in compiled modules).}
     Some infrastructure theorems are currently carried as explicit axioms in the Lean library, but for an unconditional \emph{written} proof these are standard results that can be cited:
@@ -2747,6 +2748,45 @@ The Cauchy--Riemann identity \(\partial_x v=-\partial_y u\) in $\Omega$ then yie
     \end{itemize}
     In the present manuscript, these are treated as \emph{external} theorems; the remaining nontrivial work is concentrated in B1/B2 (RG track) and A1/A2 (Route~3 track).
 \end{itemize}
+
+\begin{theorem}[RG chain (conditional): zero-free to the right of the critical line]\label{thm:rg_chain_conditional}
+Assume the two RG bottlenecks B1 and B2 (as stated above), together with the standard external analytic inputs listed in B3. Then there are no zeros \(\rho\) of the completed zeta function \(\xi/\Lambda\) in the half-strip \(1/2<\Re\rho<1\).
+
+Equivalently (since \(\Gamma_{\mathbb R}(s)\neq 0\) for \(\Re(s)>0\)), there are no zeta zeros in \(1/2<\Re\rho<1\). In particular, under the same assumptions, every nontrivial zero satisfies \(\Re\rho=1/2\) (the Riemann Hypothesis).
+\end{theorem}
+
+\begin{proof}
+We run the Recognition Geometry contradiction on the boundary line \(\Re(s)=1/2\), using the phase modeled modulo \(2\pi\) (i.e.\ in \(\mathbb{R}/2\pi\mathbb{Z}\)) to avoid principal-branch discontinuities.
+
+Fix a putative zero \(\rho\) with \(1/2<\Re\rho<1\). Since \(\Gamma_{\mathbb R}(\rho)\neq 0\) for \(\Re(\rho)>0\), the identity \(\Lambda(s)=\Gamma_{\mathbb R}(s)\zeta(s)\) implies \(\zeta(\rho)=0\) as well. Thus it is enough to rule out zeros of \(\zeta\) in the half-strip.
+
+Let \(d:=\Re\rho-\tfrac12>0\), and let \(I\) be the centered Whitney interval with base point \(t_0=\Im\rho\) and half-length \(2d\). Consider the total phase signal \(R(I)\), defined as the norm of the phase change of \(\zeta(\tfrac12+it)\) across the endpoints of \(I\) in \(\mathbb{R}/2\pi\mathbb{Z}\) (this is \texttt{totalPhaseSignal} in \texttt{RiemannRecognitionGeometry/Axioms.lean}).
+
+\noindent\textbf{(Lower bound: Blaschke trigger).}
+By the Poisson--Jensen/Blaschke computation (Track~2 in \texttt{RiemannRecognitionGeometry/PoissonJensen.lean} and the derived lemmas in \texttt{Axioms.lean}), the presence of a zero \(\rho\) forces a Blaschke contribution at scale \(I\) of size at least \(L_{\mathrm{rec}}\) (numerically \(L_{\mathrm{rec}}=2.2\) in the Lean development).
+
+\noindent\textbf{(Upper bound: Carleson/energy bound from oscillation).}
+By B2, there exists \(M\) such that \(\mathrm{InBMOWithBound}(\log|\zeta(\tfrac12+it)|)\,M\) and \(M\le C_{\mathrm{tail}}\).
+Fefferman--Stein (B3) implies the Carleson/Dirichlet energy bound \(E(I)\le K_{\mathrm{tail}}(M)\,|I|\), with \(K_{\mathrm{tail}}(M)=C_{\mathrm{FS}}\,M^2\) (this is the scale-correct `BMO \(\to\) energy' step in the code).
+Then B1 (the outer/log-branch package) provides the CR/Green conversion from energy to a cofactor phase-change bound. In the driver this yields a uniform tail phase bound of the form
+\[
+  |R(I)| \le U_{\mathrm{tail}}(M),
+\]
+where \(U_{\mathrm{tail}}(M)=C_{\mathrm{geom}}\sqrt{K_{\mathrm{tail}}(M)}\) (see \texttt{U\_tail} in \texttt{RiemannRecognitionGeometry/Basic.lean} and \texttt{totalPhaseSignal\_bound} in \texttt{Axioms.lean} / \texttt{Port/TotalPhaseSignalBound.lean}).
+
+\noindent\textbf{(Dominance and numeric closure).}
+Combining the Blaschke decomposition with the tail bound gives
+\[
+  R(I)\ \ge\ L_{\mathrm{rec}} - U_{\mathrm{tail}}(M)
+  \qquad\text{and}\qquad
+  R(I)\ \le\ U_{\mathrm{tail}}(M).
+\]
+If \(M\le C_{\mathrm{tail}}\), monotonicity of \(U_{\mathrm{tail}}\) gives \(U_{\mathrm{tail}}(M)\le U_{\mathrm{tail}}(C_{\mathrm{tail}})\). The Lean development proves the explicit numeric inequality \(U_{\mathrm{tail}}(C_{\mathrm{tail}})<L_{\mathrm{rec}}/2\) (equivalently \(L_{\mathrm{rec}}>2\,U_{\mathrm{tail}}(C_{\mathrm{tail}})\)), so we get \(L_{\mathrm{rec}}>2\,U_{\mathrm{tail}}(M)\). Hence the two inequalities for \(R(I)\) are incompatible, a contradiction.
+
+Therefore there is no zero \(\rho\) with \(1/2<\Re\rho<1\).
+
+Finally, to deduce RH, use the functional equation symmetry of the completed zeta function \(\Lambda(s)=\Lambda(1-s)\): if a zero had \(\Re\rho<1/2\), then \(1-\rho\) would be a zero with \(\Re(1-\rho)>1/2\), which we have just ruled out. Thus every nontrivial zero satisfies \(\Re\rho=1/2\).
+\end{proof}
 
 \section{Notation Index}
 

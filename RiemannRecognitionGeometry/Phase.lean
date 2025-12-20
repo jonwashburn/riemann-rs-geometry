@@ -21,7 +21,7 @@ open Real Complex
 
 namespace RiemannRecognitionGeometry
 
-/-- Phase of ξ on the critical line as an element of `Real.Angle = ℝ/2πℤ`.
+/-- Phase of ζ on the critical line as an element of `Real.Angle = ℝ/2πℤ`.
 
 This is the argument **modulo 2π**, so branch cut jumps of `Complex.arg` are identified.
 At zeros we still take the junk value coming from `arg 0 = 0`.

@@ -895,20 +895,28 @@ lemma meanOscillation_le_sup_osc (f : ℝ → ℝ) (a b : ℝ) (hab : a < b)
         apply mul_le_mul_of_nonneg_left h_int_bound h_inv_nonneg
     _ = M := by field_simp
 
-/-! ## The Completed Zeta Function -/
+/-! ## The zeta function on the critical line (boundary data) -/
 
-/-- The completed Riemann zeta function on the critical line. -/
+/-- The Riemann zeta function on the critical line. -/
 def xiOnCriticalLine (t : ℝ) : ℂ :=
-  completedRiemannZeta (1/2 + t * Complex.I)
+  riemannZeta ((1 / 2 : ℂ) + t * Complex.I)
 
-/-- The logarithm of |ξ| on the critical line (regularized at zeros).
-    At zeros of ξ, we define this to be 0 (rather than -∞).
+/-- The completed zeta function `Λ(s)` (Mathlib: `completedRiemannZeta`) on the critical line.
+
+This is **not** the object used for the BMO/Carleson boundary datum in this repo: the numerical
+constant `C_tail` is a `log|ζ|`-type bound, so `logAbsXi` is defined using `xiOnCriticalLine`
+above (zeta on the line), not `completedZetaOnCriticalLine`. -/
+def completedZetaOnCriticalLine (t : ℝ) : ℂ :=
+  completedRiemannZeta ((1 / 2 : ℂ) + t * Complex.I)
+
+/-- The logarithm of |ζ| on the critical line (regularized at zeros).
+    At zeros of ζ, we define this to be 0 (rather than -∞).
     This regularization is measure-theoretically inconsequential since zeros are isolated,
     and it ensures logAbsXi is a well-defined real-valued function in BMO. -/
 def logAbsXi (t : ℝ) : ℝ :=
   if xiOnCriticalLine t = 0 then 0 else Real.log (Complex.abs (xiOnCriticalLine t))
 
-/-- The argument of ξ on the critical line. -/
+/-- The argument of ζ on the critical line. -/
 def argXi (t : ℝ) : ℝ :=
   (xiOnCriticalLine t).arg
 
@@ -1007,7 +1015,7 @@ theorem completed_zeta_polynomial_bound
     4. Combined: |ξ(1/2+it)| ≤ C(1+|t|)^A where A = A₁ + A₂ -/
 theorem xi_polynomial_growth_axiom
     (h_bound : ∃ C A : ℝ, C > 0 ∧ A > 0 ∧
-               ∀ t : ℝ, Complex.abs (completedRiemannZeta ((1/2 : ℂ) + t * Complex.I)) ≤ C * (1 + |t|)^A) :
+               ∀ t : ℝ, Complex.abs (riemannZeta ((1/2 : ℂ) + t * Complex.I)) ≤ C * (1 + |t|)^A) :
     ∃ C A : ℝ, C > 0 ∧ A > 0 ∧
     ∀ t : ℝ, Complex.abs (xiOnCriticalLine t) ≤ C * (1 + |t|)^A := by
   -- Use the combined bound directly
@@ -1015,7 +1023,7 @@ theorem xi_polynomial_growth_axiom
   use C, A
   refine ⟨hC_pos, hA_pos, ?_⟩
   intro t
-  -- xiOnCriticalLine t = completedRiemannZeta (1/2 + t * I)
+  -- xiOnCriticalLine t = riemannZeta (1/2 + t * I)
   unfold xiOnCriticalLine
   exact h_bd t
 
@@ -2086,7 +2094,7 @@ theorem fefferman_stein_axiom (f : ℝ → ℝ) (M : ℝ) (h_bmo : InBMOWithBoun
     Takes polynomial upper and lower bounds as explicit hypotheses. -/
 theorem logAbsXi_growth
     (h_upper_bound : ∃ C A : ℝ, C > 0 ∧ A > 0 ∧
-                     ∀ t : ℝ, Complex.abs (completedRiemannZeta ((1/2 : ℂ) + t * Complex.I)) ≤ C * (1 + |t|)^A)
+                     ∀ t : ℝ, Complex.abs (xiOnCriticalLine t) ≤ C * (1 + |t|)^A)
     (h_lower_bound : ∃ c B : ℝ, c > 0 ∧ B > 0 ∧
                      ∀ t : ℝ, xiOnCriticalLine t ≠ 0 →
                      Complex.abs (xiOnCriticalLine t) ≥ c * (1 + |t|)^(-B)) :
@@ -2120,7 +2128,7 @@ theorem logAbsXi_growth
     simp only [if_neg h_nz]
 
     -- From the non-zero hypothesis, |ξ| > 0
-    have h_abs_pos : Complex.abs (completedRiemannZeta (1/2 + ↑t * Complex.I)) > 0 :=
+    have h_abs_pos : Complex.abs (xiOnCriticalLine t) > 0 :=
       Complex.abs.pos h_nz
 
     -- Key bounds from axioms (applied to t)
