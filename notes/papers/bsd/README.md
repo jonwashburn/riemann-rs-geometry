@@ -16,5 +16,14 @@ Start with the “core engine” references:
 - Poitou–Tate / Selmer complexes (Nekovář)
 - Kobayashi/Pollack/Lei–Loeffler–Zerbes for signed supersingular theory
 
+Second pass (high ROI for removing “disc pinch” conditionality):
+- Recent IMC equality papers (2024–2025) that may replace the internal disc engine:
+  - Yan–Zhu (arXiv:2412.20078)
+  - Burungale–Castella–Skinner (arXiv:2405.00270)
+  - Burungale–Skinner–Tian–Wan (arXiv:2409.01350)
+  - Sprung (Adv. Math. 2024; `S0001870824002561`)
+  - Castella (arXiv:2502.19618)
+  - Keller–Yin (arXiv:2410.23241)
+
 
 

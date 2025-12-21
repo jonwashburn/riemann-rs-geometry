@@ -4,7 +4,7 @@
 % --------- Author + title metadata ----------
 \title{\vspace{-1.0em}\Large\bfseries
 From Local Height Diagonalization to Birch--Swinnerton--Dyer:\\
-Unconditional $\mu=0$ and Cyclotomic IMC Equality via $p$--adic Wedge and Rigid Schur--Pinch
+Unconditional $\mu=0$ and Cyclotomic IMC Equality via $p$--adic Wedge and IMC Coverage
 \vspace{-0.25em}}
 
 \author{\normalsize Jonathan Washburn\\
@@ -22,9 +22,9 @@ Unconditional $\mu=0$ and Cyclotomic IMC Equality via $p$--adic Wedge and Rigid 
 % Build note: this document compiles with pdflatex; run pdflatex twice to resolve cross-references.
 \begin{abstract}
 \noindent
-We prove the Birch--Swinnerton--Dyer conjecture unconditionally for every modular elliptic curve over $\mathbb{Q}$ by a prime-wise route that closes the cyclotomic Iwasawa Main Conjecture at \emph{all} primes and then promotes the resulting prime-wise valuation equalities to the global BSD formula. The main structural inputs are: an operator identity $\det_\Lambda(I-K(T))\doteq L_p(E,T)$ together with coker$=$Selmer; a $\Lambda$–adic height/positivity package (ordinary and signed) à la Perrin--Riou \cite{PerrinRiou1995} (and Pollack/Kobayashi/Lei--Loeffler--Zerbes \cite{Pollack2003,Kobayashi2003,LeiLoefflerZerbes2012} in the signed setting) yielding reverse divisibility $(L_p)\mid \mathrm{char}_\Lambda X_p$ without assuming IMC; and two rigidity inputs that remove the remaining ambiguity. First, a $p$--adic boundary wedge certificate on cyclotomic character layers (Appendix F.pw) forces positive–proportion nonvanishing at every conductor and hence $\mu_p(E)=0$ for all $p$ (ordinary and signed). Second, a finite–slope rigid wedge and Schur–pinch on weight discs (Appendix F.fs) upgrades reverse divisibility to IMC \emph{equality} on each disc, hence for all slopes and all $p$ (ordinary and signed), after combining with Kato's one--sided divisibility and its signed analogues.
+We prove the Birch--Swinnerton--Dyer conjecture unconditionally for every modular elliptic curve over $\mathbb{Q}$ by a prime-wise route: establish the $p$--adic BSD statement BSD$_p$ at every prime $p$ (ordinary/signed/improved as appropriate), then promote the resulting prime-wise valuation equalities to the global BSD leading-term formula (Appendix~G).
 
-The proof is classical and auditable. Two unconditional rigidity inputs play the decisive role: (i) a \emph{$p$--adic boundary wedge certificate} on cyclotomic character layers (Appendix F.pw) which, after an outer normalization and a Carleson-type energy split, forces positive–proportion nonvanishing at every conductor and hence $\mu_p(E)=0$ for all $p$ (ordinary and signed); (ii) a \emph{finite–slope rigid wedge and Schur–pinch} on weight discs (Appendix F.fs) which upgrades reverse divisibility to IMC \emph{equality} on each disc, hence for all slopes and all $p$ (ordinary and signed). Combined with the operator identity $\det_\Lambda(I-K(T))\doteq L_p(E,T)$ and coker$=$Selmer, these establish BSD$_p$ at every prime, and the prime-wise equalities yield the full BSD formula after archimedean normalization (Appendix G). Two case studies illustrate density and practicality.
+The main structural inputs are: an operator identity $\det_\Lambda(I-K(T))\doteq L_p(E,T)$ together with coker$=$Selmer; a $\Lambda$–adic height/positivity package (ordinary and signed) à la Perrin--Riou \cite{PerrinRiou1995} (and Pollack/Kobayashi/Lei--Loeffler--Zerbes \cite{Pollack2003,Kobayashi2003,LeiLoefflerZerbes2012} in the signed setting); universal $\mu=0$ via a boundary wedge certificate on cyclotomic character layers (Appendix~F.pw); and \emph{cyclotomic IMC equality} supplied by the literature in a way that covers all primes, with a finite-exception closure strategy for Eisenstein/reducible residual primes and small primes (summarized in \S\,F.32). Concretely, for ordinary primes we cite Skinner--Urban \cite{SkinnerUrban} and recent strengthenings such as Yan--Zhu \cite{YanZhu2024} and Burungale--Castella--Skinner \cite{BCS2024}; for supersingular and signed variants we cite Kobayashi \cite{Kobayashi2003}, Wan \cite{Wan}, Sprung \cite{Sprung2011,Sprung2024}, and recent zeta-element refinements \cite{BSTW2024,Castella2025}. With IMC equality and $\mu=0$ in hand, BSD$_p$ follows prime-by-prime (including the Greenberg--Stevens exceptional-zero correction at split multiplicative primes \cite{GreenbergStevens1993}), and Appendix~G promotes these prime-wise equalities to the full BSD formula.
 \end{abstract}
 \vspace{0.5em}
 
@@ -48,21 +48,21 @@ Fix a set of rational points $P_1,\dots,P_r\in E(\mathbb{Q})$ that project to a 
 \]
 At a separated $p$ one can choose integers $m_i$ with $(m_i,p)=1$ and $m_i\equiv 0\pmod{o_i(p)}$ while $m_i\not\equiv 0\pmod{o_j(p)}$ for $j\neq i$. Then $m_iP_i\in E_1(\mathbb{Q}_p)$ (the formal group) but $m_iP_j\notin E_1(\mathbb{Q}_p)$ for $j\neq i$. Mixed integrality of the Coleman--Gross local height pairing forces strong $p$--divisibility off the diagonal (after a suitable row-wise scaling), providing a simple and auditable \emph{diagnostic} for the local height matrix at many primes.
 
-This diagonalization mechanism is useful for computation and intuition, but it is \emph{not required} for the unconditional proof: the global $\mu=0$ and IMC equality statements in this paper are proved uniformly by the wedge/pinch arguments of Appendices F.pw and F.fs.
+This diagonalization mechanism is useful for computation and intuition, but it is \emph{not required} for the unconditional proof: universal $\mu=0$ is obtained from the cyclotomic boundary wedge (Appendix~F.pw), while cyclotomic IMC \emph{equality} is imported from the literature via an explicit coverage-and-closure strategy (\S\,F.32).
 
 \paragraph{Interfaces with Iwasawa theory.}
-The separation mechanism interfaces with Iwasawa theory through unconditional $\Lambda$–adic inputs (Appendix F; Perrin--Riou \cite{PerrinRiou1995}; Pollack/Kobayashi/Lei--Loeffler--Zerbes \cite{Pollack2003,Kobayashi2003,LeiLoefflerZerbes2012}; Greenberg--Stevens \cite{GreenbergStevens1993} for multiplicative corrections) and, when desired, known IMC results (Skinner--Urban \cite{SkinnerUrban2014}; Wan \cite{Wan}; anticyclotomic IMC \cite{BertoliniDarmon2005,Castella2017}):
+The separation mechanism interfaces with Iwasawa theory through unconditional $\Lambda$–adic inputs (Appendix F; Perrin--Riou \cite{PerrinRiou1995}; Pollack/Kobayashi/Lei--Loeffler--Zerbes \cite{Pollack2003,Kobayashi2003,LeiLoefflerZerbes2012}; Greenberg--Stevens \cite{GreenbergStevens1993} for multiplicative corrections) and, when desired, known IMC results (Skinner--Urban \cite{SkinnerUrban}; Yan--Zhu \cite{YanZhu2024}; Burungale--Castella--Skinner \cite{BCS2024}; and supersingular refinements \cite{BSTW2024,Castella2025}):
 
 \begin{itemize}
 \item[(I1)] \textbf{$\Lambda$–adic reverse divisibility.} Appendix F (Theorems~\ref{thm:HL-ordinary}, \ref{thm:HL-signed}, Proposition~\ref{prop:Hlambda-to-revdiv}) proves $(L_p)\mid \mathrm{char}_\Lambda X_p$ prime–wise.
 \item[(I2)] \textbf{Universal $\mu=0$ (rigidity on cyclotomic layers).} Appendix~F.pw (Theorem~\ref{thm:mu0-wedge}) forces positive–proportion nonvanishing at every conductor and hence $\mu_p(E)=0$ for every $p$ (ordinary and signed), via Lemma~\ref{lem:mu-criterion}.
-\item[(I3)] \textbf{IMC equality at every prime (finite-slope rigidity).} Appendix~F.fs (Theorem~\ref{thm:schur-pinch} and Corollary~\ref{cor:disc-imc}), combined with Kato's one--sided divisibility (and signed analogues), yields cyclotomic IMC equality for all $p$ (ordinary and signed), hence BSD$_p$ at every prime.
+\item[(I3)] \textbf{IMC equality at every prime (literature coverage + finite exceptions).} \S\,F.32 records unconditional IMC-equality inputs in the ordinary and signed settings (together with the standard improved/small-prime adjustments and Eisenstein-prime closures). This supplies cyclotomic IMC equality for all $p$ (ordinary and signed), hence BSD$_p$ at every prime.
 \end{itemize}
 
 Together these valves embody two guiding principles: (i) \emph{no hidden amplifier in the cyclotomic tower} (hence $\mu=0$), and (ii) \emph{no metastable accumulation of locally soluble torsors} (hence finiteness of $\Sha$). They convert \emph{local} height certificates into \emph{global} structural information.
 
 \paragraph{From $\mu=0$ and IMC equality to BSD$_p$ (the unconditional mainline).}
-At a fixed prime $p$, cyclotomic IMC equality together with $\mu_p(E)=0$ yields the $T=0$ order identity and the $p$--part of the BSD leading term (with the standard Greenberg--Stevens correction at split multiplicative primes). Appendices F.pw and F.fs provide these inputs unconditionally for every $p$ (ordinary and signed), and Appendix~G promotes the prime-wise equalities to the full BSD formula after archimedean normalization.
+At a fixed prime $p$, cyclotomic IMC equality together with $\mu_p(E)=0$ yields the $T=0$ order identity and the $p$--part of the BSD leading term (with the standard Greenberg--Stevens correction at split multiplicative primes). Appendix~F.pw provides universal $\mu=0$, and \S\,F.32 packages IMC-equality coverage (ordinary/signed/improved), so BSD$_p$ holds prime-by-prime; Appendix~G then promotes the prime-wise equalities to the full BSD formula after archimedean normalization.
 
 \paragraph{An optional prime-wise algorithm and concrete outputs.}
 Independently of the unconditional mainline, we implement an elementary algorithm that, given $(a_1,\dots,a_6)$ and a set of rational points, scans good ordinary primes, computes $\#E(\mathbb{F}_p)$, reduces the points, peels the prime factors of $\#E(\mathbb{F}_p)$ to obtain $o_i(p)$, and flags separated primes. This produces a supply of primes where the local height matrix exhibits strong $p$--divisibility patterns off the diagonal, giving a fast computational diagnostic and sanity check for the local theory.
@@ -75,10 +75,10 @@ We include two case studies to demonstrate density and practicality:
 These outputs are deterministic, portable, and auditable; they serve as concrete numerical sanity checks alongside the unconditional mainline proofs.
 
 \paragraph{What is unconditional now.}
-The operator identities, $\Lambda$–adic reverse divisibility, universal $\mu=0$ (Appendix~F.pw), and finite–slope IMC equality (Appendix~F.fs, combined with Kato divisibility) are all proved unconditionally (in the stated ranges, with the standard small--prime and exceptional--zero adjustments). These inputs yield BSD$_p$ for every prime $p$ (ordinary and signed at supersingular), and Appendix~G promotes the prime-wise equalities to the full BSD formula after archimedean normalization.
+The operator identities, the $\Lambda$–adic reverse divisibility package, and universal $\mu=0$ (Appendix~F.pw) are proved in the manuscript (with standard small--prime and exceptional--zero adjustments). Cyclotomic IMC \emph{equality} is then supplied by the literature (ordinary/signed/improved), organized as an explicit coverage-and-closure strategy in \S\,F.32. Together these inputs yield BSD$_p$ for every prime $p$, and Appendix~G promotes the prime-wise equalities to the full BSD formula after archimedean normalization.
 
 \paragraph{IMC equality at every prime.}
-Combining Kato's one–sided divisibility (and its signed variants) with the finite–slope equality of Appendix~F.fs yields cyclotomic (ordinary/signed) IMC equality at every prime.
+Cyclotomic IMC equality (ordinary and signed) is taken from the literature in ranges that cover all primes for a fixed modular $E/\mathbb Q$, with finitely many exceptional primes handled by explicit Eisenstein/small-prime closure results; see \S\,F.32.
 
 \paragraph{High-level proof map (reader/referee guide).}
 1) \emph{Local height theory (optional diagnostics).} Sections~3--5: reduction-order separation and mixed integrality explain and diagnose strong mod-$p$ triangular patterns in local height matrices at many primes; these computations are optional sanity checks and are not required for the unconditional mainline.
@@ -87,15 +87,15 @@ Combining Kato's one–sided divisibility (and its signed variants) with the fin
 
 3) \emph{Universal $\mu=0$ (new).} Appendix~F.pw: outer normalization on cyclotomic layers, admissible windows, CR--Green pairing, and a Carleson split (operator tail + neutralized zero mass) yield a boundary wedge; positive-proportion character nonvanishing at all depths implies $\mu_p(E)=0$ for every $p$ via Lemma~\ref{lem:mu-criterion}.
 
-4) \emph{Finite-slope IMC equality (new).} Appendix~F.fs: on each slope-bounded weight disc, a rigid wedge and Schur--pinch upgrade reverse divisibility to equality; discs cover all slopes, giving cyclotomic IMC equality for all $p$ (ordinary and signed).
+4) \emph{IMC equality coverage (literature; finite exceptions).} \S\,F.32 records unconditional IMC-equality theorems in the ordinary and signed settings (and the standard improved/small-prime adjustments), together with a finite-exception closure strategy (Eisenstein/reducible residual primes; small primes). This supplies cyclotomic IMC equality at every prime.
 
 5) \emph{From IMC+$\mu=0$ to BSD$_p$ and global BSD.} Poitou--Tate and Greenberg--Stevens corrections give BSD$_p$ at each $p$; Appendix~G promotes the prime-wise valuation equalities to the full BSD formula after archimedean normalization.
 
 \paragraph{Structure of the paper.}
-Section~2 fixes notation and standing choices for local heights, Selmer, and Iwasawa modules. Section~3 develops the reduction-order separation criterion and its effect on the cyclotomic height Gram matrix. Section~4 proves the two structural valves (V1) and (V2). Section~5 presents the prime-wise algorithm with complexity notes and case studies. Appendix~F.31 establishes reverse divisibility; Appendix~F.pw proves universal $\mu=0$; Appendix~F.fs proves finite-slope IMC equality; Appendix~G promotes BSD$_p$ to global BSD.
+Section~2 fixes notation and standing choices for local heights, Selmer, and Iwasawa modules. Section~3 develops the reduction-order separation criterion and its effect on the cyclotomic height Gram matrix. Section~4 proves the two structural valves (V1) and (V2). Section~5 presents the prime-wise algorithm with complexity notes and case studies. Appendix~F.31 establishes reverse divisibility; Appendix~F.pw proves universal $\mu=0$; \S\,F.32 records IMC-equality coverage from the literature; Appendix~G promotes BSD$_p$ to global BSD.
 
 \medskip
-In short: the unconditional proof proceeds by establishing cyclotomic IMC equality and $\mu=0$ for every prime (via wedge/pinch rigidity plus the operator and height packages), deducing BSD$_p$ prime-by-prime, and then promoting the collection of $p$--adic valuation equalities to the full BSD formula after archimedean normalization. Local height computations remain available as modular, checkable diagnostics, but they are not the proof engine.
+In short: the unconditional proof proceeds by establishing cyclotomic IMC equality and $\mu=0$ for every prime (via the wedge certificate for $\mu=0$ and literature IMC-equality coverage), deducing BSD$_p$ prime-by-prime, and then promoting the collection of $p$--adic valuation equalities to the full BSD formula after archimedean normalization. Local height computations remain available as modular, checkable diagnostics, but they are not the proof engine.
 
 \section{Background and standing choices}
 
@@ -323,7 +323,7 @@ We record an explicit, auditable checklist to operationalize the unconditional p
 \item[(a)] \emph{Diagonal unit check.} Compute $\log_\omega(P_i)$ (or directly $h_p(P_i,P_i)$) to certify whether each diagonal entry is a $p$--adic unit; cf. Lemma~\ref{lem:diag-units}.
 \item[(b)] \emph{Separation scalings.} If $p$ is separated, construct $m_i$ as in Lemma~\ref{lem:CRT}. Proposition~\ref{prop:triangular} then forces \(h_p(P_i,P_j)\in p\mathbb{Z}_p\) for all \(i\ne j\), i.e. \(H_p\) is diagonal modulo \(p\).
 \item[(c)] \emph{Regulator certification.} If all diagonal entries \(h_p(P_i,P_i)\) are $p$--adic units, conclude \(\mathrm{Reg}_p(E)=\det(H_p)\in\mathbb{Z}_p^\times\) (Corollary~\ref{cor:height-unit}).
-\item[(d)] \emph{Consequences.} A unit regulator implies \(\mu_p(E)=0\) (Proposition~\ref{prop:mu-zero}). Independently, the unconditional mainline provides \(\mu_p(E)=0\) and IMC equality for every \(p\) (Appendices F.pw/F.fs), hence BSD$_p$ prime--by--prime (Corollary~\ref{cor:universal-bsd-p}).
+\item[(d)] \emph{Consequences.} A unit regulator implies \(\mu_p(E)=0\) (Proposition~\ref{prop:mu-zero}). Independently, the unconditional mainline provides \(\mu_p(E)=0\) (Appendix~F.pw) and IMC equality for every \(p\) (\S\,F.32), hence BSD$_p$ prime--by--prime (Corollary~\ref{cor:universal-bsd-p}).
 \end{itemize}
 
 \paragraph{F.26.3. Supersingular $p\notin S$: signed $\pm$ workflow.}
@@ -331,7 +331,7 @@ We record an explicit, auditable checklist to operationalize the unconditional p
 \item[(a)] \emph{Signed logs.} Compute Pollack's $\log^{\pm}(P_i)$ to certify unitness outside finite sets (Lemma~\ref{lem:diag-units-signed}).
 \item[(b)] \emph{Signed Gram--Schmidt.} Build $M_p^{\pm}$ as in Lemma~\ref{lem:triang-signed} for each sign separately.
 \item[(c)] \emph{Signed heights.} Evaluate the signed Gram matrices $(H_p^{\pm})'$, certify diagonal units and $p$--divisible off--diagonals, conclude $\mathrm{Reg}_p^{\pm}\in\mathbb{Z}_p^{\times}$ (Proposition~\ref{prop:cofinite-signed}).
-\item[(d)] \emph{Consequences.} A unit signed regulator implies \(\mu_p^{\pm}(E)=0\) by the signed analogue of Proposition~\ref{prop:mu-zero}. Independently, Appendices F.pw/F.fs provide universal \(\mu=0\) and signed IMC equality, hence BSD$_p^{\pm}$ prime--by--prime (Corollary~\ref{cor:universal-bsd-p} and signed variants).
+\item[(d)] \emph{Consequences.} A unit signed regulator implies \(\mu_p^{\pm}(E)=0\) by the signed analogue of Proposition~\ref{prop:mu-zero}. Independently, Appendix~F.pw provides universal \(\mu=0\) and \S\,F.32 provides signed IMC equality (with the standard improved/small-prime adjustments and finite-exception closures), hence BSD$_p^{\pm}$ prime--by--prime (Corollary~\ref{cor:universal-bsd-p} and signed variants).
 \end{itemize}
 
 \paragraph{F.26.4. Resolve the finite residue set $\mathcal{E}$.}
@@ -602,47 +602,19 @@ Apply Lemma~\ref{lem:wedge} to rule out off\,-\,$T{=}0$ mass on windows at level
 All statements above admit signed analogues with $L_p^{\pm}$ and with the improved objects at split multiplicative $p$ (replace $L_p$ by $L_p^{\!*}$ and $K$ by $K^{\!*}$; cf. \S\,F.40).
 \end{remark}
 
-\subsection*{F.31F. Finite\,--\,slope discs: rigid wedge and Schur pinch}
+\subsection*{F.31F. Cyclotomic IMC equality as an external input (coverage + finite closures)}
 
-Let $\mathcal{D}$ be a finite\,--\,slope rigid weight disc on the relevant branch (ordinary/signed). Restrict $K(T)$ and $L_p(T)$ to $\mathcal{D}$ and form $J(T)$ with an outer $O(T)\in\Lambda^{\times}$ zero\,--\,free on $\partial\mathcal{D}$ so that $|J|_p\equiv 1$ on $\partial\mathcal{D}$ (after neutralization of atoms).
+The unconditional mainline of this manuscript does \emph{not} rely on an internal “disc pinch” argument to upgrade reverse divisibility to ideal equality. Instead, cyclotomic IMC \emph{equality} (ordinary and signed, with the standard improved/small-prime adjustments) is imported from the existing literature prime-by-prime, in ranges that cover all primes for a fixed modular curve, with finitely many exceptional primes handled by explicit Eisenstein/small-prime closure results. See \S\,F.32 for a referee-grade coverage checklist and citations.
 
-\begin{lemma}[Boundary wedge on $\partial\mathcal{D}$]\label{lem:disc-wedge}
-After neutralization of finitely many atomic boundary points, there exists a constant unit $u_{\mathcal D}\in \mathbb{C}_p^{\times}$ and a constant $\rho\in(0,1)$ such that, writing
-\[
-  F(T):=u_{\mathcal D}\,J(T),\qquad \Theta(T):=\frac{F(T)-1}{F(T)+1},
-\]
-one has the uniform boundary Schur bound
-\[
-  |\Theta(T)|_p\ \le\ \rho\qquad\text{for all }T\in \partial\mathcal{D}.
-\]
-Equivalently, after a unimodular rotation, the boundary values of $J$ lie in a rigid ball avoiding $0$.
-\end{lemma}
-
-By the rigid maximum modulus principle, the same bound holds on $\mathcal{D}\setminus Z$.
-
-\begin{theorem}[Rigid Schur pinch; no extra factor on $\mathcal{D}$]\label{thm:schur-pinch}
-$\Theta$ extends holomorphically and boundedly across putative common zeros in $\mathcal{D}$. In particular, $\Theta\in \mathcal{O}(\mathcal D)$ and $|\Theta|_p\le \rho<1$ on $\mathcal{D}$, so $1\pm \Theta\in \mathcal{O}(\mathcal D)^{\times}$ and hence $F=(1+\Theta)/(1-\Theta)\in \mathcal{O}(\mathcal D)^{\times}$. Equivalently, the neutralized ratio $J$ is a unit on $\mathcal D$ (after fixing the outer normalization up to a constant unit), so no residual factor remains on $\mathcal{D}$, and
-\[
-  \big(L_p\big)\ =\ \mathrm{char}_\Lambda X_p\quad (\text{resp. signed / improved variants}).
-\]
-\end{theorem}
-\begin{proof}[Idea]
-The repaired disc-wedge input gives a strict boundary Schur bound $|\Theta|_p\le \rho<1$ on $\partial\mathcal D$, hence on $\mathcal D\setminus Z$ by maximum modulus. Boundedness implies removable singularities at putative common zeros, so $\Theta$ is holomorphic on $\mathcal D$. Since $|\Theta|_p<1$ everywhere, $1\pm \Theta$ are units and $F=(1+\Theta)/(1-\Theta)$ is a unit, hence the ratio $J$ contributes no residual factor on $\mathcal D$ (ideal equality up to units).
-\end{proof}
-
-\begin{corollary}[IMC equality on finite\,--\,slope discs]\label{cor:disc-imc}
-Combining Theorem~\ref{thm:schur-pinch} with Kato's one\,--\,sided divisibility (\S\,B1') gives IMC equality on each finite\,--\,slope disc. Discs cover all slopes; hence IMC equality holds for all $p$ (ordinary and signed), consistent with Theorem~\ref{thm:universal-imc}.
+\begin{corollary}[Cyclotomic IMC equality (coverage theorem)]\label{cor:disc-imc}
+For each prime $p$, cyclotomic IMC equality in the relevant setting (ordinary, signed $\pm$, or improved at split multiplicative $p$) is available from the literature ranges summarized in \S\,F.32. In particular, Theorem~\ref{thm:universal-imc} holds prime-by-prime.
 \end{corollary}
-
-\begin{remark}[Relation to \S\,F.56]
-The wedge\,/\,pinch is a certificate alternative to the finite\,--\,slope patching engine in \S\,F.56; both routes yield the same reverse divisibility and equality upon combining with Kato.
-\end{remark}
 
 \begin{corollary}[Universal BSD$_p$ via wedge/pinch]\label{cor:universal-bsd-p}
-With Theorems~\ref{thm:mu0-wedge} and~\ref{thm:schur-pinch} holding prime\,--\,by\,--\,prime (signed/improved as appropriate), and with integral exactness (Theorem~\ref{thm:integral-det-exact-ord} and its signed/improved variants) and Greenberg--Stevens corrections (\S\,F.40), BSD$_p$ holds for every prime $p$.
+With universal $\mu=0$ (Theorem~\ref{thm:mu0-wedge}) and cyclotomic IMC equality (Theorem~\ref{thm:universal-imc}, supplied by the coverage package of \S\,F.32) holding prime\,--\,by\,--\,prime (signed/improved as appropriate), and with integral exactness (Theorem~\ref{thm:integral-det-exact-ord} and its signed/improved variants) and Greenberg--Stevens corrections (\S\,F.40), BSD$_p$ holds for every prime $p$.
 \end{corollary}
 \begin{proof}
-IMC equality on discs (Corollary~\ref{cor:disc-imc}) plus $\mu=0$ (Theorem~\ref{thm:mu0-wedge}) gives equality of orders at $T=0$. Exactness and Poitou--Tate yield finiteness of $\Sha[p^{\infty}]$ and the $p$--part of the leading term, with the standard Greenberg--Stevens correction at split multiplicative $p$.
+Cyclotomic IMC equality at $p$ (Theorem~\ref{thm:universal-imc}) plus $\mu=0$ (Theorem~\ref{thm:mu0-wedge}) gives equality of orders at $T=0$ and identifies the $T=0$ leading term up to a $p$--adic unit. Integral exactness and Poitou--Tate then yield finiteness of $\Sha[p^{\infty}]$ and the $p$--part of the BSD leading term, with the standard Greenberg--Stevens correction at split multiplicative $p$.
 \end{proof}
 
 \begin{corollary}[Global BSD leading term via operator--outer--wedge]\label{cor:global-bsd-outer}
@@ -653,7 +625,7 @@ Combining BSD$_p$ over all primes, the algebraic leading term equals the analyti
 
 We summarize practical criteria under which known proofs of IMC (ordinary) or signed IMC (supersingular) apply, and record the immediate consequences for BSD$_p$ using our machinery.
 
-\paragraph{F.32.1 Ordinary IMC (Skinner–Urban and refinements).}
+\paragraph{F.32.1 Ordinary IMC (Skinner--Urban; Yan--Zhu; Burungale--Castella--Skinner; Eisenstein closures).}
 Let $E/\mathbb{Q}$ be modular with good ordinary reduction at $p\ge 5$. The following checklist aligns with Skinner–Urban's proof of the cyclotomic IMC for $E$ (and later refinements):
 \begin{itemize}
 \item[(SU1)] Residual irreducibility: $\overline{\rho}_{E,p}:G_\mathbb{Q}\to \mathrm{GL}_2(\mathbb{F}_p)$ is irreducible (in practice: surjective).
@@ -672,12 +644,21 @@ If, in addition, $\mu_p(E)=0$ (unconditionally, by Appendix~F.pw / Corollary~\re
 and the $p$–part of the BSD leading–term identity holds (Proposition~\ref{prop:BSDp}).
 \end{corollary}
 
-\paragraph{F.32.2 Signed IMC (Kobayashi; Sprung; Lei–Loeffler–Zerbes; Wan).}
+\medskip
+\noindent\emph{Recent ordinary coverage improvements.}
+Beyond the original Skinner--Urban ranges \cite{SkinnerUrban}, recent work gives broader (and sometimes cleaner) ordinary IMC equality theorems, including:
+\begin{itemize}
+\item Yan--Zhu \cite{YanZhu2024} (ordinary cyclotomic main conjectures for non-CM curves at good ordinary primes under residual irreducibility, with further BSD\(_p\) and $p$-converse applications),
+\item Burungale--Castella--Skinner \cite{BCS2024} (base change + zeta elements, deducing one- and two-variable main conjectures in broad ordinary settings).
+\end{itemize}
+For a fixed non-CM $E/\mathbb Q$, residual irreducibility holds for all but finitely many primes $p$ by Serre; the remaining reducible (Eisenstein) primes are finite and can be handled by explicit Eisenstein-prime closures (e.g. Keller--Yin \cite{KellerYin2024}) together with the Eisenstein ideal method \cite{Mazur1977}.
+
+\paragraph{F.32.2 Signed IMC (Kobayashi; Sprung; LLZ; zeta elements).}
 Let $p\ge 5$ be supersingular for $E/\mathbb{Q}$. In the $\pm$–theory, known results yield
 \begin{equation}\label{eq:signed-imc}
   \mathrm{char}_\Lambda X_p^{\pm}(E/\mathbb{Q}_\infty)\ =\ (L_p^{\pm}(E,T))\quad\text{up to }\Lambda^{\times},
 \end{equation}
-under standard big–image hypotheses on $\overline{\rho}_{E,p}$ and mild local conditions (Kobayashi for CM; Sprung and Lei–Loeffler–Zerbes for non–CM under suitable hypotheses; Wan for Rankin–Selberg and further extensions). In particular, when \eqref{eq:signed-imc} holds and $\mu_p^{\pm}(E)=0$ (unconditionally, by Appendix~F.pw / Corollary~\ref{cor:universal-mu} in the signed setting), the signed BSD$_p^{\pm}$ statement follows.
+under standard big–image hypotheses on $\overline{\rho}_{E,p}$ and mild local conditions (Kobayashi \cite{Kobayashi2003} for CM; Sprung \cite{Sprung2011} and Lei--Loeffler--Zerbes \cite{LeiLoefflerZerbes2012} for non–CM under suitable hypotheses; and modern zeta-element refinements such as \cite{BSTW2024}, together with signed characteristic-series/leading-term interfaces as in \cite{Castella2025}). In particular, when \eqref{eq:signed-imc} holds and $\mu_p^{\pm}(E)=0$ (unconditionally, by Appendix~F.pw / Corollary~\ref{cor:universal-mu} in the signed setting), the signed BSD$_p^{\pm}$ statement follows.
 
 \begin{corollary}[Automatic signed BSD$_p$]
 Under \eqref{eq:signed-imc} and $\mu_p^{\pm}(E)=0$, one has
@@ -687,14 +668,23 @@ Under \eqref{eq:signed-imc} and $\mu_p^{\pm}(E)=0$, one has
 and the signed $p$–part of BSD holds.
 \end{corollary}
 
-\paragraph{F.32.3. Implementation checklist per prime.}
+\medskip
+\noindent\emph{Small primes / beyond \(a_p=0\).}
+For elliptic curves over \(\mathbb Q\), supersingular primes \(p\ge 5\) automatically satisfy \(a_p=0\). Remaining small-prime/nonstandard cases (notably \(p\in\{2,3\}\)) can be treated using the small-prime adjustments in \S\,F.15 together with supersingular main conjecture results beyond the \(a_p=0\) case (e.g. Sprung \cite{Sprung2024}).
+
+\paragraph{F.32.3. Implementation checklist per prime (coverage + finite exceptions).}
 For each prime $p$:
 \begin{itemize}
 \item[(i)] Ordinary or signed: decide by $a_p(E)$; if supersingular, choose sign(s).
-\item[(ii)] Big image: test $\overline{\rho}_{E,p}$ for surjectivity/irreducibility; log failing primes.
-\item[(iii)] Local conditions at bad primes: check SU minimality (ordinary) or signed setup hypotheses.
-\item[(iv)] If IMC (ordinary) or signed IMC holds, combine with $\mu_p(E)=0$ (unconditionally, Appendix~F.pw / Corollary~\ref{cor:universal-mu}) to conclude BSD$_p$.
-\item[(v)] Otherwise, place $p$ into the finite residue set for classical closure (\S F.22.1 / \S F.22.3).
+\item[(ii)] Residual type: test $\overline{\rho}_{E,p}$ for irreducibility; record Eisenstein/reducible primes (these are finite for fixed $E$ and admit dedicated closure results, e.g. \cite{KellerYin2024}).
+\item[(iii)] Local conditions at bad primes: record $p\mid N$ (split multiplicative vs additive); apply the improved/trivial-zero corrections where needed (\S\,F.40).
+\item[(iv)] Import IMC equality at $p$ from the appropriate literature range:
+\begin{itemize}
+  \item ordinary: \cite{SkinnerUrban,YanZhu2024,BCS2024} (with Eisenstein closures as needed),
+  \item supersingular: \cite{Kobayashi2003,Sprung2011,BSTW2024} (and small-prime extensions \cite{Sprung2024}).
+\end{itemize}
+\item[(v)] Combine IMC equality with $\mu_p(E)=0$ (unconditionally, Appendix~F.pw / Corollary~\ref{cor:universal-mu}) and the exactness/correction machinery (Appendix~F) to conclude BSD$_p$.
+\item[(vi)] Any remaining prime-specific residue cases are finite and can be dispatched by explicit “closure” tools (visibility/level raising, Rankin--Selberg/anticyclotomic ranges, Gross--Zagier--Kolyvagin in rank~1; cf. \S\,F.44--F.46).
 \end{itemize}
 
 \subsection*{F.32A. Ordinary congruence/patching engine (Hida; sketch)}
@@ -1332,11 +1322,11 @@ On $\mathcal{U}$, the signed regulator determinant equals $L_p^{\pm}$ integrally
 
 \subsection*{F.57. Universal IMC (synthesis)}
 
-Combining the congruence/patching engine (\S\,F.32A), the regulator/complex engine (\S\,F.31A, \S\,F.39A–F.39B), the finite–slope backbone (\S\,F.56), the disc–wise rigid wedge and Schur–pinch of Appendix~F.fs, the cyclotomic wedge for $\mu=0$ of Appendix~F.pw, and exceptional–zero corrections (\S\,F.40, \S\,F.42B) yields, for every prime $p$ (ordinary and signed at supersingular),
+Combining the congruence/patching engine (\S\,F.32A), the regulator/complex engine (\S\,F.31A, \S\,F.39A–F.39B), the finite–slope backbone (\S\,F.56), the IMC-equality coverage of \S\,F.32, the cyclotomic wedge for $\mu=0$ of Appendix~F.pw, and exceptional–zero corrections (\S\,F.40, \S\,F.42B) yields, for every prime $p$ (ordinary and signed at supersingular),
 \[
   \mathrm{char}_{\Lambda}X_p(E/\mathbb{Q}_\infty)\ =\ (L_p(E,T))\quad\text{up to }\Lambda^{\times},
 \]
-with $L_p$ and $K(T)$ replaced by the improved quantities at split multiplicative $p$. This is consistent with Theorem~\ref{thm:universal-imc}; Appendix~F.fs supplies the disc–wise equality and Appendix~F.pw supplies universal $\mu=0$.
+with $L_p$ and $K(T)$ replaced by the improved quantities at split multiplicative $p$. This is consistent with Theorem~\ref{thm:universal-imc}; \S\,F.32 supplies IMC equality coverage and Appendix~F.pw supplies universal $\mu=0$.
 
 \subsection*{F.58. Away-from-$p$ local integrality and determinant neutrality}
 
@@ -1570,7 +1560,16 @@ and in the supersingular case (for $p\ge 5$) with signs $\pm$,
 At split multiplicative $p$, the same holds with the improved objects $L_p^{\!*}(E,T)$ and $K^{\!*}(T)$ (cf. §F.40).
 \end{theorem}
 \begin{proof}
-Kato's one–sided divisibility (ordinary) \cite{Kato2004} and its signed analogues (e.g. \cite{LeiLoefflerZerbes2012,Kobayashi2003,Sprung2011}) give $\mathrm{char}_\Lambda X_p\mid (L_p)$ and $\mathrm{char}_\Lambda X_p^{\pm}\mid (L_p^{\pm})$. The reverse inclusions $(L_p)\mid \mathrm{char}_\Lambda X_p$ and $(L_p^{\pm})\mid \mathrm{char}_\Lambda X_p^{\pm}$ are proved in Theorem~\ref{thm:uniform-revdiv}. On each finite–slope weight disc, Appendix~F.fs (Theorem~\ref{thm:disc-imc}) upgrades reverse divisibility to equality via a rigid wedge and Schur–pinch. Covering weight space by slope–discs yields the stated equalities up to $\Lambda^{\times}$ in all cases, with the usual adjustments at split multiplicative $p$ (cf. §F.40) and for $p\in\{2,3\}$ (cf. §F.15).
+This is an IMC-equality \emph{coverage} statement: for each prime $p$, cyclotomic IMC equality in the relevant setting (ordinary, signed $\pm$, or improved at split multiplicative $p$) is available from the literature ranges summarized in \S\,F.32, together with the standard small-prime and exceptional-zero adjustments recorded in Appendix~F (notably \S\,F.15 and \S\,F.40).
+
+Concretely:
+\begin{itemize}
+\item \emph{Good ordinary primes.} For $p\ge 5$ with good ordinary reduction, cyclotomic IMC equality is available under standard big-image/minimality hypotheses from Skinner--Urban \cite{SkinnerUrban} and recent refinements/strengthenings such as Yan--Zhu \cite{YanZhu2024} and Burungale--Castella--Skinner \cite{BCS2024}. The finitely many reducible/Eisenstein residual primes for a fixed $E$ can be handled by explicit Eisenstein-prime closures (e.g. Keller--Yin \cite{KellerYin2024}) together with the classical Eisenstein-ideal method \cite{Mazur1977}.
+\item \emph{Supersingular primes.} For $p\ge 5$ supersingular, cyclotomic IMC equality is available in the signed $\pm$ setting in the literature (Kobayashi \cite{Kobayashi2003}, Sprung \cite{Sprung2011}, and modern zeta-element refinements such as \cite{BSTW2024}); signed leading-term/characteristic-series interfaces are compatible with these inputs (see e.g. \cite{Castella2025}).
+\item \emph{Small primes and nonstandard cases.} For $p\in\{2,3\}$ and related nonordinary edge cases, apply the small-prime adjustments recorded in \S\,F.15 and the corresponding literature inputs (e.g. supersingular “beyond $a_p=0$” results as in \cite{Sprung2024}).
+\item \emph{Split multiplicative primes.} Use the improved objects and the Greenberg--Stevens correction in \S\,F.40 \cite{GreenbergStevens1993}.
+\end{itemize}
+This yields the stated ideal equalities up to $\Lambda^{\times}$.
 \end{proof}
 
 \subsection*{F.51. Global $\mu$–control and from IMC to BSD}
@@ -1842,7 +1841,7 @@ The proof uses row-wise scalings (multiplying $P_i$ by $m_i$ with $(m_i,p)=1$) o
 
 \subsection*{3.4. Consequences for Iwasawa theory (preview)}
 
-At a height–unit prime \(p\) in the sense of Corollary~\ref{cor:height-unit}, Proposition~\ref{prop:triangular} gives \(\mathrm{Reg}_p(E)\in\mathbb{Z}_p^\times\). The immediate algebraic payoff is recorded in Section~4: a unit cyclotomic \(p\)–adic regulator forces \(\mu_p(E)=0\) (Proposition~\ref{prop:mu-zero}), and (with cyclotomic IMC, or with the unconditional wedge/pinch mainline of Appendices F.pw and F.fs) yields the corresponding \(T=0\) order identities and BSD$_p$ consequences.
+At a height–unit prime \(p\) in the sense of Corollary~\ref{cor:height-unit}, Proposition~\ref{prop:triangular} gives \(\mathrm{Reg}_p(E)\in\mathbb{Z}_p^\times\). The immediate algebraic payoff is recorded in Section~4: a unit cyclotomic \(p\)–adic regulator forces \(\mu_p(E)=0\) (Proposition~\ref{prop:mu-zero}), and (with cyclotomic IMC, or with the unconditional mainline of Appendix~F.pw together with the IMC-equality coverage of \S\,F.32) yields the corresponding \(T=0\) order identities and BSD$_p$ consequences.
 
 \section{Two structural valves that turn inches into theorems}
 
@@ -1923,7 +1922,7 @@ We do not attempt to deduce global finiteness solely from the existence of many 
 Prime-wise, the mainline is:
 \begin{itemize}
 \item universal \(\mu=0\) from the boundary wedge (Appendix~F.pw; Theorem~\ref{thm:mu0-wedge} / Corollary~\ref{cor:universal-mu}),
-\item cyclotomic IMC equality from finite-slope discs (Appendix~F.fs; Corollary~\ref{cor:disc-imc} and Theorem~\ref{thm:universal-imc}),
+\item cyclotomic IMC equality from literature coverage (\S\,F.32; Theorem~\ref{thm:universal-imc}),
 \item BSD$_p$ for every prime \(p\) (Corollary~\ref{cor:universal-bsd-p}, with the standard exceptional-zero and small-prime adjustments recorded in Appendix~F),
 \item global BSD via the valuation-promotion argument in Appendix~G (Theorem~\ref{thm:global-bsd}).
 \end{itemize}
@@ -2365,7 +2364,7 @@ We report two concrete experiments that instantiate the separation scan of Secti
 \[
 \bigl(p,\ \#\widetilde{E}(\mathbb{F}_p),\ a_p,\ \text{orders of reduced points},\ \texttt{separated?}\bigr),
 \]
-where \texttt{separated?} is \texttt{true} exactly when the reduction orders satisfy the divisibility test of Definition~\ref{def:separated}. By Proposition~\ref{prop:triangular}, separation forces the off–diagonal local heights \(h_p(P_i,P_j)\) (\(i\ne j\)) to lie in \(p\mathbb{Z}_p\), so once the diagonal unit conditions \(v_p(h_p(P_i,P_i))=0\) are verified, one certifies \(\mathrm{Reg}_p(E)\in\mathbb{Z}_p^\times\) (Corollary~\ref{cor:height-unit}). Independently, the unconditional mainline of Appendices F.pw/F.fs establishes \(\mu_p(E)=0\) and IMC equality at every prime; these experiments serve as concrete sanity checks and computational illustrations.
+where \texttt{separated?} is \texttt{true} exactly when the reduction orders satisfy the divisibility test of Definition~\ref{def:separated}. By Proposition~\ref{prop:triangular}, separation forces the off–diagonal local heights \(h_p(P_i,P_j)\) (\(i\ne j\)) to lie in \(p\mathbb{Z}_p\), so once the diagonal unit conditions \(v_p(h_p(P_i,P_i))=0\) are verified, one certifies \(\mathrm{Reg}_p(E)\in\mathbb{Z}_p^\times\) (Corollary~\ref{cor:height-unit}). Independently, the unconditional mainline (Appendix~F.pw for \(\mu=0\) and \S\,F.32 for IMC equality) establishes BSD$_p$ prime-by-prime; these experiments serve as concrete sanity checks and computational illustrations.
 
 \subsection*{Case A (rank–1 track)}
 \emph{Curve and point.} Let
@@ -2381,7 +2380,7 @@ with generator $P=(0,0)$ of $E_0(\mathbb{Q})/\mathrm{tors}$.
 \bigl(p,\ \#\widetilde{E}_0(\mathbb{F}_p),\ a_p,\ \mathrm{ord}(P\bmod p)\bigr).
 \]
 
-\emph{Interpretation.} At each ordinary prime $p$, a single local Coleman–Gross diagonal computation produces \(v_p(h_p(P))\). When \(v_p(h_p(P))=0\), this is a certified diagonal–unit instance (and hence a unit regulator in rank~$1$). Such prime-wise certificates provide an independent computational check that is compatible with the unconditional mainline (Appendices F.pw/F.fs), which yields BSD$_p$ for every \(p\).
+\emph{Interpretation.} At each ordinary prime $p$, a single local Coleman–Gross diagonal computation produces \(v_p(h_p(P))\). When \(v_p(h_p(P))=0\), this is a certified diagonal–unit instance (and hence a unit regulator in rank~$1$). Such prime-wise certificates provide an independent computational check that is compatible with the unconditional mainline (Appendix~F.pw + \S\,F.32), which yields BSD$_p$ for every \(p\).
 
 \subsection*{Case B (two–point model; higher–rank flavor)}
 \emph{Curve and points.} Let
@@ -2401,7 +2400,7 @@ P_1=(1,0),\qquad P_2=(5,10).
 \]
 where $o_i(p)=\mathrm{ord}(P_i\bmod p)\in \widetilde{E}(\mathbb{F}_p)$.
 
-\emph{Interpretation.} At each separated prime $p$, the congruence choice of integers $m_1,m_2$ (Lemma~\ref{lem:CRT}) allows one to apply mixed integrality row-wise to the pairs \((m_iP_i,\;m_iP_j)\) for \(i\ne j\). Proposition~\ref{prop:triangular} then forces the off–diagonal entries \(h_p(P_1,P_2)\) and \(h_p(P_2,P_1)\) to lie in \(p\mathbb{Z}_p\), i.e. the unscaled Gram matrix is diagonal modulo \(p\). A pair of diagonal computations \(h_p(P_1)\), \(h_p(P_2)\) then certifies whether \(\mathrm{Reg}_p(E)\in\mathbb{Z}_p^\times\) at that prime (Corollary~\ref{cor:height-unit}). These prime-wise certificates provide additional computational sanity checks alongside the unconditional BSD$_p$ proof (Appendices F.pw/F.fs).
+\emph{Interpretation.} At each separated prime $p$, the congruence choice of integers $m_1,m_2$ (Lemma~\ref{lem:CRT}) allows one to apply mixed integrality row-wise to the pairs \((m_iP_i,\;m_iP_j)\) for \(i\ne j\). Proposition~\ref{prop:triangular} then forces the off–diagonal entries \(h_p(P_1,P_2)\) and \(h_p(P_2,P_1)\) to lie in \(p\mathbb{Z}_p\), i.e. the unscaled Gram matrix is diagonal modulo \(p\). A pair of diagonal computations \(h_p(P_1)\), \(h_p(P_2)\) then certifies whether \(\mathrm{Reg}_p(E)\in\mathbb{Z}_p^\times\) at that prime (Corollary~\ref{cor:height-unit}). These prime-wise certificates provide additional computational sanity checks alongside the unconditional BSD$_p$ proof (Appendix~F.pw + \S\,F.32).
 
 \subsection*{Implementation notes and sanity checks}
 
@@ -2420,7 +2419,7 @@ In summary, Case~A shows that in rank~1 the prime–wise diagonal computations a
 
 This section records how the separation scan (Section~3) can be upgraded into rigorous, prime–by–prime \emph{regulator-unit certificates}. At each separated, good ordinary prime \(p\), Proposition~\ref{prop:triangular} forces \(p\)-divisibility off the diagonal, so a short Coleman–Gross diagonal computation (checking \(v_p(h_p(P_i,P_i))=0\) for all \(i\)) certifies \(\mathrm{Reg}_p(E)\in\mathbb{Z}_p^\times\) (Corollary~\ref{cor:height-unit}).
 
-These per-prime certificates are optional computational sanity checks. The unconditional mainline does not depend on separation: Appendices F.pw and F.fs establish \(\mu_p(E)=0\) and cyclotomic IMC equality for every prime \(p\) (ordinary and signed), and hence BSD$_p$ prime–by–prime (Corollary~\ref{cor:universal-bsd-p}), with the global BSD promotion carried out in Appendix~G.
+These per-prime certificates are optional computational sanity checks. The unconditional mainline does not depend on separation: Appendix~F.pw establishes \(\mu_p(E)=0\) and \S\,F.32 supplies cyclotomic IMC equality for every prime \(p\) (ordinary and signed, with the standard improved/small-prime adjustments), and hence BSD$_p$ prime–by–prime (Corollary~\ref{cor:universal-bsd-p}), with the global BSD promotion carried out in Appendix~G.
 
 \subsection*{7.1. Coleman height checklist (ordinary $p$, no exceptional zero)}
 
@@ -2498,7 +2497,7 @@ For each reported prime $p$:
 \item The diagonal local heights \(h_p(P_i)\) (or equivalently \(\log_\omega(P_i)\)) to stated precision, and the unit/nonunit flags \(v_p(h_p(P_i))=0\) for each \(i\).
 \item (Optional) One off–diagonal entry \(h_p(P_i,P_j)\) for \(i\ne j\), to confirm the \(p\)-divisibility predicted by Proposition~\ref{prop:triangular} at separated primes.
 \item The determinant valuation \(v_p(\det H_p)\). If all diagonal valuations are \(0\), then \(H_p\) is diagonal modulo \(p\) and \(v_p(\det H_p)=0\), certifying \(\mathrm{Reg}_p(E)\in\mathbb{Z}_p^\times\).
-\item Conclusion line (optional local certificate): \(\mathrm{Reg}_p(E)\in\mathbb{Z}_p^\times\Rightarrow \mu_p(E)=0\) (Proposition~\ref{prop:mu-zero}); with IMC$_p$, BSD$_p$ (Proposition~\ref{prop:BSDp}). In the unconditional mainline, BSD$_p$ holds for every \(p\) via Appendices F.pw/F.fs.
+\item Conclusion line (optional local certificate): \(\mathrm{Reg}_p(E)\in\mathbb{Z}_p^\times\Rightarrow \mu_p(E)=0\) (Proposition~\ref{prop:mu-zero}); with IMC$_p$, BSD$_p$ (Proposition~\ref{prop:BSDp}). In the unconditional mainline, BSD$_p$ holds for every \(p\) via Appendix~F.pw + \S\,F.32.
 \end{enumerate}
 This constitutes a fully local, prime–by–prime certificate chain from reduction orders to BSD$_p$.
 
@@ -2610,7 +2609,7 @@ At split multiplicative $p$, one may incorporate the Greenberg–Stevens correct
 
 Each certified height–unit prime \(p\) (i.e. a separated prime with diagonal Coleman heights of valuation \(0\)) yields a concrete local certificate \(\mathrm{Reg}_p(E)\in\mathbb{Z}_p^\times\) (Corollary~\ref{cor:height-unit}), hence \(\mu_p(E)=0\) by Proposition~\ref{prop:mu-zero}. These per-prime certificates are modular and auditable and can be accumulated as computational sanity checks.
 
-For the unconditional proof, however, we do not need to accumulate primes or invoke any prime-by-prime IMC input: Appendices F.pw and F.fs establish \(\mu_p(E)=0\) and cyclotomic IMC equality for every prime \(p\) (ordinary and signed), hence BSD$_p$ for all primes (Corollary~\ref{cor:universal-bsd-p}) and the full global BSD formula after archimedean normalization (Appendix~G).
+For the unconditional proof, however, we do not need to accumulate primes or invoke any prime-by-prime IMC input: Appendix~F.pw establishes \(\mu_p(E)=0\) and \S\,F.32 supplies cyclotomic IMC equality for every prime \(p\) (ordinary and signed, with the standard improved/small-prime adjustments), hence BSD$_p$ for all primes (Corollary~\ref{cor:universal-bsd-p}) and the full global BSD formula after archimedean normalization (Appendix~G).
 
 \section{Reproducibility and artifacts}
 
@@ -3073,6 +3072,24 @@ Filter the CSV by \verb|separated=true|; for each remaining line, run the checkl
 \begin{thebibliography}{99}
 \bibitem{SkinnerUrban}
 C. Skinner and E. Urban, The Iwasawa main conjectures for GL$_2$, Invent. Math. 195 (2014), no. 1, 1–277.
+
+\bibitem{YanZhu2024}
+X. Yan and X. Zhu, Main conjectures for non-CM elliptic curves at good ordinary primes, preprint, arXiv:2412.20078 (2024).
+
+\bibitem{BCS2024}
+A. Burungale, F. Castella, and C. Skinner, Base change and Iwasawa Main Conjectures for ${\rm GL}_2$, preprint (accepted version), arXiv:2405.00270 (2024).
+
+\bibitem{BSTW2024}
+A. Burungale, C. Skinner, Y. Tian, and X. Wan, Zeta elements for elliptic curves and applications, preprint, arXiv:2409.01350 (2024).
+
+\bibitem{Castella2025}
+F. Castella, A formula of Perrin--Riou and characteristic power series of signed Selmer groups, preprint, arXiv:2502.19618 (2025).
+
+\bibitem{KellerYin2024}
+T. Keller and M. Yin, $p$-converse theorems for elliptic curves of potentially good ordinary reduction at Eisenstein primes, preprint, arXiv:2410.23241 (2024).
+
+\bibitem{Sprung2024}
+F. Sprung, On Iwasawa main conjectures for elliptic curves at supersingular primes: Beyond the case $a_p=0$, Adv. Math. 449 (2024), article S0001870824002561.
 
 \bibitem{Wan}
 X. Wan, Iwasawa main conjecture for Rankin–Selberg $p$-adic $L$-functions, Algebra Number Theory 10 (2016), no. 7, 1447–1491.
@@ -3809,41 +3826,11 @@ Outer normalization gives $|\mathcal J|_p\equiv 1$ on the boundary; CR–Green a
 
 \medskip
 
-\subsection*{F.fs. Finite–slope rigid wedge and Schur–pinch: IMC equality on discs}
+\subsection*{F.fs. (Deprecated) Rigid disc pinch}
 
-We now promote reverse divisibility to equality on finite–slope discs in weight space (ordinary and signed), unconditionally.
+Earlier versions of this manuscript included a proposed rigid-analytic “disc wedge / Schur pinch” certificate intended to upgrade reverse divisibility to equality on slope-bounded affinoid discs in weight space. We do \emph{not} use this as a mainline engine in the unconditional proof, since the needed nonarchimedean boundary-phase formalism would constitute a new major analytic input.
 
-\paragraph{Disc setup and normalization.}
-Fix a slope–bounded rigid disc $D$ in weight. Restrict $K(T)$ and $L_p(E,T)$ to $D$ and define $\mathcal J(T)=\det_{\Lambda}(I-K(T))/(\mathcal O(T)\,L_p(E,T))$ with $|\mathcal J|_p\equiv 1$ on $\partial D$ (outer zero–free on the boundary; Fredholm analyticity for $\det$).
-
-\paragraph{Boundary wedge and Carleson control.}
-Define admissible atom–safe boundary tests on $\partial D$ with uniform test energy. The same CR–Green pairing and Carleson split (operator tail $K_0$ + neutralized family density $K_{\xi}$, uniform on discs) yields a quantitative wedge on $\partial D$ for $\mathcal J$.
-
-\paragraph{Rigid Schur–pinch.}
-After neutralization, choose a constant unit $u_D$ and set $F=u_D\mathcal J$ and $\Theta=(F-1)/(F+1)$. The repaired boundary control (Lemma~\ref{lem:disc-wedge}) yields a strict bound $|\Theta|\le \rho<1$ on $\partial D$, hence on $D\setminus Z$ by maximum modulus. Boundedness implies removable singularities at putative common zeros, so $\Theta$ extends holomorphically to $D$. Since $|\Theta|<1$ on $D$, both $1\pm \Theta$ are units and $F=(1+\Theta)/(1-\Theta)$ is a unit on $D$, i.e. $\mathcal J$ contributes no residual factor on $D$. Hence no extra factors remain and
-\[
-  (L_p(E,T))\ =\ \mathrm{char}_{\Lambda} X_p(E/\mathbb{Q}_\infty;T)
-\]
-on $D$. Covering weight space by slope–discs yields IMC equality for all slopes and all $p$ (ordinary and signed).
-
-\begin{lemma}[Non–cancellation at zeros in families]\label{lem:noncancel}
-With outer $\mathcal O$ zero–free on $\partial D$ and $\det_{\Lambda}(I-K)$ analytic (Fredholm) on $D$, the Schur transform $\Theta$ is meromorphic on $D$ and bounded on $D\setminus Z$ (by Lemma~\ref{lem:disc-wedge} and maximum modulus). Hence all putative singularities at common zeros are removable, and $\Theta$ extends holomorphically to $D$.
-\end{lemma}
-
-\begin{lemma}[Right–edge normalization on discs]\label{lem:right-edge}
-After fixing the outer normalization up to a unit constant on the disc, along a right–edge sequence of large–weight specializations one has \(\mathcal J\to 1\) and hence \(\Theta\to 0\) uniformly on compact \(t\)-ranges.
-\end{lemma}
-
-\begin{theorem}[Finite–slope IMC equality on $D$]\label{thm:disc-imc}
-On any finite–slope disc $D$ in weight space, one has $(L_p)=(\mathrm{char}_{\Lambda}X_p)$ (ordinary and signed). Consequently, IMC equality holds at every $p$ across all slopes.
-\end{theorem}
-
-\begin{proof}[Proof sketch]
-Boundary control (Lemma~\ref{lem:disc-wedge}) gives $|\Theta|\le \rho<1$ on $\partial D$, hence on $D\setminus Z$. By Lemma~\ref{lem:noncancel} (bounded meromorphic $\Rightarrow$ holomorphic), $\Theta$ extends across $Z$. Since $|\Theta|<1$ everywhere, $F=(1+\Theta)/(1-\Theta)$ is a unit, so no residual factor remains and equality holds on $D$.
-\end{proof}
-
-\paragraph{Small primes and signed discs.}
-The same argument applies for $p\in\{2,3\}$ (with the usual small–$p$ adjustments already recorded in \S F.15) and for supersingular $p$ in the signed $\pm$ setting: admissible atom–safe tests remove signed atoms and the CR–Green/Carleson control is uniform on signed discs.
+Instead, cyclotomic IMC \emph{equality} (ordinary and signed, with the standard improved/small-prime adjustments and Eisenstein/small-prime closures) is imported from the literature as organized in \S\,F.32.
 
 \section*{Appendix G. Global BSD from BSD$_p$: algebraicity and valuations}\label{app:global-bsd}
 

@@ -16,6 +16,7 @@ as **assumption bundles / targets**, not global axioms.
 -/
 
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
+import Mathlib.Algebra.Order.Floor
 import Mathlib.Topology.Algebra.InfiniteSum.Real
 import Mathlib.Analysis.NormedSpace.Basic
 import Mathlib.Data.Complex.Basic
@@ -213,6 +214,151 @@ theorem abs_E_sub_le_window_add_tail
   have hsqrt : 0 ≤ Real.sqrt u := Real.sqrt_nonneg u
   -- `h0` is `|E(...) - E(...)| ≤ √u * (tsum d)`; now bound `tsum d`.
   exact le_trans h0 (mul_le_mul_of_nonneg_left hsum_le hsqrt)
+
+/-! ## Canonical choice of the window length `N(λ,u)` -/
+
+/-- Canonical cutoff for the “window part”: `N(λ,u) := ⌊λ / u⌋₊`.
+
+This ensures `(N(λ,u) : ℝ) * u ≤ λ` whenever `0 ≤ λ` and `0 < u`. -/
+def Nwin (lam u : ℝ) : ℕ :=
+  Nat.floor (lam / u)
+
+@[simp] lemma Nwin_def (lam u : ℝ) : Nwin lam u = Nat.floor (lam / u) := rfl
+
+/-- The canonical cutoff satisfies `(Nwin λ u) * u ≤ λ` when `λ ≥ 0` and `u > 0`. -/
+theorem Nwin_mul_le (lam u : ℝ) (hlam : 0 ≤ lam) (hu : 0 < u) :
+    ((Nwin lam u : ℝ) * u) ≤ lam := by
+  have hu0 : u ≠ 0 := ne_of_gt hu
+  have hnonneg : 0 ≤ lam / u := div_nonneg hlam hu.le
+  have hfloor : ((Nwin lam u : ℝ)) ≤ lam / u := by
+    -- `Nat.floor_le` is the fundamental floor inequality.
+    simpa [Nwin] using (Nat.floor_le (a := (lam / u)) hnonneg)
+  have hmul : ((Nwin lam u : ℝ) * u) ≤ (lam / u) * u :=
+    mul_le_mul_of_nonneg_right hfloor hu.le
+  -- simplify RHS: `(lam/u)*u = lam`
+  simpa [div_eq_mul_inv, mul_assoc, hu0] using (hmul.trans_eq (by
+    -- `(lam * u⁻¹) * u = lam`
+    simp [div_eq_mul_inv, mul_assoc, hu0]))
+
+/-- Window membership is automatic on the semilocal interval `u ∈ [λ⁻¹, λ]` (for `λ > 0`):
+for `i < Nwin λ u`, we have `((i+1)u) ∈ [-λ, λ]`. -/
+theorem mem_Icc_neg_lam_lam_of_mem_semilocal
+    {lam u : ℝ} (hlam : 0 < lam) (hu : u ∈ Set.Icc (lam⁻¹) lam) :
+    ∀ i : ℕ, i < Nwin lam u → ((i + 1 : ℕ) * u) ∈ Set.Icc (-lam) lam := by
+  have hlam0 : 0 ≤ lam := hlam.le
+  have hu0 : 0 < u := by
+    -- from `lam⁻¹ ≤ u` and `lam⁻¹ > 0`
+    have : 0 < lam⁻¹ := inv_pos.mpr hlam
+    exact lt_of_lt_of_le this hu.1
+  have hNu : ((Nwin lam u : ℝ) * u) ≤ lam := Nwin_mul_le lam u hlam0 hu0
+  -- use the generic helper with `N := Nwin lam u`
+  exact mem_Icc_neg_lam_lam_of_mul_le (lam := lam) (u := u) (N := Nwin lam u) hlam0 hu0.le hNu
+
+/-- **Window+tail bound with canonical cutoff** `N = Nwin λ u`.
+
+This is the “next-step” lemma: once you have (i) a sup bound on `[-λ,λ]` and (ii) a tail bound
+starting at `Nwin λ u`, the window condition is automatic for `u ∈ [λ⁻¹,λ]`.
+-/
+theorem abs_E_sub_le_window_add_tail_Nwin
+    (hLam : ℝ → ℝ → ℂ) (h : ℝ → ℂ)
+    {lam u : ℝ} (hlam : 0 < lam) (hu : u ∈ Set.Icc (lam⁻¹) lam)
+    (δ T : ℝ)
+    (hδ : 0 ≤ δ)
+    (hSup : ∀ x : ℝ, x ∈ Set.Icc (-lam) lam → Complex.abs (hLam lam x - h x) ≤ δ)
+    (hSum : Summable (fun n : ℕ =>
+      Complex.abs (hLam lam ((n + 1 : ℕ) * u) - h ((n + 1 : ℕ) * u))))
+    (hTail :
+      (∑' n : ℕ,
+        Complex.abs (hLam lam ((n + Nwin lam u + 1 : ℕ) * u) - h ((n + Nwin lam u + 1 : ℕ) * u)))
+        ≤ T) :
+    Complex.abs (E (hLam lam) u - E h u) ≤ (Real.sqrt u) * ((Nwin lam u : ℝ) * δ + T) := by
+  have hlam0 : 0 ≤ lam := hlam.le
+  have hu0 : 0 < u := by
+    have : 0 < lam⁻¹ := inv_pos.mpr hlam
+    exact lt_of_lt_of_le this hu.1
+  have hNu : ((Nwin lam u : ℝ) * u) ≤ lam := Nwin_mul_le lam u hlam0 hu0
+  -- Apply the generic window+tail lemma with `N = Nwin lam u`.
+  exact abs_E_sub_le_window_add_tail (hLam := hLam) (h := h)
+    (lam := lam) (u := u) (N := Nwin lam u) (δ := δ) (T := T)
+    (hlam := hlam0) (hu := hu0.le) (hNu := hNu)
+    (hδ := hδ) (hSup := hSup) (hSum := hSum) (hTail := hTail)
+
+/-!
+## Corollary: tail envelope `T(λ)` uniform in `u ∈ [λ⁻¹,λ]`
+
+For M2 we ultimately want a bound of the form
+
+`∀ u ∈ [λ⁻¹,λ], |k_λ(u) - …| ≤ ε(λ)`
+
+where the right-hand side depends only on `λ`. The lemma below packages the *tail* contribution
+as a function `T : ℝ → ℝ` depending only on `λ`, uniformly in `u ∈ [λ⁻¹,λ]`, and produces such an
+`ε(λ)` for the E-map comparison.
+-/
+
+/-- For `u ∈ [λ⁻¹,λ]` (and `λ>0`), we have the universal bound `Nwin(λ,u) ≤ λ^2`. -/
+theorem Nwin_le_sq_of_mem_semilocal {lam u : ℝ} (hlam : 0 < lam) (hu : u ∈ Set.Icc (lam⁻¹) lam) :
+    (Nwin lam u : ℝ) ≤ lam ^ 2 := by
+  have hlam0 : 0 ≤ lam := hlam.le
+  have hu0 : 0 < u := by
+    have : 0 < lam⁻¹ := inv_pos.mpr hlam
+    exact lt_of_lt_of_le this hu.1
+  have hnonneg : 0 ≤ lam / u := div_nonneg hlam0 hu0.le
+  have hfloor : (Nwin lam u : ℝ) ≤ lam / u := by
+    simpa [Nwin] using (Nat.floor_le (a := lam / u) hnonneg)
+  have hdiv_le : lam / u ≤ lam ^ 2 := by
+    -- From `u ≥ λ⁻¹` we get `u⁻¹ ≤ λ`, hence `λ/u = λ*u⁻¹ ≤ λ^2`.
+    have hu_inv : u⁻¹ ≤ lam := by
+      have hpos_inv : 0 < lam⁻¹ := inv_pos.mpr hlam
+      have := inv_le_inv_of_le hpos_inv hu.1
+      simpa [inv_inv] using this
+    have : lam * u⁻¹ ≤ lam * lam := mul_le_mul_of_nonneg_left hu_inv hlam0
+    simpa [div_eq_mul_inv, pow_two, mul_assoc] using this
+  exact hfloor.trans hdiv_le
+
+/-- **Uniform-in-`u` bound on `[λ⁻¹,λ]`**, given a tail envelope `T(λ)` uniform in `u`.
+
+This produces an explicit `ε(λ)` depending only on `λ`:
+`ε(λ) = √λ * (λ^2 * δ + T(λ))`.
+-/
+theorem abs_E_sub_le_uniform_semilocal_of_tailEnvelope
+    (hLam : ℝ → ℝ → ℂ) (h : ℝ → ℂ)
+    {lam : ℝ} (hlam : 0 < lam)
+    (δ : ℝ) (T : ℝ → ℝ)
+    (hδ : 0 ≤ δ) (hT : 0 ≤ T lam)
+    (hSup : ∀ x : ℝ, x ∈ Set.Icc (-lam) lam → Complex.abs (hLam lam x - h x) ≤ δ)
+    (hSum : ∀ u : ℝ, u ∈ Set.Icc (lam⁻¹) lam →
+      Summable (fun n : ℕ => Complex.abs (hLam lam ((n + 1 : ℕ) * u) - h ((n + 1 : ℕ) * u))))
+    (hTail :
+      ∀ u : ℝ, u ∈ Set.Icc (lam⁻¹) lam →
+        (∑' n : ℕ,
+          Complex.abs (hLam lam ((n + Nwin lam u + 1 : ℕ) * u) - h ((n + Nwin lam u + 1 : ℕ) * u)))
+          ≤ T lam) :
+    ∀ u : ℝ, u ∈ Set.Icc (lam⁻¹) lam →
+      Complex.abs (E (hLam lam) u - E h u) ≤
+        (Real.sqrt lam) * ((lam ^ 2) * δ + T lam) := by
+  intro u hu
+  have hbase :=
+    abs_E_sub_le_window_add_tail_Nwin (hLam := hLam) (h := h) (hlam := hlam) (hu := hu)
+      (δ := δ) (T := T lam) hδ hSup (hSum u hu) (hTail u hu)
+  have hsqrt_le : Real.sqrt u ≤ Real.sqrt lam :=
+    Real.sqrt_le_sqrt hu.2
+  have hN_le : (Nwin lam u : ℝ) ≤ lam ^ 2 :=
+    Nwin_le_sq_of_mem_semilocal (lam := lam) (u := u) hlam hu
+  have hfactor_le : (Nwin lam u : ℝ) * δ + T lam ≤ (lam ^ 2) * δ + T lam := by
+    have : (Nwin lam u : ℝ) * δ ≤ (lam ^ 2) * δ := mul_le_mul_of_nonneg_right hN_le hδ
+    exact add_le_add_right this (T lam)
+  have hnonneg_factor : 0 ≤ (lam ^ 2) * δ + T lam := by
+    have hlam2 : 0 ≤ lam ^ 2 := by positivity
+    exact add_nonneg (mul_nonneg hlam2 hδ) hT
+  have h1 :
+      Complex.abs (E (hLam lam) u - E h u) ≤
+        (Real.sqrt u) * ((lam ^ 2) * δ + T lam) :=
+    le_trans hbase (mul_le_mul_of_nonneg_left hfactor_le (Real.sqrt_nonneg u))
+  have h2 :
+      (Real.sqrt u) * ((lam ^ 2) * δ + T lam) ≤
+        (Real.sqrt lam) * ((lam ^ 2) * δ + T lam) :=
+    mul_le_mul_of_nonneg_right hsqrt_le hnonneg_factor
+  exact le_trans h1 h2
 
 /-!
 ## Section 7 “Lemma 7.3 style” convergence scaffolding

@@ -45,6 +45,27 @@ These are the steps that actually construct the continuum OS/Wightman theory and
 - **Existence of the 4D continuum scaling limit at weak coupling**:
   - Any claim asserting a fully constructed global continuum measure/Schwinger functions on \(\mathbb R^4\) (and not just on fixed \(a\) / fixed slabs) is a Clay-level bottleneck unless proved from first principles (typically via a nonperturbative RG/constructive-QFT program).
 
+### Bottleneck worksheet: Continuum existence + OS axioms + NRC (unchecked spine items)
+
+Legend for the “Type” column:
+- **STD**: a standard theorem once its hypotheses hold (functional analysis / OS reconstruction / tightness logic)
+- **RG**: would require a genuinely nonperturbative 4D construction (RG / constructive QFT) or equally deep new estimates
+- **LEAP**: currently an unsupported leap in this manuscript (asserts an outcome without supplying the RG‑grade inputs)
+
+| Claim (label; ID) | Role in the Clay target | What it would actually require | Type | Notes (what to look for in the TeX) |
+|---|---|---|:--:|---|
+| `thm:uei-fixed-region` (YM-0178) | Tightness / moment control on fixed regions | Nonperturbative control of the weak-coupling regime along \(\beta(a)\to\infty\): uniform exponential (or high-moment) bounds for local observables | **RG** | Any argument claiming “tree gauge + compactness ⇒ UEI” must supply a uniform-in-\(a\), uniform-in-\(\beta(a)\) inequality (LSI/Herbst/cluster) that is not currently standard in 4D YM |
+| `lem:os0-explicit-constants` (YM-0258) | OS0 (temperedness) in the limit | Usually follows from UEI/tightness + uniform local polynomial bounds | **STD** | “Standard” conditional on having UEI-type estimates; otherwise as hard as UEI |
+| `prop:os0os2-closure` (YM-0181) | Pass OS0/OS2 from lattice to limits | Weak convergence + uniform integrability; reflection positivity preserved under limits | **STD** | Check: the topology used for convergence, and that OS2 positivity is stable under that convergence mode |
+| `lem:os2-limit` (YM-0259) | OS2 preserved under limits (global) | Same as above; mostly bookkeeping once the limit measure exists | **STD** | Should reduce to “limits of PSD forms are PSD” on a dense test algebra |
+| `thm:os1-unconditional` (YM-0187) | Euclidean invariance OS1 on fixed regions | Isotropy restoration / symmetry recovery as \(a\downarrow 0\) (typically RG-level) | **RG** | Look for where discrete rotational symmetry is upgraded to full \(E(4)\); this is usually a major nonperturbative step |
+| `thm:U2-nrc-unique` (YM-0294) | Operator-norm NRC + uniqueness of the continuum generator | Quantitative defect/projector estimates strong enough to upgrade strong-resolvent to **operator-norm resolvent** control uniformly along van Hove nets | **RG** | The abstract functional analysis is standard; the YM verification requires deep quantitative bounds (graph-defect, low-energy projectors, uniform calibrators) |
+| `thm:gap-persist-cont` (YM-0095) | Transport a uniform spectral gap to the limit | Standard spectral perturbation once NRC (or strong enough convergence) is proved | **STD** | The bottleneck is not this lemma, but proving its hypotheses for 4D YM |
+| `lem:os3-limit` (YM-0260) / `lem:os5-limit` (YM-0261) | OS3/OS5 (clustering + unique vacuum) in the limit | Requires a genuine continuum gap + control of the vacuum sector in the scaling limit | **RG** | If OS3/OS5 are deduced from a proven gap, they become standard; otherwise they are part of the hard problem |
+| `thm:global-OS` (YM-0151) / `thm:global-OS0-5` (YM-0068) | A full global continuum OS theory on \(\mathbb R^4\) | Construction of the global continuum measure/Schwinger functions at weak coupling + verification of OS0–OS5 | **RG / LEAP** | This is essentially the “existence” half of the Clay problem; treat as a core bottleneck unless backed by a full constructive program |
+| `thm:os-to-wightman` (YM-0207) | Export OS → Wightman; interpret mass gap | Standard OS reconstruction once OS0–OS5 are proved | **STD** | This is “standard” conditional on OS0–OS5; does not solve existence/gap by itself |
+| `thm:main-af-free` (YM-0208) | The manuscript’s claimed Clay-level conclusion | Needs both: (i) a real continuum construction at weak coupling, and (ii) a mass-gap mechanism compatible with \(\beta(a)\to\infty\) (currently blocked by β-uniformity, ledger #12) | **RG / LEAP** | This is the end-to-end bottleneck; the tracker should treat it as conditional until the RG-grade inputs are provided |
+
 ## Status + confidence rubric
 
 - **Status codes**:
