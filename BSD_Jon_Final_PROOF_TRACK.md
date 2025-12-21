@@ -1597,6 +1597,14 @@ Write the proof here as if for a referee who will check every line.
 - **Auto-extracted internal refs**: —
 - **Conditional on / Blockers (edit)**:
   - **Core missing lemma**: the source now posits a strict boundary Schur bound \(|\Theta|_p\le\rho<1\) on \(\partial\mathcal D\) after a unimodular rotation \(u_{\mathcal D}\). This is the entire “disc pinch” input and currently has no proof.
+  - **What this actually asserts (p-adic content)**:
+    - Writing \(F=u_{\mathcal D}J\) with \(|u_{\mathcal D}|_p=1\), the inequality \(\left|\frac{F-1}{F+1}\right|_p\le\rho<1\) forces \(F(\partial\mathcal D)\subset B(1,\rho)\subset \mathbb C_p^\times\).
+    - In particular (since \(B(1,1)=1+\mathfrak m\)), this implies **after rotation the boundary values all lie in a single residue class**; e.g. if \(\rho\le |p|\) then \(F\equiv 1\pmod p\) on the boundary.
+    - This is far stronger than “\(|J|_p\equiv 1\) on the boundary” and is precisely the kind of rigidity needed to deduce \(J\in\mathcal O(D)^\times\).
+  - **Why this looks genuinely new / unjustified (as written)**:
+    - The manuscript’s motivating mechanism is a complex-analytic “argument wedge / \(\pi/2\)” proof pattern. No nonarchimedean analogue is defined in the text: there is no canonical \(p\)-adic “\(\arg\)” on \(\mathbb C_p^\times\) with cone geometry, and no stated Berkovich/rigid potential-theory replacement.
+    - Even in rigid analysis, \(|J|_p\equiv 1\) on the (Shilov) boundary does **not** force \(J\) to be close to a constant (e.g. nonconstant analytic units exist with boundary norm \(1\)). The strict residue-ball conclusion therefore requires an additional, nonstandard rigidity input.
+    - Repo cross-check: the only “wedge → Schur pinch” infrastructure currently present is **archimedean/complex** (e.g. `RiemannRecognitionGeometry/Phase.lean` and `RiemannRecognitionGeometry/Port/WedgeClosure.lean`) and does not translate to \(p\)-adic boundaries.
   - **Analytic formalism missing**: we need explicit definitions for:
     - the boundary carrier \(S(D)\) (Shilov boundary / Berkovich boundary of a closed affinoid disc) and how \(\partial D\) in the source maps to it,
     - “admissible boundary masks” and their energy on \(S(D)\),

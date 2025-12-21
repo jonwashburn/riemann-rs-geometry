@@ -89,6 +89,132 @@ theorem abs_E_sub_le
   exact mul_le_mul_of_nonneg_left h1 hsqrt
 
 /-!
+## “Lemma 7.3 style” decomposition: finite window + tail
+
+The CCM E-map is defined by a `tsum` over `n ≥ 1`. To make convergence proofs modular, we split
+that `tsum` into:
+
+- a **finite window part** (`n < N`), which can be controlled using a sup bound on `[-λ,λ]` once we
+  ensure `(n+1)u ∈ [-λ,λ]`,
+- a **tail part** (`n ≥ N`), controlled by a separate tail hypothesis (Schwartz decay, etc.).
+
+This is the standard shape used in CCM’s Section 7.
+-/
+
+/-- Split the `n ≥ 1` series `∑_{n≥1} f(nu)` (implemented as `∑' n, f((n+1)u)`) into
+a finite sum over `n < N` and a tail starting at `N`. -/
+theorem tsum_succ_mul_eq_sum_range_add_tsum_nat_add
+    (f : ℝ → ℂ) (u : ℝ) (N : ℕ)
+    (hSum : Summable (fun n : ℕ => f ((n + 1 : ℕ) * u))) :
+    (∑' n : ℕ, f ((n + 1 : ℕ) * u)) =
+      (∑ i in Finset.range N, f ((i + 1 : ℕ) * u)) + ∑' n : ℕ, f ((n + N + 1 : ℕ) * u) := by
+  -- This is a standard `tsum` decomposition on `ℕ`, applied to the shifted sequence `n ↦ f((n+1)u)`.
+  have h :=
+    (sum_add_tsum_nat_add (f := fun n : ℕ => f ((n + 1 : ℕ) * u)) N hSum).symm
+  -- The tail term is `n ↦ f(((n+N)+1)u)`, which we rewrite as `n ↦ f((n+N+1)u)`.
+  simpa [Nat.add_assoc, Nat.add_left_comm, Nat.add_comm, add_assoc] using h
+
+/-- Corresponding split for `E f u` (just multiply the split `tsum` by `√u`). -/
+theorem E_eq_sum_range_add_tsum_nat_add
+    (f : ℝ → ℂ) (u : ℝ) (N : ℕ)
+    (hSum : Summable (fun n : ℕ => f ((n + 1 : ℕ) * u))) :
+    E f u =
+      ((Real.sqrt u : ℝ) : ℂ) *
+        ((∑ i in Finset.range N, f ((i + 1 : ℕ) * u)) + ∑' n : ℕ, f ((n + N + 1 : ℕ) * u)) := by
+  simp [E, tsum_succ_mul_eq_sum_range_add_tsum_nat_add (f := f) (u := u) (N := N) hSum]
+
+private lemma mem_Icc_neg_lam_lam_of_mul_le
+    {lam u : ℝ} {N : ℕ} (hlam : 0 ≤ lam) (hu : 0 ≤ u) (hNu : (N : ℝ) * u ≤ lam) :
+    ∀ i : ℕ, i < N → ((i + 1 : ℕ) * u) ∈ Set.Icc (-lam) lam := by
+  intro i hi
+  have h0 : 0 ≤ ((i + 1 : ℕ) * u) := by
+    -- `(i+1) ≥ 0` and `u ≥ 0`
+    simpa using (mul_nonneg (Nat.cast_nonneg (i + 1)) hu)
+  have hlow : -lam ≤ ((i + 1 : ℕ) * u) := by
+    exact (neg_nonpos.mpr hlam).trans h0
+  have hi_le : (i + 1 : ℝ) ≤ (N : ℝ) := by
+    exact_mod_cast (Nat.succ_le_of_lt hi)
+  have hhigh : ((i + 1 : ℕ) * u) ≤ lam := by
+    -- `(i+1)u ≤ Nu ≤ lam`
+    have : ((i + 1 : ℝ) * u) ≤ (N : ℝ) * u := mul_le_mul_of_nonneg_right hi_le hu
+    exact this.trans hNu
+  exact ⟨hlow, hhigh⟩
+
+/-- Sup bound on `[-λ,λ]` controls the finite “window part” of the E-map difference. -/
+theorem sum_range_abs_sub_le_mul_of_sup
+    {hLam : ℝ → ℝ → ℂ} {h : ℝ → ℂ}
+    {lam u : ℝ} {N : ℕ} {δ : ℝ}
+    (hδ : 0 ≤ δ)
+    (hSup : ∀ x : ℝ, x ∈ Set.Icc (-lam) lam → Complex.abs (hLam lam x - h x) ≤ δ)
+    (hWin : ∀ i : ℕ, i < N → ((i + 1 : ℕ) * u) ∈ Set.Icc (-lam) lam) :
+    (∑ i in Finset.range N, Complex.abs (hLam lam ((i + 1 : ℕ) * u) - h ((i + 1 : ℕ) * u)))
+      ≤ (N : ℝ) * δ := by
+  classical
+  have hterm : ∀ i ∈ Finset.range N,
+      Complex.abs (hLam lam ((i + 1 : ℕ) * u) - h ((i + 1 : ℕ) * u)) ≤ δ := by
+    intro i hi
+    have hi' : i < N := Finset.mem_range.mp hi
+    exact hSup _ (hWin i hi')
+  -- Sum each term ≤ δ, so the whole sum ≤ N*δ.
+  calc
+    (∑ i in Finset.range N,
+        Complex.abs (hLam lam ((i + 1 : ℕ) * u) - h ((i + 1 : ℕ) * u)))
+        ≤ ∑ _i in Finset.range N, δ := by
+            exact Finset.sum_le_sum hterm
+    _ = (N : ℝ) * δ := by simp [hδ]
+
+/-- **Main window+tail bound** (E-map form):
+
+If
+- `|h_λ - h| ≤ δ` on `[-λ,λ]`,
+- the first `N` E-terms satisfy `(n+1)u ≤ λ` (so they lie in the window),
+- and the tail absolute sum is ≤ `T`,
+
+then `|E(h_λ)(u) - E(h)(u)| ≤ √u * (N·δ + T)`.
+-/
+theorem abs_E_sub_le_window_add_tail
+    (hLam : ℝ → ℝ → ℂ) (h : ℝ → ℂ)
+    (lam u : ℝ) (N : ℕ) (δ T : ℝ)
+    (hlam : 0 ≤ lam) (hu : 0 ≤ u) (hNu : (N : ℝ) * u ≤ lam)
+    (hδ : 0 ≤ δ)
+    (hSup : ∀ x : ℝ, x ∈ Set.Icc (-lam) lam → Complex.abs (hLam lam x - h x) ≤ δ)
+    (hSum : Summable (fun n : ℕ =>
+      Complex.abs (hLam lam ((n + 1 : ℕ) * u) - h ((n + 1 : ℕ) * u))))
+    (hTail :
+      (∑' n : ℕ,
+        Complex.abs (hLam lam ((n + N + 1 : ℕ) * u) - h ((n + N + 1 : ℕ) * u))) ≤ T) :
+    Complex.abs (E (hLam lam) u - E h u) ≤ (Real.sqrt u) * ((N : ℝ) * δ + T) := by
+  -- Start from the global bound by the full absolute-sum.
+  have h0 :=
+    abs_E_sub_le (f := hLam lam) (g := h) (u := u) hSum
+  -- Decompose the absolute-sum into window + tail.
+  let d : ℕ → ℝ := fun n : ℕ => Complex.abs (hLam lam ((n + 1 : ℕ) * u) - h ((n + 1 : ℕ) * u))
+  have hdecomp : (∑' n : ℕ, d n) = (∑ i in Finset.range N, d i) + ∑' n : ℕ, d (n + N) := by
+    -- Apply the standard `tsum` decomposition on `ℕ`.
+    -- (The tail is summable since `d` is summable.)
+    simpa [d, Nat.add_assoc, add_assoc] using (sum_add_tsum_nat_add (f := d) N hSum).symm
+  have hWinMem : ∀ i : ℕ, i < N → ((i + 1 : ℕ) * u) ∈ Set.Icc (-lam) lam :=
+    mem_Icc_neg_lam_lam_of_mul_le (lam := lam) (u := u) (N := N) hlam hu hNu
+  have hwindow_sum :
+      (∑ i in Finset.range N, d i) ≤ (N : ℝ) * δ := by
+    -- Reduce to the sup bound on `[-lam, lam]`.
+    simpa [d] using
+      (sum_range_abs_sub_le_mul_of_sup (hLam := hLam) (h := h) (lam := lam) (u := u) (N := N)
+        (δ := δ) hδ hSup hWinMem)
+  have htail_sum : (∑' n : ℕ, d (n + N)) ≤ T := by
+    -- Rewrite `d (n+N)` to match the given tail hypothesis.
+    simpa [d, Nat.add_assoc, Nat.add_left_comm, Nat.add_comm, add_assoc] using hTail
+  have hsum_le : (∑' n : ℕ, d n) ≤ (N : ℝ) * δ + T := by
+    -- Use the decomposition and combine the two bounds.
+    -- `tsum d = window + tail`.
+    rw [hdecomp]
+    exact add_le_add hwindow_sum htail_sum
+  -- Finish by monotonicity of multiplication by `√u` (nonnegative).
+  have hsqrt : 0 ≤ Real.sqrt u := Real.sqrt_nonneg u
+  -- `h0` is `|E(...) - E(...)| ≤ √u * (tsum d)`; now bound `tsum d`.
+  exact le_trans h0 (mul_le_mul_of_nonneg_left hsum_le hsqrt)
+
+/-!
 ## Section 7 “Lemma 7.3 style” convergence scaffolding
 
 The paper’s Lemma 7.3 uses a **sup-norm approximation** for `h_λ` on `[-λ, λ]` with rate `O(λ⁻²)`

@@ -12,6 +12,39 @@
 
 This is the *single place* to (1) enumerate every theorem-like claim in `Yang-Mills.tex`, (2) track proof confidence for each one, and (3) record blockers/conditionals so we can close gaps across multiple sessions without losing context.
 
+## Millennium alignment (Clay YM: unconditional target)
+
+The Clay problem requires an **unconditional** proof of:
+- **(Existence)**: a mathematically rigorous 4D quantum Yang–Mills theory for each compact simple gauge group \(G\), satisfying the usual axioms (OS/Wightman framework).
+- **(Mass gap)**: a strictly positive continuum spectral gap above the vacuum (in physical units).
+
+This tracker contains a mix of **lattice-only** results (important, but not sufficient by themselves), **continuum-construction** claims (needed to build the continuum theory), and **bottlenecks** (places where the current manuscript is still conditional or would require a genuinely new breakthrough to become Millennium-level unconditional).
+
+### Lattice-only (necessary but not sufficient for Clay)
+
+- **OS positivity / transfer on the lattice**:
+  - `thm:os` (YM-0001)
+  - `lem:char-pd` (YM-0129), `prop:psd-crossing-gram` (YM-0130), `lem:os-gns-transfer` (YM-0131)
+- **Fixed-\(a\) lattice gap mechanisms** (can be fully rigorous at fixed lattice spacing; does not by itself build the \(a\downarrow 0\) continuum theory):
+  - `cor:hk-convex-split-explicit` (interface \(L^2\) contraction once a Doeblin/HK split is granted)
+  - `prop:int-to-transfer` (YM-0040), `cor:odd-contraction-from-Kint` (YM-0041), `thm:uniform-odd-contraction` (YM-0043), `thm:eight-tick-uniform` (YM-0054)
+
+### Continuum-construction (must be proved for Clay)
+
+These are the steps that actually construct the continuum OS/Wightman theory and transport spectral information to the limit:
+- **Tightness / OS axioms on fixed regions**: e.g. `thm:uei-fixed-region`, `prop:os0os2-closure`, `thm:os1-unconditional` (and the global OS packages).
+- **Operator convergence (NRC) and uniqueness of the continuum generator**: e.g. `thm:U2-nrc-unique`, `thm:gap-persist-cont`.
+- **OS → Wightman export**: `thm:os-to-wightman` (and global variants).
+- **Main “existence + gap” theorem as stated in the manuscript**: `thm:main-af-free` (and any global existence theorem it depends on).
+
+### Current open bottlenecks (what blocks an unconditional Clay-level proof *in this manuscript*)
+
+- **β-uniform, scaling-compatible refresh/minorization on fixed slabs**:
+  - Targeted claims: `lem:beta-L-independent-minorization` (YM-0123), `lem:coarse-refresh` (YM-0119), `prop:sandwich` (YM-0100), `prop:coarse-doeblin` (YM-0122).
+  - Current status: we have made the geometry and “refresh ⇒ convolution” steps explicit, but the clean in-text one-link measure minorization (`lem:one-link-ball-minorization`) is **β-explicit** (decays like \(e^{-2\beta N}\)). A truly **β-uniform** mechanism is still missing; see ledger #12.
+- **Existence of the 4D continuum scaling limit at weak coupling**:
+  - Any claim asserting a fully constructed global continuum measure/Schwinger functions on \(\mathbb R^4\) (and not just on fixed \(a\) / fixed slabs) is a Clay-level bottleneck unless proved from first principles (typically via a nonperturbative RG/constructive-QFT program).
+
 ## Status + confidence rubric
 
 - **Status codes**:
