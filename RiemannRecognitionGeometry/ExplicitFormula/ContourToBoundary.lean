@@ -71,18 +71,12 @@ structure PSCComponents where
   xi : ℂ → ℂ
   /-- det₂ is nonzero in the Euler-product region Re(s) > 1 (needed for right-edge log-derivatives). -/
   det2_ne_zero : ∀ s : ℂ, 1 < s.re → det2 s ≠ 0
-  /-- O is nonzero on Re s > 1/2. -/
-  outer_ne_zero : ∀ s : ℂ, 1/2 < s.re → outer s ≠ 0
   /-- det₂ is differentiable on the Euler-product half-plane `Re(s) > 1`. -/
   det2_diff : ∀ s : ℂ, 1 < s.re → DifferentiableAt ℂ det2 s
-  /-- O is differentiable on Re s > 1/2. -/
-  outer_diff : ∀ s : ℂ, 1/2 < s.re → DifferentiableAt ℂ outer s
-  /-- ξ is differentiable on Re s > 1/2 (away from zeros, for log-deriv). -/
-  xi_diff : ∀ s : ℂ, 1/2 < s.re → xi s ≠ 0 → DifferentiableAt ℂ xi s
+  /-- ξ is differentiable on the right-edge region Re(s) > 1 (away from zeros, for log-deriv). -/
+  xi_diff : ∀ s : ℂ, 1 < s.re → xi s ≠ 0 → DifferentiableAt ℂ xi s
   /-- A chosen boundary phase function θ : ℝ → ℝ for the PSC ratio J on Re(s)=1/2. -/
   boundaryPhase : ℝ → ℝ
-  /-- Regularity of the chosen boundary phase. -/
-  boundaryPhase_diff : ∀ t : ℝ, DifferentiableAt ℝ boundaryPhase t
   /-- Boundary trace phase lift: J(1/2+it)=exp(i·θ(t)) almost everywhere. -/
   boundaryPhase_repr :
     ∀ᵐ t : ℝ ∂volume,
@@ -120,17 +114,15 @@ where J = det₂/(O·ξ) is the PSC ratio.
 This is a direct application of Mathlib's `logDeriv_div` and `logDeriv_mul`.
 -/
 theorem log_deriv_decomposition (P : PSCComponents) (s : ℂ) (hs : 1 < s.re)
-    (hxi : P.xi s ≠ 0) :
+    (houter : P.outer s ≠ 0) (hxi : P.xi s ≠ 0)
+    (hdiff_outer : DifferentiableAt ℂ P.outer s) :
     logDeriv P.xi s =
       logDeriv P.det2 s - logDeriv P.outer s - logDeriv (PSCRatio P) s := by
-  have hs_half : (1 / 2 : ℝ) < s.re := by linarith
   -- J = det₂ / (O · ξ), so logDeriv J = logDeriv det₂ - logDeriv O - logDeriv ξ
   -- Rearranging: logDeriv ξ = logDeriv det₂ - logDeriv O - logDeriv J
   have hdet2 : P.det2 s ≠ 0 := P.det2_ne_zero s hs
-  have houter : P.outer s ≠ 0 := P.outer_ne_zero s hs_half
   have hdiff_det2 : DifferentiableAt ℂ P.det2 s := P.det2_diff s hs
-  have hdiff_outer : DifferentiableAt ℂ P.outer s := P.outer_diff s hs_half
-  have hdiff_xi : DifferentiableAt ℂ P.xi s := P.xi_diff s hs_half hxi
+  have hdiff_xi : DifferentiableAt ℂ P.xi s := P.xi_diff s hs hxi
   have hdiff_outer_xi : DifferentiableAt ℂ (fun z => P.outer z * P.xi z) s :=
     hdiff_outer.mul hdiff_xi
   have houter_xi : P.outer s * P.xi s ≠ 0 := mul_ne_zero houter hxi
@@ -291,7 +283,6 @@ theorem logDeriv_unimodular_real (f : ℂ → ℂ) (θ : ℝ → ℝ) (t : ℝ)
 
 This is provided as part of the `PSCComponents` bundle:
 - `P.boundaryPhase` is the chosen phase function θ
-- `P.boundaryPhase_diff` gives differentiability
 - `P.boundaryPhase_repr` gives the a.e. boundary trace identity
   \(J(1/2+it)=\exp(i\theta(t))\).
 -/

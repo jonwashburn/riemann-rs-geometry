@@ -16,7 +16,10 @@ single named axiom/target, so the Connes Route 3′ pipeline can be expressed cl
 
 import Mathlib.Analysis.Complex.LocallyUniformLimit
 import Mathlib.Analysis.Complex.Basic
+import Mathlib.Analysis.Complex.AbsMax
 import Mathlib.Analysis.Convex.Topology
+import Mathlib.Analysis.Analytic.IsolatedZeros
+import Mathlib.Topology.Order.OrderClosed
 
 noncomputable section
 
@@ -135,25 +138,206 @@ packaged as zero-freeness on the upper and lower halves of the strip.
 def ZeroFreeOffRealAxisInStrip (f : ℂ → ℂ) : Prop :=
   ZeroFreeOn f upperStrip ∧ ZeroFreeOn f lowerStrip
 
-/-! ## Hurwitz-style nonvanishing preservation (target axiom) -/
+/-! ## Hurwitz-style nonvanishing preservation (proved theorem) -/
 
 /--
-**Hurwitz nonvanishing principle (target axiom).**
+**Hurwitz nonvanishing principle (proved).**
 
 If `Fₙ` are holomorphic on an open, preconnected set `U`, converge locally uniformly to `f` on `U`,
 and each `Fₙ` is zero-free on `U`, then either `f` is identically `0` on `U` or `f` is zero-free on `U`.
 
-We expose the useful “nontrivial ⇒ zero-free” direction as a single named axiom, since Mathlib does
-not currently provide it as a lemma.
+We expose the useful “nontrivial ⇒ zero-free” direction as a single named lemma.
 -/
-axiom hurwitz_zeroFree_of_tendstoLocallyUniformlyOn
+theorem hurwitz_zeroFree_of_tendstoLocallyUniformlyOn
     {F : ℕ → ℂ → ℂ} {f : ℂ → ℂ} {U : Set ℂ}
     (hUopen : IsOpen U) (hUconn : IsPreconnected U)
     (hF : ∀ n : ℕ, DifferentiableOn ℂ (F n) U)
     (hLim : TendstoLocallyUniformlyOn F f atTop U)
     (hZeroFree : ∀ n : ℕ, ZeroFreeOn (F n) U)
     (hNontriv : ∃ z ∈ U, f z ≠ 0) :
-    ZeroFreeOn f U
+    ZeroFreeOn f U := by
+  classical
+  intro z0 hz0
+  -- First, the locally uniform limit of holomorphic functions is holomorphic.
+  have hf : DifferentiableOn ℂ f U :=
+    hLim.differentiableOn (Eventually.of_forall hF) hUopen
+  have hAnalyticOn : AnalyticOnNhd ℂ f U := hf.analyticOnNhd hUopen
+  have hAnalyticAt : AnalyticAt ℂ f z0 := hf.analyticAt (hUopen.mem_nhds hz0)
+  -- Suppose `f z0 = 0`; we will derive a contradiction.
+  intro hf0
+  -- Isolated zeros: either `f ≡ 0` near `z0` or `f` is nonzero on a punctured neighborhood.
+  have hAlt :
+      (∀ᶠ z in 𝓝 z0, f z = 0) ∨ ∀ᶠ z in 𝓝[≠] z0, f z ≠ 0 :=
+    hAnalyticAt.eventually_eq_zero_or_eventually_ne_zero
+  have hPunctured : ∀ᶠ z in 𝓝[≠] z0, f z ≠ 0 := by
+    -- The “eventually zero” branch would force `f ≡ 0` on `U`, contradicting `hNontriv`.
+    refine hAlt.resolve_left ?_
+    intro hEvZero
+    have hfreq : (∃ᶠ z in 𝓝[≠] z0, f z = 0) :=
+      (hAnalyticAt.frequently_zero_iff_eventually_zero).2 hEvZero
+    have hEqOn : EqOn f 0 U :=
+      hAnalyticOn.eqOn_zero_of_preconnected_of_frequently_eq_zero hUconn hz0 hfreq
+    rcases hNontriv with ⟨z1, hz1U, hz1ne⟩
+    have : f z1 = 0 := by simpa using hEqOn hz1U
+    exact hz1ne this
+  -- Extract a punctured ball on which `f` is nonzero.
+  have hPunctured' : ∀ᶠ z in 𝓝 z0, z ≠ z0 → f z ≠ 0 := by
+    -- `𝓝[≠] z0` is `𝓝[{z0}ᶜ] z0`.
+    simpa [nhdsWithin, Filter.eventually_inf_principal] using
+      (eventually_nhdsWithin_iff).1 hPunctured
+  rcases (Metric.eventually_nhds_iff_ball).1 hPunctured' with ⟨δ, hδpos, hδ⟩
+  -- Also pick a ball whose closure stays inside `U` (since `U` is open).
+  rcases (Metric.mem_nhds_iff).1 (hUopen.mem_nhds hz0) with ⟨ε, hεpos, hεU⟩
+  -- Choose a radius that is small enough for both constraints.
+  let r : ℝ := min (δ / 2) (ε / 2)
+  have hrpos : 0 < r := by
+    have hδ2 : 0 < δ / 2 := by nlinarith [hδpos]
+    have hε2 : 0 < ε / 2 := by nlinarith [hεpos]
+    exact lt_min hδ2 hε2
+  have hr_lt_δ : r < δ := by
+    have h : δ / 2 < δ := by nlinarith
+    exact (min_le_left _ _).trans_lt h
+  have hr_lt_ε : r < ε := by
+    have h : ε / 2 < ε := by nlinarith
+    exact (min_le_right _ _).trans_lt h
+  have hclosedU : Metric.closedBall z0 r ⊆ U := by
+    -- `closedBall z0 r ⊆ ball z0 ε ⊆ U`
+    have h1 : Metric.closedBall z0 r ⊆ Metric.ball z0 ε :=
+      Metric.closedBall_subset_ball hr_lt_ε
+    exact h1.trans hεU
+  have hSphereU : Metric.sphere z0 r ⊆ U := (Metric.sphere_subset_closedBall).trans hclosedU
+  -- On the boundary sphere, `f` is nonzero by the punctured neighborhood property.
+  have hf_ne_on_sphere : ∀ z ∈ Metric.sphere z0 r, f z ≠ 0 := by
+    intro z hz
+    have hz_ne : z ≠ z0 := by
+      have : dist z z0 = r := by simpa [Metric.mem_sphere] using hz
+      -- If `z = z0`, then `dist z z0 = 0`, contradicting `r > 0`.
+      intro hEq
+      have : (0 : ℝ) = r := by simpa [hEq] using this
+      exact (ne_of_gt hrpos) this
+    have hz_in_ball : z ∈ Metric.ball z0 δ := by
+      -- `dist z z0 = r < δ`
+      have : dist z z0 = r := by simpa [Metric.mem_sphere] using hz
+      exact (Metric.mem_ball.2 (this ▸ hr_lt_δ))
+    -- Apply the punctured-ball nonvanishing hypothesis.
+    exact hδ hz_in_ball hz_ne
+  -- Get a positive lower bound `m` for `|f|` on the boundary sphere.
+  have hsphere_compact : IsCompact (Metric.sphere z0 r) := isCompact_sphere z0 r
+  have hcont_abs : ContinuousOn (fun z : ℂ => Complex.abs (f z)) (Metric.sphere z0 r) := by
+    have hcont_f : ContinuousOn f (Metric.sphere z0 r) := (hf.continuousOn.mono hSphereU)
+    exact continuous_abs.comp_continuousOn hcont_f
+  have hpos_on_sphere : ∀ z ∈ Metric.sphere z0 r, (0 : ℝ) < Complex.abs (f z) := by
+    intro z hz
+    exact AbsoluteValue.pos Complex.abs (hf_ne_on_sphere z hz)
+  obtain ⟨m, hmpos, hmle⟩ :=
+    hsphere_compact.exists_forall_le' hcont_abs (a := (0 : ℝ))
+      (by intro z hz; exact hpos_on_sphere z hz)
+  -- Use locally uniform convergence on the boundary sphere to transfer this lower bound to `F n`.
+  have hUnif : TendstoUniformlyOn F f atTop (Metric.sphere z0 r) :=
+    (tendstoLocallyUniformlyOn_iff_forall_isCompact hUopen).1 hLim (Metric.sphere z0 r) hSphereU hsphere_compact
+  have hUnif' : ∀ ε > 0, ∀ᶠ n in atTop, ∀ z ∈ Metric.sphere z0 r, dist (f z) (F n z) < ε := by
+    simpa [tendstoUniformlyOn_iff] using (tendstoUniformlyOn_iff.mp hUnif)
+  have hClose : ∀ᶠ n in atTop, ∀ z ∈ Metric.sphere z0 r, Complex.abs (F n z) ≥ m / 2 := by
+    filter_upwards [hUnif' (m / 2) (by nlinarith [hmpos])] with n hn z hz
+    have hmf : m ≤ Complex.abs (f z) := hmle z hz
+    have hdist : Complex.abs (f z - F n z) < m / 2 := by
+      -- `dist (f z) (F n z) = abs (f z - F n z)`
+      simpa [dist_eq, Complex.abs] using (hn z hz)
+    -- `‖F n z‖ ≥ ‖f z‖ - ‖f z - F n z‖`
+    have htri : Complex.abs (F n z) ≥ Complex.abs (f z) - Complex.abs (f z - F n z) := by
+      -- from `|‖a‖ - ‖b‖| ≤ ‖a-b‖`
+      have := norm_sub_norm_le (F n z) (f z)
+      -- rearrange to `‖F‖ ≥ ‖f‖ - ‖F-f‖`
+      -- Note `‖F - f‖ = ‖f - F‖`.
+      have : Complex.abs (f z) - Complex.abs (F n z) ≤ Complex.abs (F n z - f z) := by
+        linarith [this]
+      have : Complex.abs (F n z) ≥ Complex.abs (f z) - Complex.abs (F n z - f z) := by linarith
+      -- rewrite `F - f` to `f - F`
+      simpa [sub_eq_add_neg, add_comm, add_left_comm, add_assoc, abs_sub_comm] using this
+    have htri' : Complex.abs (F n z) ≥ m - (m / 2) := by
+      have hdist_le : Complex.abs (f z - F n z) ≤ m / 2 := le_of_lt hdist
+      have : Complex.abs (F n z) ≥ m - (m / 2) := by
+        have := le_trans (sub_le_sub_right hmf _) (sub_le_sub_left hdist_le _)
+        -- combine `abs(F) ≥ abs(f) - abs(f-F)` with bounds
+        linarith [htri, hmf, hdist_le]
+      exact this
+    -- simplify `m - m/2 = m/2`
+    nlinarith
+  -- Propagate the boundary lower bound to the center using the maximum modulus principle on `1/F n`.
+  have hCenterLower : ∀ᶠ n in atTop, Complex.abs (F n z0) ≥ m / 2 := by
+    filter_upwards [hClose] with n hn
+    -- Let `g(z) = (F n z)⁻¹`. Apply maximum modulus to bound `|g|` on the disc.
+    have hFn_ne : ∀ z ∈ Metric.closedBall z0 r, F n z ≠ 0 := by
+      intro z hz
+      exact hZeroFree n z (hclosedU hz)
+    have hDiffOn_inv : DifferentiableOn ℂ (fun z : ℂ => (F n z)⁻¹) U :=
+      (hF n).inv (fun z hz => hZeroFree n z hz)
+    have hDiffCont : DiffContOnCl ℂ (fun z : ℂ => (F n z)⁻¹) (Metric.ball z0 r) :=
+      hDiffOn_inv.diffContOnCl_ball (c := z0) (R := r) hclosedU
+    have hBoundFrontier :
+        ∀ z ∈ frontier (Metric.ball z0 r), ‖(F n z)⁻¹‖ ≤ (2 / m) := by
+      -- frontier of the ball is the sphere (since `r ≠ 0`)
+      have hr0 : r ≠ 0 := ne_of_gt hrpos
+      intro z hz
+      have hz' : z ∈ Metric.sphere z0 r := by
+        simpa [Metric.frontier_ball hr0] using hz
+      have hlow : Complex.abs (F n z) ≥ m / 2 := hn z hz'
+      have hmne : m ≠ 0 := ne_of_gt hmpos
+      -- `‖(F n z)⁻¹‖ = 1 / ‖F n z‖ ≤ 2 / m`
+      have : ‖(F n z)⁻¹‖ = (Complex.abs (F n z))⁻¹ := by
+        -- `‖z⁻¹‖ = ‖z‖⁻¹` in a normed field
+        simp
+      -- Convert the lower bound on the denominator to an upper bound on its inverse.
+      have hInv : (Complex.abs (F n z))⁻¹ ≤ (m / 2)⁻¹ := by
+        exact inv_le_inv_of_le (by nlinarith [hlow, hmpos]) hlow
+      have : ‖(F n z)⁻¹‖ ≤ (m / 2)⁻¹ := by simpa [this] using hInv
+      -- `(m/2)⁻¹ = 2/m` for `m ≠ 0`.
+      have hcalc : (m / 2)⁻¹ = (2 / m) := by
+        field_simp [hmne]
+      simpa [hcalc] using this
+    have hBoundCenter :
+        ‖(F n z0)⁻¹‖ ≤ (2 / m) := by
+      have hz0mem : z0 ∈ closure (Metric.ball z0 r) := by
+        -- `z0 ∈ closedBall z0 r = closure (ball z0 r)` since `r>0`
+        have : z0 ∈ Metric.closedBall z0 r := by simpa using (mem_closedBall_self hrpos.le)
+        -- `closedBall ⊆ closure ball`
+        exact (Metric.closedBall_subset_closure_ball) this
+      exact Complex.norm_le_of_forall_mem_frontier_norm_le (hU := isBounded_ball)
+        (hd := hDiffCont) (hC := hBoundFrontier) hz0mem
+    -- Turn the bound on `‖(F n z0)⁻¹‖` into a lower bound on `‖F n z0‖`.
+    have hmne : m ≠ 0 := ne_of_gt hmpos
+    have : Complex.abs (F n z0) ≥ m / 2 := by
+      -- If `‖(F n z0)⁻¹‖ ≤ 2/m`, then `‖F n z0‖ ≥ m/2`.
+      -- Use `‖(x)⁻¹‖ = 1/‖x‖`.
+      have hInvNorm : ‖(F n z0)⁻¹‖ = (Complex.abs (F n z0))⁻¹ := by simp
+      have hInv_le : (Complex.abs (F n z0))⁻¹ ≤ (2 / m) := by simpa [hInvNorm] using hBoundCenter
+      -- Invert both sides (all positive).
+      have hpos : 0 < Complex.abs (F n z0) := AbsoluteValue.pos Complex.abs (hZeroFree n z0 hz0)
+      have : (2 / m)⁻¹ ≤ Complex.abs (F n z0) := by
+        -- `inv_le_inv_of_le` with positives.
+        have hmpos' : 0 < (2 / m) := by nlinarith [hmpos]
+        have := inv_le_inv_of_le hmpos'.le hInv_le
+        -- simplify `((abs F)⁻¹)⁻¹ = abs F`
+        simpa using this
+      -- `(2/m)⁻¹ = m/2`
+      have hcalc : (2 / m)⁻¹ = m / 2 := by field_simp [hmne]; ring
+      simpa [hcalc] using this
+    exact this
+  -- Take limits at the center: `abs(F n z0) → abs(f z0)`, so `abs(f z0) ≥ m/2`, contradiction.
+  have hT0 : Tendsto (fun n : ℕ => F n z0) atTop (𝓝 (f z0)) :=
+    hLim.tendsto_at hz0
+  have hTabs : Tendsto (fun n : ℕ => Complex.abs (F n z0)) atTop (𝓝 (Complex.abs (f z0))) :=
+    (continuous_abs.tendsto (f z0)).comp hT0
+  have habs_ge : m / 2 ≤ Complex.abs (f z0) :=
+    ge_of_tendsto hTabs hCenterLower
+  -- But `f z0 = 0` by assumption.
+  have : Complex.abs (f z0) = 0 := by simpa [hf0]
+  have hmhalf_pos : 0 < m / 2 := by nlinarith [hmpos]
+  have : False := by
+    -- `m/2 ≤ 0` contradicts `0 < m/2`.
+    have : m / 2 ≤ 0 := by simpa [this] using habs_ge
+    exact not_lt_of_ge this hmhalf_pos
+  exact this
 
 /-! ## A packaged Hurwitz gate for “zeros are real (in the strip)” -/
 

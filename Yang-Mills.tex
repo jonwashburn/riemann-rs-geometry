@@ -645,12 +645,13 @@ Work on a fixed physical slab $R\supset\Sigma$ and $a\in(0,a_0]$ with $m:=|\Sigm
 \end{itemize}
 \end{proposition}
 \begin{proof}
-Tree gauge on a spanning tree $T\subset E(R)$ that avoids $\Sigma$ fixes $U_e=\mathbf 1$ for $e\in T$ by vertex gauges; the associated change of variables is a product of left/right translations and preserves Haar measure on each link, so the joint law on $(u,y)=(U|_{\Sigma},U|_Y)$ is $Z_R^{-1}e^{-S_R(u,y;b)}\,\pi^{\otimes m}(du)\,\pi^{\otimes |Y|}(dy)$. Since $S_R$ is smooth and strictly positive, Fubini implies $Z(u):=\int e^{-S_R(u,y;b)}\,\pi^{\otimes |Y|}(dy)$ is $C^\infty$ and strictly positive on $G^m$, hence $f_{\beta,b}(u):=Z(u)/\int Z\,d\pi^{\otimes m}\in C^\infty$ and $>0$ (this proves (i)).
+Write $\mathcal S_R(u,y;b)$ for the \emph{local Wilson action on $R$} after tree gauge, as a function of the interface variables $u=U|_{\Sigma}$, the remaining variables $y=U|_Y$, and exterior boundary data $b$. (This $\mathcal S_R$ includes the explicit factor $\beta$; it should not be confused with the plaquette sum $S_R(U)=\sum_{p\subset R}\phi(U_p)$ used in the UEI statements later.)
+Tree gauge on a spanning tree $T\subset E(R)$ that avoids $\Sigma$ fixes $U_e=\mathbf 1$ for $e\in T$ by vertex gauges; the associated change of variables is a product of left/right translations and preserves Haar measure on each link, so the joint law on $(u,y)=(U|_{\Sigma},U|_Y)$ is $Z_R^{-1}e^{-\mathcal S_R(u,y;b)}\,\pi^{\otimes m}(du)\,\pi^{\otimes |Y|}(dy)$. Since $\mathcal S_R$ is smooth and strictly positive, Fubini implies $Z(u):=\int e^{-\mathcal S_R(u,y;b)}\,\pi^{\otimes |Y|}(dy)$ is $C^\infty$ and strictly positive on $G^m$, hence $f_{\beta,b}(u):=Z(u)/\int Z\,d\pi^{\otimes m}\in C^\infty$ and $>0$ (this proves (i)).
 For (ii), let $\mathcal P_\Sigma$ denote the plaquettes in $R$ that depend on $u$. For the Wilson term $\phi_p(U)=1-\tfrac1N\operatorname{ReTr}\,U_p$, one has a uniform differential bound $\|\nabla_{U_e}\phi_p\|\le C_p(N)$, whence, for some $L_\Sigma=C_p(N)\,|\mathcal P_\Sigma|$,
 \[
-  |S_R(u,y;b)-S_R(v,y;b)|\ \le\ \beta\,L_\Sigma\, d_{G^m}(u,v)\qquad(\text{all }y,b),
+  |\mathcal S_R(u,y;b)-\mathcal S_R(v,y;b)|\ \le\ \beta\,L_\Sigma\, d_{G^m}(u,v)\qquad(\text{all }y,b),
 \]
-with $d_{G^m}$ the product Riemannian distance. Set $h_{u,v}(Y):=S_R(u,Y;b)-S_R(v,Y;b)$. After tree gauge, Theorem~\ref{thm:U1-lsi-uei} gives an LSI for the conditional measure $\mu_v(dy)\propto e^{-S_R(v,y;b)}\,\pi^{\otimes |Y|}(dy)$ with constant $\rho_R\ge c(R,N)\,\beta$. Moreover, $\|\nabla_Y h_{u,v}\|\le L_0(R,N)\, d_{G^m}(u,v)$. The Herbst argument under LSI yields the local log--Lipschitz estimate
+with $d_{G^m}$ the product Riemannian distance. Set $h_{u,v}(Y):=\mathcal S_R(u,Y;b)-\mathcal S_R(v,Y;b)$. After tree gauge, Theorem~\ref{thm:U1-lsi-uei} gives an LSI for the conditional measure $\mu_v(dy)\propto e^{-\mathcal S_R(v,y;b)}\,\pi^{\otimes |Y|}(dy)$ with constant $\rho_R\ge c(R,N)\,\beta$. Moreover, $\|\nabla_Y h_{u,v}\|\le L_0(R,N)\, d_{G^m}(u,v)$. The Herbst argument under LSI yields the local log--Lipschitz estimate
 \[
   \big|\log Z(u)-\log Z(v)\big|\ \le\ \beta\,\big(L_\Sigma r + C_1 r^2\big)\qquad(r:=d_{G^m}(u,v)),\quad C_1:=\tfrac{L_0(R,N)^2}{2c(R,N)}.
 \]
@@ -666,7 +667,7 @@ and, by symmetry of the log--Lipschitz bound, also the reverse inequality with $
 \end{proof}
 
 \begin{remark}[No pointwise $\beta$--uniform lower bound without smoothing]\label{rem:no-pointwise-lower}
-Because $S_R$ carries an explicit factor $\beta$, the log--Lipschitz estimate shows that $\log f_{\beta,b}$ can oscillate by $\asymp \beta$ over $O(1)$ distances. On a compact group this precludes any pointwise lower bound $\inf f_{\beta,b}\ge c>0$ that is uniform in $\beta$ without either shrinking the radius $r\sim 1/\beta$ in an averaged statement as above, or introducing short--time heat--kernel smoothing. The latter is exactly what yields the convex split $K_{\rm int}^{(a)}=\theta_* P_{t_0}+(1-\theta_*)\mathcal K$ in Proposition~\ref{prop:doeblin-full}/Corollary~\ref{cor:convex-split}.
+Because $\mathcal S_R$ carries an explicit factor $\beta$, the log--Lipschitz estimate shows that $\log f_{\beta,b}$ can oscillate by $\asymp \beta$ over $O(1)$ distances. On a compact group this precludes any pointwise lower bound $\inf f_{\beta,b}\ge c>0$ that is uniform in $\beta$ without either shrinking the radius $r\sim 1/\beta$ in an averaged statement as above, or introducing short--time heat--kernel smoothing. The latter is exactly what yields the convex split $K_{\rm int}^{(a)}=\theta_* P_{t_0}+(1-\theta_*)\mathcal K$ in Proposition~\ref{prop:doeblin-full}/Corollary~\ref{cor:convex-split}.
 \end{remark}
 
 \begin{lemma}[Small-ball Haar volume on compact simple Lie groups]\label{lem:small-ball-volume}
@@ -2353,7 +2354,7 @@ Write the one-step convex split $K=\theta_* P_{t_0}+(1-\theta_*)\mathcal K$ with
 Using Lemma~\ref{lem:hk-lower-explicit} at $t_0$ shows $P_{t_0}\ge c_*(N,r_*)^{m} \Pi_{B_{r_*}}$ (projection to densities supported in $B_{r_*}^m$). Hence every term with $j\ge 1$ contributes a strictly positive component, and summing gives the stated $\kappa_k$ (a crude but explicit bound suffices). The $L^2_0$-norm bound follows by functional calculus: on the orthogonal complement of constants, $\|P_{t_0}\|=e^{-\lambda_1(G) t_0}$ and $\|\mathcal K\|\le 1$, so $\|K\|\le 1-\theta_*(1-e^{-\lambda_1(G) t_0})$ and $\|K^k\|\le (1-\theta_*(1-e^{-\lambda_1(G) t_0}))^{k}$.
 \end{proof}
 \begin{corollary}[UEI with explicit constants]\label{cor:uei-explicit-constants}
-In the setting of Theorem~\ref{thm:uei-fixed-region}, fix any $a\in(0,a_0]$ with $\beta\ge \beta_{\min}(R,N)>0$. Let
+In the setting of Theorem~\ref{thm:uei-fixed-region}, fix any $a\in(0,a_0]$ with $\beta=\beta(a)\ge \beta_{\min}(R,N)>0$. Let
 \[
   \rho_{\min}(R,N)\ :=\ c_2(R,N)\,\beta_{\min}(R,N),\qquad
   G_R(R,N,a_0)\ :=\ C_1(R,N)\,a_0^4,
@@ -3587,7 +3588,7 @@ uniformly in $(L,a)$. In particular, $\mathrm{spec}(H_{L,a})\subset\{0\}\cup[c_{
 \section{Appendix: Tree--Gauge UEI (Uniform Exponential Integrability)}
 
 \begin{theorem}[Uniform Exponential Integrability on fixed regions]\label{thm:uei-fixed-region}
-Fix a bounded physical region $R\subset\mathbb{R}^4$ and let $\mathcal{P}_R$ be the set of plaquettes in $R$ at spacing $a$. With $\phi(U):=1-\tfrac{1}{N}\,\mathrm{Re\,Tr}\,U\in[0,2]$ and $S_R(U):=\sum_{p\in\mathcal{P}_R}\phi(U_p)$, there exist constants $\eta_R>0$ and $C_R<\infty$, depending only on $(R,a_0,N)$ and a fixed lower bound $\beta_{\min}(R,N)>0$ (with $\beta\ge \beta_{\min}(R,N)$), such that for all $(L,a)$ in the scaling window and any boundary configuration outside $R$,
+Fix a bounded physical region $R\subset\mathbb{R}^4$ and let $\mathcal{P}_R$ be the set of plaquettes in $R$ at spacing $a$. Fix a weak-coupling scaling schedule $a\mapsto \beta(a)$ with $\beta(a)\ge \beta_{\min}(R,N)>0$ for $a\in(0,a_0]$ and $\beta(a)\to\infty$ as $a\downarrow 0$. With $\phi(U):=1-\tfrac{1}{N}\,\mathrm{Re\,Tr}\,U\in[0,2]$ and $S_R(U):=\sum_{p\in\mathcal{P}_R}\phi(U_p)$, there exist constants $\eta_R>0$ and $C_R<\infty$, depending only on $(R,a_0,N,\beta_{\min})$, such that for all $(L,a)$ in the scaling window (with coupling $\beta=\beta(a)$) and any boundary configuration outside $R$,
 \[
   \mathbb{E}_{\mu_{L,a}}\big[e^{\eta_R S_R(U)}\big]\ \le\ C_R.
 \]
@@ -3596,10 +3597,12 @@ Fix a bounded physical region $R\subset\mathbb{R}^4$ and let $\mathcal{P}_R$ be 
 Under Assumption~\ref{assump:AF-Mosco}, for each fixed bounded region $R\Subset\mathbb R^4$ there exist $\eta_R>0$ and $C_R<\infty$, depending only on $(R,N)$ and the AF trajectory parameters, such that the UEI bound of Theorem~\ref{thm:uei-fixed-region} holds uniformly along the scaling window. In particular, the Laplace transforms of all time-zero local observables supported in $R$ are uniformly bounded in $a$ and $L$.
 \end{corollary}
 \begin{proof}
+\emph{Scope note (weak-coupling scaling).} The uniform-in-$a$ claim for the extensive quantity $S_R=\sum_{p\subset R}\phi(U_p)$ is only plausible in the intended continuum regime where $\beta=\beta(a)\to\infty$ as $a\downarrow 0$ (so plaquette holonomies concentrate near $\mathbf 1$ and $\phi(U_p)\sim a^4\|F\|^2$). At fixed $\beta$ independent of $a$, $|\mathcal P_R|\asymp a^{-4}$ and one expects $\mathbb E S_R$ to grow proportionally to $|\mathcal P_R|$, so $\sup_a\mathbb E e^{\eta S_R}$ cannot remain bounded for any fixed $\eta>0$.
+
 \emph{Idea.} Gauge-fix on a tree so only finitely many chords remain; the Wilson energy is uniformly strictly convex along chords on fixed regions, giving a local log–Sobolev inequality. A Lipschitz bound for the local action then yields subgaussian Laplace tails (Herbst), giving uniform exponential integrability.
 
 \medskip
-\emph{Step 1 (Tree gauge and local coordinates).} Fix a spanning tree $T$ of links in $R$ (with fixed boundary outside $R$) and gauge--fix links on $T$ to the identity. The remaining independent variables (``chords'') form a finite product $X\in G^{m}$, $G=\mathrm{SU}(N)$, with $m=m(R,a)=O(a^{-3})$ (finite because $R$ is bounded). Each plaquette variable $U_p$ is a product of at most four chord variables, and each chord enters at most $d_0=d_0(R)$ plaquettes.
+\emph{Step 1 (Tree gauge and local coordinates).} Fix a spanning tree $T$ of links in $R$ (with fixed boundary outside $R$) and gauge--fix links on $T$ to the identity. The remaining independent variables (``chords'') form a finite product $X\in G^{m}$, $G=\mathrm{SU}(N)$, with $m=m(R,a)=O(a^{-4})$ (finite for each fixed $a$ because $R$ is bounded). Each plaquette variable $U_p$ is a product of at most four chord variables, and each chord enters at most $d_0=d_0(R)$ plaquettes.
 
 \emph{Step 2 (Local LSI at large $\beta$).} In a normal coordinate chart around $\mathbf{1}\in G$, write $U_\ell=\exp A_\ell$ with $A_\ell\in\mathfrak{su}(N)$. For $p$ near the identity,
 \[
@@ -3608,7 +3611,7 @@ Under Assumption~\ref{assump:AF-Mosco}, for each fixed bounded region $R\Subset\
 \]
 with a universal $c_N>0$ and a bounded multilinear form $F_p$ (continuum expansion). Thus the negative log--density on $R$ after tree gauge,
 \[
-  V_R(X)\ :=\ -\beta(a)\sum_{p\subset R}\phi(U_p(X))
+  V_R(X)\ :=\ \beta(a)\sum_{p\subset R}\phi(U_p(X))
 \]
 has Hessian uniformly bounded below by $\kappa_R\,\beta(a)$ along each chord direction for all $a\in(0,a_0]$ with $\beta(a)\ge \beta_{\min}$, by compactness of $G$ and bounded interaction degree (Holley--Stroock/Bakry--\'Emery perturbation on compact groups). Therefore the induced Gibbs measure $\mu_R$ satisfies a local log--Sobolev inequality (LSI)
 \[
@@ -3630,7 +3633,8 @@ By compactness of $G^{m(R,a)}$ and that each chord enters at most $d_0$ plaquett
 The quadratic expansion of $\phi$ around the identity gives $\phi(U_p)= \tfrac{c_N}{2} a^4\|F_p(A)\|^2+O(a^6\|A\|^3)$. Summing over plaquettes and using that each $A_\ell$ appears in at most $d_0$ plaquettes with uniformly bounded coefficients yields the stated quadratic lower bound with a cubic remainder. For $\|A\|\le r_R$ small, the cubic term is absorbed into the quadratic, giving the local Hessian bound. A standard patching argument on the compact manifold, together with bounded interaction degree, propagates a uniform convexity constant $\kappa_R$ on all of $G^{m(R,a)}$.
 \end{proof}
 
-\emph{Step 3 (Lipschitz bound for $S_R$).} The map $X\mapsto S_R(U(X))$ is Lipschitz on $G^{m}$ with respect to the product Riemannian metric. Changing a single chord affects at most $d_0$ plaquettes; by the expansion above and compactness, there exist constants $C_1(R,N),C_2(R,N)$ such that
+\emph{Step 3 (Lipschitz bound for $S_R$).} The map $X\mapsto S_R(U(X))$ is Lipschitz on $G^{m}$ with respect to the product Riemannian metric. Changing a single chord affects at most $d_0$ plaquettes. In the small-field regime where $U_p$ stays within $O(a^2)$ of $\mathbf 1$ (so $\|\nabla\phi(U_p)\|=O(a^2)$ uniformly on $R$), one gets an $a$-uniform bound on the global gradient. Without such weak-coupling control one only has the trivial bound $\|\nabla S_R\|_2^2\lesssim m(R,a)$, which grows like $a^{-4}$.
+By the expansion above and compactness, there exist constants $C_1(R,N),C_2(R,N)$ such that
 \[
   \|\nabla S_R\|_2^2\ \le\ C_1(R,N)\,a^4\ \le\ C_1(R,N)\,a_0^4\ :=\ G_R\,.
 \]
@@ -3653,7 +3657,7 @@ with $t_*(R,N)$ a universal LSI radius (on compact groups) so that $\frac{\eta_R
   \mathbb{E}_{\mu_R}\big[e^{\eta_R(S_R-\mathbb{E}S_R)}\big]\ \le\ e^{1/2}\,.
 \]
 
-\emph{Step 5 (Bounding $\mathbb{E}S_R$ and conclusion).} Since $0\le\phi\le 2$ and $S_R$ is a Riemann sum of a positive density, there exists $M_R(R,N,\beta_{\min})<\infty$ such that $\sup_{a\in(0,a_0]}\mathbb{E}_{\mu_R}S_R\le M_R$. Therefore
+\emph{Step 5 (Bounding $\mathbb{E}S_R$ and conclusion).} In the intended weak-coupling scaling regime, $S_R$ behaves as a Riemann sum for the local continuum density, and one expects $\sup_{a\in(0,a_0]}\mathbb{E}_{\mu_R}S_R<\infty$ on fixed $R$. Denote this bound by $M_R(R,N,\beta_{\min})$. Therefore
 \[
   \mathbb{E}_{\mu_{L,a}}\!\left[e^{\eta_R S_R(U)}\right]
   \ =\ e^{\eta_R\,\mathbb{E}S_R}\,\mathbb{E}\big[e^{\eta_R(S_R-\mathbb{E}S_R)}\big]

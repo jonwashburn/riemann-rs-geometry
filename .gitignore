@@ -30,3 +30,6 @@ Thumbs.db
 *.bbl
 *.blg
 
+# Scratch / local experimentation files
+Scratch*.lean
+

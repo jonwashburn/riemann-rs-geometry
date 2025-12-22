@@ -9,12 +9,13 @@ Proves that `riemannZeta (conj s) = conj (riemannZeta s)` and similar identities
 import Mathlib.NumberTheory.LSeries.RiemannZeta
 import Mathlib.Analysis.NormedSpace.Connected
 import Mathlib.NumberTheory.Harmonic.ZetaAsymp
+import Mathlib.Analysis.MellinTransform
 
 open scoped Complex ComplexConjugate
 
 noncomputable section
 
-open Complex Set
+open Complex Set MeasureTheory
 
 /-!
 ## HasDerivAt for conjugated functions
@@ -165,6 +166,67 @@ theorem logDerivZeta_conj' (s : ℂ) :
 This requires proving conjugation symmetry for Gammaℝ and the completed zeta.
 -/
 
+/-!
+### A small Mellin–conjugation helper
+
+`completedRiemannZeta₀` is defined in Mathlib via Hurwitz’s completed zeta as a Mellin transform
+(`WeakFEPair.Λ₀ = mellin f_modif`).  For the conjugation symmetry of `completedRiemannZeta₀` we use:
+
+> If `f : ℝ → ℂ` is pointwise fixed by conjugation, then `mellin f` commutes with conjugation.
+
+We keep this lemma `private` since it is just local glue for the `completedRiemannZeta₀_conj` proof.
+-/
+
+private lemma mellin_star_of_star_fixed (f : ℝ → ℂ)
+    (hf : ∀ t, starRingEnd ℂ (f t) = f t) (s : ℂ) :
+    mellin f (starRingEnd ℂ s) = starRingEnd ℂ (mellin f s) := by
+  -- Unfold Mellin as an integral over `t > 0`.
+  simp [mellin]
+  have hs_meas : MeasurableSet (Set.Ioi (0 : ℝ)) := isOpen_Ioi.measurableSet
+
+  -- Establish AE equality of integrands on the restricted measure `volume.restrict (Ioi 0)`.
+  have hAE :
+      (fun t : ℝ => ((t : ℂ) ^ (starRingEnd ℂ s - 1)) • f t) =ᵐ[volume.restrict (Set.Ioi 0)]
+        fun t : ℝ => starRingEnd ℂ (((t : ℂ) ^ (s - 1)) • f t) := by
+    -- Reduce `∀ᵐ` on the restricted measure to `∀ᵐ` on `volume` plus a membership hypothesis.
+    refine (MeasureTheory.ae_restrict_iff' (μ := volume) (s := Set.Ioi (0 : ℝ)) hs_meas).2 ?_
+    refine Filter.Eventually.of_forall ?_
+    intro t ht
+    have ht0 : 0 < t := by simpa using ht
+
+    -- For `t>0`, `(t : ℂ)` is a positive real so `arg(t)=0≠π`, enabling `Complex.cpow_conj`.
+    have harg : (t : ℂ).arg = 0 := by
+      simpa using (Complex.arg_ofReal_of_nonneg (show 0 ≤ t from le_of_lt ht0))
+    have hne : (t : ℂ).arg ≠ Real.pi := by
+      have : (0 : ℝ) ≠ Real.pi := by exact ne_of_lt Real.pi_pos
+      simpa [harg] using this
+    have htstar : starRingEnd ℂ (t : ℂ) = (t : ℂ) := by simp
+
+    have hsstar : starRingEnd ℂ (s - 1) = starRingEnd ℂ s - 1 := by
+      simp [map_sub]
+
+    have hpow : starRingEnd ℂ ((t : ℂ) ^ (s - 1)) = (t : ℂ) ^ (starRingEnd ℂ (s - 1)) := by
+      have h := (Complex.cpow_conj (x := (t : ℂ)) (n := (s - 1)) hne)
+      -- `cpow_conj` gives `t^(conj(s-1)) = conj((conj t)^(s-1))`; for real `t`, `conj t = t`.
+      simpa [htstar] using h.symm
+
+    -- Push conjugation through the integrand.
+    simp [smul_eq_mul, hf t, hsstar, hpow]
+
+  have hInt :
+      (∫ t : ℝ in Set.Ioi 0, ((t : ℂ) ^ (starRingEnd ℂ s - 1)) • f t) =
+        ∫ t : ℝ in Set.Ioi 0, starRingEnd ℂ (((t : ℂ) ^ (s - 1)) • f t) := by
+    simpa using (MeasureTheory.integral_congr_ae (μ := volume.restrict (Set.Ioi 0)) hAE)
+
+  -- Conclude by `integral_conj` over the restricted measure.
+  calc
+    (∫ t : ℝ in Set.Ioi 0, ((t : ℂ) ^ (starRingEnd ℂ s - 1)) • f t) =
+        ∫ t : ℝ in Set.Ioi 0, starRingEnd ℂ (((t : ℂ) ^ (s - 1)) • f t) := hInt
+    _ = starRingEnd ℂ (∫ t : ℝ in Set.Ioi 0, ((t : ℂ) ^ (s - 1)) • f t) := by
+        simpa [Measure.restrict_restrict] using
+          (integral_conj (μ := (volume.restrict (Set.Ioi 0)))
+            (f := fun t : ℝ => ((t : ℂ) ^ (s - 1)) • f t))
+
 /-- Conjugation symmetry of complex power with positive real base. -/
 theorem cpow_conj_of_pos {x : ℝ} (hx : 0 < x) (s : ℂ) :
     (x : ℂ) ^ conj s = conj ((x : ℂ) ^ s) := by
@@ -197,9 +259,67 @@ theorem Gammaℝ_conj (s : ℂ) : Complex.Gammaℝ (conj s) = conj (Complex.Gamm
       rw [this]
     rw [h2, Complex.Gamma_conj]
 
-/-- Conjugation symmetry of completedRiemannZeta₀. -/
-axiom completedRiemannZeta₀_conj (s : ℂ) :
-    completedRiemannZeta₀ (conj s) = conj (completedRiemannZeta₀ s)
+/-!
+### Conjugation symmetry of `completedRiemannZeta₀`
+
+Mathlib defines:
+
+`completedRiemannZeta₀ s = HurwitzZeta.completedHurwitzZetaEven₀ 0 s`
+with
+`HurwitzZeta.completedHurwitzZetaEven₀ a s = (HurwitzZeta.hurwitzEvenFEPair a).Λ₀ (s/2) / 2`
+and `Λ₀ = mellin f_modif`.
+
+For `a = 0` the kernel `f_modif` is real-valued (as a function into `ℂ`), hence fixed by conjugation,
+so the Mellin–conjugation lemma above applies.
+-/
+
+private lemma hurwitzEvenFEPair0_f_modif_star_fixed (t : ℝ) :
+    starRingEnd ℂ (((HurwitzZeta.hurwitzEvenFEPair (0 : UnitAddCircle)).f_modif t)) =
+      ((HurwitzZeta.hurwitzEvenFEPair (0 : UnitAddCircle)).f_modif t) := by
+  by_cases h1 : 1 < t
+  · by_cases h2 : 0 < t ∧ t < 1
+    · simp [WeakFEPair.f_modif, HurwitzZeta.hurwitzEvenFEPair, h1, h2]
+    · simp [WeakFEPair.f_modif, HurwitzZeta.hurwitzEvenFEPair, h1, h2]
+  · by_cases h2 : 0 < t ∧ t < 1
+    · simp [WeakFEPair.f_modif, HurwitzZeta.hurwitzEvenFEPair, h1, h2]
+    · simp [WeakFEPair.f_modif, HurwitzZeta.hurwitzEvenFEPair, h1, h2]
+
+private theorem completedRiemannZeta₀_star (s : ℂ) :
+    completedRiemannZeta₀ (starRingEnd ℂ s) = starRingEnd ℂ (completedRiemannZeta₀ s) := by
+  -- Unfold `completedRiemannZeta₀` through Hurwitz’s completion; reduce to a Mellin identity.
+  simp [completedRiemannZeta₀, HurwitzZeta.completedHurwitzZetaEven₀, WeakFEPair.Λ₀]
+
+  -- Rewrite the harmless scalar `starRingEnd ℂ 2 = 2` without `simp` loops.
+  have h2 : (starRingEnd ℂ) (2 : ℂ) = 2 := by
+    simp [starRingEnd_apply]
+
+  -- Numerator identity: Mellin commutes with conjugation when the kernel is fixed by conjugation.
+  have hnum :
+      mellin (HurwitzZeta.hurwitzEvenFEPair (0 : UnitAddCircle)).f_modif ((starRingEnd ℂ) s / 2) =
+        (starRingEnd ℂ)
+          (mellin (HurwitzZeta.hurwitzEvenFEPair (0 : UnitAddCircle)).f_modif (s / 2)) := by
+    have hM :=
+      mellin_star_of_star_fixed
+        (f := (HurwitzZeta.hurwitzEvenFEPair (0 : UnitAddCircle)).f_modif)
+        (fun t => hurwitzEvenFEPair0_f_modif_star_fixed t)
+        (s / 2)
+    -- `starRingEnd (s/2) = starRingEnd s / starRingEnd 2 = starRingEnd s / 2`.
+    simpa [map_div₀, h2] using hM
+
+  -- Divide both sides of the numerator identity by 2, matching the definition.
+  have := congrArg (fun z : ℂ => z / 2) hnum
+  simpa [h2] using this
+
+/-- Conjugation symmetry of `completedRiemannZeta₀`. -/
+theorem completedRiemannZeta₀_conj (s : ℂ) :
+    completedRiemannZeta₀ (conj s) = conj (completedRiemannZeta₀ s) := by
+  -- Convert the `starRingEnd` statement to the `conj` statement by rewriting.
+  have hs : conj s = starRingEnd ℂ s := by
+    -- Rewriting the RHS by `starRingEnd_apply` closes the goal.
+    rw [starRingEnd_apply]
+  have hs2 : conj (completedRiemannZeta₀ s) = starRingEnd ℂ (completedRiemannZeta₀ s) := by
+    rw [starRingEnd_apply]
+  simpa [hs, hs2] using completedRiemannZeta₀_star s
 
 /-- Conjugation symmetry of completedRiemannZeta. -/
 theorem completedRiemannZeta_conj' (s : ℂ) :

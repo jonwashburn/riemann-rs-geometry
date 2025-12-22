@@ -140,7 +140,11 @@ theorem rightEdgeIntegrand_eq_decomp
     (hxi : LC.xi = P.xi)
     (hc_gt_one : 1 < LC.c)
     (hxi_ne : ∀ t : ℝ, P.xi ((LC.c : ℂ) + (t : ℂ) * Complex.I) ≠ 0) :
+    -- We also need the outer factor to be nonzero and differentiable along the right edge.
+    (houter_ne : ∀ t : ℝ, P.outer ((LC.c : ℂ) + (t : ℂ) * Complex.I) ≠ 0) →
+    (houter_diff : ∀ t : ℝ, DifferentiableAt ℂ P.outer ((LC.c : ℂ) + (t : ℂ) * Complex.I)) →
     rightEdgeIntegrand LC h = rightEdgeIntegrand_decomp LC P h := by
+  intro houter_ne houter_diff
   funext t
   -- Apply `log_deriv_decomposition` at `s = c + it`.
   have hs : (1 : ℝ) < (((LC.c : ℂ) + (t : ℂ) * Complex.I)).re := by
@@ -155,7 +159,9 @@ theorem rightEdgeIntegrand_eq_decomp
         (P := P)
         (s := (LC.c : ℂ) + (t : ℂ) * Complex.I)
         (hs := hs)
-        (hxi := hxi_ne t))
+        (houter := houter_ne t)
+        (hxi := hxi_ne t)
+        (hdiff_outer := houter_diff t))
   -- Rewrite `LC.xi` to `P.xi`, then finish by simp.
   simp [rightEdgeIntegrand, rightEdgeIntegrand_decomp, hxi, hdecomp, mul_assoc]
 
@@ -212,16 +218,19 @@ theorem rightEdge_integral_identity_iff_decomp
     (h : F)
     (hxi : LC.xi = P.xi)
     (hc_gt_one : 1 < LC.c)
-    (hxi_ne : ∀ t : ℝ, P.xi ((LC.c : ℂ) + (t : ℂ) * Complex.I) ≠ 0) :
+    (hxi_ne : ∀ t : ℝ, P.xi ((LC.c : ℂ) + (t : ℂ) * Complex.I) ≠ 0)
+    (houter_ne : ∀ t : ℝ, P.outer ((LC.c : ℂ) + (t : ℂ) * Complex.I) ≠ 0)
+    (houter_diff : ∀ t : ℝ, DifferentiableAt ℂ P.outer ((LC.c : ℂ) + (t : ℂ) * Complex.I)) :
     rightEdge_integral_identity (LC := LC) (P := P) h ↔
       rightEdge_integral_identity_decomp (LC := LC) (P := P) h := by
   have hh :
       rightEdgeIntegrand LC h = rightEdgeIntegrand_decomp LC P h :=
-    rightEdgeIntegrand_eq_decomp (LC := LC) (P := P) (h := h) hxi hc_gt_one hxi_ne
+    rightEdgeIntegrand_eq_decomp (LC := LC) (P := P) (h := h) hxi hc_gt_one hxi_ne houter_ne houter_diff
   have htilde :
       rightEdgeIntegrand LC (TestSpace.tilde (F := F) h) =
         rightEdgeIntegrand_decomp LC P (TestSpace.tilde (F := F) h) :=
-    rightEdgeIntegrand_eq_decomp (LC := LC) (P := P) (h := (TestSpace.tilde (F := F) h)) hxi hc_gt_one hxi_ne
+    rightEdgeIntegrand_eq_decomp (LC := LC) (P := P) (h := (TestSpace.tilde (F := F) h))
+      hxi hc_gt_one hxi_ne houter_ne houter_diff
   constructor <;> intro H
   · simpa [rightEdge_integral_identity, rightEdge_integral_identity_decomp, hh, htilde] using H
   · simpa [rightEdge_integral_identity, rightEdge_integral_identity_decomp, hh, htilde] using H
@@ -1672,7 +1681,10 @@ theorem explicit_formula_cancellation_contour_of_allComponentAssumptions
     (hInt_ratio : Integrable (rightEdgeIntegrand_ratio LC P h) (volume : Measure ℝ))
     (hInt_det2_tilde : Integrable (rightEdgeIntegrand_det2 LC P (TestSpace.tilde (F := F) h)) (volume : Measure ℝ))
     (hInt_outer_tilde : Integrable (rightEdgeIntegrand_outer LC P (TestSpace.tilde (F := F) h)) (volume : Measure ℝ))
-    (hInt_ratio_tilde : Integrable (rightEdgeIntegrand_ratio LC P (TestSpace.tilde (F := F) h)) (volume : Measure ℝ)) :
+    (hInt_ratio_tilde : Integrable (rightEdgeIntegrand_ratio LC P (TestSpace.tilde (F := F) h)) (volume : Measure ℝ))
+    -- Outer regularity along the right edge (needed for the log-derivative decomposition lemma).
+    (houter_ne : ∀ t : ℝ, P.outer ((LC.c : ℂ) + (t : ℂ) * I) ≠ 0)
+    (houter_diff : ∀ t : ℝ, DifferentiableAt ℂ P.outer ((LC.c : ℂ) + (t : ℂ) * I)) :
     ContourToBoundary.explicit_formula_cancellation_contour (LC := LC) (P := P) h := by
   -- Step 1: Get the component identity from AllComponentAssumptions.
   have hComponents := rightEdge_integral_identity_components_of_allComponentAssumptions
@@ -1702,12 +1714,12 @@ theorem explicit_formula_cancellation_contour_of_allComponentAssumptions
       -- Rewrite `P.xi` to `xiLagarias`, then use its nonvanishing on `Re(s) > 1`.
       simpa [hxiP] using (xiLagarias_ne_zero_of_re_gt_one (s := (LC.c : ℂ) + (t : ℂ) * I) hs)
     have hEq : rightEdgeIntegrand LC h = rightEdgeIntegrand_decomp LC P h :=
-      rightEdgeIntegrand_eq_decomp (LC := LC) (P := P) (h := h) hxi hc_gt_one hxi_ne
+      rightEdgeIntegrand_eq_decomp (LC := LC) (P := P) (h := h) hxi hc_gt_one hxi_ne houter_ne houter_diff
     have hEq_tilde :
         rightEdgeIntegrand LC (TestSpace.tilde (F := F) h) =
           rightEdgeIntegrand_decomp LC P (TestSpace.tilde (F := F) h) :=
       rightEdgeIntegrand_eq_decomp (LC := LC) (P := P) (h := (TestSpace.tilde (F := F) h))
-        hxi hc_gt_one hxi_ne
+        hxi hc_gt_one hxi_ne houter_ne houter_diff
     simp only [hEq, hEq_tilde]
     simpa [rightEdge_integral_identity_decomp] using hDecomp
   -- Step 4: Apply the main contour theorem.

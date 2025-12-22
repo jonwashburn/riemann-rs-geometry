@@ -360,6 +360,54 @@ theorem abs_E_sub_le_uniform_semilocal_of_tailEnvelope
     mul_le_mul_of_nonneg_right hsqrt_le hnonneg_factor
   exact le_trans h1 h2
 
+/-- Companion lemma to `abs_E_sub_le_uniform_semilocal_of_tailEnvelope`, stated directly for
+`kLamOf` / `kOf` (no mention of `E`). -/
+theorem abs_kLam_sub_k_le_uniform_semilocal_of_tailEnvelope
+    (hLam : ℝ → ℝ → ℂ) (h : ℝ → ℂ)
+    {lam : ℝ} (hlam : 0 < lam)
+    (δ : ℝ) (T : ℝ → ℝ)
+    (hδ : 0 ≤ δ) (hT : 0 ≤ T lam)
+    (hSup : ∀ x : ℝ, x ∈ Set.Icc (-lam) lam → Complex.abs (hLam lam x - h x) ≤ δ)
+    (hSum : ∀ u : ℝ, u ∈ Set.Icc (lam⁻¹) lam →
+      Summable (fun n : ℕ => Complex.abs (hLam lam ((n + 1 : ℕ) * u) - h ((n + 1 : ℕ) * u))))
+    (hTail :
+      ∀ u : ℝ, u ∈ Set.Icc (lam⁻¹) lam →
+        (∑' n : ℕ,
+          Complex.abs (hLam lam ((n + Nwin lam u + 1 : ℕ) * u) - h ((n + Nwin lam u + 1 : ℕ) * u)))
+          ≤ T lam) :
+    ∀ u : ℝ, u ∈ Set.Icc (lam⁻¹) lam →
+      Complex.abs (kLamOf hLam lam u - kOf h u) ≤
+        (Real.sqrt lam) * ((lam ^ 2) * δ + T lam) := by
+  intro u hu
+  simpa [kLamOf, kOf] using
+    (abs_E_sub_le_uniform_semilocal_of_tailEnvelope (hLam := hLam) (h := h) (lam := lam)
+      (hlam := hlam) (δ := δ) (T := T) (hδ := hδ) (hT := hT)
+      (hSup := hSup) (hSum := hSum) (hTail := hTail) u hu)
+
+/-- Variant of `abs_kLam_sub_k_le_uniform_semilocal_of_tailEnvelope` where the window error is a
+function `δ(λ)` (paper-style `O(λ⁻²)`). -/
+theorem abs_kLam_sub_k_le_uniform_semilocal_of_tailEnvelope_delta
+    (hLam : ℝ → ℝ → ℂ) (h : ℝ → ℂ)
+    {lam : ℝ} (hlam : 0 < lam)
+    (δ : ℝ → ℝ) (T : ℝ → ℝ)
+    (hδ : 0 ≤ δ lam) (hT : 0 ≤ T lam)
+    (hSup : ∀ x : ℝ, x ∈ Set.Icc (-lam) lam → Complex.abs (hLam lam x - h x) ≤ δ lam)
+    (hSum : ∀ u : ℝ, u ∈ Set.Icc (lam⁻¹) lam →
+      Summable (fun n : ℕ => Complex.abs (hLam lam ((n + 1 : ℕ) * u) - h ((n + 1 : ℕ) * u))))
+    (hTail :
+      ∀ u : ℝ, u ∈ Set.Icc (lam⁻¹) lam →
+        (∑' n : ℕ,
+          Complex.abs (hLam lam ((n + Nwin lam u + 1 : ℕ) * u) - h ((n + Nwin lam u + 1 : ℕ) * u)))
+          ≤ T lam) :
+    ∀ u : ℝ, u ∈ Set.Icc (lam⁻¹) lam →
+      Complex.abs (kLamOf hLam lam u - kOf h u) ≤
+        (Real.sqrt lam) * ((lam ^ 2) * (δ lam) + T lam) := by
+  -- Just instantiate the constant-`δ` lemma with `δ := δ lam`.
+  simpa [mul_assoc] using
+    (abs_kLam_sub_k_le_uniform_semilocal_of_tailEnvelope (hLam := hLam) (h := h) (lam := lam)
+      (hlam := hlam) (δ := δ lam) (T := T) (hδ := hδ) (hT := hT)
+      (hSup := hSup) (hSum := hSum) (hTail := hTail))
+
 /-!
 ## Section 7 “Lemma 7.3 style” convergence scaffolding
 

@@ -28,18 +28,114 @@ Use one of:
 - **blocked**: cannot proceed (missing input / circularity / unclear definition)
 - **conditional**: relies on black-box / hypothesis / conjecture
 - **suspect**: likely wrong / needs counterexample check
+- **deprecated**: intentionally not used in the current mainline; kept only as historical context (do not invest effort unless reviving that route)
 
 ### Session log
 
 - **2025-12-20**: Auto-generated inventory + per-result proof templates from `BSD-Jon-Final.txt`. Next step is to pick a target result and start the `stated → outlined → drafted → audited` loop.
 
+### BSD unconditional checklist (C0–C5) — dashboard (active route)
+
+This is the **minimal spine** for an unconditional BSD proof in this manuscript’s framework. Each item must be either (i) proved internally with referee-grade detail, or (ii) supplied by unconditional literature with exact theorem-number mapping and a verified hypothesis check. If an item is blocked, **all downstream “unconditional” claims must be downgraded**.
+
+| ID | Goal (what must be true) | Where it lives in this repo | Current status | Minimal unblocker |
+|---|---|---|---|---|
+| **C0** | Definitions + normalizations: \(L_p\), \(L_p^{\pm}\), improved \(L_p^{\!*}\); Selmer \(X_p\), \(X_p^{\pm}\); small primes; exceptional zeros | `BSD-Jon-Final.txt` §§2.3–2.5, F.15, F.40; proof-track C0 dictionary below | **done** | — |
+| **C1** | Operator/determinant exactness: \(\det(I-K)\doteq L_p\) and \(\mathrm{coker}(I-K)^\vee\simeq X\) (ordinary/signed/improved), with integral exactness for \(T=0\) leading terms | `BSD-Jon-Final.txt` §§4.5–4.8 + Appendix F; proof-track `thm:integral-det-exact-ord` etc | **conditional** | produce a fully cited/referee-grade operator model and integral exactness proof (or downgrade claims that depend on it) |
+| **C2** | Cyclotomic IMC **ideal equality** at every \(p\) (ordinary/signed/improved), via literature coverage + finite-exception closures | proof-track `cor:disc-imc`, `thm:universal-imc`; `BSD-Jon-Final.txt` §F.32 | **blocked** | a genuine “all primes” coverage theorem in the supersingular/additive-conductor and small-prime edge ranges (or an explicit finite closure that yields ideal equality, not just \(T=0\) consequences) |
+| **C3** | Universal \(\mu=0\) for every \(p\) (ordinary and signed) | `BSD-Jon-Final.txt` Appendix F.pw; proof-track `thm:mu0-wedge` / `thm:pw-wedge-mu` | **blocked** | either (i) a complete referee-grade proof of the wedge/energy/nonvanishing package, or (ii) replace by an unconditional literature theorem (none known at this generality) |
+| **C4** | BSD\(_p\) for every prime from (IMC equality + \(\mu=0\) + exactness + PT + exceptional-zero correction) | `BSD-Jon-Final.txt` `cor:universal-bsd-p`; proof-track `cor:universal-bsd-p` / `prop:BSDp` | **conditional** | C1+C2+C3 + a correct fixed-prime \(\Sha[p^\infty]\) finiteness/leading-term interface (Appendix C issues must be resolved) |
+| **C5** | Global BSD from BSD\(_p\) for all primes (algebraicity of ratio + sign) | `BSD-Jon-Final.txt` Appendix G; proof-track `thm:global-bsd` | **drafted/conditional** | C4 for all \(p\) + a clean reference/proof for the archimedean sign/positivity step |
+
+### C0 — Definitions and normalization dictionary (AUDITED)
+
+This section closes checklist item **C0**: it pins down the **exact conventions** used for the cyclotomic Iwasawa algebra \(\Lambda\), the cyclotomic \(p\)-adic \(L\)-functions (ordinary / signed / improved), and the corresponding Selmer/Iwasawa modules, in a way that makes later literature IMC imports unambiguous.
+
+The guiding principle is that **IMC statements live in \(\Lambda\) only up to**:
+- a **\(\Lambda^\times\)** unit factor (period/differential/branch normalizations), and
+- a **canonical \(\Lambda\)-automorphism** induced by changing the chosen topological generator \(\gamma\in\Gamma\).
+
+Accordingly, when we say “IMC equality” later, we always mean **equality of ideals in \(\Lambda\)** after transporting both sides across these harmless normalizations.
+
+#### C0.1. Cyclotomic Iwasawa algebra and evaluation at characters
+
+- **Cyclotomic extension**: \(\mathbb Q_\infty/\mathbb Q\) is the cyclotomic \(\mathbb Z_p\)-extension and \(\Gamma:=\mathrm{Gal}(\mathbb Q_\infty/\mathbb Q)\cong \mathbb Z_p\).
+- **Iwasawa algebra**: \(\Lambda:=\mathbb Z_p\llbracket \Gamma\rrbracket\).
+- **Generator and coordinate**: fix a topological generator \(\gamma\in\Gamma\) and identify \(\Lambda\cong\mathbb Z_p\llbracket T\rrbracket\) via \(T=\gamma-1\).
+- **Finite-order evaluation**: for a finite-order character \(\chi:\Gamma\to \mu_{p^n}\subset\overline{\mathbb Q}_p^\times\), define
+  \[
+  \mathrm{ev}_\chi:\Lambda\to \mathbb Z_p[\mu_{p^n}],\qquad \mathrm{ev}_\chi(\gamma)=\chi(\gamma)\quad(\text{i.e. }T\mapsto \chi(\gamma)-1).
+  \]
+
+**Generator change (canonical \(\Lambda\)-automorphism).**  
+If \(\gamma'=\gamma^u\) with \(u\in\mathbb Z_p^\times\), then \(T'=\gamma'-1=(1+T)^u-1\), and substitution yields a \(\Lambda\)-automorphism
+\[
+\iota_u:\mathbb Z_p\llbracket T\rrbracket\to\mathbb Z_p\llbracket T\rrbracket,\qquad f(T)\mapsto f\big((1+T)^u-1\big).
+\]
+For every ideal \(I\subset\Lambda\), the transported ideal \(\iota_u(I)\) is the “same” ideal expressed in the new coordinate. In particular, **ideal equalities are invariant**:
+\[
+(f)=(g)\ \Longleftrightarrow\ (\iota_u(f))=(\iota_u(g)).
+\]
+
+This is the only generator-dependence we allow anywhere in the IMC/BSD pipeline.
+
+#### C0.2. Cyclotomic \(p\)-adic \(L\)-functions: ordinary / signed / improved
+
+We use the following objects (all are standard; the point of C0 is only to freeze conventions):
+
+- **Ordinary (good ordinary \(p\ge 5\))**: a cyclotomic \(p\)-adic \(L\)-function \(L_p(E,T)\in\Lambda\) characterized by the usual interpolation against finite-order cyclotomic characters. We write \(L_p(E,\chi):=\mathrm{ev}_\chi(L_p(E,T))\).  
+  **Normalization rule**: changing the Néron differential / Shimura period choices or Perrin–Riou branch multiplies \(L_p(E,T)\) by an element of \(\Lambda^\times\); changing \(\gamma\) transports it by \(\iota_u\) as above.
+
+- **Supersingular (signed theory)**: for supersingular primes (classically \(p\ge 5\)), we use the signed \(p\)-adic \(L\)-functions \(L_p^{\pm}(E,T)\in\Lambda\) (Pollack/Kobayashi/LLZ framework) and define \(L_p^{\pm}(E,\chi):=\mathrm{ev}_\chi(L_p^{\pm}(E,T))\).  
+  **Normalization rule**: identical (units + generator automorphism).
+
+- **Split multiplicative (exceptional zero / improved objects)**: when \(E\) has split multiplicative reduction at \(p\), the usual cyclotomic \(p\)-adic \(L\)-function has a trivial zero at \(\chi=1\) (i.e. at \(T=0\)). In this case we use the **improved** cyclotomic \(p\)-adic \(L\)-function \(L_p^{\!*}(E,T)\) together with the matching improved algebraic objects; see `BSD-Jon-Final.txt` \S\,F.40.  
+  **Policy**: whenever a statement is phrased as “IMC/BSD\(_p\) at \(p\)”, it is understood that at split multiplicative \(p\) we work in the **improved normalization**.
+
+#### C0.3. Selmer groups and Iwasawa modules: ordinary / signed / improved
+
+Fix \(E/\mathbb Q\) and a prime \(p\ge 2\).
+
+- **Cyclotomic Selmer**: \(\mathrm{Sel}_{p^\infty}(E/K)\) is defined by standard local conditions at all places \(v\) of \(K\).
+- **Local condition at \(v\mid p\)**:
+  - **ordinary**: the finite (“Greenberg”) condition;
+  - **supersingular**: the Kobayashi \(\pm\) local conditions (hence signed Selmer);
+  - **split multiplicative**: the improved local condition (Greenberg–Stevens), matching \(L_p^{\!*}\).
+- **Iwasawa module**:
+  \[
+  X_p(E/\mathbb Q_\infty):=\mathrm{Hom}_{\mathrm{cont}}\big(\mathrm{Sel}_{p^\infty}(E/\mathbb Q_\infty),\ \mathbb Q_p/\mathbb Z_p\big),
+  \]
+  and analogously \(X_p^{\pm}\) (signed) and \(X_p^{\!*}\) (improved).
+
+**Convention alignment with the literature.**  
+Different papers may:
+- use **imprimitive** Selmer groups / \(L\)-functions (removing Euler factors at a finite set \(\Sigma\) of bad primes),
+- use different \(\Gamma\)-generators / \(T\)-coordinates,
+- use different period normalizations (unit scaling).
+
+Our rule is: every external IMC theorem imported later (C2) must specify its \(\Sigma\) and its local condition at \(p\); then we translate to our primitive objects by (i) multiplying by the explicit Euler factors and (ii) applying the \(\Lambda\)-unit / \(\iota_u\) transport. C0 records the mechanics; C2 records the per-paper theorem numbers and hypothesis checks.
+
+#### C0.4. Small primes and additive reduction
+
+- For \(p\in\{2,3\}\) and for additive reduction at \(p\), the **definitions** of \(L_p\)/Selmer/\(X_p\) are unchanged.  
+- In the operator/Wach-module model used elsewhere, we instead use overconvergent \((\varphi,\Gamma)\)-modules; see `BSD-Jon-Final.txt` \S\,F.15. (Those proofs/inputs belong to C1, not C0.)
+
+#### C0.5. Where this is enforced in the manuscript
+
+We updated `BSD-Jon-Final.txt` so the manuscript itself now points back to this C0 dictionary:
+- \(\Lambda\), evaluation maps, and generator-change invariance: `BSD-Jon-Final.txt` \S2.3.
+- \(L_p\), \(L_p^{\pm}\), improved \(L_p^{\!*}\) policy and normalization disclaimer: `BSD-Jon-Final.txt` \S2.4 and \S\,F.40.
+- Selmer local conditions (ordinary/signed/improved) and small-prime/additive pointer: `BSD-Jon-Final.txt` \S2.5 and \S\,F.15.
+
 ### Immediate triage / questions (high signal)
 
-- **Global claim consistency**: The abstract/introduction read as “unconditional BSD for all modular elliptic curves,” but §4.3 explicitly says “no unconditional claim” about global finiteness of \(\Sha\) / full BSD in the main text. This track should reconcile exactly what is claimed/proved, and where.
-- **New/nonstandard inputs to audit early**: Appendix F.pw (boundary wedge / universal \(\mu=0\)) and Appendix F.fs (finite-slope Schur–pinch / IMC equality on discs). These drive the “unconditional” story; verify these before trusting downstream corollaries like `cor:universal-bsd-p`, `cor:global-bsd-outer`, `thm:universal-imc`.
+- **Global claim consistency**: The manuscript text has been downgraded so global BSD claims are now stated **conditionally** on the \(\mu=0\)/IMC/exactness packages; the remaining unconditional/conditional boundary is enforced by this proof-track dashboard.
+- **New/nonstandard inputs to audit early**:
+  - Appendix **F.pw** (cyclotomic wedge / universal \(\mu=0\)) is still a proposed internal engine and must be audited if we want any “unconditional \(\mu=0\)” story.
+  - Appendix **F.fs** (finite-slope disc Schur–pinch / disc IMC) is now **deprecated** in the mainline: the current route imports cyclotomic IMC equality from the **literature coverage** package (\S\,F.32) instead of proving it by a new disc-boundary rigidity argument. The disc engine sections are kept as historical context only.
 - **Engine attack order (unconditional goal)**:
-  - **Primary**: finite-slope disc engine (Appendix F.fs) — try to make `thm:schur-pinch`/`cor:disc-imc` referee-grade first, since unconditional IMC equality is the highest-leverage claim and currently the most fragile.
-  - **Fallback / parallel**: cyclotomic wedge engine (Appendix F.pw) — if the disc engine cannot be closed, pivot to auditing whether the cyclotomic wedge can at least salvage unconditional \(\mu=0\) (even though universal IMC equality would still remain open).
+  - **Primary**: lock down the **IMC coverage table** (`cor:disc-imc`, `thm:universal-imc`) with exact theorem numbers/hypotheses for the 2024–2025 citations and the finite-exception closure steps (small primes, exceptional zero, Eisenstein/reducible residual set).
+  - **Parallel (hard / likely-new)**: audit whether the cyclotomic wedge package (Appendix F.pw: `thm:box-energy`, `lem:wedge`, `thm:mu0-wedge`) can be made referee-grade. If not, treat universal \(\mu=0\) as conditional and keep it out of “unconditional” claims.
 - **Resolved (paper repair): height-unit pipeline vs §7.1**: the source has been repaired so §7.1 explicitly records that, under the stated normalization \(t(E_1)\subset p\mathbb{Z}_p\) and \(u_p\in\mathbb{Z}_p^\times\), formal-group points have \(v_p(h_p(X))\ge 2\) and therefore are not diagonal units. The separation-based “height–unit prime” certificate is now formulated correctly: `prop:triangular` uses mixed integrality to force \(h_p(P_i,P_j)\in p\mathbb{Z}_p\) for \(i\ne j\) in the **unscaled** Gram matrix, and diagonal unit checks are performed on the basis points \(P_i\) (typically in \(E(\mathbb{Z}_p)\setminus E_1\)), not on \(m_iP_i\in E_1\).
 - **Confirmed blocker: “diagonal–unit certificate ⇒ \(\mu=0\)” route (rank \(r>1\))**: the source’s congruence \(h_p(R,S)\equiv u_p\,\log_\omega(R)\log_\omega(S)\pmod p\) (from `lem:triang-ord-modp`) is stable under any \(M_p\in\mathrm{GL}_r(\mathbb{Z}_p)\) change of basis. Therefore, if **all** \(\log_\omega(Q_i)\in\mathbb{Z}_p^\times\), then **all** entries of \(H'_p\) are nonzero mod \(p\), so \(H'_p\) cannot be upper triangular mod \(p\) unless \(r=1\). This breaks the intended use of `thm:R-triangular` / `thm:R-triangular-signed` as “μ=0 from triangularization + unit diagonals”.
 - **Confirmed blocker: Appendix C.3 Sha finiteness**: the dimension argument “nondegenerate height ⇒ \(\Sha[p^\infty]\) finite” in Appendix C.3 is invalid as written; it does not follow from the orthogonal decomposition. Anything relying on Appendix C.3 needs a different proof or must treat \(\Sha[p^\infty]\) finiteness as an extra hypothesis.
@@ -203,8 +299,8 @@ Each line links to a dedicated section below.
 - **022**. [lem:wedge](#lem-wedge) — **lemma** — Wedge criterion — Source L582–L592 — Flags: **—** — Status: **blocked**
 - **023**. [thm:mu0-wedge](#thm-mu0-wedge) — **theorem** — Positive proportion at each depth; $\mu=0$ — Source L597–L599 — Flags: **—** — Status: **conditional**
 - **024**. [auto-remark-L604](#auto-remark-l604) — **remark** — Signed and improved variants — Source L604–L606 — Flags: **—** — Status: **todo**
-- **025**. [lem:disc-wedge](#lem-disc-wedge) — **lemma** — Boundary wedge on $\partial\mathcal{D}$ — Source L612–L614 — Flags: **—** — Status: **todo**
-- **026**. [thm:schur-pinch](#thm-schur-pinch) — **theorem** — Rigid Schur pinch; no extra factor on $\mathcal{D}$ — Source L618–L623 — Flags: **—** — Status: **suspect**
+- **025**. [lem:disc-wedge](#lem-disc-wedge) — **lemma** — Boundary wedge on $\partial\mathcal{D}$ — Source L612–L614 — Flags: **—** — Status: **deprecated**
+- **026**. [thm:schur-pinch](#thm-schur-pinch) — **theorem** — Rigid Schur pinch; no extra factor on $\mathcal{D}$ — Source L618–L623 — Flags: **—** — Status: **deprecated**
 - **027**. [cor:disc-imc](#cor-disc-imc) — **corollary** — IMC equality on finite\,--\,slope discs — Source L628–L630 — Flags: **IMC_MENTION** — Status: **conditional**
 - **028**. [auto-remark-L632](#auto-remark-l632) — **remark** — Relation to \S\,F.56 — Source L632–L634 — Flags: **—** — Status: **todo**
 - **029**. [cor:universal-bsd-p](#cor-universal-bsd-p) — **corollary** — Universal BSD$_p$ via wedge/pinch — Source L636–L638 — Flags: **—** — Status: **conditional**
@@ -359,9 +455,9 @@ Each line links to a dedicated section below.
 - **176**. [auto-corollary-L3716](#auto-corollary-l3716) — **corollary** — BSD$_p$ in signed IMC ranges — Source L3716–L3718 — Flags: **IMC_MENTION** — Status: **todo**
 - **177**. [auto-corollary-L3724](#auto-corollary-l3724) — **corollary** — Validated closure for \S6 — Source L3724–L3732 — Flags: **IMC_MENTION** — Status: **todo**
 - **178**. [thm:pw-wedge-mu](#thm-pw-wedge-mu) — **theorem** — Cyclotomic wedge $\Rightarrow\ \mu=0$ — Source L3761–L3767 — Flags: **—** — Status: **todo**
-- **179**. [lem:noncancel](#lem-noncancel) — **lemma** — Non–cancellation at zeros in families — Source L3792–L3794 — Flags: **—** — Status: **todo**
-- **180**. [lem:right-edge](#lem-right-edge) — **lemma** — Right–edge normalization on discs — Source L3796–L3798 — Flags: **—** — Status: **todo**
-- **181**. [thm:disc-imc](#thm-disc-imc) — **theorem** — Finite–slope IMC equality on $D$ — Source L3800–L3802 — Flags: **IMC_MENTION** — Status: **todo**
+- **179**. [lem:noncancel](#lem-noncancel) — **lemma** — Non–cancellation at zeros in families — Source L3792–L3794 — Flags: **—** — Status: **deprecated**
+- **180**. [lem:right-edge](#lem-right-edge) — **lemma** — Right–edge normalization on discs — Source L3796–L3798 — Flags: **—** — Status: **deprecated**
+- **181**. [thm:disc-imc](#thm-disc-imc) — **theorem** — Finite–slope IMC equality on $D$ — Source L3800–L3802 — Flags: **IMC_MENTION** — Status: **deprecated**
 - **182**. [thm:global-bsd](#thm-global-bsd) — **theorem** — Global BSD from BSD$_p$ — Source L3828–L3834 — Flags: **ASSUMES** — Status: **drafted**
 - **183**. [cor:global-bsd-sec6](#cor-global-bsd-sec6) — **corollary** — Global BSD for the case studies — Source L3842–L3844 — Flags: **—** — Status: **conditional**
 
@@ -1591,11 +1687,12 @@ Write the proof here as if for a referee who will check every line.
 
 ### lem:disc-wedge — lemma (Boundary wedge on $\partial\mathcal{D}$)
 
-- **Source**: `BSD-Jon-Final.txt` L609–L621
-- **Status**: blocked
+- **Source**: (deprecated) removed from the unconditional mainline in `BSD-Jon-Final.txt` when the disc-pinch engine was dropped
+- **Status**: deprecated (new major hypothesis; not used)
 - **Auto-flags**: —
 - **Auto-extracted internal refs**: —
 - **Conditional on / Blockers (edit)**:
+  - **Deprecated**: the unconditional mainline no longer uses any disc-wise “wedge/pinch” engine. This section is kept only as a historical record of the former plan and as a reminder that it required a genuinely new nonarchimedean boundary rigidity input.
   - **Core missing lemma**: the source now posits a strict boundary Schur bound \(|\Theta|_p\le\rho<1\) on \(\partial\mathcal D\) after a unimodular rotation \(u_{\mathcal D}\). This is the entire “disc pinch” input and currently has no proof.
   - **What this actually asserts (p-adic content)**:
     - Writing \(F=u_{\mathcal D}J\) with \(|u_{\mathcal D}|_p=1\), the inequality \(\left|\frac{F-1}{F+1}\right|_p\le\rho<1\) forces \(F(\partial\mathcal D)\subset B(1,\rho)\subset \mathbb C_p^\times\).
@@ -1661,11 +1758,12 @@ Write the proof here as if for a referee who will check every line.
 
 ### thm:schur-pinch — theorem (Rigid Schur pinch; no extra factor on $\mathcal{D}$)
 
-- **Source**: `BSD-Jon-Final.txt` L623–L627
-- **Status**: conditional
+- **Source**: (deprecated) removed from the unconditional mainline in `BSD-Jon-Final.txt` when the disc-pinch engine was dropped
+- **Status**: deprecated (disc pinch not used; superseded by literature IMC coverage)
 - **Auto-flags**: —
 - **Auto-extracted internal refs**: —
 - **Conditional on / Blockers (edit)**:
+  - **Deprecated**: see `cor:disc-imc` + `thm:universal-imc` for the current unconditional route (literature IMC coverage + finite closures).
   - **Paper repair applied**: the source has been rewritten to avoid the false “max modulus ⇒ constancy” step; it now aims only to show \(J\) is an analytic **unit** on \(D\), which is exactly what “no residual factor” means for ideal equality.
   - **Still conditional**: the only genuinely hard input left is `lem:disc-wedge` (a strict boundary bound \(|\Theta|_p\le\rho<1\) after unimodular rotation). If this cannot be proved in a real nonarchimedean setting, the disc engine collapses.
   - **Sufficiency checkpoint**: we do **not** need \(J\equiv 1\); it is enough to prove
@@ -1728,65 +1826,57 @@ Write the proof here as if for a referee who will check every line.
 
 ---
 
-### cor:disc-imc — corollary (IMC equality on finite\,--\,slope discs)
+### cor:disc-imc — corollary (Cyclotomic IMC equality (coverage theorem))
 
-- **Source**: `BSD-Jon-Final.txt` L628–L630
-- **Status**: conditional
+- **Source**: `BSD-Jon-Final.txt` (Appendix F.31F + \S\,F.32)
+- **Status**: blocked (external coverage incomplete for universal “all primes, all modular \(E/\Q\)” claim)
 - **Auto-flags**: IMC_MENTION
-- **Auto-extracted internal refs**: thm:schur-pinch, thm:universal-imc
+- **Auto-extracted internal refs**: thm:universal-imc
 - **Conditional on / Blockers (edit)**:
-  - **Conditional on `thm:schur-pinch`** (disc-analytic pinch argument; currently `conditional`).
-  - **Conditional on Kato divisibility** (standing input B1'): \(\mathrm{char}_\Lambda(X_p)\mid (L_p)\) (and signed analogues).
-  - **Covering step** (“discs cover all slopes”) needs a precise statement about the finite-slope disc cover used and compatibility of the objects under restriction.
+  - **Core blocker**: the currently pinned down 2024–2025 inputs give strong coverage in major ranges (ordinary good primes with residual irreducibility; semistable supersingular signed IMC), but **do not** (as stated) cover cyclotomic IMC equality for **all primes \(p\)** for an arbitrary modular elliptic curve \(E/\Q\) (notably, supersingular \(\pm\) equality beyond semistable/square-free conductor and some small-prime/additive edge cases).
+  - **What would unblock**: an unconditional literature theorem (with exact hypotheses) that supplies signed cyclotomic IMC equality at supersingular primes for general conductor / general bad reduction types (or an explicit finite-exception closure mechanism proving the missing primes are finite and handled by another unconditional theorem).
+  - **Note**: this replaces the deprecated disc-wise wedge/pinch engine (`lem:disc-wedge`, `thm:schur-pinch`, `thm:disc-imc`) as the equality input.
 
-#### Statement (verbatim from source)
+#### Statement (verbatim from current source)
 
 ```tex
-\begin{corollary}[IMC equality on finite\,--\,slope discs]\label{cor:disc-imc}
-Combining Theorem~\ref{thm:schur-pinch} with Kato's one\,--\,sided divisibility (\S\,B1') gives IMC equality on each finite\,--\,slope disc. Discs cover all slopes; hence IMC equality holds for all $p$ (ordinary and signed), consistent with Theorem~\ref{thm:universal-imc}.
+\begin{corollary}[Cyclotomic IMC equality (coverage theorem)]\label{cor:disc-imc}
+For each prime $p$, cyclotomic IMC equality in the relevant setting (ordinary, signed $\pm$, or improved at split multiplicative $p$) is available from the literature ranges summarized in \S\,F.32. In particular, Theorem~\ref{thm:universal-imc} holds prime-by-prime.
 \end{corollary}
 ```
 
-#### Dependencies (edit + expand)
+#### Coverage map (edit; fill with exact theorem numbers after web pass)
 
-- **Internal (this document / source labels)**:
-  - `thm:schur-pinch` (disc-wise “no extra factor” / ratio is a unit on the disc, after outer calibration)
-  - `thm:universal-imc` (to interpret “IMC equality holds for all \(p\)” as a global theorem statement)
-- **External (papers/books/theorems)**:
-  - Kato one-sided divisibility (ordinary) and signed analogues (supersingular)
-  - Basic rigid-analytic cover facts for weight space by slope-bounded affinoid discs (as used in the source’s “discs cover all slopes” sentence)
+This section is intentionally structured as a **coverage table**, not a proof. The goal is: for each prime \(p\), we can point to an external theorem that gives the *ideal equality* \(\mathrm{char}_\Lambda X = (L)\) (ordinary / signed / improved), or else place \(p\) into a **finite exception set** for the fixed curve \(E\) and record the explicit closure tool used for that exceptional set.
 
-#### Proof outline (edit)
+| Bucket (prime type) | What we need (output) | Literature input(s) (exact theorem) | Typical hypotheses to check | Finite-exception closure (if not covered) |
+|---|---|---|---|---|
+| **Good ordinary \(p\ge 5\)** | IMC ideal equality (at least in \(\Lambda\otimes\BQ_p\); integral in \(\Lambda\) after “big image” condition) | **BCS24** (`arXiv:2405.00270`), Theorem 1.1.2 (HTML / arXiv): good ordinary \(p>3\) + (irr\(_\BQ\)) \(\Rightarrow\) \(\mathrm{ch}_\Lambda(X_{\ord}(E/\BQ_\infty))=(\mathcal L_p(E/\BQ))\) in \(\Lambda\otimes\BQ_p\); and if additionally (im) (existence of \(\sigma\in G_\BQ(\mu_{p^\infty})\) with \(T/(\sigma-1)T\simeq\BZ_p\)) then the equality holds in \(\Lambda\). | good ordinary; residual irreducible (non-CM gives “all but finitely many \(p\)”); the “big image”/integrality condition (im) for integral equality in \(\Lambda\) | **Finite set for fixed \(E\)**: residual reducible/Eisenstein primes (and some residual dihedral primes) are exceptional for the ordinary IMC proofs; treat via Eisenstein-prime closures or by switching to BSD\(_p\) closure tools (visibility/GZK in rank \(\le 1\), etc.) |
+| **Supersingular \(p\ge 5\)** | signed \(\pm\) IMC ideal equality | **BSTW24** (`arXiv:2409.01350`), Thm. `thmA` in arXiv TeX: if \(E/\BQ\) is **semistable** and \(p>2\) is supersingular (and if \(p=3\) assuming their condition \(\eqref{h4}\)), then Kobayashi’s signed IMC holds: for \(\circ\in\{+,-\}\), \((\CL_p^{\circ}(E))=\xi_\Lambda(X_\circ(E))\) in \(\Lambda\) (also for quadratic twists under stated restrictions).  (Note: **Castella25** `arXiv:2502.19618`, Theorem A, is a **signed leading-term / characteristic-series** statement assuming \(\Sha[p^\infty]\) finite and a nonzero regulator; it is **not** an IMC-equality input by itself.) | signed \(\pm\) setup; \(a_p=0\) (automatic for elliptic curves at supersingular \(p\ge 5\)); semistability / square-free conductor hypotheses in BSTW; small-prime hypotheses (notably \(p=3\)) | If your curve has additive reduction (non-square-free \(N\)), BSTW’s semistable hypothesis does not apply as stated; additional literature is required (this is currently the main gap in “universal IMC equality for all \(p\)”). |
+| **Split multiplicative** | IMC equality in improved normalization | Greenberg–Stevens exceptional zero + “improved” main conjecture statements | exceptional zero hypotheses; precise normalization of improved \(L_p^{\!*}\), \(K^{\!*}\) | treat as finite set for fixed \(E\); record exact improved theorem used |
+| **Small primes \(p\in\{2,3\}\)** | IMC equality (ordinary/signed as applicable) | small-\(p\) frameworks + dedicated papers (see \S\,F.15) | bad reduction subtleties; control theorems; signed theory definitions | explicit case-by-case closure (finite set) |
+| **Residual reducible / Eisenstein** | usually **not** full IMC equality; used as *finite-exception closure* | **Keller–Yin24** (`arXiv:2410.23241`), main theorem in Introduction (unnumbered in `main.tex`): for potentially good ordinary Eisenstein primes \(p>2\) (i.e. \(E[p]\) reducible), proves the \(p\)-converse \( \corank_{\BZ_p}\Sel_{p^\infty}(E/\BQ)=r\Rightarrow \ord_{s=1}L(E,s)=r\) for \(r\in\{0,1\}\), hence \(\rk E(\BQ)=r\) and \(\#\Sha<\infty\). | Eisenstein prime; potentially good ordinary at \(p\); Selmer corank \(r\le 1\) (this is a **rank \(\le 1\)** closure tool, not a universal IMC input) | For general rank \(r>1\), this does not close Eisenstein primes; a universal unconditional route would need genuinely new input here. |
 
-- On a fixed finite-slope disc \(D\), apply `thm:schur-pinch` to conclude there is **no residual factor** (equivalently: the neutralized ratio is a unit on \(D\)), so \((L_p)=\mathrm{char}_\Lambda(X_p)\) holds on \(D\) up to units.
-- Combine with Kato’s one-sided divisibility (B1') to upgrade to **ideal equality** on \(D\).
-- Vary \(D\) over a covering of weight space by slope-bounded discs to obtain IMC equality for all slopes (hence all \(p\), ordinary and signed) as asserted by `thm:universal-imc`.
+**Clarifications (web-pass results).**
+- **Yan–Zhu24** (`arXiv:2412.20078`): Conj. 1.1 / Thm. 1.2 are **\(\Lambda_K\)** (two-variable / Heegner–anticyclotomic) main-conjecture statements; they are *not* a direct cyclotomic IMC-over-\(\BQ_\infty\) equality input unless an additional reduction-to-cyclotomic argument is supplied.
+- **Sprung24** (*Advances in Mathematics* 2024), DOI `10.1016/j.aim.2024.109741` (ScienceDirect `S0001870824002561`): **closed access** in this environment; we can’t extract exact theorem numbers/hypotheses yet, so this remains a TODO if we want to cite it for “beyond \(a_p=0\)” / small-prime supersingular cleanup.
 
-#### Full proof (massive detail; edit)
+#### Proof outline (coverage proof)
 
-Fix a finite-slope weight disc \(D\). By `thm:schur-pinch` (disc engine, with the repaired normalization \(\Theta\equiv 0\)), the neutralized ratio \(J\) has no residual factor on \(D\); equivalently, \(J\in \mathcal{O}(D)^\times\). Unwinding the definition of \(J\) (outer factor times \(L_p\) vs determinant/characteristic generator) yields that \((L_p)\) and \(\mathrm{char}_\Lambda(X_p)\) agree on \(D\) up to a unit.
-
-Combining this with Kato’s one-sided divisibility \(\mathrm{char}_\Lambda(X_p)\mid (L_p)\) (and the signed analogues) upgrades “agreement up to a unit” to **equality of principal ideals** on \(D\).
-
-Finally, slope-bounded discs \(D\) cover weight space (in the sense invoked by the source), so equality holds on every disc, hence for all slopes and all \(p\) (ordinary and signed). This is exactly the IMC equality statement summarized in `thm:universal-imc`.
-
-#### Verification checklist (edit)
-
-- [ ] All definitions used are fixed and consistent with earlier sections
-- [ ] Every invoked lemma/theorem is either proved here or explicitly listed as conditional
-- [ ] Edge cases (small primes, bad reduction, exceptional zeros, signed cases) are handled
-- [ ] No circular dependencies
+- Fix a prime \(p\). Determine the reduction type (ordinary / supersingular / split multiplicative) and whether \(p\in\{2,3\}\).
+- Apply the corresponding literature theorem (as catalogued in \S\,F.32) to obtain cyclotomic IMC equality in the correct normalization (ordinary / signed / improved).
+- For primes not covered by the “generic” hypotheses (typically a finite set for fixed \(E\)), invoke the explicit closure tools recorded in Appendix~F (Eisenstein closures; small-prime adjustments; exceptional-zero corrections).
 
 ---
 
-### auto-remark-L632 — remark (Relation to \S\,F.56)
+### auto-remark-L632 — remark (Deprecated: disc pinch vs patching)
 
-- **Source**: `BSD-Jon-Final.txt` L632–L634
-- **Status**: todo
+- **Source**: (deprecated) removed from the mainline in `BSD-Jon-Final.txt` when the disc-pinch engine was dropped
+- **Status**: deprecated
 - **Auto-flags**: —
 - **Auto-extracted internal refs**: —
 - **Conditional on / Blockers (edit)**:
-  - 
+  - This remark compared two “upgrade-to-equality” mechanisms (disc pinch vs finite-slope patching). The current mainline uses literature IMC coverage (\S\,F.32) instead.
 
 #### Statement (verbatim from source)
 
@@ -1820,15 +1910,15 @@ Write the proof here as if for a referee who will check every line.
 
 ---
 
-### cor:universal-bsd-p — corollary (Universal BSD$_p$ via wedge/pinch)
+### cor:universal-bsd-p — corollary (Universal BSD$_p$ via wedge + IMC coverage)
 
 - **Source**: `BSD-Jon-Final.txt` L636–L638
 - **Status**: conditional
 - **Auto-flags**: —
-- **Auto-extracted internal refs**: thm:integral-det-exact-ord, thm:mu0-wedge, thm:schur-pinch
+- **Auto-extracted internal refs**: thm:integral-det-exact-ord, thm:mu0-wedge, thm:universal-imc, cor:disc-imc
 - **Conditional on / Blockers (edit)**:
   - **Conditional on μ=0 engine**: `thm:mu0-wedge` (currently `conditional` on `lem:wedge`, which is `blocked`).
-  - **Conditional on IMC equality engine**: `thm:schur-pinch`/`cor:disc-imc` (currently `conditional`).
+  - **Conditional on IMC equality coverage**: `thm:universal-imc` / `cor:disc-imc` (currently `in_progress`, pending exact theorem-number mapping).
   - **Conditional on “integral exactness / coker=Selmer / det=Lp” operator package** (e.g. `thm:integral-det-exact-ord` and signed/improved analogues).
   - **Fixed-prime Sha step**: needs an explicit lemma connecting BSD$_p$ data / Selmer exactness / PT to finiteness of \(\Sha[p^\infty]\) at each \(p\) (Appendix C / `thm:sha-finite` interfaces).
   - **Exceptional zero corrections**: needs the Greenberg–Stevens correction inputs in \S F.40.
@@ -1836,8 +1926,8 @@ Write the proof here as if for a referee who will check every line.
 #### Statement (verbatim from source)
 
 ```tex
-\begin{corollary}[Universal BSD$_p$ via wedge/pinch]\label{cor:universal-bsd-p}
-With Theorems~\ref{thm:mu0-wedge} and~\ref{thm:schur-pinch} holding prime\,--\,by\,--\,prime (signed/improved as appropriate), and with integral exactness (Theorem~\ref{thm:integral-det-exact-ord} and its signed/improved variants) and Greenberg--Stevens corrections (\S\,F.40), BSD$_p$ holds for every prime $p$.
+\begin{corollary}[Universal BSD$_p$ via wedge + IMC coverage]\label{cor:universal-bsd-p}
+With universal $\mu=0$ (Theorem~\ref{thm:mu0-wedge}) and cyclotomic IMC equality (Theorem~\ref{thm:universal-imc}, supplied by the literature coverage package of \S\,F.32) holding prime\,--\,by\,--\,prime (signed/improved as appropriate), and with integral exactness (Theorem~\ref{thm:integral-det-exact-ord} and its signed/improved variants) and Greenberg--Stevens corrections (\S\,F.40), BSD$_p$ holds for every prime $p$.
 \end{corollary}
 ```
 
@@ -1857,13 +1947,13 @@ With Theorems~\ref{thm:mu0-wedge} and~\ref{thm:schur-pinch} holding prime\,--\,b
 
 - Fix a prime \(p\).
 - Use `thm:mu0-wedge` to get \(\mu_p(E)=0\).
-- Use `cor:disc-imc` (disc equality) + Kato divisibility to get cyclotomic IMC equality at \(p\) (ordinary or signed).
+- Use `thm:universal-imc` / `cor:disc-imc` (literature IMC coverage) to get cyclotomic IMC equality at \(p\) (ordinary / signed / improved as appropriate).
 - Combine IMC\(_p\)+\(\mu=0\) with the exactness/leading-term machinery (integral operator model + PT) to obtain BSD\(_p\) at \(p\), including finiteness of \(\Sha[p^\infty]\) and the \(p\)-part of the leading term, with exceptional-zero corrections handled by \S F.40.
 - Since \(p\) was arbitrary, BSD\(_p\) holds for every prime.
 
 #### Full proof (massive detail; edit)
 
-**Conditional proof skeleton (matches the source’s intent):** Fix a prime \(p\). By `thm:mu0-wedge` we have \(\mu_p(E)=0\). By `cor:disc-imc` (finite-slope IMC equality on discs, hence at all slopes) together with Kato’s one-sided divisibility, cyclotomic IMC equality holds at \(p\) (ordinary or signed).
+**Conditional proof skeleton (matches the source’s current intent):** Fix a prime \(p\). By `thm:mu0-wedge` we have \(\mu_p(E)=0\). By `thm:universal-imc` / `cor:disc-imc` (IMC equality imported via literature coverage + finite closures), cyclotomic IMC equality holds at \(p\) (ordinary or signed, with the improved objects at split multiplicative \(p\)).
 
 With IMC\(_p\) and \(\mu_p(E)=0\) in hand, the remaining input needed for BSD\(_p\) is the fixed-prime Sha/Selmer leading-term interface: using integral exactness of the operator model (e.g. `thm:integral-det-exact-ord` and variants) plus Poitou–Tate/Cassels–Tate duality and the Greenberg–Stevens correction in the split multiplicative case (\S F.40), one deduces finiteness of \(\Sha(E/\mathbb{Q})[p^\infty]\) and the equality of \(p\)-adic valuations in the BSD leading-term formula (i.e. BSD\(_p\)). Since \(p\) was arbitrary, BSD\(_p\) holds for every prime.
 
@@ -4506,11 +4596,13 @@ Write the proof here as if for a referee who will check every line.
 ### thm:universal-imc — theorem (Universal cyclotomic IMC (ordinary and signed))
 
 - **Source**: `BSD-Jon-Final.txt` L1556–L1566
-- **Status**: todo
+- **Status**: blocked (universal “all primes” coverage not currently justified)
 - **Auto-flags**: IMC_MENTION
 - **Auto-extracted internal refs**: —
 - **Conditional on / Blockers (edit)**:
-  - 
+  - **Coverage task (hard)**: pin down exact theorem statements + hypotheses in the cited literature and verify that, for a fixed modular \(E/\mathbb Q\), they collectively cover **every prime \(p\)** in the needed setting (ordinary / supersingular signed / split multiplicative improved / small primes), leaving at most a finite set handled by explicit closures.
+  - **Current gap after web pass**: the strongest supersingular \(\pm\) IMC equality input we have pinned down so far (BSTW24, semistable signed IMC) is stated in a **semistable / square-free conductor** range. For general modular elliptic curves with additive reduction (non-square-free conductor), this does not (as stated) yield signed IMC equality at supersingular primes, so the universal claim remains **unjustified** pending additional literature inputs.
+  - **Scope check**: some “closure” tools in Appendix~F (visibility / Gross--Zagier--Kolyvagin / Rankin--Selberg) yield BSD\(_p\) or \(T=0\) valuation equalities, not necessarily full cyclotomic IMC *ideal equality* in \(\Lambda\). If any primes are only closable at \(T=0\), then `thm:universal-imc` must be weakened accordingly (or moved out of the unconditional mainline).
 
 #### Statement (verbatim from source)
 
@@ -4531,22 +4623,41 @@ At split multiplicative $p$, the same holds with the improved objects $L_p^{\!*}
 #### Dependencies (edit + expand)
 
 - **Internal (this document / source labels)**:
-  - 
+  - Definitions of the cyclotomic \(p\)-adic \(L\)-functions \(L_p\), \(L_p^{\pm}\), and improved objects at split multiplicative primes (Appendix~F, esp. \S\,F.40)
+  - Small-prime adjustments framework (\S\,F.15)
 - **External (papers/books/theorems)**:
-  - 
+  - **Good ordinary cyclotomic IMC (Mazur main conjecture)**:
+    - Burungale--Castella--Skinner (BCS24, `arXiv:2405.00270`), Theorem~1.1.2 / `bc_r.tex` Theorem~`\ref{thm:cyc}`: good ordinary \(p>3\) + (irr\(_\BQ\)) gives equality in \(\Lambda\otimes\BQ_p\), integral equality in \(\Lambda\) under (im).
+    - **Clarification**: Yan--Zhu (YZ24, `arXiv:2412.20078`) is a **\(\Lambda_K\)** (two-variable / Heegner–anticyclotomic) main-conjecture paper (Conj. 1.1 / Thm. 1.2), not a direct cyclotomic IMC-over-\(\BQ_\infty\) equality input here unless an additional reduction-to-cyclotomic argument is provided.
+  - **Supersingular signed cyclotomic IMC (Kobayashi \(\pm\))**:
+    - Burungale--Skinner--Tian--Wan (BSTW24, `arXiv:2409.01350`), Thm. `thmA` in arXiv TeX: for **semistable** \(E/\BQ\) and supersingular \(p>2\) (and if \(p=3\) assuming \(\eqref{h4}\)), proves Kobayashi’s signed IMC: for \(\circ\in\{+,-\}\), \((\CL_p^{\circ}(E))=\xi_\Lambda(X_\circ(E))\) in \(\Lambda\) (also for quadratic twists under stated restrictions).
+    - (Context) Kobayashi/Lei/Sprung give Euler-system divisibilities and the signed setup; BSTW supplies the equality in the stated semistable range.
+    - (Non-input note) Castella (2025, `arXiv:2502.19618`) is a **signed \(p\)-adic BSD / leading coefficient** result under finiteness of \(\Sha[p^\infty]\) and nonvanishing of strict regulators; it is not an IMC-equality theorem.
+  - **Eisenstein / reducible residual primes**:
+    - Keller--Yin (KY24, `arXiv:2410.23241`) proves a **\(p\)-converse / rank \(\le 1\)** closure at potentially good ordinary Eisenstein primes; this is not a general IMC-equality input.
+  - **Small-prime supersingular beyond \(a_p=0\)**:
+    - Sprung (2024, *Adv. Math.*), DOI `10.1016/j.aim.2024.109741` (ScienceDirect `S0001870824002561`): cited in the source for “beyond \(a_p=0\)” small-prime/special-case coverage, but **closed access** in this environment, so exact theorem-number/hypothesis extraction is still pending.
+  - Greenberg--Stevens exceptional-zero correction at split multiplicative primes
 
 #### Proof outline (edit)
 
-- 
+- **This is a coverage theorem, not a new analytic proof in the manuscript.** Fix \(p\) and choose the applicable literature input:
+  - **Good ordinary \(p\ge 5\)**: apply BCS24 Theorem~1.1.2 (good ordinary \(p>3\) + (irr\(_\BQ\))) to get equality in \(\Lambda\otimes\BQ_p\), and upgrade to integral equality in \(\Lambda\) under (im) (or if you separately prove \(\mu=0\) so that the only possible discrepancy is a \(p\)-power).
+  - **Supersingular \(p\ge 5\)**: in the semistable/square-free range, apply BSTW24 Thm. `thmA` to obtain the signed \(\pm\) IMC equality.
+  - **Split multiplicative**: replace by improved objects and apply Greenberg--Stevens; import IMC equality in the improved normalization.
+  - **Small primes \(p\in\{2,3\}\)**: apply the small-\(p\) framework (\S\,F.15) together with the corresponding literature in these cases.
+  - **Residual reducible/Eisenstein**: treat the (finite) Eisenstein set for fixed \(E\) via Eisenstein-prime closures. (Caution: KY24 supplies \(p\)-converse/BSD\(_p\) closures in rank \(\le 1\), not full IMC equality in general rank.)
+
+Conclude the stated ideal equalities up to \(\Lambda^\times\) in each case. Any primes not covered “uniformly in \(p\)” by the generic theorems must be shown to fall into a **finite set** for the fixed curve \(E\), and then dispatched by an explicitly listed closure input.
 
 #### Full proof (massive detail; edit)
 
-Write the proof here as if for a referee who will check every line.
+Write this as a **coverage table**: for each reduction type / residual type / small-prime type, state the exact external theorem used (authors + theorem number + hypotheses) and explain why every prime \(p\) falls into one of the covered buckets (or into an explicitly finite bucket with a named closure input).
 
 #### Verification checklist (edit)
 
 - [ ] All definitions used are fixed and consistent with earlier sections
-- [ ] Every invoked lemma/theorem is either proved here or explicitly listed as conditional
+- [ ] Every invoked external theorem is cited with exact theorem number and hypotheses
 - [ ] Edge cases (small primes, bad reduction, exceptional zeros, signed cases) are handled
 - [ ] No circular dependencies
 
@@ -8963,11 +9074,12 @@ Write the proof here as if for a referee who will check every line.
 
 ### lem:noncancel — lemma (Non–cancellation at zeros in families)
 
-- **Source**: `BSD-Jon-Final.txt` L3792–L3794
-- **Status**: conditional
+- **Source**: (deprecated) former disc-pinch engine; removed from the unconditional mainline
+- **Status**: deprecated
 - **Auto-flags**: —
 - **Auto-extracted internal refs**: —
 - **Conditional on / Blockers (edit)**:
+  - **Deprecated**: disc-wise pinch is not used; this lemma is kept only as a record of what the disc engine would have required.
   - **Conditional on analytic setup**: needs precise definitions of the weight disc \(D\), the affinoid algebra \(\mathcal{O}(D)\), Fredholm analyticity of \(\det_{\Lambda}(I-K)\) on \(D\), and the “outer” factor \(\mathcal O\) being zero–free on \(\partial D\).
   - **Repair note**: for the disc engine we do not need a mysterious “zeros/poles coincide” claim; what we need is a standard rigid-analytic **removable singularities** lemma: a meromorphic function on a 1D affinoid disc that is bounded is holomorphic (hence “common zeros are removable”).
 
@@ -9009,11 +9121,12 @@ Write the proof here as if for a referee who will check every line.
 
 ### lem:right-edge — lemma (Right–edge normalization on discs)
 
-- **Source**: `BSD-Jon-Final.txt` L3796–L3798
-- **Status**: suspect
+- **Source**: (deprecated) former disc-pinch engine; removed from the unconditional mainline
+- **Status**: deprecated
 - **Auto-flags**: —
 - **Auto-extracted internal refs**: —
 - **Conditional on / Blockers (edit)**:
+  - **Deprecated**: disc-wise pinch is not used; this lemma is kept only as a record of a former normalization idea.
   - **This is a new normalization choice after paper repair**: the source now asserts \(\mathcal J\to 1\) (hence \(\Theta\to 0\)) along a right-edge large-weight sequence after calibrating the outer factor up to a unit constant. This needs a precise construction of the “right-edge” family of specializations and an argument that the ratio \(\mathcal J\) converges to \(1\) there.
   - If the intended mechanism is “\(\mathcal J=1\) on an infinite set of specializations” (identity theorem), that should be stated explicitly.
   - **Not needed for ideal equality (recommended downgrade)**: the repaired disc engine only needs \(J\in\mathcal O(D)^\times\), not \(J\equiv 1\) or \(\Theta\equiv 0\). Until a real argument is supplied, treat `lem:right-edge` as an optional normalization remark, not a structural step.
@@ -9052,11 +9165,12 @@ Write the proof here as if for a referee who will check every line.
 
 ### thm:disc-imc — theorem (Finite–slope IMC equality on $D$)
 
-- **Source**: `BSD-Jon-Final.txt` L3800–L3802
-- **Status**: todo
+- **Source**: (deprecated) former disc-pinch engine; removed from the unconditional mainline
+- **Status**: deprecated
 - **Auto-flags**: IMC_MENTION
 - **Auto-extracted internal refs**: —
 - **Conditional on / Blockers (edit)**:
+  - **Deprecated**: disc-wise pinch is not used. IMC equality is imported via literature coverage + finite closures (`cor:disc-imc`, \S\,F.32; `thm:universal-imc`).
   - **Conditional on a repaired disc engine**: as written, the source’s “max modulus ⇒ constancy” step is not valid. To make `thm:disc-imc` credible, it should be derived from the repaired conclusion “\(J\in\mathcal O(D)^\times\)” (no residual factor) plus Kato divisibility.
   - **Conditional on `lem:disc-wedge` (repaired)**: need a real nonarchimedean boundary-control lemma that yields \(|\Theta|_p<1\) on the Shilov boundary.
 

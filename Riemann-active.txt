@@ -656,6 +656,32 @@ The measure-first ``positive measure $\Rightarrow$ Hilbert realization'' plumbin
 Thus, from the Route~3 perspective, the content supplied by the certificate route is precisely the \emph{positivity of the boundary measure}
 $\mu_{\mathrm{spec}}\ge 0$; the remaining work is the analytic identification of the Route~3 Weil form with the $L^2(\mu_{\mathrm{spec}})$ pairing.
 
+\medskip
+\noindent\textbf{Formalization ledger (Lean).}
+The conjugation symmetry
+\[
+  \texttt{completedRiemannZeta\_0}(\overline{s})=\overline{\texttt{completedRiemannZeta\_0}(s)}
+\]
+is now \emph{proved} in Lean as
+\texttt{RiemannRecognitionGeometry/ExplicitFormula/ZetaConjugation.lean :: completedRiemannZeta\_0\_conj}
+(the earlier axiom has been removed). The proof unfolds Mathlib’s definition
+\texttt{completedRiemannZeta\_0 = HurwitzZeta.completedHurwitzZetaEven\_0 0}
+and reduces to a Mellin–conjugation lemma on $t>0$ using that the Hurwitz even kernel is real-valued.
+We also proved (axiom removed) the derivative conjugation lemma
+\texttt{RiemannRecognitionGeometry/ExplicitFormula/Lagarias.lean :: deriv\_xiLagarias\_conj}.
+The next Route~3 Lean blockers for an axiom-free $\zeta$ run are the remaining ExplicitFormula axioms
+(Weil transform, outer construction / Schur bridge, etc.).
+The det$_2$ analytic obligation bundle for the concrete \texttt{WeilTestFunction} space has been moved out of a global axiom:
+it is now treated as an explicit hypothesis bundle in \texttt{RiemannRecognitionGeometry/ExplicitFormula/ZetaDet2Weil.lean}
+(to be discharged later from Mathlib).
+The optional Route~3 $\zeta$ “glue” bundle \texttt{RiemannRecognitionGeometry/ExplicitFormula/ZetaInstantiation.lean :: ZetaRoute3Glue}
+is now an \emph{explicit assumption record} (no global axiom); it will ultimately be constructed from the contour-to-boundary theory.
+We removed the earlier ill-posed \texttt{zetaPSCGlue} axiom: it attempted to define a \emph{pointwise} boundary phase using
+\texttt{Complex.arg} together with a pointwise boundary identity, which cannot hold at critical-line zeros (where the PSC ratio has a removable
+singularity). Route~3 is measure-first, so $\zeta$ boundary phase / $\mu_{\mathrm{spec}}$ data are now carried only as hypothesis fields in
+\texttt{ZetaPSCHypotheses}. We also removed the shim axiom \texttt{boundaryWedgeAssumptions\_zeta} in
+\texttt{RiemannRecognitionGeometry/ExplicitFormula/PPlusZetaShim.lean}; wedge assumptions are now threaded explicitly.
+
 \begin{lemma}[Carleson box energy: stable sum bound]\label{lem:carleson-sum}
 For harmonic potentials $U_1,U_2$ on $\Omega$, one has
 \[

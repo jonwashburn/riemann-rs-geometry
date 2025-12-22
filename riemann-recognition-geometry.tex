@@ -263,7 +263,7 @@ A substantial portion of this proof has been formalized in the Lean 4 theorem pr
 \item \textbf{Verification:} The intricate inequalities and case analyses are verified mechanically, eliminating the possibility of computational or logical errors.
 \item \textbf{Clarity:} The formal development forces a precise articulation of all hypotheses, making explicit which classical results are invoked and where.
 \end{enumerate}
-At the time of writing, the formalization treats certain deep classical results---specifically, the Fefferman-Stein BMO-to-Carleson embedding and the BMO regularity of $\log|\xi|$---as axioms, with the remaining argument fully machine-checked.
+At the time of writing, the formalization still treats certain deep classical results---most notably, the Fefferman--Stein BMO$\to$Carleson embedding and the BMO regularity of $\log|\xi|$---as axioms, with the remaining argument fully machine-checked. The geometric and measure-theoretic preliminaries for a tent-space proof of Fefferman--Stein (cone/tent geometry and Fubini bookkeeping on Carleson boxes) have been formalized, and we have also formalized a first analytic prerequisite: differentiation under the integral sign for the conjugate Poisson integral (Lean: `RiemannRecognitionGeometry.PoissonExtension.deriv_conjugatePoissonIntegral_eq_integral_dxKernel`, under a simple `Integrable` hypothesis). The remaining work is the analytic estimates (global weighted energy identity, John--Nirenberg, and tail annulus bounds) needed to discharge the embedding axiom with explicit constants.
 
 \subsection{Outline of the Paper}
 

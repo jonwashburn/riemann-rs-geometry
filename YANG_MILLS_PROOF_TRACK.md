@@ -7,6 +7,7 @@
 ## Session log
 
 - **2025-12-20**: Built the complete claim inventory (323 theorem-like blocks) and started full-detail audits. First audited module: OS reflection positivity / transfer operator (`thm:os`, plus `lem:char-pd`, `prop:psd-crossing-gram`, `lem:os-gns-transfer`). Also fixed two correctness issues in `Yang-Mills.tex`: (i) the convex-split \(L^2\) contraction constant, and (ii) an incorrect internal citation in `prop:psd-crossing-gram`. Added missing `\label{...}` tags for 15 proof-relevant unlabeled claims.
+- **2025-12-21**: Audited the UEI normalization convention: confirmed `thm:uei-fixed-region`/`thm:U1-lsi-uei` use \(S_R:=\sum_{p\subset R}\phi(U_p)\) (Wilson weight \(e^{-\beta S_R}\), no extra \(a^4\) prefactor). Added ledger #18 (scaling/notation ambiguity) and checked off the corresponding subclaim in the bottleneck checklist. TeX hygiene: renamed the β-weighted local action in `prop:interface-density-ball-avg` to `\mathcal S_R` to avoid silent convention swaps; fixed the sign in the UEI proof Step 2 definition of the “negative log-density” \(V_R\).
 
 ## What this file is for
 
@@ -66,6 +67,48 @@ Legend for the “Type” column:
 | `thm:os-to-wightman` (YM-0207) | Export OS → Wightman; interpret mass gap | Standard OS reconstruction once OS0–OS5 are proved | **STD** | This is “standard” conditional on OS0–OS5; does not solve existence/gap by itself |
 | `thm:main-af-free` (YM-0208) | The manuscript’s claimed Clay-level conclusion | Needs both: (i) a real continuum construction at weak coupling, and (ii) a mass-gap mechanism compatible with \(\beta(a)\to\infty\) (currently blocked by β-uniformity, ledger #12) | **RG / LEAP** | This is the end-to-end bottleneck; the tracker should treat it as conditional until the RG-grade inputs are provided |
 
+### Subclaim decompositions (actionable checklists for the three continuum/NRC spine items)
+
+These checklists are meant to be *worked*: each checkbox is a concrete subclaim that should become either (i) a proved lemma/proposition in `Yang-Mills.tex`, or (ii) an explicitly cited external theorem with hypotheses matched and constants/uniformities tracked.
+
+#### `thm:uei-fixed-region` (YM-0178) — UEI/tightness on fixed regions
+
+- [x] **Normalize the quantity being controlled (confirmed)**: in `Yang-Mills.tex` both `thm:uei-fixed-region` and `thm:U1-lsi-uei` use the **standard Wilson normalization**
+  \(S_R:=\sum_{p\subset R}\phi(U_p)\) (no extra \(a^4\) prefactor; \(\phi(U_p)\) itself has an \(a^4\) leading term in the small-field expansion). The Gibbs weight is \(e^{-\beta S_R}\).
+  **Notation collision to fix**: elsewhere the manuscript also writes \(e^{-S_R(\cdot)}\) where \(S_R\) already *includes* \(\beta\) (see e.g. `prop:interface-density-ball-avg` remark “\(S_R\) carries an explicit factor \(\beta\)”). We should rename one of these to avoid silently swapping conventions.
+- [ ] **Tree-gauge reduction (STD)**: gauge-fix on a spanning tree in \(R\), identify the chord variables, and write the induced finite-dimensional Gibbs density with a uniform interaction degree bound \(d_0(R)\); check dependence on exterior boundary conditions.
+- [ ] **Uniform LSI on the chord Gibbs measure (RG)**: justify a log–Sobolev constant \(\rho_R\) that is uniform in volume/boundary and compatible with the continuum regime (typically along \(\beta(a)\to\infty\)); address nonconvexity away from the identity (global patching/perturbation on compact groups).
+- [ ] **Gradient/Lipschitz bound for the chosen local observable (STD/LEAP check)**: prove the bound on \(\|\nabla S_R\|^2\) used in Herbst, and verify it does not hide an \(a^{-k}\) blowup from the number of plaquettes/links in \(R\).
+- [ ] **Herbst \(\Rightarrow\) Laplace bound (STD)**: run the Herbst argument with explicit constants, choose \(\eta_R\) independent of \(a,L\), and record exactly what dependence on \(\beta_{\min}\) (or a scaling schedule) remains.
+- [ ] **Uniform control of \(\mathbb E S_R\) (RG/LEAP)**: either prove the uniform bound used to remove centering *or* restate UEI in a centered/renormalized form so the mean term is not a hidden divergence.
+- [ ] **Boundary-condition robustness (STD)**: show the constants do not depend on the exterior configuration outside \(R\).
+
+**Audit notes (2025-12-21; decision point).**
+- **Tree gauge step**: the reduction to a finite-dimensional chord Gibbs law is standard, but the scaling in the current TeX was inconsistent: if \(R\subset\BR^4\) is a fixed physical region, then the number of chord/link variables grows like \(m(R,a)=O(a^{-4})\) (not \(O(a^{-3})\)). This was corrected in `Yang-Mills.tex`.
+- **Gradient/Lipschitz step**: as written, the claimed global bound \(\|\nabla S_R\|^2\lesssim a^4\) is only plausible under a **small-field/weak-coupling regime** where plaquette holonomies stay within \(O(a^2)\) of \(\mathbf 1\), so \(\|\nabla\phi(U_p)\|=O(a^2)\). Without such control, the trivial bound is \(\|\nabla S_R\|^2\lesssim m(R,a)\asymp a^{-4}\), which is incompatible with the later “uniform in \(a\)” Herbst/UEI conclusions at fixed \(\beta\).
+- **Mean bound step**: the step “\(\sup_a \BE S_R<\infty\) because \(S_R\) is a Riemann sum” likewise implicitly assumes weak-coupling scaling; at fixed \(\beta\) independent of \(a\), \(|\mathcal P_R|\asymp a^{-4}\) and one expects \(\BE S_R\) to grow proportionally, so \(\sup_a \BE e^{\eta S_R}\) cannot stay bounded for any fixed \(\eta>0\).
+- **Decision**: to be internally consistent, the UEI/tightness package must be **tied to a weak-coupling scaling window** \(\beta=\beta(a)\to\infty\) (and in practice requires RG-grade small-field control). Treat the “β-uniform for all \(\beta\ge\beta_{\min}\)” phrasing as not credible without major new input.
+
+#### `thm:os1-unconditional` (YM-0187) — OS1 on fixed regions (Euclidean invariance)
+
+- [ ] **Lock the route + dependency graph (meta)**: commutator route (`lem:local-commutator-Oa2` ⇒ `prop:resolvent-from-commutator` ⇒ OS1) vs calibrator route (`prop:hk-calibrators-constructed` ⇒ `thm:os1-calibrator-route`). Pick one as primary and treat the other as optional cross-check.
+- [ ] **Define the lattice action of rigid motions \(U_a(G)\) (STD)**: specify how \(G\in E(4)\) acts on lattice cylinders/loops and prove \(U_a(G)\) is unitary on the OS/GNS quotient and compatible with embeddings.
+- [ ] **Prove `TS:sandwich_main` in the uniform form actually used (RG/LEAP)**: a Strang/sandwich approximation for \(e^{-tH_{a,L}}\) with an \(O(a^2 t)\) remainder on local cores, uniform in \(L\), boundary, and \(t\in[0,t_0]\).
+- [ ] **Prove `DEC:plaquette-F2` with explicit \(O(a^2)\) control (hard STD)**: finite-region Taylor control needed to compare magnetic terms under small rotations/relabellings (and to justify the “finite-stencil” estimates invoked in the commutator proof).
+- [ ] **Establish `lem:local-commutator-Oa2` (RG)**: show \(\|[U_a(G),e^{-tH_{a,L}}]\|\le C(R,G)\,a^2 t\) on the time-zero local subspace, uniformly in \(L\) and boundary.
+- [ ] **Semigroup commutators \(\Rightarrow\) resolvent conjugation (STD)**: check Laplace-transform bounds and the \(t\in[0,t_0]\) split in `prop:resolvent-from-commutator` with explicit constants.
+- [ ] **Limit passage \(\Rightarrow\) OS1 for Schwinger functions (STD)**: verify the convergence mode is strong enough and that UEI/equicontinuity closes any density gaps so the invariance extends beyond a dense cylinder class.
+
+#### `thm:U2-nrc-unique` (YM-0294) — operator-norm NRC + uniqueness of the continuum generator
+
+- [ ] **Embeddings / partial isometries (STD)**: prove \(I_{a,L}\) are genuine isometries on local OS/GNS quotients and intertwine time translations on cylinders (see `lem:U2-embeddings`).
+- [ ] **Common core + defect operator (STD)**: construct a common dense core \(\mathcal D^{\rm loc}\) and make \(D_{a,L}=H I_{a,L}-I_{a,L}H_{a,L}\) well-defined with the required defect identity (see `lem:U2-defect-core`).
+- [ ] **Graph-defect estimate (RG)**: prove \(\|D_{a,L}(H_{a,L}+1)^{-1/2}\|\le C a\) uniformly in \(L\) (cited in TeX to `thm:quant-calibrated-af-free-nrc` (D)).
+- [ ] **Low-energy projector control (RG)**: prove \(\|(I-P_{a,L})E_H([0,\Lambda])\|\le C_\Lambda a\) uniformly in \(L\) (TeX cites `lem:low-energy-proj`), including where the continuum spectral projector \(E_H\) comes from before uniqueness is established.
+- [ ] **Uniform resolvent–graph bounds (STD)**: establish the bounds \(\|(H-z_0)^{-1}(H+1)^{1/2}\|\) and \(\|(H_{a,L}-z_0)^{-1}(H_{a,L}+1)^{1/2}\|\) independent of \((a,L)\) for some nonreal \(z_0\).
+- [ ] **One-point resolvent estimate at \(z_0\) (STD)**: prove `prop:one-point-resolvent` with constants and \(\Lambda\) bookkeeping.
+- [ ] **Bootstrap from \(z_0\) to compact \(K\subset\mathbb C\setminus\mathbb R\) (STD)**: execute the resolvent-identity/uniform-boundedness argument to get \(\sup_{z\in K}\|R(z)-I_{a,L}R_{a,L}(z)I_{a,L}^*\|\to 0\) and conclude “no subsequences”.
+
 ## Status + confidence rubric
 
 - **Status codes**:
@@ -118,6 +161,74 @@ This is the minimal “spine” to reach `thm:main-af-free`. We’ll check a box
 - **Main theorem**:
   - [ ] `thm:main-af-free`
 
+### Unconditional checklist (active route; **no axioms**)
+
+This is the **minimal set of structures/lemmas** that must exist *with proofs in this repo* (or standard, fully cited theorems with hypotheses checked) to claim an **unconditional Clay-level** result via the active route.
+
+Each checkbox below should end up either:
+- **DONE**: proof in `Yang-Mills.tex` at **S3+** with explicit uniformities, or
+- **BLOCKED**: moved to the ledger with a precise missing subclaim (no hand-waving).
+
+- **L0. Finite-lattice OS framework (finite \(a,L\))**
+  - [ ] **(Already largely done)**: existence of the Wilson measure + OS reflection positivity + transfer operator construction (`thm:os`, `lem:os-gns-transfer` and friends) with clean normalization of \(H_{L,a}\) and \(T=e^{-aH}\).
+
+- **L1. β- and \(L\)-uniform *physical* slab gap (fixed physical thickness)**
+  - [ ] **β-uniform interface minorization / smoothing**: a genuine β-uniform lower bound of the interface kernel by a smoothing reference (heat kernel / strong-Feller minorization) on a **fixed-dimension** coarse interface (`lem:beta-L-independent-minorization`, `prop:sandwich`).
+  - [ ] **Odd-cone contraction with correct scaling**: prove that the induced contraction yields a **physical** gap floor \(\gamma_*>0\) that does not degenerate as \(a\downarrow 0\) along the scaling schedule (this is where “per tick” vs “per physical time” constants must be audited).
+
+- **L2. Van Hove / thermodynamic limit at fixed spacing \(a\) with uniformity**
+  - [ ] **Infinite-volume (or van Hove) stability**: existence/consistency of the \(L\to\infty\) limit (in the sense used later) and preservation of the slab gap constants (`thm:thermo` / `thm:gap` cluster).
+
+- **C0. Continuum tightness/existence on fixed regions along weak-coupling scaling**
+  - [ ] **Local UEI/LSI in the *actual* weak-coupling regime**: a theorem of the form “for each fixed \(R\), along \(\beta=\beta(a)\to\infty\) we have uniform integrability / tightness / equicontinuity on \(R\)” with constants independent of \(a,L\) (`thm:uei-fixed-region` / `thm:U1-lsi-uei` and supporting lemmas).  
+    - **Note**: this is an RG/constructive-QFT grade input in 4D; if it is not proved, the route is blocked.
+  - [ ] **OS0/OS2 closure under limits**: once tightness is real, pass OS0 + OS2 to the limit in a precise topology (`prop:os0os2-closure`, `lem:os2-limit`, `lem:os0-explicit-constants`).
+  - [ ] **OS1 (Euclidean invariance)**: restore full \(E(4)\) invariance in the limit (commutator route or calibrator route) with all uniformities checked (`thm:os1-unconditional` and its true dependencies).
+
+- **C1. Operator convergence / uniqueness of the continuum generator (AF-free NRC package)**
+  - [ ] **Operator-norm NRC on fixed regions**: prove the quantitative resolvent convergence needed to transport the gap (`thm:nrc-operator-norm` plus its concrete YM verification inputs).
+  - [ ] **Uniqueness / no subsequences**: make `thm:U2-nrc-unique` unconditional by proving its “graph-defect \(O(a)\)” + “low-energy projector control” hypotheses in the YM setting.
+
+- **C2. Continuum mass gap + global OS0–OS5**
+  - [ ] **Gap persistence**: standard once NRC holds (`thm:gap-persist-cont`).
+  - [ ] **Global continuum measure / OS0–OS5 on \(\mathbb R^4\)**: construct the global theory and verify OS0–OS5 (this is the true Clay “existence” half) (`thm:global-OS` / `thm:global-OS0-5` cluster).
+
+- **C3. OS → Wightman export (standard once C2 holds)**
+  - [ ] **OS reconstruction + Minkowski mass gap**: `thm:os-to-wightman` (+ global variants) with hypotheses matched to what we actually proved.
+
+### Reusable prompt (copy/paste; **Yang–Mills only, not RH**)
+
+```text
+You are my proof-audit coding agent working in /Users/jonathanwashburn/Projects/riemann-geometry-rs.
+
+We are working ONLY on the Yang–Mills existence + mass gap proof audit:
+- Primary files: Yang-Mills.tex, YANG_MILLS_PROOF_TRACK.md
+- Do NOT work on Riemann hypothesis, BSD, or any other manuscript in this repo.
+
+Task:
+Pick the next unchecked item from the “Unconditional checklist (active route; no axioms)” section in YANG_MILLS_PROOF_TRACK.md, and drive it to one of two outcomes:
+  (A) DONE: a fully detailed, referee-grade proof is written into Yang-Mills.tex (S3 or better), with all constants/uniformities (in a, L, β, region size, group) checked and no hidden assumptions; OR
+  (B) BLOCKED: you prove it cannot currently be completed from prior material, and you add a blocker ledger entry explaining the exact missing lemma/estimate and why it is genuinely needed.
+
+Method (repeat until complete):
+1) Locate the target claim in Yang-Mills.tex by its \\label{...}. Copy its statement into a “proof worksheet” block in the tracker (or update the existing one).
+2) Normalize notation (especially anything involving β(a), a→0 scaling, and “physical” vs “per-tick” units).
+3) List dependencies:
+   - Internal: exact lemma/theorem labels.
+   - External: exact citations with theorem numbers + hypotheses; if a “standard fact” is used, either cite it precisely or create a new tracked lemma.
+4) Write the proof in full detail in Yang-Mills.tex:
+   - No “it is clear”; quantify constants; state uniformity domains.
+   - If you introduce any new lemma, add a \\label{...} and register it in the tracker inventory/ledger as needed.
+5) Update YANG_MILLS_PROOF_TRACK.md:
+   - Set Status/Confidence (S*/C*) for the target claim.
+   - Check off the corresponding checklist checkbox if DONE.
+   - If BLOCKED, add/upgrade a ledger entry with a concrete missing-subclaim description.
+6) Run lints on edited files and fix any issues you introduced.
+
+Output:
+Summarize what changed (files + key proof facts), what remains open, and propose the next target checkbox you will tackle next.
+```
+
 ## Previously unlabeled proof-relevant claims (now labeled)
 
 All of the items below were unlabeled in `Yang-Mills.tex` during the initial inventory and were **fixed on 2025-12-20** by adding `\label{...}` tags. The table is kept for provenance/mapping.
@@ -161,6 +272,7 @@ All of the items below were unlabeled in `Yang-Mills.tex` during the initial inv
 | 15 | `lem:compact-small-ball` | missing lemma (fixed) | — | Added `lem:compact-small-ball` to `Yang-Mills.tex` Appendix `app:beta-indep-minorization` (2025-12-20). |
 | 16 | `lem:coarse-density` / `cor:odd-to-meanzero` | fixed (rewritten) | — | `lem:coarse-density` was rewritten as the standard martingale/conditional-expectation density statement as $\varepsilon\downarrow 0$ (under an explicit nesting + generation hypothesis). `cor:odd-to-meanzero` was rewritten as a pointer/restatement of `thm:eight-tick-uniform`, so it no longer depends on the coarse-density lemma. |
 | 17 | `prop:sandwich` | external input (proof gap removed; still conditional) | compact-group smoothing/minorization theorems | The original TeX proof used a “drop the middle factor” step that does not follow without additional assumptions on the unsmoothed kernel. It is now explicitly recorded as a proof sketch / external input relying on standard minorization results for strong-Feller kernels on compact groups after smoothing (citations included). |
+| 18 | `thm:uei-fixed-region` / `thm:U1-lsi-uei` | scaling + notation ambiguity (open) | weak-coupling / continuum control (RG) | **Normalization confirmed**: in TeX, \(S_R:=\sum_{p\subset R}\phi(U_p)\) (no extra \(a^4\); weight \(e^{-\beta S_R}\)). **But** elsewhere the manuscript also writes \(e^{-S_R(\cdot)}\) where \(S_R\) already carries an explicit \(\beta\) (e.g. `prop:interface-density-ball-avg`), so conventions can silently swap. Also, the UEI statement “uniform in \(a\) for all \(\beta\ge\beta_{\min}\)” is not credible unless the “scaling window” *implicitly* ties \(\beta=\beta(a)\to\infty\) (or \(\beta_{\min}\) is taken sufficiently large): this needs to be made explicit and/or replaced by a renormalized local energy observable plus a genuine RG-grade estimate. |
 
 ## Proof worksheet template (copy/paste per claim)
 

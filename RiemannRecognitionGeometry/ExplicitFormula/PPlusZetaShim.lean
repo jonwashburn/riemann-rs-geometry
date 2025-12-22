@@ -26,19 +26,15 @@ chain interface from `BoundaryWedgeInterfaces.lean`. This makes the remaining wo
 we can replace its individual fields with proofs incrementally.
 -/
 
-axiom boundaryWedgeAssumptions_zeta (H : ZetaPSCHypotheses) :
-  BoundaryWedgeAssumptions H
-
 -- The phase‑positivity target now follows from the boundary‑wedge assumptions.
-theorem boundaryPhase_cos_nonneg_ae (H : ZetaPSCHypotheses) :
+theorem boundaryPhase_cos_nonneg_ae (H : ZetaPSCHypotheses) (wedge : BoundaryWedgeAssumptions H) :
   (∀ᵐ t : ℝ, 0 ≤ Real.cos (H.boundaryPhase t)) :=
-  boundaryPhase_cos_nonneg_ae_of_boundary_wedge H (boundaryWedgeAssumptions_zeta H)
+  boundaryPhase_cos_nonneg_ae_of_boundary_wedge H wedge
 
 -- Hence (P+) holds for the ζ pinch field.
-theorem PPlus_zeta_proved (H : ZetaPSCHypotheses) : PPlus_zeta := by
-  exact PPlus_zeta_of_boundary_wedge H (boundaryWedgeAssumptions_zeta H)
+theorem PPlus_zeta_proved (H : ZetaPSCHypotheses) (wedge : BoundaryWedgeAssumptions H) : PPlus_zeta := by
+  exact PPlus_zeta_of_boundary_wedge H wedge
 
 end ZetaInstantiation
 end ExplicitFormula
 end RiemannRecognitionGeometry
-

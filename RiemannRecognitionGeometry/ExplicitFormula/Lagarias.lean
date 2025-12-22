@@ -20,6 +20,7 @@ import RiemannRecognitionGeometry.ExplicitFormula.ZetaConjugation
 noncomputable section
 
 open Complex
+open scoped ComplexConjugate
 
 namespace RiemannRecognitionGeometry
 namespace ExplicitFormula
@@ -132,8 +133,46 @@ lemma xiLagarias_conj (s : ℂ) : xiLagarias (starRingEnd ℂ s) = starRingEnd �
 
 For a holomorphic f with f(conj s) = conj(f(s)), we have f'(conj s) = conj(f'(s)).
 This can be seen by differentiating f(conj s) = conj(f(s)) along a real parameter. -/
-axiom deriv_xiLagarias_conj (s : ℂ) :
-    deriv xiLagarias (starRingEnd ℂ s) = starRingEnd ℂ (deriv xiLagarias s)
+lemma deriv_xiLagarias_conj (s : ℂ) :
+    deriv xiLagarias (starRingEnd ℂ s) = starRingEnd ℂ (deriv xiLagarias s) := by
+  -- Step 1: show `xiLagarias` is fixed by the involution `z ↦ conj (f (conj z))`.
+  have hfun : (fun z : ℂ => conj (xiLagarias (conj z))) = xiLagarias := by
+    funext z
+    -- Rewrite `xiLagarias_conj` into a `conj`-statement.
+    have hz' : xiLagarias (starRingEnd ℂ z) = starRingEnd ℂ (xiLagarias z) := xiLagarias_conj z
+    have hzL : starRingEnd ℂ z = conj z := by
+      calc
+        starRingEnd ℂ z = star z := by simpa using (starRingEnd_apply (R := ℂ) z)
+        _ = conj z := by rfl
+    have hzR : starRingEnd ℂ (xiLagarias z) = conj (xiLagarias z) := by
+      calc
+        starRingEnd ℂ (xiLagarias z) = star (xiLagarias z) := by
+          simpa using (starRingEnd_apply (R := ℂ) (xiLagarias z))
+        _ = conj (xiLagarias z) := by rfl
+    have hz : xiLagarias (conj z) = conj (xiLagarias z) := by
+      -- Rewrite both sides of `hz'` using `hzL` and `hzR`.
+      -- (`rw` works inside `xiLagarias (·)` since it's definitional rewriting of the argument.)
+      simpa [hzL, hzR] using hz'
+    -- Now conjugate both sides and simplify.
+    calc
+      conj (xiLagarias (conj z)) = conj (conj (xiLagarias z)) := by rw [hz]
+      _ = xiLagarias z := by simp
+
+  -- Step 2: differentiate `conj (xiLagarias (conj z)) = xiLagarias z` via `deriv_conj_conj`.
+  have hder_base :
+      deriv (fun z : ℂ => conj (xiLagarias (conj z))) (conj s) = conj (deriv xiLagarias s) := by
+    simpa using (deriv_conj_conj (f := xiLagarias) (p := s))
+
+  -- Replace the LHS derivative using `hfun`.
+  have hder_eq :
+      deriv (fun z : ℂ => conj (xiLagarias (conj z))) (conj s) = deriv xiLagarias (conj s) := by
+    simpa using congrArg (fun g : ℂ → ℂ => deriv g (conj s)) hfun
+
+  have hconj : deriv xiLagarias (conj s) = conj (deriv xiLagarias s) :=
+    hder_eq.symm.trans hder_base
+
+  -- Step 3: `conj` is notation for `starRingEnd`, so this is already exactly the goal.
+  exact hconj
 
 /-- The log-derivative of xiLagarias satisfies the conjugation symmetry.
 

@@ -73,49 +73,16 @@ def outer_zeta (s : ℂ) : ℂ :=
 /-- Lagarias’ entire completion `ξ(s) = (1/2) s (s-1) Λ(s)`. -/
 def xi_zeta : ℂ → ℂ := xiLagarias
 
-/-- Riemann-Siegel theta function (placeholder definition using `arg`). -/
-def thetaRS (t : ℝ) : ℝ :=
-  (Complex.Gammaℝ (1/2 + I * t)).arg
-
-/-- Concrete boundary phase for ζ: θ(t) = -2θ_RS(t) - π. -/
-def boundaryPhase_zeta (t : ℝ) : ℝ :=
-  -2 * thetaRS t - Real.pi
-
-/--
-Spectral boundary measure for ζ (density -θ'/π). -/
-def μ_spec_zeta : Measure ℝ :=
-  volume.withDensity (fun t => ENNReal.ofReal (- (1 / Real.pi) * deriv boundaryPhase_zeta t))
-
-/--
-Remaining ζ-specific analytic inputs for the Route‑3 / PSC instantiation.
-
-This bundles the “hard analysis” facts that are currently assumed (the user is OK with classical
-axioms) into a single surface, instead of scattering multiple independent `axiom`s across the file.
--/
-structure ZetaPSCGlue : Prop where
-  boundaryPhase_zeta_diff (t : ℝ) : DifferentiableAt ℝ boundaryPhase_zeta t
-  outer_zeta_ne_zero_of_re_gt_half {s : ℂ} (hs : 1 / 2 < s.re) : outer_zeta s ≠ 0
-  outer_zeta_differentiable_of_re_gt_half {s : ℂ} (hs : 1 / 2 < s.re) :
-      DifferentiableAt ℂ outer_zeta s
-  boundaryPhase_repr_zeta (t : ℝ) :
-      det2_zeta (1/2 + I * t) / (outer_zeta (1/2 + I * t) * xi_zeta (1/2 + I * t)) =
-        Complex.exp (I * boundaryPhase_zeta t)
-  phase_velocity_zeta_concrete :
-      ∀ φ : ℝ → ℝ, Integrable φ volume →
-        ∫ t : ℝ, φ t * deriv boundaryPhase_zeta t ∂volume =
-          - Real.pi * ∫ t : ℝ, φ t ∂ μ_spec_zeta
-
 /-!
-### ζ PSC glue (remaining axioms)
+## ζ boundary phase / spectral measure inputs
 
-At this stage, the remaining ζ-specific analytic inputs for the PSC instantiation are bundled in
-`ZetaPSCGlue` as a single assumption surface (so downstream imports don’t depend on scattered axioms).
+We intentionally **do not** hard-code a concrete ζ boundary phase via `Complex.arg` here.
+
+Reason: on the critical line the PSC ratio has removable singularities at ξ/ζ-zeros, and any
+pointwise `arg`-based phase lift (or pointwise boundary identity) is ill-posed there. Route 3 is
+*measure-first*: we keep ζ boundary phase / μ-spec data as hypotheses (`ZetaPSCHypotheses`) and keep
+all downstream results in the form “assumptions → wiring”.
 -/
-
-axiom zetaPSCGlue : ZetaPSCGlue
-
-theorem boundaryPhase_zeta_diff (t : ℝ) : DifferentiableAt ℝ boundaryPhase_zeta t :=
-  zetaPSCGlue.boundaryPhase_zeta_diff t
 
 /-!
 ## Von Mangoldt L-series / log-derivative identity
@@ -147,13 +114,6 @@ theorem det2_zeta_differentiable_of_re_gt_one {s : ℂ} (hs : 1 < s.re) :
   intro hs1
   have : (1 : ℝ) < (1 : ℝ) := by simpa [det2_zeta, hs1] using hs
   linarith
-
-theorem outer_zeta_ne_zero_of_re_gt_half {s : ℂ} (hs : 1/2 < s.re) : outer_zeta s ≠ 0 :=
-  zetaPSCGlue.outer_zeta_ne_zero_of_re_gt_half (s := s) hs
-
-theorem outer_zeta_differentiable_of_re_gt_half {s : ℂ} (hs : 1/2 < s.re) :
-    DifferentiableAt ℂ outer_zeta s :=
-  zetaPSCGlue.outer_zeta_differentiable_of_re_gt_half (s := s) hs
 
 /-!
 ## Differentiability of `xiLagarias` (for PSCComponents.xi_diff)
@@ -201,8 +161,6 @@ theorem xi_zeta_differentiable_of_re_gt_half {s : ℂ} (hs : 1/2 < s.re) (hne : 
 structure ZetaPSCHypotheses where
   /-- Boundary phase function for the PSC ratio on the critical line. -/
   boundaryPhase : ℝ → ℝ
-  /-- Regularity of the chosen boundary phase. -/
-  boundaryPhase_diff : ∀ t : ℝ, DifferentiableAt ℝ boundaryPhase t
   /-- Boundary trace phase lift: `J(1/2+it) = exp(i·θ(t))` a.e. -/
   boundaryPhase_repr :
     ∀ᵐ t : ℝ ∂volume,
@@ -219,41 +177,15 @@ structure ZetaPSCHypotheses where
 -- to avoid creating an import cycle between:
 -- `ZetaInstantiation` ↔ `BoundaryWedgeInterfaces` ↔ `PPlusZeta`.
 
-theorem boundaryPhase_repr_zeta (t : ℝ) :
-    det2_zeta (1/2 + I * t) / (outer_zeta (1/2 + I * t) * xi_zeta (1/2 + I * t)) =
-        Complex.exp (I * boundaryPhase_zeta t) :=
-  zetaPSCGlue.boundaryPhase_repr_zeta t
-
-theorem phase_velocity_zeta_concrete :
-    ∀ φ : ℝ → ℝ, Integrable φ volume →
-      ∫ t : ℝ, φ t * deriv boundaryPhase_zeta t ∂volume =
-        - Real.pi * ∫ t : ℝ, φ t ∂ μ_spec_zeta :=
-  zetaPSCGlue.phase_velocity_zeta_concrete
-
-/--
-Concrete instantiation of `ZetaPSCHypotheses` using the Riemann-Siegel theta.
-Key analytic facts are currently explicit `axiom`s / bundle fields (phase regularity, boundary phase
-representation, and phase–velocity identity).
--/
-def zetaPSCHypotheses_concrete : ZetaPSCHypotheses where
-  boundaryPhase := boundaryPhase_zeta
-  boundaryPhase_diff := boundaryPhase_zeta_diff
-  boundaryPhase_repr := Filter.Eventually.of_forall boundaryPhase_repr_zeta
-  μ_spec := μ_spec_zeta
-  phase_velocity := phase_velocity_zeta_concrete
-
 /-- PSCComponents for ζ, packaged with the remaining boundary hypotheses. -/
 def PSCComponents_zeta (H : ZetaPSCHypotheses) : ContourToBoundary.PSCComponents where
   det2 := det2_zeta
   outer := outer_zeta
   xi := xi_zeta
   det2_ne_zero := fun s hs => det2_zeta_ne_zero_of_re_gt_one (s := s) hs
-  outer_ne_zero := fun s hs => outer_zeta_ne_zero_of_re_gt_half (s := s) hs
   det2_diff := fun s hs => det2_zeta_differentiable_of_re_gt_one (s := s) hs
-  outer_diff := fun s hs => outer_zeta_differentiable_of_re_gt_half (s := s) hs
-  xi_diff := fun s hs hne => xi_zeta_differentiable_of_re_gt_half (s := s) hs hne
+  xi_diff := fun s hs hne => xi_zeta_differentiable_of_re_gt_half (s := s) (by linarith) hne
   boundaryPhase := H.boundaryPhase
-  boundaryPhase_diff := H.boundaryPhase_diff
   boundaryPhase_repr := H.boundaryPhase_repr
   μ_spec := H.μ_spec
   phase_velocity_identity := H.phase_velocity
@@ -287,9 +219,6 @@ structure ZetaRoute3Glue where
         (L : LagariasFramework Route3.F)
         (Aμ : Route3.PSCSplice.Assumptions),
         CayleyMeasureBridgeAssumptions (L := L)
-
-/-- Default ζ Route‑3 glue, bundling the two standing Route‑3 glue axioms. -/
-axiom zetaRoute3Glue : ZetaRoute3Glue
 
 /--
 Concrete ζ-instance of `Route3.AssumptionsMeasureIntegral`.
@@ -419,10 +348,11 @@ def OuterArchimedeanAssumptions_zeta
 theorem ratio_eq_neg_boundaryPhase_zeta
     {F : Type} [TestSpace F]
     (LC : LagariasContourFramework F)
-    (H : ZetaPSCHypotheses) (h : F) :
+    (H : ZetaPSCHypotheses)
+    (G : ZetaRoute3Glue) (h : F) :
     ExplicitFormulaCancellationSkeleton.ratio_fullIntegral (LC := LC) (P := PSCComponents_zeta H) h =
       - ∫ t : ℝ, ExplicitFormulaCancellationSkeleton.boundaryPhaseIntegrand (PSCComponents_zeta H) h t ∂ volume :=
-  zetaRoute3Glue.ratio_eq_neg_boundaryPhase_zeta (LC := LC) (H := H) h
+  G.ratio_eq_neg_boundaryPhase_zeta (LC := LC) (H := H) h
 
 /--
 Build the ζ-instance of `RatioBoundaryPhaseAssumptions`, given the remaining analytic obligations.
@@ -430,10 +360,11 @@ Build the ζ-instance of `RatioBoundaryPhaseAssumptions`, given the remaining an
 def RatioBoundaryPhaseAssumptions_zeta
     {F : Type} [TestSpace F]
     (LC : LagariasContourFramework F)
-    (H : ZetaPSCHypotheses) :
+    (H : ZetaPSCHypotheses)
+    (G : ZetaRoute3Glue) :
     ExplicitFormulaCancellationSkeleton.RatioBoundaryPhaseAssumptions
       (LC := LC) (P := PSCComponents_zeta H) where
-  ratio_eq_neg_boundaryPhase := ratio_eq_neg_boundaryPhase_zeta LC H
+  ratio_eq_neg_boundaryPhase := ratio_eq_neg_boundaryPhase_zeta LC H G
 
 /-!
 ## Full bundle wiring (sanity): build `AllComponentAssumptions` for the ζ PSCComponents
@@ -447,6 +378,7 @@ def AllComponentAssumptions_zeta
     {F : Type} [TestSpace F]
     (LC : LagariasContourFramework F)
     (H : ZetaPSCHypotheses)
+    (G : ZetaRoute3Glue)
     (testValue : F → ℝ → ℂ)
     (fourierAtZero : F → ℂ)
     (Adet2 : ZetaDet2AnalyticAssumptions (LC := LC) (testValue := testValue)) :
@@ -457,7 +389,7 @@ def AllComponentAssumptions_zeta
             (testValue := testValue) (A := Adet2)
   outer := OuterArchimedeanAssumptions_zeta (LC := LC) (H := H)
             (testValue := testValue) (fourierAtZero := fourierAtZero)
-  ratio := RatioBoundaryPhaseAssumptions_zeta (LC := LC) (H := H)
+  ratio := RatioBoundaryPhaseAssumptions_zeta (LC := LC) (H := H) (G := G)
 
 /-!
 ## Cayley bridge instantiation for ζ
@@ -505,22 +437,24 @@ This connects the right-half-plane condition for the completed-channel `J`
 to the Route 3 Weil gate.
 -/
 def CayleyMeasureBridgeAssumptions_zeta
+    (G : ZetaRoute3Glue)
     (L : LagariasFramework Route3.F)
     (Aμ : Route3.PSCSplice.Assumptions) :
     CayleyMeasureBridgeAssumptions (L := L) :=
-  zetaRoute3Glue.cayleyMeasureBridgeAssumptions_zeta (L := L) (Aμ := Aμ)
+  G.cayleyMeasureBridgeAssumptions_zeta (L := L) (Aμ := Aμ)
 
 /--
 The “Cayley bridge” proof of RH for ζ:
 If you supply the PSC splice assumptions, then the Cayley bridge yields RH.
 -/
 theorem RH_of_cayleyBridge_zeta
+    (G : ZetaRoute3Glue)
     (L : LagariasFramework Route3.F)
     (Aμ : Route3.PSCSplice.Assumptions) :
     RiemannHypothesis := by
   -- Reduce to the generic “measure-bridge ⇒ Weil gate ⇒ RH” theorems.
   have B : CayleyMeasureBridgeAssumptions (L := L) :=
-    CayleyMeasureBridgeAssumptions_zeta (L := L) Aμ
+    CayleyMeasureBridgeAssumptions_zeta (G := G) (L := L) Aμ
   have hGate : L.WeilGate := WeilGate_of_measureBridge (L := L) B
   exact LagariasFramework.WeilGate_implies_RH (L := L) hGate
 

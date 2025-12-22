@@ -27,9 +27,92 @@
 
 ### The actual remaining “unconditional” gaps
 
+- **(G0) Eliminate the last explicit axiom in the active Port‑S2 spine**: prove
+  `RiemannRecognitionGeometry.PoissonExtension.bmo_carleson_embedding` (currently an `axiom` in
+  `RiemannRecognitionGeometry/PoissonExtension.lean`).
+  - **Status**: **BLOCKED** (no proof in this repo or Mathlib today; requires substantial new Lean formalization).
+  - **Why this is top priority**: `#print axioms` on
+    `RiemannRecognitionGeometry.Port.RiemannHypothesis_recognition_geometry_of_oscillationTarget_of_S2`
+    shows this is the **only** remaining project-level axiom the active spine depends on.
+  - **Note (2025-12-22)**: the vendored Mathlib in this repo contains **no Carleson/BMO→Carleson embedding development**
+    (no `*Carleson*` modules/files), so this cannot be discharged by “importing the standard theorem”; it must be
+    proved inside `RiemannRecognitionGeometry/PoissonExtension.lean` (or a new sibling file) using `MeasureTheory` +
+    `ParametricIntegral` + harmonic-analysis lemmas.
+  - **Correctness note (statement shape)**: the current axiom has **no hypothesis `a < b`** but concludes
+    `carleson_energy w a b ≤ C_FS * M^2 * (b - a)`. For `b < a`, the LHS is `0` (empty box) while the RHS is negative,
+    so the inequality is false. When we replace the axiom by a theorem, we should either:
+    - add an explicit hypothesis `hab : a < b`, or
+    - replace the RHS factor `(b - a)` by `Real.max (b - a) 0` (or `Real.abs (b - a)`), and keep the call sites
+      rewriting under `hab`.
+  - **What it would require (honest)**: a full Fefferman–Stein BMO→Carleson embedding proof for the
+    (conjugate) Poisson extension, including differentiation-under-the-integral and the classical
+    tent-space/Carleson-measure estimate. The repo contains a complete *written* proof blueprint with
+    explicit constant `C_FS = 10` (see `Fefferman–Stein-UHP-constant-10.txt` and
+    `Fefferman-Stein-constant-10-proof.txt`), but this is not yet formalized in Lean.
+  - **Suggested minimal decomposition (next smallest lemmas to attempt)**:
+    - ✅ **DONE**: `RiemannRecognitionGeometry.PoissonExtension.cone_base_volume_ge`
+      (pure geometry: for `(ξ,y)` in the box, the set `{x∈I : |x-ξ|<2y}` has length ≥ y).
+    - ✅ **DONE**: `RiemannRecognitionGeometry.PoissonExtension.integral_if_abs_lt_const`
+      (rewrite `∫_{Icc a b} if |x-ξ|<2y then c else 0` as `volume{...} * c`).
+    - ✅ **DONE**: `RiemannRecognitionGeometry.PoissonExtension.cone_weight_le_integral_indicator`
+      (pointwise inequality `y*c ≤ ∫_{x∈I} 1_{|x-ξ|<2y} c` derived from the volume lower bound).
+    - ✅ **DONE**: `RiemannRecognitionGeometry.PoissonExtension.setIntegral_prod_swap`
+      (generic Fubini swap for set integrals on product sets, with `SFinite` hypotheses).
+    - ✅ **DONE**: `RiemannRecognitionGeometry.PoissonExtension.integrableOn_K_of_integrableOn_cone`
+      (bookkeeping: from product integrability on `I×box`, derive integrability of the inner-x integral `K(p)` on `box`).
+    - ✅ **DONE**: `RiemannRecognitionGeometry.PoissonExtension.expand_box_integral`
+      (rewrite set integrals on `box` as iterated integrals via `MeasureTheory.setIntegral_prod` + `volume_eq_prod`).
+    - ✅ **DONE**: `RiemannRecognitionGeometry.PoissonExtension.cone_to_tent_geometry`
+      (the full \(Q(I)\)→cone averaging inequality, with explicit integrability hypotheses surfaced).
+    - ✅ **DONE**: `RiemannRecognitionGeometry.PoissonExtension.deriv_conjugatePoissonIntegral_eq_integral_dxKernel`
+      (differentiate under the integral sign for the conjugate Poisson integral, using Mathlib’s
+      `hasDerivAt_integral_of_dominated_loc_of_deriv_le`; currently stated under a simple sufficient hypothesis
+      `Integrable w` and for `y>0`).
+    - ✅ **DONE**: `RiemannRecognitionGeometry.PoissonExtension.deriv_conjugatePoissonIntegral_eq_integral_dyKernel`
+      (the y-derivative analogue; needed to control the full gradient energy `‖∇(conjugate Poisson)‖^2`).
+    - `PoissonExtension.poisson_energy_identity_L2` (global weighted energy identity / Plancherel)
+    - `PoissonExtension.tail_annulus_decay_bound` (ring decomposition estimate for the tail term)
+
 - **(G1) Discharge the RG bottleneck**: prove `RGAssumptions.j_carleson_energy_axiom_statement` (or replace it with a theorem) using a Hardy/Dirichlet/Carleson/CR–Green pipeline.
 - **(G2) Produce an explicit oscillation certificate**: prove `OscillationTarget` for `logAbsXi`.
+- **(G2) Produce an explicit oscillation certificate**: prove `OscillationTarget` for `logAbsXi`.
+  - **Status**: **BLOCKED** (no existing lemma path in this repo; this is a genuine analytic theorem about
+    `logAbsXi(t)=log|ζ(1/2+it)|` with a numerically small BMO constant).
+  - **What “DONE” would mean in Lean**: a theorem of the form
+    `∃ M, InBMOWithBound logAbsXi M ∧ M ≤ C_tail` (with `C_tail = 0.20` from `Basic.lean`), i.e.
+    `∀ a<b, meanOscillation logAbsXi a b ≤ M` with explicit `M`.
+  - **Smallest missing sub-lemmas to even start** (suggested next targets; live in `RiemannRecognitionGeometry/FeffermanStein.lean`):
+    - `log_singularity_meanOscillation_le`:
+      `∃ C>0, ∀ γ a b, a<b → meanOscillation (fun t => Real.log |t-γ|) a b ≤ C`.
+      (Elementary real analysis; this is a foundational chip used in every classical BMO proof for `log|F|`.)
+    - `logAbsXi_hadamard_factorization_on_line` (statement-shape TBD):
+      a renormalized decomposition of `logAbsXi` into a “near zeros” sum of `log|t-γ|` terms plus a smooth/error term,
+      with integrability and convergence hypotheses made explicit.
+    - `zero_density_unit_interval` (Riemann–von Mangoldt style):
+      a usable bound on the number of zeros with `Im ρ ∈ [T, T+1]` sufficient to control the “near zeros” count in
+      the BMO constant chase.
+  - **Design note**: the repo already contains the *renormalized* driver interface `OscillationTargetTail`, intended as
+    the replacement for this deprecated global `OscillationTarget`. If we keep the active Port‑S2 spine theorem fixed,
+    then proving global `OscillationTarget` remains mandatory for “fully unconditional”; otherwise we should switch the
+    spine to the tail interface explicitly.
 - **(G3) Reduce (or justify) remaining classical-analysis axioms** in compiled modules (e.g. John–Nirenberg/CZ scaffolding, Fefferman–Stein embedding, η–ζ identity principle).
+
+- **(G4) Discharge the Port‑S2 “faithful S2” interfaces** (xi-side and cofactor-side).
+  - **Status**: **BLOCKED** (these are currently *assumption bundles*, not proved theorems).
+  - **Xi side (`Port.XiCRGreenS2.Assumptions`)**: requires producing a witness
+    `T : Port.XiCRGreenS2Interfaces.GreenTraceIdentity` plus `PairingBound T`, i.e.
+    a real-valued phase lift `theta` of `phaseXi` on Whitney bases, an FTC-valid velocity density `dPhase`
+    (`HasDerivAt` + `IntervalIntegrable`), and the pairing bound
+    `|∫ dPhase| ≤ sqrt(xiEbox_poisson I) * (C_geom * |I|^{-1/2})`.
+  - **Cofactor side (`Port.CofactorCRGreenS2.Assumptions`)**: defined as
+    `∃ h : Port.CofactorOuterLogBranch.CofactorOuterLogBranch, PairingBound (greenTraceIdentity h)`.
+    The repo already contains the holistic package `Port.CofactorOuterLogBranch` (lift + FTC velocity + Poisson
+    pairing/trace convergence hook), but there is **no theorem** constructing such an `h`, and there is no lemma
+    deriving the required `PairingBound` inequality from the Poisson pairing hook plus the energy definition.
+  - **Next smallest sub-lemma to attempt**: introduce `RiemannRecognitionGeometry/Port/XiOuterLogBranch.lean`
+    (analog of `Port/CofactorOuterLogBranch.lean`) as a *statement-shape* package for the xi-side lift + FTC + Poisson
+    pairing, and prove the purely-formal wiring lemma
+    `XiOuterLogBranch → XiCRGreenS2.Assumptions`.
 
 Current implementation direction for **(G1)**: start with **Fefferman–Stein + BMO inheritance** (see `REALITY_PORT_PLAN.md` §5), using the new `RiemannRecognitionGeometry/Port/*` interfaces as the faithful targets.
 

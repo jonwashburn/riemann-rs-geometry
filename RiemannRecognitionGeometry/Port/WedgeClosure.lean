@@ -13,7 +13,7 @@ into an a.e. **boundary positivity** statement that then feeds the Schur pinch a
 In this repo, the analogous “boundary wedge” interface is already mined and factored in Route 3 as:
 
 - `RiemannRecognitionGeometry/ExplicitFormula/BoundaryWedgeInterfaces.lean`, and
-- a lightweight shim axiom `boundaryWedgeAssumptions_zeta` in `PPlusZetaShim.lean`.
+- lightweight wrappers in `PPlusZetaShim.lean` that consume the mined wedge assumptions.
 
 This file re-exports the key interface path via `Port/*` so the Reality port plan can refer to
 a stable location while we continue replacing interface fields with proofs.
@@ -37,15 +37,11 @@ open RiemannRecognitionGeometry.ExplicitFormula
 abbrev BoundaryWedgeAssumptions (H : ExplicitFormula.ZetaInstantiation.ZetaPSCHypotheses) :=
   ExplicitFormula.ZetaInstantiation.BoundaryWedgeAssumptions H
 
-/-- Re-export: the shim axiom providing the boundary-wedge assumptions for ζ. -/
-abbrev boundaryWedgeAssumptions_zeta (H : ExplicitFormula.ZetaInstantiation.ZetaPSCHypotheses) :
-    BoundaryWedgeAssumptions H :=
-  ExplicitFormula.ZetaInstantiation.boundaryWedgeAssumptions_zeta H
-
 /-- Re-export: boundary phase positivity for ζ from the wedge interface (the “wedge closure output”). -/
-theorem boundaryPhase_cos_nonneg_ae (H : ExplicitFormula.ZetaInstantiation.ZetaPSCHypotheses) :
+theorem boundaryPhase_cos_nonneg_ae (H : ExplicitFormula.ZetaInstantiation.ZetaPSCHypotheses)
+    (wedge : BoundaryWedgeAssumptions H) :
     (∀ᵐ t : ℝ, 0 ≤ Real.cos (H.boundaryPhase t)) :=
-  ExplicitFormula.ZetaInstantiation.boundaryPhase_cos_nonneg_ae H
+  ExplicitFormula.ZetaInstantiation.boundaryPhase_cos_nonneg_ae H wedge
 
 end WedgeClosure
 

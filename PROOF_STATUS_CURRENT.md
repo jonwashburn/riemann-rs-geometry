@@ -4,10 +4,97 @@
 
 - **Build**: `lake build` succeeds with **zero warnings**.
 - **`sorry` count**: **0** across the entire Lean codebase (verified via grep).
-- **Axiom count**: **22 explicit axioms** across 12 files (verified via grep):
-  - ExplicitFormula track: 14 axioms (Weil transform, Fourier inversion, outer/Schur bridges, wedge closure, PSC/Route3 glue, conjugation, etc.)
-  - RG spine: 8 axioms (CZ/JN infrastructure ×6, identity principle, BMO→Carleson embedding)
+- **Axiom count**: **24 explicit axioms** across 10 files (verified via grep):
+  - ExplicitFormula track: 7 axioms (Weil transform, outer/Schur bridges, outer construction, etc.)
+  - Remaining scaffolding: 17 axioms (Carleson/BMO interfaces, tail/zero-density stubs, etc.)
   - Port track: 0 axioms (all assumptions are bundled as hypothesis structures, not `axiom` declarations)
+- **Axiom eliminated (2025-12-22)**: `completedRiemannZeta₀_conj` in `RiemannRecognitionGeometry/ExplicitFormula/ZetaConjugation.lean`
+  is now a theorem (proved by unfolding `completedRiemannZeta₀` to Hurwitz’s completion and applying a Mellin‑conjugation lemma).
+- **Axiom eliminated (2025-12-22)**: `deriv_xiLagarias_conj` in `RiemannRecognitionGeometry/ExplicitFormula/Lagarias.lean`
+  is now a theorem (using `deriv_conj_conj` + `xiLagarias_conj`).
+- **Axiom eliminated (2025-12-22)**: removed the ill-posed `axiom zetaPSCGlue` in
+  `RiemannRecognitionGeometry/ExplicitFormula/ZetaInstantiation.lean` (the old “`Complex.arg` pointwise phase” stub).
+  ζ boundary phase / μ-spec data are now carried only as hypothesis fields in `ZetaPSCHypotheses`, matching the
+  measure-first Route‑3 design. (Also: `ContourToBoundary.PSCComponents` and `ZetaPSCHypotheses` no longer require a
+  separate pointwise `boundaryPhase_diff` field.)
+- **Axiom eliminated (2025-12-22)**: removed `axiom zetaRoute3Glue : ZetaRoute3Glue` by threading `ZetaRoute3Glue`
+  as an explicit assumption parameter through the optional ζ Route‑3 glue wrappers in
+  `RiemannRecognitionGeometry/ExplicitFormula/ZetaInstantiation.lean`.
+- **Axiom eliminated (2025-12-22)**: removed the lightweight shim axiom `boundaryWedgeAssumptions_zeta` in
+  `RiemannRecognitionGeometry/ExplicitFormula/PPlusZetaShim.lean`; wedge assumptions are now passed explicitly
+  (matching `ZetaInstantiation.EndToEnd.AssumptionsSplice`), and the Port re-export in
+  `RiemannRecognitionGeometry/Port/WedgeClosure.lean` was updated accordingly.
+- **Axiom eliminated (2025-12-22)**: removed `axiom zetaDet2AnalyticAssumptions_weil` in
+  `RiemannRecognitionGeometry/ExplicitFormula/ZetaDet2Weil.lean`; the det₂ analytic obligations for `WeilTestFunction`
+  are now treated purely as an explicit hypothesis bundle (to be proved later from Mathlib).
+- **Axiom eliminated (2025-12-22)**: removed `axiom fourierInversionDirichletTerm_weil` in
+  `RiemannRecognitionGeometry/ExplicitFormula/ZetaFourierInversionWeil.lean`; it is now an explicit assumption surface
+  (`FourierInversionDirichletTerm_weil`) to be discharged later from Mathlib.
+- **Next target (Route 3 / ζ)**: eliminate `axiom weilTransform_convolution_axiom` in
+  `RiemannRecognitionGeometry/ExplicitFormula/WeilTestFunction.lean` (either by proving the Weil-transform convolution
+  identity, or by threading it as an explicit assumption bundle).
+- **Active spine axiom check (2025-12-22)**: running `#print axioms` on the active Port‑S2 spine theorem
+  `RiemannRecognitionGeometry.Port.RiemannHypothesis_recognition_geometry_of_oscillationTarget_of_S2`
+  shows it depends on **exactly one** project-level axiom:
+  `RiemannRecognitionGeometry.PoissonExtension.bmo_carleson_embedding`
+  (plus Lean’s standard classical axioms like `Classical.choice` / `propext`).
+  - **Blocker**: eliminating this axiom requires a full Fefferman–Stein BMO→Carleson embedding formalization
+    for the (conjugate) Poisson extension (see `REMAINING_WORK.md` (G0) for the decomposition plan).
+    - **Repo reality check**: the vendored Mathlib in this project has **no Carleson/BMO→Carleson embedding library**,
+      so this is not currently solvable by importing an upstream theorem.
+    - **Statement hygiene note**: the axiom is currently stated without `a < b`, but the RHS uses `(b - a)`;
+      replacing it by a theorem will require adding `hab : a < b` or changing `(b - a)` to `Real.max (b - a) 0`.
+  - **Progress**: the first geometry sub-lemma needed by the tent-space proof is now formalized:
+    `RiemannRecognitionGeometry.PoissonExtension.cone_base_volume_ge`.
+  - **Progress (more geometry chips)**:
+    - `RiemannRecognitionGeometry.PoissonExtension.integral_if_abs_lt_const`
+    - `RiemannRecognitionGeometry.PoissonExtension.cone_weight_le_integral_indicator`
+    - `RiemannRecognitionGeometry.PoissonExtension.setIntegral_prod_swap`
+    - `RiemannRecognitionGeometry.PoissonExtension.integrableOn_K_of_integrableOn_cone`
+    - `RiemannRecognitionGeometry.PoissonExtension.expand_box_integral`
+    - `RiemannRecognitionGeometry.PoissonExtension.cone_to_tent_geometry`
+  - **Progress (first analytic chip)**:
+    - `RiemannRecognitionGeometry.PoissonExtension.deriv_conjugatePoissonIntegral_eq_integral_dxKernel`
+      (differentiation under the integral sign for the conjugate Poisson integral; a prerequisite for turning the
+      Fefferman–Stein embedding from an axiom into a theorem).
+  - **Progress (second analytic chip, 2025-12-22)**:
+    `RiemannRecognitionGeometry.PoissonExtension.deriv_conjugatePoissonIntegral_eq_integral_dyKernel`
+    (y-derivative analogue; needed to control the full gradient energy).
+  - **Next analytic chip to attempt**: `RiemannRecognitionGeometry.PoissonExtension.poisson_energy_identity_L2`
+    (global weighted energy identity / Plancherel for the Poisson/conjugate Poisson extension).
+- **Unconditional Port‑S2 reality check (2025-12-22)**: even if the last project-level axiom above is eliminated,
+  the active Port‑S2 spine theorem is still **conditional** on:
+  - `OscillationTarget` (global-BMO smallness for `logAbsXi`), and
+  - `XiCRGreenS2.Assumptions` + `CofactorCRGreenS2.Assumptions` (the faithful “trace + pairing” inputs).
+  There is currently **no theorem** in this repo that produces `OscillationTarget` unconditionally; turning the
+  Port‑S2 route into a fully unconditional RH proof therefore requires proving these analytic hypotheses (or
+  switching the spine to the renormalized-tail `OscillationTargetTail` interface).
+
+- **Port‑S2 checklist audit (2025-12-22): `XiCRGreenS2.Assumptions` is a pure interface (BLOCKED)**.
+  The xi-side S2 bundle is defined as:
+  `∃ T : Port.XiCRGreenS2Interfaces.GreenTraceIdentity, Port.XiCRGreenS2Interfaces.PairingBound T`
+  (`RiemannRecognitionGeometry/Port/XiCRGreenS2.lean`).
+  A witness `T` must provide:
+  - a real lift `theta I : ℝ → ℝ` with `(theta I t : Real.Angle) = phaseXi t` on the Whitney base,
+  - a velocity `dPhase I : ℝ → ℝ` with `HasDerivAt (theta I) (dPhase I t)` for all `t` in the base,
+  - `IntervalIntegrable (dPhase I)` on the base,
+  and the pairing inequality:
+  `|∫ dPhase| ≤ sqrt(xiEbox_poisson I) * (C_geom * |I|^{-1/2})`.
+  No construction of such `T` exists in the repo today (this is a substantial complex-analysis / Green–trace
+  formalization task), so the item is currently **BLOCKED**.
+
+- **Port‑S2 checklist audit (2025-12-22): `CofactorCRGreenS2.Assumptions` is also an interface (BLOCKED)**.
+  The cofactor-side S2 bundle is defined as:
+  `∃ h : Port.CofactorOuterLogBranch.CofactorOuterLogBranch, PairingBound (greenTraceIdentity h)`
+  (`RiemannRecognitionGeometry/Port/CofactorCRGreenS2.lean`).
+  Here `CofactorOuterLogBranch` is a holistic “outer/log branch” package that should (in an honest analytic proof)
+  come from a holomorphic nonvanishing cofactor with a logarithm branch; it contains:
+  - a phase lift `CofactorPhaseLift`,
+  - an FTC-valid velocity `PhaseVelocityFTC`, and
+  - a Poisson-model pairing/trace convergence hook `PhaseVelocityBoundaryTracePoissonPairing`.
+  However, the repo currently provides **no theorem** that constructs such an `h`, and the required `PairingBound`
+  inequality (the actual CR/Green Cauchy–Schwarz estimate in energy form) is likewise not derived from the Poisson
+  pairing hook. Therefore this checklist item is also **BLOCKED**.
 - **Note on what “axiom count” means**:
   - This counts literal Lean `axiom` declarations (`^\s*axiom\s+`).
   - It does **not** count “axiom-shaped fields” like `*_axiom_statement` inside assumption bundles such as `ClassicalAnalysisAssumptions` / `RGAssumptions`.

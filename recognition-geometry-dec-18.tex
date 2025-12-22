@@ -2848,6 +2848,248 @@ Therefore there is no zero \(\rho\) with \(1/2<\Re\rho<1\).
 Finally, to deduce RH, use the functional equation symmetry of the completed zeta function \(\Lambda(s)=\Lambda(1-s)\): if a zero had \(\Re\rho<1/2\), then \(1-\rho\) would be a zero with \(\Re(1-\rho)>1/2\), which we have just ruled out. Thus every nontrivial zero satisfies \(\Re\rho=1/2\).
 \end{proof}
 
+\section{Lean Unconditional Checklist (Connes Route-3')}
+
+\subsection{\texttt{hurwitz\_zeroFree\_of\_tendstoLocallyUniformlyOn}}
+
+\textbf{Lean symbol.}
+\texttt{RiemannRecognitionGeometry/ExplicitFormula/HurwitzGate.lean}:
+\texttt{hurwitz\_zeroFree\_of\_tendstoLocallyUniformlyOn}.
+
+\textbf{Statement.}
+Let \(U\subset\C\) be open and connected.
+Let \(F_n:U\to\C\) and \(f:U\to\C\).
+Assume:
+(i) each \(F_n\) is holomorphic on \(U\);
+(ii) \(F_n\to f\) locally uniformly on \(U\);
+(iii) each \(F_n\) is zero-free on \(U\);
+(iv) \(f\) is not identically zero on \(U\) (i.e. \(\exists z\in U,\ f(z)\neq 0\)).
+Then \(f\) is zero-free on \(U\).
+
+\textbf{Dependencies.}
+\begin{itemize}
+  \item Locally uniform limits of holomorphic functions are holomorphic
+  (Mathlib: \texttt{Mathlib.Analysis.Complex.LocallyUniformLimit}).
+  \item Isolated zeros / identity theorem for analytic functions
+  (Mathlib: \texttt{Mathlib.Analysis.Analytic.IsolatedZeros}).
+  \item Maximum modulus principle (applied to the holomorphic inverse \(1/F_n\))
+  (Mathlib: \texttt{Mathlib.Analysis.Complex.AbsMax}).
+\end{itemize}
+
+\textbf{Proof sketch.}
+\begin{itemize}
+  \item Assume (for contradiction) that \(f(z_0)=0\) for some \(z_0\in U\).
+  \item By isolated zeros + nontriviality, choose \(r>0\) with \(\overline{B}(z_0,r)\subset U\) and
+  \(f\neq 0\) on the boundary circle \(S(z_0,r)\).
+  \item By compactness of \(S(z_0,r)\), get a positive lower bound \(m>0\) with \(|f|\ge m\) on \(S(z_0,r)\).
+  \item By uniform convergence on \(S(z_0,r)\), for \(n\gg 1\) we have \(|F_n|\ge m/2\) on \(S(z_0,r)\).
+  \item Since each \(F_n\) is zero-free on \(U\), the inverse \(1/F_n\) is holomorphic on \(B(z_0,r)\).
+  Apply maximum modulus to \(1/F_n\) to propagate the boundary bound to the whole closed disc, giving
+  \(|F_n|\ge m/2\) on \(\overline{B}(z_0,r)\).
+  \item Taking \(n\to\infty\) at \(z_0\) yields \(|f(z_0)|\ge m/2>0\), contradiction.
+\end{itemize}
+
+\textbf{Status (Lean).} \textbf{PROVED.}
+
+\subsection{\texttt{CCM.F}}
+
+\textbf{Lean symbol.}
+\texttt{RiemannRecognitionGeometry/ExplicitFormula/ConnesApproximantsCCM.lean}:
+\texttt{CCM.F} (type: \(\mathbb{N}\to\mathbb{C}\to\mathbb{C}\)).
+
+\textbf{Statement.}
+In Lean, \texttt{CCM.F} is now defined explicitly (as a \emph{toy closed-form CCM model}) using the
+CCM formula-level expression
+\[
+  F_{\lambda,N}(z)=-i\,\lambda^{-iz}\,\widehat\xi(z),
+\qquad
+  \widehat\xi(z)=2\,L^{-1/2}\sin(zL/2)\left(\sum_{j=-N}^{N}\frac{\xi_j}{z-2\pi j/L}\right),
+\quad L=2\log\lambda,
+\]
+implemented in Lean as \texttt{CCM.Formula.F\_lamN}.
+
+We fix the auxiliary (non-CCM) indexing
+\[
+  \lambda_n := n+2,\qquad N_n := n,
+\]
+and the toy Fourier coefficients
+\[
+  \xi^{(n)}_j :=
+  \begin{cases}
+  1,& j=0,\\
+  0,& j\neq 0.
+  \end{cases}
+\]
+Then
+\[
+  F_n(z)\ :=\ F_{\lambda_n,N_n}(z)
+\]
+is a fully explicit \(\mathbb{N}\to\mathbb{C}\to\mathbb{C}\) function in Lean.
+
+\textbf{Dependencies.}
+\begin{itemize}
+  \item the CCM formula-level definitions \texttt{CCM.Formula.L}, \texttt{pole}, \texttt{lamPow},
+  \texttt{xiHat}, \texttt{F\_lamN} in \texttt{ConnesApproximantsCCM.lean};
+  \item basic holomorphicity of \(\exp\) and \(\sin\).
+\end{itemize}
+
+\textbf{Proof sketch.}
+\begin{itemize}
+  \item Define an explicit auxiliary parameter sequence \(\lambda_n=n+2\) and cutoff \(N_n=n\).
+  \item Define explicit coefficients \(\xi^{(n)}_j\) by \(\xi^{(n)}_0=1\), \(\xi^{(n)}_j=0\) for \(j\neq 0\).
+  \item Set \(F_n := \texttt{CCM.Formula.F\_lamN}(\lambda_n,N_n,\xi^{(n)})\).
+\end{itemize}
+
+\textbf{Status (Lean).} \textbf{PROVED} (as a definition).
+
+\textbf{Note (remaining CCM work).}
+This is not yet the true CCM ground-state coefficient choice; upgrading \(\xi^{(n)}\) to the
+normalized even ground state of the truncated Weil form is the next step needed for the genuine
+CCM approximants and for the convergence theorem \texttt{CCM.tendstoXi}.
+
+\subsection{\texttt{CCM.holo\_upper} and \texttt{CCM.holo\_lower}}
+
+\textbf{Lean symbols.}
+\texttt{RiemannRecognitionGeometry/ExplicitFormula/ConnesApproximantsCCM.lean}:
+\texttt{CCM.holo\_upper}, \texttt{CCM.holo\_lower}.
+
+\textbf{Statement.}
+For each \(n\), the approximant \(F_n\) is holomorphic on the upper/lower half of the strip
+\(|\Im t|<\tfrac12\) (as sets \texttt{upperStrip} and \texttt{lowerStrip} in Lean).
+
+\textbf{Dependencies.}
+Concrete definition of \(F_n\). In CCM, once \(F_{\lambda,N}(z)\) is written in closed form as a
+product of \(\exp\), \(\sin\), and a finite rational sum with poles on the real axis, holomorphy on
+\texttt{upperStrip}/\texttt{lowerStrip} is elementary:
+\begin{itemize}
+  \item \(\exp\) and \(\sin\) are entire;
+  \item on \(\Im z\neq 0\) one has \(z\neq a\) for all real \(a\), hence the factors \((z-a)^{-1}\) are holomorphic;
+  \item finite sums/products preserve holomorphy.
+\end{itemize}
+In Lean, this is a short `DifferentiableOn` composition proof (and we already have the closed-form
+definitions in \texttt{CCM.Formula} once the coefficient data \(\xi_j\) are fixed).
+
+\textbf{Proof sketch.}
+\begin{itemize}
+  \item Expand \texttt{CCM.F} into the closed-form expression \texttt{CCM.Formula.F\_lamN}.
+  \item Use that \(\exp\) and \(\sin\) are entire (hence holomorphic everywhere).
+  \item For each real pole location \(a\), show \(z\in\texttt{upperStrip}/\texttt{lowerStrip}\Rightarrow z\neq a\),
+  hence \((z-a)^{-1}\) is holomorphic on those sets.
+  \item Close under finite sums and products to conclude \texttt{DifferentiableOn}.
+\end{itemize}
+
+\textbf{Status (Lean).} \textbf{PROVED} (lemmas \texttt{CCM.holo\_upper\_proof}, \texttt{CCM.holo\_lower\_proof}).
+
+\subsection{\texttt{CCM.allZerosReal}}
+
+\textbf{Lean symbol.}
+\texttt{RiemannRecognitionGeometry/ExplicitFormula/ConnesApproximantsCCM.lean}:
+\texttt{CCM.allZerosReal}.
+
+\textbf{Statement.}
+For each \(n\), all zeros of \(F_n\) are real in the \(t\)-variable (Lean predicate \texttt{AllZerosReal}).
+
+\textbf{Dependencies.}
+CCM’s Theorem~\texttt{finmain} (and Lemma~\texttt{key} in the paper) gives:
+\begin{itemize}
+  \item a finite-dimensional self-adjoint operator \(D''\) whose characteristic polynomial has real zeros,
+  \item an explicit determinant identity expressing the “nontrivial factor” in \(F_{\lambda,N}\) as that characteristic polynomial,
+  \item a tail factor (coming from \(\det_{\mathrm{reg}}(D_{\log}^{(\lambda)}-z)\)) whose zeros are the real lattice \(\{2\pi k/L\}\).
+\end{itemize}
+Formalizing this requires (i) a finite-dimensional self-adjointness statement (available in Mathlib for hermitian matrices),
+and (ii) a determinant/characteristic-polynomial to zero-set lemma specialized to the CCM rank-one perturbation.
+
+\textbf{Status (Lean).} \textbf{BLOCKED.}
+
+\textbf{Smallest next step.}
+Formalize the finite-dimensional linear-algebra heart of CCM’s Lemma~\texttt{key} (rank-one
+perturbation + determinant identity) in Lean, then specialize it to the CCM matrices. This will
+reduce \texttt{AllZerosReal} to “\(D''\) is self-adjoint” (finite-dimensional spectral theorem).
+
+\subsection{\texttt{CCM.tendstoXi}}
+
+\textbf{Lean symbol.}
+\texttt{RiemannRecognitionGeometry/ExplicitFormula/ConnesApproximantsCCM.lean}:
+\texttt{CCM.tendstoXi}.
+
+\textbf{Statement.}
+The approximants converge locally uniformly on the strip:
+\[
+  F_n \to \Xi \quad \text{locally uniformly on } \{t:|\Im t|<\tfrac12\}.
+\]
+In Lean: \texttt{TendstoLocallyUniformlyOn CCM.F riemannXi atTop strip}.
+
+\textbf{Dependencies.}
+Concrete definition of \(F_n\) plus the two-stage CCM convergence strategy:
+\begin{itemize}
+  \item for fixed \(\lambda\), control \(N\to\infty\) to obtain convergence to \(-i\,\lambda^{-iz}\widehat{\xi_\lambda}(z)\);
+  \item then control \(\lambda\to\infty\) (after a phase renormalization \(e^{a+ibs}\)) to reach \(\Xi\).
+\end{itemize}
+In our Lean development this aligns with the Section~7 window+tail reductions in
+\texttt{ConnesSection7.lean}: the remaining analytic work is a uniform tail envelope \(T(\lambda)\) and a
+sup error \(\delta(\lambda)\) tending to \(0\), upgraded to locally uniform convergence in \(z\).
+
+\textbf{Status (Lean).} \textbf{BLOCKED.}
+
+\textbf{Smallest next step.}
+Prove uniform-on-compact convergence by reducing to explicit bounds on the determinant/Fourier
+kernel and applying dominated convergence / Weierstrass theorems.
+
+\subsection{\texttt{CCM.gate} and \texttt{CCM.assumptions}}
+
+\textbf{Lean symbols (target).}
+\texttt{RiemannRecognitionGeometry/ExplicitFormula/ConnesApproximantsCCM.lean}:
+\texttt{CCM.gate : HurwitzOffRealAxisInStripGate (riemannXi)} and
+\texttt{CCM.assumptions : ConnesHurwitzAssumptions}.
+
+\textbf{Statement.}
+Define the concrete Hurwitz gate and Connes assumption bundle for the CCM approximants.
+
+\textbf{Dependencies.}
+Requires \textbf{proofs} of the four CCM properties (\texttt{holo\_upper}, \texttt{holo\_lower},
+\texttt{allZerosReal}, \texttt{tendstoXi}). (The Hurwitz lemma from item (1) is now proved in Lean.)
+
+\textbf{Status (Lean).} \textbf{BLOCKED.}
+
+\textbf{Smallest next step.}
+Once the four properties are proved, define
+\(\texttt{CCM.gate} := \texttt{CCM.mkGate}\,\ldots\) and
+\(\texttt{CCM.assumptions} := \texttt{CCM.mkAssumptions}\,\ldots\).
+
+\subsection{\texttt{CCM.mkGate} and \texttt{CCM.mkAssumptions}}
+
+\textbf{Lean symbols.}
+\texttt{RiemannRecognitionGeometry/ExplicitFormula/ConnesApproximantsCCM.lean}:
+\texttt{CCM.mkGate}, \texttt{CCM.mkAssumptions}.
+
+\textbf{Statement.}
+Given the four properties (\texttt{holo\_upper}, \texttt{holo\_lower}, \texttt{allZerosReal},
+\texttt{tendstoXi}), build the typed Hurwitz gate \texttt{HurwitzOffRealAxisInStripGate (riemannXi)}
+and hence \texttt{ConnesHurwitzAssumptions}.
+
+\textbf{Dependencies.}
+\begin{itemize}
+  \item Real-zero glue: \texttt{AllZerosReal} \(\Rightarrow\) \texttt{ZeroFreeOn} (already in Lean).
+  \item Nontriviality witnesses for \(\Xi\) on the upper/lower strip (already in Lean).
+\end{itemize}
+
+\textbf{Status (Lean).} \textbf{PROVED} (as definitions).
+
+\subsection{\texttt{riemannHypothesis\_of\_connesHurwitz}}
+
+\textbf{Lean symbol.}
+\texttt{RiemannRecognitionGeometry/ExplicitFormula/ConnesHurwitzBridge.lean}:
+\texttt{riemannHypothesis\_of\_connesHurwitz}.
+
+\textbf{Statement.}
+From the Hurwitz gate assumptions for \(\Xi\), conclude \(\mathrm{RH}\).
+
+\textbf{Dependencies.}
+Only the Hurwitz gate conclusion (zero-free off the real axis in the strip) and standard zeta/xi glue
+already formalized in the repo.
+
+\textbf{Status (Lean).} \textbf{PROVED}.
+
 \section{Notation Index}
 
 \begin{tabular}{ll}

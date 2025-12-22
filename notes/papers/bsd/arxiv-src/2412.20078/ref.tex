@@ -1,0 +1,1112 @@
+\documentclass[a4paper]{amsart}
+
+\synctex = 1
+
+%\RequirePackage{amsmath} \RequirePackage{amssymb}
+\usepackage{amscd,amsthm,amsfonts,amssymb,esint}
+\usepackage{amsmath}
+\usepackage[colorlinks=true]{hyperref}
+\usepackage{fullpage}
+\usepackage[all]{xy}
+%\usepackage[all]{xy}
+\usepackage{tikz-cd}
+
+
+%cohomology groups
+\newcommand{\Hf}{H_{f}}
+\newcommand{\HfF}{H_{f,\F}}
+\newcommand{\HfFa}{H_{f,\F_{\a}}}
+\newcommand{\HfFda}{H_{f,\F_{\a}^{*}}}
+\newcommand{\HfFd}{H_{f,\F^{*}}}
+\newcommand{\Hs}{H_{s}}
+\newcommand{\HsF}{H_{s,\F}}
+\newcommand{\HsFd}{H_{s,\F^{*}}}
+
+
+
+    \newcommand{\BA}{{\mathbb {A}}} \newcommand{\BB}{{\mathbb {B}}}
+    \newcommand{\BC}{{\mathbb {C}}} \newcommand{\BD}{{\mathbb {D}}}
+    \newcommand{\BE}{{\mathbb {E}}} \newcommand{\BF}{{\mathbb {F}}}
+    \newcommand{\BG}{{\mathbb {G}}} \newcommand{\BH}{{\mathbb {H}}}
+    \newcommand{\BI}{{\mathbb {I}}} \newcommand{\BJ}{{\mathbb {J}}}
+    \newcommand{\BK}{{\mathbb {K}}} \newcommand{\BL}{{\mathbb {L}}}
+    \newcommand{\BM}{{\mathbb {M}}} \newcommand{\BN}{{\mathbb {N}}}
+    \newcommand{\BO}{{\mathbb {O}}} \newcommand{\BP}{{\mathbb {P}}}
+    \newcommand{\BQ}{{\mathbb {Q}}} \newcommand{\BR}{{\mathbb {R}}}
+    \newcommand{\BS}{{\mathbb {S}}} \newcommand{\BT}{{\mathbb {T}}}
+    \newcommand{\BU}{{\mathbb {U}}} \newcommand{\BV}{{\mathbb {V}}}
+    \newcommand{\BW}{{\mathbb {W}}} \newcommand{\BX}{{\mathbb {X}}}
+    \newcommand{\BY}{{\mathbb {Y}}} \newcommand{\BZ}{{\mathbb {Z}}}
+
+    \newcommand{\CA}{{\mathcal {A}}} \newcommand{\CB}{{\mathcal {B}}}
+    \newcommand{\CC}{{\mathcal {C}}} \renewcommand{\CD}{{\mathcal {D}}}
+    \newcommand{\CE}{{\mathcal {E}}} \newcommand{\CF}{{\mathcal {F}}}
+    \newcommand{\CG}{{\mathcal {G}}} \newcommand{\CH}{{\mathcal {H}}}
+    \newcommand{\CI}{{\mathcal {I}}} \newcommand{\CJ}{{\mathcal {J}}}
+    \newcommand{\CK}{{\mathcal {K}}} \newcommand{\CL}{{\mathcal {L}}}
+    \newcommand{\CM}{{\mathcal {M}}} \newcommand{\CN}{{\mathcal {N}}}
+    \newcommand{\CO}{{\mathcal {O}}} \newcommand{\CP}{{\mathcal {P}}}
+    \newcommand{\CQ}{{\mathcal {Q}}} \newcommand{\CR}{{\mathcal {R}}}
+    \newcommand{\CS}{{\mathcal {S}}} \newcommand{\CT}{{\mathcal {T}}}
+    \newcommand{\CU}{{\mathcal {U}}} \newcommand{\CV}{{\mathcal {V}}}
+    \newcommand{\CW}{{\mathcal {W}}} \newcommand{\CX}{{\mathcal {X}}}
+    \newcommand{\CY}{{\mathcal {Y}}} \newcommand{\CZ}{{\mathcal {Z}}}
+
+
+    \newcommand{\RA}{{\mathrm {A}}} \newcommand{\RB}{{\mathrm {B}}}
+    \newcommand{\RC}{{\mathrm {C}}} \newcommand{\RD}{{\mathrm {D}}}
+    \newcommand{\RE}{{\mathrm {E}}} \newcommand{\RF}{{\mathrm {F}}}
+    \newcommand{\RG}{{\mathrm {G}}} \newcommand{\RH}{{\mathrm {H}}}
+    \newcommand{\RI}{{\mathrm {I}}} \newcommand{\RJ}{{\mathrm {J}}}
+    \newcommand{\RK}{{\mathrm {K}}} \newcommand{\RL}{{\mathrm {L}}}
+    \newcommand{\RM}{{\mathrm {M}}} \newcommand{\RN}{{\mathrm {N}}}
+    \newcommand{\RO}{{\mathrm {O}}} \newcommand{\RP}{{\mathrm {P}}}
+    \newcommand{\RQ}{{\mathrm {Q}}} \newcommand{\RR}{{\mathrm {R}}}
+    \newcommand{\RS}{{\mathrm {S}}} \newcommand{\RT}{{\mathrm {T}}}
+    \newcommand{\RU}{{\mathrm {U}}} \newcommand{\RV}{{\mathrm {V}}}
+    \newcommand{\RW}{{\mathrm {W}}} \newcommand{\RX}{{\mathrm {X}}}
+    \newcommand{\RY}{{\mathrm {Y}}} \newcommand{\RZ}{{\mathrm {Z}}}
+
+    \newcommand{\fa}{{\mathfrak{a}}} \newcommand{\fb}{{\mathfrak{b}}}
+    \newcommand{\fc}{{\mathfrak{c}}} \newcommand{\fd}{{\mathfrak{d}}}
+    \newcommand{\fe}{{\mathfrak{e}}} \newcommand{\ff}{{\mathfrak{f}}}
+    \newcommand{\fg}{{\mathfrak{g}}} \newcommand{\fh}{{\mathfrak{h}}}
+    \newcommand{\fii}{{\mathfrak{i}}} \newcommand{\fj}{{\mathfrak{j}}}
+    \newcommand{\fk}{{\mathfrak{k}}} \newcommand{\fl}{{\mathfrak{l}}}
+    \newcommand{\fm}{{\mathfrak{m}}} \newcommand{\fn}{{\mathfrak{n}}}
+    \newcommand{\fo}{{\mathfrak{o}}} \newcommand{\fp}{{\mathfrak{p}}}
+    \newcommand{\fq}{{\mathfrak{q}}} \newcommand{\fr}{{\mathfrak{r}}}
+    \newcommand{\fs}{{\mathfrak{s}}} \newcommand{\ft}{{\mathfrak{t}}}
+    \newcommand{\fu}{{\mathfrak{u}}} \newcommand{\fv}{{\mathfrak{v}}}
+    \newcommand{\fw}{{\mathfrak{w}}} \newcommand{\fx}{{\mathfrak{x}}}
+    \newcommand{\fy}{{\mathfrak{y}}} \newcommand{\fz}{{\mathfrak{z}}}
+     \newcommand{\fA}{{\mathfrak{A}}} \newcommand{\fB}{{\mathfrak{B}}}
+    \newcommand{\fC}{{\mathfrak{C}}} \newcommand{\fD}{{\mathfrak{D}}}
+    \newcommand{\fE}{{\mathfrak{E}}} \newcommand{\fF}{{\mathfrak{F}}}
+    \newcommand{\fG}{{\mathfrak{G}}} \newcommand{\fH}{{\mathfrak{H}}}
+    \newcommand{\fI}{{\mathfrak{I}}} \newcommand{\fJ}{{\mathfrak{J}}}
+    \newcommand{\fK}{{\mathfrak{K}}} \newcommand{\fL}{{\mathfrak{L}}}
+    \newcommand{\fM}{{\mathfrak{M}}} \newcommand{\fN}{{\mathfrak{N}}}
+    \newcommand{\fO}{{\mathfrak{O}}} \newcommand{\fP}{{\mathfrak{P}}}
+    \newcommand{\fQ}{{\mathfrak{Q}}} \newcommand{\fR}{{\mathfrak{R}}}
+    \newcommand{\fS}{{\mathfrak{S}}} \newcommand{\fT}{{\mathfrak{T}}}
+    \newcommand{\fU}{{\mathfrak{U}}} \newcommand{\fV}{{\mathfrak{V}}}
+    \newcommand{\fW}{{\mathfrak{W}}} \newcommand{\fX}{{\mathfrak{X}}}
+    \newcommand{\fY}{{\mathfrak{Y}}} \newcommand{\fZ}{{\mathfrak{Z}}}
+
+
+
+
+
+
+    \newcommand{\ab}{{\mathrm{ab}}}\newcommand{\Ad}{{\mathrm{Ad}}}
+    \newcommand{\ad}{{\mathrm{ad}}}\newcommand{\al}{{\mathrm{al}}}
+    \newcommand{\alg}{{\mathrm{alg}}}\newcommand{\Ann}{{\mathrm{Ann}}}
+    \newcommand{\Aut}{{\mathrm{Aut}}}\newcommand{\Ar}{{\mathrm{Ar}}}
+     \newcommand{\Asai}{{\mathrm{Asai}}}
+    \newcommand{\AI}{{\mathrm{AI}}}\newcommand{\Alb}{{\mathrm{Alb}}}
+    \newcommand{\Art}{{\mathrm{Art}}} \newcommand{\bij}{{\mathrm{bij}}}
+    \newcommand{\Br}{{\mathrm{Br}}}\newcommand{\BBC}{{\mathrm{BC}}}
+    \newcommand{\Char}{{\mathrm{Char}}}\newcommand{\cf}{{\mathrm{cf}}}
+    \newcommand{\Ch}{{\mathrm{Ch}}}\newcommand{\cod}{{\mathrm{cod}}}
+    \newcommand{\cts}{{\mathrm{cts}}}
+    \newcommand{\cond}{\mathrm{cond^r}}\newcommand{\Cond}{{\mathrm{Cond}}}
+    \newcommand{\cont}{{\mathrm{cont}}}\newcommand{\cris}{{\mathrm{cris}}}
+    \newcommand{\corank}{{\mathrm{corank}}}
+    \newcommand{\Cor}{{\mathrm{Cor}}}\newcommand{\cl}{{\mathrm{cl}}}
+    \newcommand{\Cl}{{\mathrm{Cl}}}\newcommand{\can}{{\mathrm{can}}}
+    \newcommand{\codim}{{\mathrm{codim}}}\newcommand{\Coker}{{\mathrm{Coker}}}
+    \newcommand{\coker}{{\mathrm{coker}}}\newcommand{\cyc}{{\mathrm{cyc}}}
+    \newcommand{\dR}{{\mathrm{dR}}}\newcommand{\depth}{{\mathrm{depth}}}
+    \newcommand{\disc}{{\mathrm{disc}}}\newcommand{\Deg}{{\mathrm{Deg}}}
+    \newcommand{\Def}{{\mathrm{Def}}}\newcommand{\der}{{\mathrm{der}}}
+    \newcommand{\Det}{{\mathrm{Det}}}
+    \newcommand{\diag}{{\mathrm{diag}}}
+    \newcommand{\Div}{{\mathrm{Div}}} \renewcommand{\div}{{\mathrm{div}}}
+    \newcommand{\End}{{\mathrm{End}}} \newcommand{\Eis}{{\mathrm{Eis}}}
+    \newcommand{\Ell}{{\mathrm{Ell}}}\newcommand{\Error}{{\mathrm{Errr}}}
+    \newcommand{\Frac}{{\mathrm{Frac}}}\newcommand{\Fr}{{\mathrm{Fr}}}
+    \newcommand{\Frob}{{\mathrm{Frob}}} \newcommand{\fin}{{\mathrm{fin}}}
+    \newcommand{\forget}{{\mathrm{forget}}}  \newcommand{\GOl}{{\mathrm{GO}}}
+    \newcommand{\Grossen}{{\mathrm{Grossen}}}
+    \newcommand{\Gal}{{\mathrm{Gal}}} \newcommand{\GL}{{\mathrm{GL}}}
+    \newcommand{\Groth}{{\mathrm{Groth}}}\newcommand{\GSp}{{\mathrm{GSp}}}
+    \newcommand{\Hg}{{\mathrm{Hg}}}\newcommand{\Hom}{{\mathrm{Hom}}}
+    \newcommand{\height}{{\mathrm{ht}}}\newcommand{\Hol}{{\mathrm{Hol}}}
+    \newcommand{\id}{{\mathrm{id}}}\renewcommand{\Im}{{\mathrm{Im}}}
+    \newcommand{\Ind}{{\mathrm{Ind}}}\newcommand{\GO}{{\mathrm{GO}}}
+    \newcommand{\Irr}{{\mathrm{Irr}}}\newcommand{\irred}{{\mathrm{irred}}}
+    \newcommand{\inv}{{\mathrm{inv}}}\newcommand{\Isom}{{\mathrm{Isom}}}
+     \newcommand{\JL}{{\mathrm{JL}}}
+    \newcommand{\Jac}{{\mathrm{Jac}}}\newcommand{\Ker}{{\mathrm{Ker}}}
+    \newcommand{\KS}{{\mathrm{KS}}}\newcommand{\length}{{\mathrm{length}}}
+    \newcommand{\Lie}{{\mathrm{Lie}}}\newcommand{\LT}{{\mathrm{LT}}}
+    \newcommand{\loc}{{\mathrm{loc}}}
+    \newcommand{\mult}{{\mathrm{mult}}}\newcommand{\Meas}{{\mathrm{Meas}}}
+    \newcommand{\Mor}{{\mathrm{Mor}}}\newcommand{\Mp}{{\mathrm{Mp}}}
+    \newcommand{\new}{{\mathrm{new}}} \newcommand{\NS}{{\mathrm{NS}}}
+    \newcommand{\NT}{{\mathrm{NT}}} \newcommand{\old}{{\mathrm{old}}}
+    \newcommand{\op}{{\mathrm{op}}}
+    \newcommand{\ord}{{\mathrm{ord}}} \newcommand{\rank}{{\mathrm{rank}}}
+    \newcommand{\PGL}{{\mathrm{PGL}}} \newcommand{\Pic}{\mathrm{Pic}}
+    \newcommand{\pr}{{\mathrm{pr}}}
+    \newcommand{\Proj}{{\mathrm{Proj}}}\newcommand{\PSL}{{\mathrm{PSL}}}
+    \renewcommand{\mod}{\ \mathrm{mod}\ }\renewcommand{\Re}{{\mathrm{Re}}}
+    \newcommand{\Rep}{{\mathrm{Rep}}}\newcommand{\rec}{{\mathrm{rec}}}
+    \newcommand{\ram}{{\mathrm{ram}}}\newcommand{\Rings}{{\mathrm{Rings}}}
+    \newcommand{\rel}{{\mathrm{rel}}}
+    \newcommand{\red}{{\mathrm{red}}}\newcommand{\Rat}{{\mathrm{Rat}}}
+    \newcommand{\reg}{{\mathrm{reg}}}\newcommand{\Res}{{\mathrm{Res}}}
+    \newcommand{\Sel}{{\mathrm{Sel}}} \newcommand{\Sch}{{\mathrm{Sch}}}
+    \newcommand{\sep}{{\mathrm{sep}}}\newcommand{\sh}{{\mathrm{sh}}}
+    \newcommand{\st}{{\mathrm{st}}}\newcommand{\str}{{\mathrm{str}}}
+    \newcommand{\supp}{{\mathrm{supp}}}
+    \newcommand{\Sh}{{\mathrm{Sh}}}\newcommand{\Sets}{{\mathrm{Sets}}}
+    \newcommand{\sign}{{\mathrm{sign}}}\renewcommand{\ss}{{\mathrm{ss}}}
+    \newcommand{\Sim}{{\mathrm{Sim}}}\newcommand{\SL}{{\mathrm{SL}}}
+    \newcommand{\Spec}{{\mathrm{Spec}}} \newcommand{\Spf}{{\mathrm{Spf}}}
+    \newcommand{\SO}{{\mathrm{SO}}}\newcommand{\Sp}{{\mathrm{Sp}}}
+    \newcommand{\St}{{\mathrm{St}}}\newcommand{\SU}{{\mathrm{SU}}}
+    \newcommand{\Sym}{{\mathrm{Sym}}}\newcommand{\sgn}{{\mathrm{sgn}}}
+    \newcommand{\Stab}{{\mathrm{Stab}}}\newcommand{\Symb}{{\mathrm{Symb}}}
+    \newcommand{\Symm}{{\mathrm{Symm}}}\newcommand{\Tate}{{\mathrm{Tate}}}
+    \newcommand{\Tgt}{{\mathrm{Tgt}}}  \newcommand{\Supp}{{\mathrm{Supp}}}
+    \newcommand{\tr}{{\mathrm{tr}}}\newcommand{\tor}{{\mathrm{tor}}}
+    \newcommand{\RTr}{{\mathrm{Tr}}}\newcommand{\univ}{{\mathrm{univ}}}
+    \newcommand{\ur}{{\mathrm{ur}}}\newcommand{\val}{{\mathrm{val}}}
+    \newcommand{\Vol}{{\mathrm{Vol}}}\newcommand{\vol}{{\mathrm{vol}}}
+    \newcommand{\Vect}{{\mathrm{Vect}}}\newcommand{\Ver}{{\mathrm{Ver}}}
+    \newcommand{\WD}{{\mathrm{WD}}}\newcommand{\Pet}{{\mathrm{Pet}}}
+    \newcommand{\GSO}{{\mathrm{GSO}}}
+    \newcommand{\Int}{{\mathrm{Int}}}
+    \newcommand{\uG}{{\underline{G}}}
+    \newcommand{\xr}{{\xrightarrow}}
+        \newcommand{\Imag}{{\mathrm{Imag}}}
+ \newcommand{\cha}{{\mathrm{char}}}
+ \newcommand{\Nm}{{\mathrm{Nm}}}
+
+\newcommand{\matrixx}[4]{\begin{pmatrix}
+#1 & #2 \ #3 & #4
+\end{pmatrix} }        % 2*2 matrix
+
+    \font\cyr=wncyr10
+
+    \newcommand{\Sha}{\hbox{\cyr X}}\newcommand{\wt}{\widetilde}
+    \newcommand{\wh}{\widehat}
+    \newcommand{\pp}{\frac{\partial\bar\partial}{\pi i}}
+    \newcommand{\pair}[1]{\langle {#1} \rangle}
+    \newcommand{\intn}[1]{\left( {#1} \right)}
+    \newcommand{\norm}[1]{\|{#1}\|} \newcommand{\sfrac}[2]{\left( \frac {#1}{#2}\right)}
+    \newcommand{\ds}{\displaystyle}\newcommand{\ov}{\overline}
+    \newcommand{\incl}{\hookrightarrow}
+    \newcommand{\sk}{\medskip}\newcommand{\bsk}{\bigskip}
+    \newcommand{\lra}{\longrightarrow}\newcommand{\lla}{\longleftarrow}
+    \newcommand{\ra}{\rightarrow} \newcommand{\imp}{\Longrightarrow}
+    \newcommand{\lto}{\longmapsto}\newcommand{\bs}{\backslash}
+    \newcommand{\nequiv}{\equiv\hspace{-10pt}/\ }
+    \newcommand{\s}{\sk\noindent}\newcommand{\bigs}{\bsk\noindent}
+\newcommand{\LL}[1]{L^\alg(E^{(#1)}, 1)}
+
+
+    \theoremstyle{plain}
+    %\renewcommand{\thechapter}{\Roman{chapter}}
+    \newtheorem{thm}{Theorem}[section] \newtheorem{cor}[thm]{Corollary}
+    \newtheorem{lem}[thm]{Lemma}  \newtheorem{prop}[thm]{Proposition}
+    \newtheorem {conj}[thm]{Conjecture} \newtheorem{defn}[thm]{Definition}
+    \newtheorem{condition}[thm]{Condition}
+\newtheorem{fact}[thm]{Fact}
+
+
+\theoremstyle{remark} \newtheorem{remark}[thm]{Remark}
+\theoremstyle{remark} \newtheorem{exercise}{Exercise}
+\theoremstyle{remark} \newtheorem{example}{Example}
+
+    %accented words
+    \newcommand{\Neron}{N\'{e}ron~}\newcommand{\adele}{ad\'{e}le~}
+    \newcommand{\Adele}{Ad\'{e}le~}\newcommand{\adeles}{ad\'{e}les~}
+    \newcommand{\idele}{id\'{e}le~}\newcommand{\Idele}{Id\'{e}le~}
+    \newcommand{\ideles}{id\'{e}les~}\newcommand{\etale}{\'{e}tale~}
+    \newcommand{\et}{\'{e}t}
+    \newcommand{\Poincare}{Poincar\'{e}~}\renewcommand{\et}{{\text{\'{e}t}}}
+    \renewcommand{\theequation}{\arabic{equation}}
+    \numberwithin{equation}{section}
+
+    \newcommand{\Gm}{\BG_\mathrm{m}}
+    \newcommand{\OB}{\mathrm{OB}}
+    \newcommand{\sat}{\mathrm{sat}}
+      \newcommand{\Mot}{\mathrm{Mot}}
+    \newcommand{\cusp}{\mathrm{cusp}}
+       \newcommand{\Sgn}{\mathrm{Sgn}}
+%\textwidth 140mm\textheight 210mm \topmargin -15mm
+ %\oddsidemargin 0mm
+ %\evensidemargin 0mm
+
+    \newcommand{\cSch}{{\mathsf{Sch}}}
+    \newcommand{\cSht}{{\mathsf{Sht}}}
+    \newcommand{\Corr}{{\mathsf{Corr}}}
+    \newcommand{\Fix}{{\mathrm{Fix}}}
+    \newcommand{\ch}{{\mathrm{ch}}}
+    \newcommand{\Gr}{{\mathrm{Gr}}}
+    \newcommand{\Vt}{{\mathrm{Vec}}}
+\begin{document}
+
+\title{Main conjectures for non-CM elliptic curves at good ordinary primes}
+\author{Xiaojun Yan}
+\address{Academy of Mathematics and Systems Science,
+Chinese Academy of Sciences,
+Beijing
+100190, China.}
+\email{xjyan95@amss.ac.cn}
+
+\author{Xiuwu Zhu}
+\address{Beijing Institute of Mathematical Sciences and Applications, Beijing 101408, China.}
+\address{Department of Mathematics and Yau Mathematical Sciences Center, Tsinghua University;}
+\email{xwzhu@bimsa.cn}
+
+
+\begin{abstract}
+Let $E/\BQ$ be an elliptic curve and $p > 2$ be a prime of good ordinary reduction for $E$.
+Assume that the residue representation associated with $(E, p)$ is irreducible.
+In this paper, we prove more cases on several Iwasawa main conjectures for $E$.
+As applications, we prove more general cases of $p$-converse theorem and $p$-part BSD formula when the rank is less than or equal to $1$.
+\end{abstract}
+%\keywords{ellptic curve, Iwasawa main conjecture}
+
+\maketitle
+\tableofcontents
+\section{Introduction}
+Let $E$ be an elliptic curve over $\BQ$. 
+Fix an odd prime $p$ and embeddings $\iota_p:\bar{\BQ}\hookrightarrow\bar{\BQ}_p$, $\iota_\infty:\bar{\BQ}\hookrightarrow\BC$. 
+Let $T_pE$ be the $p$-adic Tate module and $\rho_E:G_\BQ\ra \Aut_{\BZ_p}(T_pE)$  the associated $p$-adic Galois representation.
+Suppose that $E$ has good ordinary reduction at $p$.
+%  and that the residue representation $\bar{\rho}_{E}:G_\BQ\rightarrow \Aut(E[p])$ is irreducible.
+
+Let $K$ be an imaginary quadratic field. 
+Suppose that $p=\fp\bar{\fp}$ splits in $K$, where $\fp$ is the prime induced by $\iota_p$. 
+Let $K_\infty^+$, $K^-_\infty$ be the cyclotomic, respectively, anticyclotomic $\BZ_p$-extension of $K$, and $K_\infty=K_\infty^+ K_\infty^-$. 
+Then we have the Iwasawa algebras
+\[\Lambda^\pm_K=\BZ_p[[\Gal(K_\infty^\pm/K)]],\quad \Lambda_K=\BZ_p[[\Gal(K_\infty/K)]].\]
+
+
+% Let $\Sigma$ be a (hence any) finite set of places of $K$ containing $\{v|N\infty\}$ and disjoint with $\{v|p\}$. 
+As in Castella-Grossi-Skinner \cite{CGS}, we have
+\begin{enumerate}
+    \item the two-variable $p$-adic $L$-function $\CL_p^\mathrm{PR}(E/K)\in \Lambda_K$, which interpolates $L(E/K,\chi^{-1},1)$ for finite order characters $\chi$ of $\Gal(K_\infty/K)$.
+    % , and $\CL_p^{PR,\Sigma}(E/K)$ is the $\CL_p^\mathrm{PR}(E/K)$ with Euler factor at $\Sigma$ removed.
+    
+    \item the $\Lambda_K$-module Selmer group ${H^1_{\CF_{\ord}}}(K,T_pE\otimes\Lambda_K^\vee)$ with ordinary Selmer conditions at $v|p$,
+    % and relaxed Selmer conditions at $v\in \Sigma$ , 
+    where $(\cdot)^\vee$ is the Pontryagin dual.
+\end{enumerate}
+Also, we have
+\begin{enumerate}
+    \item another type two-variable $p$-adic $L$-function $\CL_p^{\Gr}(E/K)\in \Lambda_K^{\ur}:=\Lambda_K\widehat{\otimes}_{\BZ_p}\BZ_p^\ur$, which  interpolates roughly $L(E/K,\chi,1)$ for $\chi$ Hecke characters over $K$ with infinity type $(b,a)$, $a\leq -1$, $b\geq 1$, where $\BZ_p^\ur$ is the completion of the ring of integers of the maximal unramified extension of $\BQ_p$.
+    
+    \item the $\Lambda_K$-module Selmer group $H^1_{\CF_{\Gr}}(K,T_pE\otimes\Lambda_K^\vee)$ with relaxed Selmer conditions at $v=\fp$ and strict Selmer conditions at $v=\bar{\fp}$.
+\end{enumerate}
+
+\begin{conj}\label{mainconj}
+    Suppose that the residue representation $\ov{\rho}_E|_{G_K}$ is irreducible. 
+    \begin{enumerate}
+        \item $H^1_{\CF_{\ord}}(K,T_pE\otimes\Lambda_K^\vee)^\vee$ is $\Lambda_K$-torsion and
+        \begin{equation*}
+            \Char_{\Lambda_K}(H^1_{\CF_{\ord}}(K,T_pE\otimes\Lambda_K^\vee)^\vee)=(\CL_p^\mathrm{PR}(E/K)).
+        \end{equation*}
+        \item $H^1_{\CF_{\Gr}}(K,T_pE\otimes\Lambda_K^\vee)^\vee$ is $\Lambda_K$-torsion and
+        \begin{equation*}
+            \quad\Char_{\Lambda_K}(H^1_{\CF_{\Gr}}(K,T_pE\otimes\Lambda_K^\vee)^\vee)\Lambda_K^{\ur}=(\CL_p^{\Gr}(E/K)).
+        \end{equation*}
+    \end{enumerate}
+\end{conj}
+\subsection{Main result}
+
+\begin{thm}\label{mainthm}
+    If the Heegner hypothesis holds (in particular, $\sign(E/K)=-1$) and $\ov{\rho}_E|_{G_K}$ is absolutely irreducible, then 
+    \begin{enumerate}
+        \item $H^1_{\CF_{\ord}}(K,T_pE\otimes\Lambda_K^\vee)^\vee$ is $\Lambda_K$-torsion and
+        \begin{equation*}
+            \Char_{\Lambda_K}(H^1_{\CF_{\ord}}(K,T_pE\otimes\Lambda_K^\vee)^\vee)\subset(\CL_p^\mathrm{PR}(E/K)).
+        \end{equation*}
+        \item $H^1_{\CF_{\Gr}}(K,T_pE\otimes\Lambda_K^\vee)^\vee$ is $\Lambda_K$-torsion and
+        \begin{equation*}
+            \Char_{\Lambda_K}(H^1_{\CF_{\Gr}}(K,T_pE\otimes\Lambda_K^\vee)^\vee)\Lambda_K^{\ur}\subset(\CL_p^{\Gr}(E/K)).
+        \end{equation*}
+    \end{enumerate}
+    Moreover, if 
+    \begin{equation}\tag{Im}\label{Imag}
+        \text{there exists }\tau\in \Gal(\ov{\BQ}/\BQ(\mu_{p^\infty})) \text{ such that } T_pE/(\rho_{E}(\tau)-1)T_pE\text{ is free of $\BZ_p$-rank one}
+    \end{equation}
+    holds, the Conjecture \ref{mainconj} is true.
+\end{thm}
+
+
+
+% \begin{remark}
+% Skinner-Urban \cite{skinner2014iwasawa} first prove Conjecture 1.1(1) under some condition. In particular, they assume sign is +1.
+% They Use Eisenstein congruence on $GU(2,2)$.
+
+% Wan \cite{Wan1} first prove Conjecture 1.1(2) under some condition。
+% In particular, he assume the sign is -1 and $E$ is semi-stable.
+% He Use Eisenstein congruence on $GU(3,1)$.
+
+% Our proof base on Skinner-Urban's results. 
+% Our results partially cover Wan's results.
+% However, Wan's method can be applied to supersingular case, see \cite{CLW}.
+
+% \end{remark}
+
+Skinner-Urban \cite{skinner2014iwasawa}  first proved Conjecture \ref{mainconj} (1)  used Eisenstein congruences on $GU(2,2)$ under certain conditions; particularly under the assumption that the sign is $+1$.
+Wan \cite{Wan1,Wan} proved Conjecture \ref{mainconj} (2) using Eisenstein congruences on $GU(3,1)$ under different conditions, specifically under the assumption that the sign is $-1$ and $E$ is semistable. 
+In \cite{BSTW}, using the Beilinson-Flach elements and explicit reciprocity law, Burungale-Skinner-Tian-Wan  proved the equivalence between Conjecture \ref{mainconj} (1) and \ref{mainconj} (2). 
+
+In this paper, our proof of Theorem \ref{mainthm} is based on Skinner-Urban's work and a simple observation. 
+The other ingredients are the equivalence of Conjecture \ref{mainconj} (1) and \ref{mainconj} (2),  and Hsieh's result on non-vanishing of the $\mu$-invariants of BDP $p$-adic $L$-function \cite{hsieh2014special}. 
+
+We observe that, Skinner-Urban actually proved that the left-hand side of Conjecture \ref{mainconj} (1) is contained in right-hand side, after tensoring the fractional field of $\Lambda_K^+.$
+By \cite{BSTW},  this shows that the left hand side of Conjecture \ref{mainconj} (2) is contained in the right hand side, after tensoring the fractional field of $\Lambda_K^+.$
+Therefore, by \cite{hsieh2014special}, if the Heegner hypothesis holds, the inclusion relation in Conjecture \ref{mainconj} (2) holds in general.
+% Therefore, by \cite{hsieh2014special}, if the Heegner hypothesis holds, then we have that the inclusion $\subset$ in Conjecture \ref{mainconj} (2) holds. 
+Then as \cite{skinner2014iwasawa}, by using Kato's result on Mazur's main conjecture \cite{Kato}, we could complete the proof under the condition $(\ref{Imag})$.
+% \begin{remark}
+%     Wan's method can also be applied to the supersingular case, as discussed in \cite{CLW}.
+% \end{remark} 
+
+\begin{remark}
+Recently, using Wan's results on main conjecture for Hilbert modular forms \cite{wan14} and the base change method, Burungale-Castella-Skinner \cite{burungale2024base} proved the rational version
+% (i.e., equality holds after $\otimes \BQ_p$) 
+of Conjecture \ref{mainconj} assuming $p>3$ and $\bar{\rho}_E$ is irreducible, and the integral version if $(\ref{Imag})$ also holds. 
+Their results don't cover ours, nor do ours cover theirs.
+\end{remark}
+
+As an application, we prove more cases of several one variable main conjectures, the $p$-part of the BSD formula and the $p$-converse theorem.
+
+\begin{cor}
+Let $E/\BQ$ be an elliptic curve of conductor $N$, $p\nmid 2N$ a prime. 
+Assume that $E$ has ordinary reduction at $p$, if $r\leq 1$, the following are equivalent
+    \begin{enumerate}
+        \item $\corank_{\BZ_p}\Sel_{p^\infty}(E/\BQ)=r$,
+        \item $\ord_{s=1}L(E/\BQ,s)=r$.
+    \end{enumerate}
+Under any of the above conditions, if (\ref{Imag}) also holds, then the $p$-part of the BSD formula for $E$ holds.
+\end{cor}
+\begin{remark}
+There have been several works on the $p$-part of the BSD formula and the $p$-converse theorem for elliptic curves.  
+For example, in our case, see \cite{skinner2014iwasawa}, \cite{zhang2014selmer}, \cite{JSW}, \cite{BSTW}, \cite{burungale2024base} for some previous works on $p$-part BSD formula, and \cite{skinner2020converse}, \cite{zhang2014selmer}, \cite{BSTW}, \cite{burungale2023non} for some previous works on $p$-converse theorem.
+\end{remark}
+
+\subsection{Strategy}
+% \begin{itemize}
+%     \item Divisibility (I): Selmer bound $\CL_p^{\mathrm{BDP}}$
+%     \begin{itemize}
+%       \item One divisibility of Main conjecture of Skinner-Urban (Rational version) (Thm 7.7 of \cite{skinner2014iwasawa})
+% \item Equivalence between two variable Greenberg main conjecture and the Main conjecture of Skinner-Urban (Prop. 3.2.1 of \cite{CGS}) (Rational version)
+%  \item Equivalence between (anticyclotomic) Greenberg main conjecture and Heegner point main conjecture. (Rational version) (Thm 5.2 of \cite{BCK})
+%     \end{itemize}
+%     \item Divisibility (II): $\CL_p^{\mathrm{BDP}}$ bound Selmer (Thm A, Thm B \cite{Howard})
+% \end{itemize}
+% By \cite[Proposition 3.2.1]{CGS} or \cite{BSTW}, using Beilinson-Flach elements and reciprocity law to relates different Main conjecture, we have that the inclusion relation (and opposite sides) of Theorem \ref{mainthm}(1) and (2) are equivalent.
+By \cite[Proposition 3.2.1]{CGS} or \cite[Proposition 9.18]{BSTW}, the use of Beilinson-Flach elements, combined with the reciprocity law, establishes a connection between different Main Conjectures. 
+Consequently, the inclusion relations (and their opposites) in Theorem \ref{mainthm} (1) and (2) are shown to be equivalent.
+
+By Skinner-Urban \cite{skinner2014iwasawa}, especially Theorem 7.7 and Proposition 13.6 (1), we have
+
+\begin{thm}\label{skinner2014iwasawa}
+    Suppose that the residue representation $\bar{\rho}_{E}:G_\BQ\rightarrow \Aut(E[p])$ is irreducible. Then for any height one prime $P$, 
+    \[\ord_P(\Char_{\Lambda_K}{H^1_{\CF_{\ord}}}(K,T_pE\otimes\Lambda_K^\vee)^\vee)\geq\ord_P (\CL_p^{PR}(E/K))\]
+    unless $P=P^+\Lambda_K$ for some $P^+\subset \Lambda^+_K$.
+\end{thm}
+
+Similarly, as \cite[Proposition 3.2.1]{CGS}, we have 
+
+\begin{thm}\label{Gr}
+    Under the assumption of above theorem, we have that for any height one prime $P$, 
+    \[\ord_P(\Char_{\Lambda_K^{\ur}}{H^1_{\CF_\Gr}}(K,T_pE\otimes\Lambda_K^\vee)^\vee)\geq\ord_P (\CL_p^\Gr(E/K))\]
+    unless $P=P^+\Lambda_K^{\ur}$ for some $P^+\subset \Lambda^{\ur,+}_K$.
+\end{thm}
+
+However, by the result on the $\mu$-invariant of the BDP $p$-adic $L$-function \cite{hsieh2014special}, we have that if $P\subset \Lambda_K^{\ur}$ is a height one primes of the form
+$P=P^+\Lambda_K^{\ur}$ for some $P^+\subset \Lambda_K^{\ur,+}$, then
+\[\ord_P (\CL_p^\Gr(E/K))=0.\]
+Hence, Theorem \ref{mainthm} (2) holds, implying that Theorem \ref{mainthm} (1) also holds. 
+Moreover, if (\ref{Imag}) is satisfied, then, similarly to \cite[Theorem 3.30]{skinner2014iwasawa}, we conclude that Conjecture \ref{mainconj} (2) is true, and consequently, so is Conjecture \ref{mainconj} (1).
+
+
+
+
+% \begin{proof}[Sketch of proof]
+%     Let $\CL_p^{Gr,-}(E/K)\in\Lambda_K^{\ur,-}$ be the projection of $\CL_p^\Gr(E/K)$. Then under our assumption, $\CL_p^{Gr,-}(E/K)\neq 0$.
+
+%     Let $\{P_1,\cdots,P_n\}$ be the set of height one primes of $\Lambda_K^{\ur}$ such that $\ord_{P_i}(\CL_p^{\Gr}(E/K))>0$ and that $P_i=P_i^+\Lambda_K^{\ur}$ for some $P_i^+\subset\Lambda_K^{+,\ur}$. Then $P_i^+\not\subset T_+\Lambda_K^{\ur}$. Choose $h_i\in P_i^+ \backslash T_+\Lambda_K^{\ur}$, and let $S$ be the multiplicative set generated by $\{h_i:i=1\dots,n\}$. Then by Theorem \ref{Gr},
+%     \[\ord_P(S^{-1}\Char_{\Lambda_K^{\ur}}{H^1_{\CF_{\Gr}}}(K,T_pE\otimes\Lambda_K^\vee)^\vee)\geq\ord_P (\CL_p^{\Gr}(E/K))\] 
+%     for any height one prime $P$ of $S^{-1}\Lambda^{\ur}_K$. Now, by decent along $\Lambda^{\ur}_K\rightarrow \Lambda^{\ur,-}_K$, Castella-Grossi-Skinner's work on Heegner point main conjecture (\cite[Theorem 5.5.2]{CGS})  and explicitly law, we complete the proof.
+% \end{proof}
+% \begin{remark}
+%     By the result on $\mu$-invariant of BDP $p$-adic $L$-function (\cite{hsieh2014special}) and Howard's work (or \cite[Proposition 12.7]{BSTW}), we can prove an integral version BDP main conjecture under more conditions.
+% \end{remark}
+
+\subsection{Acknowledgment}
+The authors are grateful to Ye Tian and Wei He for their continuous encouragement and many helpful communications and to Ashay Burungale for his valuable comments.
+
+
+
+\section{Selmer groups}
+Let $K$ be an imaginary quadratic field of discriminant $D_K$.
+Let $p>2$ be a prime such that $p=\fp\bar{\fp}$ splits in $K$.
+Let $\BQ_\infty$ be the $\BZ_p$-extension of $\BQ$. 
+Let $K_\infty$ be the $\BZ_p^2$-extension of $K$, and $K_\infty^+$ (respectively, $K_\infty^-$) be the cyclotomic (respectively, anticyclotomic) $\BZ_p$-extension of $K$. 
+Let 
+$$\Gamma_\BQ:=\Gal(\BQ_\infty/\BQ),\quad \Gamma_K:=\Gal(K_\infty/K),\quad\Gamma_K^\pm:=\Gal(K_\infty^\pm/K).$$
+Then $\Gal(K_\infty^+/K)$ is identified with $\Gal(\BQ_\infty/\BQ)$.
+Let $\gamma^\pm$ be a topological generator of $\Gamma_K^\pm$.
+Let 
+\[\Lambda_\BQ:=\BZ_p[[\Gamma_\BQ]],\quad \Lambda_K:=\BZ_p[[\Gamma_K]],\quad \Lambda_K^\pm:=\BZ_p[[\Gamma_K^\pm]]\]
+be the corresponding Iwasawa algebras, and 
+$$\varepsilon_\BQ:G_\BQ\twoheadrightarrow\Gamma_\BQ\hookrightarrow\Lambda_\BQ^{\times},\,\quad \varepsilon_K:G_K\twoheadrightarrow\Gamma_K\hookrightarrow\Lambda_K^{\times},\,\quad \varepsilon_{K,\pm}:G_K\twoheadrightarrow\Gamma_{K}^\pm\hookrightarrow\Lambda_K^{\pm,\times}$$
+the natural characters.
+For a discrete $\BZ_p$-module $M$, let $M^\vee:=\Hom_{\cts}(M,\BQ_p/\BZ_p)$ be its Pontryagin dual. 
+The module $\Lambda_\BQ^\vee$ is equipped with a $G_\BQ$-action via $\varepsilon_\BQ^{-1}$. 
+Similarly, the modules $\Lambda_K^\vee$ and $\Lambda_K^{\pm,\vee}$ are equipped with $G_K$-actions.
+% We use arithmetic Frobenius to normalize the reciprocity map of class field theory so that uniformizers get mapped to arithmetic Frobenius element, and by which we identify Hecke characters and Galois characters.
+
+We normalize the reciprocity map in class field theory using the arithmetic Frobenius. 
+Specifically, we require that uniformizers are mapped to the arithmetic Frobenius via the reciprocity map. 
+In this way, we identify Hecke characters with Galois characters in this paper.
+
+
+
+
+\subsection{Selmer groups for Iwasawa algebras}
+Let $E/\BQ$ be an elliptic curve of conductor $N$ prime to $D_K$.
+Assume that $E$ has good ordinary reduction at $p$.
+\subsubsection*{Discrete Selmer groups}
+Let $F$ be $\BQ$ or $K$, $w$ a prime of $F$ above $p$, and $\BF_w$ the residue field at $w$. 
+Let  $\tilde{E}_{/\BF_w}$ be the reduction of $E$ at $w$, and denote
+$\CF_w^+T_pE:=\ker\left(T_pE\rightarrow T_p\tilde{E}_{/\BF_w}\right)$ as the kernel of the reduction map.
+
+\begin{defn}\label{defn:local-condition}
+    For $\Lambda$ any one of $\Lambda_\BQ, \Lambda_K$ or $\Lambda_K^\pm$,  we define
+    \begin{enumerate}
+       \item $H^1_{\ord}(F_w,T_pE\otimes\Lambda^\vee)=\Im(H^1(F_w,\CF_w^+T_pE\otimes\Lambda^\vee)\rightarrow H^1(F_w,T_pE\otimes\Lambda^\vee))$,
+       
+       \item $H^1_{\rel}(F_w,T_pE\otimes\Lambda^\vee)=H^1(F_w,T_pE\otimes\Lambda^\vee)$,
+       
+       \item $H^1_{\str}(F_w,T_pE\otimes\Lambda^\vee)=0$.
+    \end{enumerate}
+\end{defn}
+
+Let $\Sigma$ be a set of places of $F$ such that $\Sigma$ contains all places of $F$ dividing $pN\infty$. 
+In the anticyclotomic case, assume moreover that every finite place in $\Sigma$ splits in $K$. 
+Let $F_\Sigma$ be the maximal extension of $F$ unramified outside $\Sigma$, and let $G_{F,\Sigma}:=\Gal(F_\Sigma/F)$. 
+ 
+In the case $F=\BQ$,  for $a\in\{\ord, \str, \rel\}$ and $M=T_pE\otimes\Lambda_\BQ^\vee$, 
+let
+\[H^1_{\CF_{a}}(\BQ,M)=\Ker\left(H^1(G_{\BQ,\Sigma},M)\rightarrow \prod_{q\in\Sigma,q\nmid p}H^1(\BQ_q,M)\times \frac{H^1(\BQ_p,M)}{H^1_{a}(\BQ_p,M)}\right),\]
+and define
+\[\CX_{\CF_{a}}(E/\BQ_\infty)=H^1_{\CF_{a}}(\BQ,T_pE\otimes\Lambda_\BQ^\vee)^\vee.\]
+In the case $F=K$, for $a,b\in\{\ord, \str, \rel\}$, $\Lambda\in \{\Lambda_K,\Lambda_K^-,\Lambda_K^+\}$, and $M=T_pE\otimes\Lambda^\vee$, let
+\[H^1_{\CF_{a,b}}(K,M)=\Ker\left(H^1(G_{K,\Sigma},M)\rightarrow \prod_{\fq\in\Sigma,\fq\nmid p}H^1(K_\fq,M)\times \frac{H^1(K_\fp,M)}{H^1_{a}(K_\fp,M)}\times \frac{H^1(K_{\bar{\fp}},M)}{H^1_{b}(K_{\bar{\fp}},M)}\right).\]
+For simplicity, we write
+\begin{enumerate}
+    \item $H^1_{\CF_a}(K,M)=H^1_{\CF_{a,a}}(K,M)$ for $a\in\{\ord, \str, \rel\}$, 
+    \item $H^1_{\Gr}(K,M)=H^1_{\CF_{\rel,\str}}(K,M)$, 
+\end{enumerate}
+And for $a\in\{\ord, \str, \rel, \Gr\}$, we define
+$$\CX_{\CF_{a}}(E/K_\infty)=H^1_{\CF_{a}}(K,T_pE\otimes\Lambda_K^\vee)^\vee,\quad \CX_{\CF_{a}}(E/K^\pm_\infty)=H^1_{\CF_{a}}(K,T_pE\otimes\Lambda_K^{\pm,\vee})^\vee.$$
+% \begin{conj}
+%     \begin{enumerate}
+%         \item $\CX_{\CF_\ord}(E/K_\infty)$ is $\Lambda_K$-torsion and
+%         \[\Char_{\Lambda_K}(\CX_{\CF_\ord}(E/K_\infty))=(\CL_p^\mathrm{PR}(E/K)).\]
+%         \item $\CX_{\CF_\Gr}(E/K_\infty)$ is $\Lambda_K$-torsion and
+%         \[\Char_{\Lambda_K}(\CX_{\CF_\Gr}(E/K_\infty))\Lambda_K^{\ur}=(\CL_p^{\Gr}(E/K)).\]
+%     \end{enumerate}
+% \end{conj}
+
+For any prime $\fq$ of $K$, we denote the inertia subgroup of $G_{K_\fq}$ by $I_\fq$.
+\begin{lem}\label{loc}
+    For any $\fq\nmid p$, 
+    we have
+    \begin{enumerate}
+        \item $H^1(G_{K_\fq}/I_\fq,(T_pE\otimes\Lambda_K^\vee)^{I_\fq})=0$.
+        \item $\Char_{\Lambda_K}((H^1(I_\fq,T_pE\otimes\Lambda_K^\vee)^{G_{K_\fq}})^\vee)=(P_\fq(\varepsilon_K(\Frob_\fq^{-1})))$, 
+        where
+        $$P_\fq(X)=\det\left(1-\Nm(\fq)^{-1}X\cdot\Frob_\fq\mid V_pE^{I_\fq}\right).$$
+    \end{enumerate}
+\end{lem}
+
+\begin{proof}
+    For simplicity, we let $M:=T_pE\otimes\Lambda_{K}^\vee$, $N:=T_pE\otimes\Lambda_{K}$. 
+    Then we have the natural $G_K$-perfect pairing
+    $$M\times N\rightarrow \BQ_p/\BZ_p(1).$$
+    It induces the perfect local Tate pairing
+    $$H^1(K_\fq,M)\times H^1(K_\fq,N)\rightarrow \BQ_p/\BZ_p,\quad \text{for every place } \fq$$
+    via cup product.
+    Let $\fq\nmid p$ be a prime of $K$.
+    Since $G_{K_\fq}/I_\fq=\pair{\Frob_\fq}\simeq\widehat{\BZ}$ has cohomological dimension $1$, we have that under local Tate pairing, $H^1(G_{K_\fq}/I_\fq,N^{I_\fq})$ and $H^1(G_{K_\fq}/I_\fq,M^{I_\fq})$ annihilate each other. 
+    Hence, by the inflation-restriction exact sequence
+    \[0\ra H^1(G_{K_\fq}/I_\fq,N^{I_\fq})\ra H^1(G_{K_\fq},N)\ra H^1(I_\fq,N)^{G_{K_\fq}}\ra 0,\]
+    to prove (1), we only need to prove that $H^1(I_\fq,N)^{G_{K_\fq}}=0$. 
+    Since $\fq\nmid p$, we know that there is a unique closed subgroup $J_\fq$ of $I_\fq$ such that $I_\fq/J_\fq\simeq\BZ_p(1)$ as $\Gal(K_\fq^{\mathrm{ur}}/K_\fq)$-module, and $J_\fq$ has profinite degree prime to $p$. 
+    By the inflation-restriction exact sequence again, we have 
+    $$H^1(I_\fq,N)=H^1(I_\fq/J_\fq,N^{J_\fq}).$$
+    Let $N_0:=T_pE^{J_\fq}$. 
+    Since $\varepsilon_K(I_\fq)=1$, we can find that $N^{J_\fq}=N_0\otimes\Lambda_{K}$. 
+    Let $\sigma_\fq$ be a topological generator of $I_\fq/J_\fq\simeq\BZ_p(1)$. 
+    For any $\phi\in H^1(I_\fq/J_\fq,N_0\otimes\Lambda_{K})^{G_{K_\fq}}$, $g\in G_{K_\fq}$, we have $(g\phi)(\sigma_\fq)=\phi(\sigma_\fq)$. 
+    Hence, there exists an integer $r=r(g)$ (we can assume $r>0$) such that
+    $$g^{-1}\phi(\sigma_\fq)=\phi(g^{-1}\sigma_\fq g)=\phi(\sigma_\fq^r)=(1+\sigma_\fq+\cdots+\sigma_\fq^{r-1})\phi(\sigma_\fq).$$ 
+    Since $\fq$ is not completely split in $K_\infty/K$, and $\varepsilon_K(G_{K_\fq})$ is not trivial, we can choose $g$ such that $\varepsilon_K(g)\neq 1$. 
+    However, since $\varepsilon_K(\sigma_\fq)=1$, it follows that $\phi(\sigma_\fq)=0$ which implies that $H^1(I_\fq,N)^{G_{K_\fq}}=0$.
+
+    Now we prove (2). 
+    As before, we have
+    \[(H^1(I_\fq,M)^{G_{K_\fq}})^\vee\simeq H^1(G_{K_\fq}/I_\fq,N^{I_\fq}).\]
+    Since
+    $$H^1(G_{K_\fq}/I_\fq,N^{I_\fq})\simeq(T_pE^{I_\fq}\otimes\Lambda_{K})/(1-\Frob_\fq^{-1}),$$
+    we have that
+    $$\mathrm{Fitt}_{\Lambda_{K}}((H^1(I_\fq,M)^{G_{K_\fq}})^\vee)=(P_\fq(\varepsilon_K^{-1}(\Frob_\fq)))$$
+    which is principal and therefore divisorial. 
+    However, $\Char_{\Lambda_{K}}((H^1(I_\fq,M)^{G_{K_\fq}})^\vee)$ is the minimal divisorial ideal containing $\mathrm{Fitt}_{\Lambda_{K}}((H^1(I_\fq,M)^{G_{K_\fq}})^\vee)$, hence we have 
+    $$\Char_{\Lambda_{K}}((H^1(I_\fq,M)^{G_{K_\fq}})^\vee)=\mathrm{Fitt}_{\Lambda_{K}}((H^1(I_\fq,M)^{G_{K_\fq}})^\vee)=(P_\fq(\varepsilon_K^{-1}(\Frob_\fq))).$$
+\end{proof}
+
+\begin{lem}\label{bdp_des}
+    The natural $\Lambda_K^-$-module homomorphism
+    \[\CX_{\CF_\Gr}(E/K_\infty)/(\gamma^+-1)\CX_{\CF_\Gr}(E/K_\infty)\rightarrow\CX_{\CF_\Gr}(E/K_\infty^-)\]
+    is pseudo-isomorphism.
+\end{lem}
+
+\begin{proof}
+    By \cite[Proposition 3.1]{Wan} and Lemma \ref{loc} (1) we obtain the desired result. 
+    Note that in our case, every finite place in $\Sigma$ splits in $K$.
+\end{proof}
+
+
+We also consider imprimitive Selmer groups. 
+For $M=T_p E\otimes \Lambda_K^\vee$, we define
+\[H^1_{\CF^\Sigma_{\ord}}(K,M)=\Ker\left(H^1(G_{K,\Sigma},M)\rightarrow \prod_{\fq|p}\frac{H^1(K_{\fq},M)}{H^1_{\ord}(K_{\fq},M)}\right)\]
+and $\CX^{\Sigma}_\ord(E/K_\infty)=H^1_{\CF^\Sigma_{\ord}}(K,M)^\vee$.
+
+
+In the proof of \cite[Lemma 3.16]{skinner2014iwasawa}, the following conclusion is essentially demonstrated.
+
+\begin{lem}
+    $\CX^{\Sigma}_\ord(E/K_\infty)$ is $\Lambda_K$-torsion.
+\end{lem}
+
+Therefore, we have the following corollary.
+
+\begin{cor}\label{impr}
+    $\CX_\ord(E/K_\infty)$ is $\Lambda_K$-torsion, and
+    \[\Char_{\Lambda_K}(\CX^{\Sigma}_\ord(E/K_\infty))\supset\Char_{\Lambda_K}(\CX_\ord(E/K_\infty))\prod_{\fq\in\Sigma-\{\fp,\bar{\fp}\}}(P_\fq(\varepsilon_K(\Frob_\fq^{-1}))).\]
+\end{cor}
+
+\subsubsection*{Compact Selmer groups} 
+We also consider compact Selmer groups. 
+For $\Lambda$ any one of $\Lambda_K$ or $\Lambda_K^\pm$, let $N=T_pE\otimes_{\BZ_p}\Lambda$, where $\Lambda$ is equipped with the natural $G_K$-action.
+For $a\in\{\ord, \rel, \str\}$, and $\fq|p$ a prime above $p$, we define the local conditions $H^1_a(K_\fq,N)\subset H^1(K_\fq,N)$ similarly to Definition \ref{defn:local-condition}, and for $a,b\in\{\ord, \rel, \str\}$, let
+\[H^1_{\CF_{a,b}}(K,N)=\Ker\left(H^1(G_{K,\Sigma},N)\rightarrow \frac{H^1(K_\fp,N)}{H^1_{a}(K_\fp,N)}\times \frac{H^1(K_{\bar{\fp}},N)}{H^1_{b}(K_{\bar{\fp}},N)}\right).\]
+For simplicity, we write
+\[S_{a,b}(E/K_\infty)=H^1_{\CF_{a,b}}(K,T_pE\otimes_{\BZ_p}\Lambda_K), \quad S_{a}(E/K_\infty)=H^1_{\CF_{a,a}}(K,T_pE\otimes_{\BZ_p}\Lambda_K)\]
+for $a,b\in\{\ord, \str, \rel\}$, and similarly for $E/K_\infty^\pm$ with $\Lambda_K$ replaced by $\Lambda_K^\pm$.
+
+ 
+
+\subsection{Selmer groups for Hida families}\label{Hida}
+Let $W$ be an indeterminate and $\Lambda_W=\BZ_p[[W]]$. 
+We identify $\Lambda_W$ with $\Lambda_K^+$ by identifying the topological generator $\gamma^+$ with $1+W$, which induces $\varepsilon_W:G_K\rightarrow \Lambda_W^\times$.
+
+Let $L\subset\bar{\BQ}_p$ be a finite extension of $\BQ_p$ with integer ring $\CO$.
+Let $\BI$ be a local reduced finite integral extension of $\Lambda_{W,\CO}:=\Lambda_W\otimes_{\BZ_p}\CO$. 
+Recall that $\phi\in \Hom_{\text{cont }\CO\text{-alg}}(\BI,\bar{\BQ}_p)$ is called arithmetic if $\phi(1+W)=\zeta_\phi(1+p)^{k_\phi-2}$ for some $p$-power root of unity $\zeta_\phi$ and integer $k_\phi$.
+Let $t_\phi>0$ be the integer such that $\zeta_\phi$ is primitive $p^{t_\phi-1}$-th root of unity, and $\chi_\phi:\BA_{\BQ}^\times/\BQ^{\times}\rightarrow\mu_{p^\infty}$ be the unique character such that $\chi_{\phi,p}(1+p)=\zeta_\phi^{-1}$ and has $p$-power conductor.
+Define 
+$$\fX_{\BI,\CO}^a =\left\{ \phi\in \Hom_{\text{cont }\CO\text{-alg}}(\BI,\bar{\BQ}_p): \phi \text{ is arithmetic }, k_\phi\geq 2\right\}.$$
+
+
+
+% \[\fX_{\BI,A}^a:=\{\phi\in \Hom_{\text{cont }\CO-\text{alg}}(\BI,\bar{\BQ}_p):\phi(1+W)=\zeta_\phi(1+p)^{k_\phi-2} \text{ for some } k_\phi\in\BZ_{\geq 2} \text{ and} p-\text{power root of unity}\zeta_\phi  \}.\]
+% For $\phi\in \fX_{\BI,A}^a$, let $t_\phi>0$ be the integer such that $\zeta_\phi$ is primitive $p^{t_\phi-1}$-th root of unity, and $\chi_\phi:\BA_{\BQ}^\times/\BQ^{\times}\rightarrow\mu_{p^\infty}$ to be the unique character such that $\chi_{\phi,p}(1+p)=\zeta_\phi^{-1}$ and has $p$-power conductor.
+
+Let $\mathbf{f}$ be an $\BI$-adic ordinary eigenform of tame level $N$ and trivial character, i.e., a $q$-expansion $\mathbf{f}=\sum_{n=0}\mathbf{a}_n(\mathbf{f})q^n\in\BI[[q]]$ such that for all $\phi\in\fX_{\BI,\CO}^a$, 
+$$\mathbf{f}_{\phi}=\sum_{n=0}\phi(\mathbf{a}_n(\mathbf{f}))q^n\in M_{k_\phi}(Np^{t_\phi},\omega^{k_\phi-2}\chi_\phi;\phi(\BI)) $$
+is ordinary.
+Here, $\omega$ is the Teichmüller character.
+
+Assume $\mathbf{f}$ satisfies the following condition 
+\begin{equation}\tag{$\irred_\mathbf{f}$}
+    \text{the residue representation of }\rho_{\mathbf{f}_\phi} \text{ is irreducible  for some (hence all) }\phi\in \fX_{\BI,\CO}^a.
+\end{equation}
+Then there exists a continuous $\BI$-linear Galois representation $(\rho_{\mathbf{f}},T_{\mathbf{f}})$ with $T_{\mathbf{f}}$ a free $\BI$-module of rank two and $\rho_{\mathbf{f}}:G_\BQ\rightarrow \GL_{\BI}(T_{\mathbf{f}})$ a continuous representation characterized by the property that $\rho_{\mathbf{f}}$ is unramified at all primes $\ell\nmid Np$ and satisfies
+$$\tr\rho_{\mathbf{f}}(\Frob_\ell)=a_\ell{(\mathbf{f})},\quad \ell\nmid Np,$$
+and
+$$\det(\rho_{\mathbf{f}})=\epsilon\varepsilon_W,$$
+where $\epsilon$ is the $p$-adic cyclotomic character.
+
+
+Let $F_\BI$ be the ring of fractions of $\BI$ and $V_\mathbf{f}:=T_\mathbf{f}\otimes_\BI F_\BI$. 
+Since $\mathbf{f}$ is ordinary, there exists an $F_\BI$-line $V_\mathbf{f}^+\subset V_\mathbf{f}$ which is stable under the action of $G_{\BQ_p}$.
+Furthermore, $G_{\BQ_p}$ acts on $V_\mathbf{f}^-:=V_\mathbf{f}/V_\mathbf{f}^+$ via the unramified character $\delta_{\mathbf{f}}$ characterized by $\delta_{\mathbf{f}}(\Frob_p)=a_p(\mathbf{f})$. 
+Then $T_\mathbf{f}^+:=T_\mathbf{f}\cap V_\mathbf{f}^+$ is a free $\BI$-summand of $T_\mathbf{f}$ of rank one.
+
+Put $\BI_K:=\BI[[\Gamma_K]]$. 
+Let $\mathbf{M}=T_\mathbf{f}\otimes_{\BI}\BI_K^\vee$, $\mathbf{M}^-=T_\mathbf{f}^-\otimes_{\BI}\BI_K^\vee$ where $\BI_K^\vee$ is equipped with a $G_K$-action via $\varepsilon_K^{-1}$. 
+Let $\Sigma$ be a set of places of $K$ containing all places of $K$ dividing $pN\infty$. 
+We define 
+\begin{align*}
+    H^1_{\CF_\ord^\Sigma}(K,\mathbf{M}):=\ker\left(H^1(G_{K,\Sigma},\mathbf{M})\rightarrow
+    \prod_{\fq|p}H^1(I_\fq,\mathbf{M}^-)\right).
+\end{align*}
+Write $\CX^{\Sigma}_\ord(\mathbf{f}/K_\infty):=H^1_{\CF_\ord^\Sigma}(K,\mathbf{M})^\vee$.
+It is $\BI_K$-torsion by \cite[Lemma 3.16]{skinner2014iwasawa}.
+
+
+Let $E/\BQ$ be an elliptic curve such that $E$ has good ordinary reduction at $p$.
+Let $\mathbf{f}$ be an $\BI$-adic ordinary eigenform and $\phi\in\fX_{\BI,A}^a$ such that $\phi(1+W)=1$ and $\phi(\mathbf{f})$ is equal to $p$-stabilization of the newform associated to $E$.
+
+\begin{lem}
+    For every $\fq|p$, we have $H^1\left(G_{K_\fq}/I_\fq,(T_p\tilde{E}_{/\BF_\fq}\otimes\Lambda_K^\vee)^{I_\fq}\right)=0$.
+\end{lem}
+
+\begin{proof}
+     Let $\alpha_\fq:G_{K_\fq}\ra \BQ_p^\times$ be  the unramified character associated to $T_p\tilde{E}_{/\BF_\fq}$, then $G_{K_\fq}$ acts on $T_p\tilde{E}_{/\BF_\fq}\otimes\Lambda_K^\vee$ via $\alpha_\fq\varepsilon_K^{-1}$, and $\alpha_\fq(\Frob_\fq)$ is not a unit.
+     Let $C_\fq\subset\Lambda_K$ be the ideal generated by $\{\varepsilon_K(g)-1:g\in I_\fq\}$, and $\sigma_\fq\in G_{K_\fq}$ be a lifting of $\Frob_\fq$.
+     Then we can find that
+     \[H^1\left(G_{K_\fq}/I_\fq,(T_p\tilde{E}_{/\BF_\fq}\otimes\Lambda_K^\vee)^{I_\fq}\right)\simeq \Hom_{\cts}\left((\Lambda_K/C_\fq)^{\varepsilon_K(\sigma_\fq)=\alpha_\fq^{-1}(\Frob_\fq)},\BQ_p/\BZ_p\right)=0,\]
+     where $(\Lambda_K/C_\fq)^{\varepsilon_K(\sigma_\fq)=\alpha_\fq^{-1}(\Frob_\fq)}$ is the submodule of $\Lambda_K/C_\fq$ killed by $\varepsilon_K(\sigma_\fq)-\alpha_\fq^{-1}(\Frob_\fq)$.
+\end{proof}
+
+\begin{cor}\label{Hida_des}
+    Let $\fp_\phi:=\ker\phi$, then
+    $\CX^{\Sigma}_\ord(\mathbf{f}/K_\infty)/\fp_\phi \CX^{\Sigma}_\ord(\mathbf{f}/K_\infty)\otimes_{\BI,\phi}\CO\simeq \CX^{\Sigma}_\ord(E/K^\infty).$
+\end{cor}
+
+\begin{proof}
+    By \cite[Proposition 3.7]{skinner2014iwasawa} and above lemma.
+ \end{proof}   
+
+
+\section{\texorpdfstring{$p$-adic $L$-functions}{p-adic L-functions}}
+
+% \subsection{Cyclotomic $p$-adic L-function}
+% Let $\omega_E$ be a minimal differential on $E$, $\delta^\pm$ be a basis of $H_1(E,\BZ)$. Then the N\'{e}ron periods $\Omega_E^\pm$ is defined by 
+% \[\Omega_E^\pm:=\int_{\delta^\pm}\omega_E.\]
+% Let $f=\sum_na_nq^n\in S_2(\Gamma_0(N))$ be the newform associated with $E$, then $a_p$ is a $p$-adic unit. Let $\alpha_p$ be the $p$-adic unit root of $x^2+a_px+p$.
+
+% We denote by $\Gamma_\BQ$ the Galois group of the cyclotomic $\BQ$-extension
+% \begin{thm}
+    
+% \end{thm} 
+
+\subsection{\texorpdfstring{A three variable $p$-adic $L$-function} {A three variable p-adic L-function}}
+Let $\mathbf{f}$ be an $\BI$-adic ordinary eigenform of tame level $N$ and trivial character as in Section \ref{Hida}.
+Suppose that $L$ contains $\BQ[\mu_{Np},i,D_K^{1/2}]$. 
+Let
+$$\fX^a_{\BI_K,\CO}:=\{\phi\in\Hom_{\text{cont }\CO\text{-alg}}(\BI_K,\bar{\BQ}_p):\phi|_\BI\in\fX^a_{\BI,\CO},\phi(\gamma^+)=\zeta_+(1+p)^{k_{\phi|_\BI}-2},\phi(\gamma^-)=\zeta_-\}$$
+where $\zeta_\pm$ are $p$-power roots of unity. 
+For each $\phi\in\fX^a_{\BI_K,\CO}$, let $k_\phi$, $t_\phi$ and $\chi_\phi$ denote the corresponding objects for $\phi|_\BI$. 
+Define
+$$\xi_\phi:=\phi\circ(\varepsilon_K/\varepsilon_W),\quad \theta_\phi:=\omega^{2-k_\phi}\chi_\phi^{-1}\xi_\phi.$$
+These are finite order idele class characters of $\BA_K^\times$. 
+For an idele class character $\psi$, denote its conductor by $\ff_\psi$. 
+Let
+$$\fX'_{\BI_K,\CO}:=\{\phi\in\fX^a_{\BI_K,\CO}:p|\ff_{\xi_\phi},p^{t_\phi}|\Nm(\ff_{\xi_\phi}),p|\ff_{\theta_\phi}\}.$$
+
+\begin{thm}\cite[Section 3.4.5]{skinner2014iwasawa}
+    Let $\Sigma$ be a finite set of primes containing all those dividing $pND_K$. 
+    Let $\mathbf{f}$ be an $\BI$-adic ordinary eigenform of tame level $N$ and trivial character.
+    Assume that $\mathbf{f}$ satisfies ($\irred_{\mathbf{f}}$).
+    Then there exists $\CL^\Sigma_{\mathbf{f},K}\in\BI_K$ such that for any $\phi\in\fX'_{\BI_K,\CO}$, we have
+    \begin{align*}
+        \CL^\Sigma_{\mathbf{f},K}(\phi)=&u_{\mathbf{f}_\phi}a_p(\mathbf{f}_\phi)^{-\ord_p(\Nm(\ff_{\theta_\phi}))}\\
+        & \times \frac{((k_\phi-2)!)^2\fg(\theta_\phi^{-1})\Nm(\ff_{\theta_\phi}\delta_K)^{k_\phi-2}L^\Sigma(\mathbf{f}_\phi/K,{\theta_\phi^{-1}},k_{\theta_\phi}-1)}{(-2\pi i)^{2k_\phi-2}\Omega^+_{\mathbf{f}_\phi}\Omega^-_{\mathbf{f}_\phi}},
+    \end{align*}
+    where $u_{\mathbf{f}_\phi}$ is a $p$-adic unit depending only on $\mathbf{f}_\phi$, $\fg(\theta_\phi^{-1})$ is the (global) Gauss sum,  $\delta_K$ is the differential ideal, and $\Omega^\pm_{\mathbf{f}_\phi}$ are the canonical periods of $\mathbf{f}_\phi$.
+\end{thm}
+
+\begin{remark}
+Note that we use arithmetic Frobenius to normalize the reciprocity map of class field theory, while \cite{skinner2014iwasawa} used geometric Frobenius.
+\end{remark}
+
+\subsection{\texorpdfstring{Two variable $p$-adic $L$-functions: type I} {Two variable p-adic L-functions: type I}}
+Let $f=\sum_na_nq^n\in S_2(\Gamma_0(N))$ be a newform with $p\nmid a_p$, and $c_f \in \BZ_p$ be the congruence number of $f$ as in \cite[section 7]{hida81} or \cite{rib83}.
+\begin{thm}\cite[Theorem 1.2.1]{CGS}
+    There exists an element $\CL_p^I(f/K)\in c_f^{-1}\Lambda_K$ such that for any finite order nontrivial character $\xi$ of $\Gamma_K$,
+    \[\CL_p^I(f/K)(\xi)=W(\xi)p^{\ord_p(\Nm(\ff_\xi))/2}\alpha_p^{-\ord_p(\Nm(\ff_\xi))}\left(1-\frac{p}{\alpha_p^2}\right)^{-1}\left(1-\frac{1}{\alpha_p^2}\right)^{-1}\frac{L(f/K,\xi^{-1},1)}{8\pi^2\pair{f,f}},\]
+    where $\alpha_p$ is the $p$-adic unit root of $x^2-a_px+p$, $\pair{f,g}=\int_{\Gamma_0(N)\backslash\CH}\overline{f(\tau)}g(\tau)d\tau$ is the Petersson inner product on $S_2(\Gamma_1(N))$, $W(\xi)$ is the Artin root number.
+\end{thm}
+Let $E/\BQ$ be an elliptic curve such that $E$ has good ordinary reduction at $p$. 
+Let $f_E\in S_2(\Gamma_0(N))$ be the newform associated to $E$,
+and $\pi_E: X_0(N)\rightarrow E$  a modular parametrization. 
+
+\begin{defn}[Perrin-Riou's $p$-adic $L$-function] 
+    We define Perrin-Riou's $p$-adic $L$-function to be
+    \[\CL_p^\mathrm{PR}(E/K):=\left(1-\frac{p}{\alpha_p^2}\right)\left(1-\frac{1}{\alpha_p^2}\right)\cdot\frac{\deg(\pi_E)}{c_E^2}\cdot \CL_p^I(f_E/K)\in \Lambda_K,\]
+    where $c_E$ is the Manin constant.
+\end{defn}
+
+Let $\mathbf{f}$ be an $\BI$-adic ordinary eigenform and $\phi\in\fX_{\BI,\CO}^a$ as in Section \ref{Hida}, such that $\phi(1+W)=1$ and $\mathbf{f}_\phi$ equal to $p$-stabilization of $f_E$.
+
+\begin{prop}\label{imp0}
+    Assume that the residue representation $\bar{\rho}_{E}:G_\BQ\rightarrow \Aut(E[p])$ is irreducible, then
+    $$\CL^\Sigma_{\mathbf{f},K}(\phi\otimes\id)=\alpha\cdot\prod_{\fq\in\Sigma,\fq\nmid p}P_\fq(\varepsilon_K(\Frob_\fq^{-1}))\cdot\CL_p^\mathrm{PR}(E/K),$$
+    where 
+    \[P_\fq(X)=\det(1-\Nm(\fq)^{-1}X\cdot\Frob_\fq\mid V_pE^{I_\fq})\]
+    is the local Euler factor, $\alpha$ is a $p$-adic units which is independent of $\xi$, and
+    $\phi\otimes\id:\BI_K=\BI\hat{\otimes}\Lambda_K\rightarrow\phi(\BI)\otimes\Lambda_K$
+    is the natural map.
+\end{prop}
+
+\begin{proof}
+    We have that  $W(\xi)=g(\bar{\xi})/\sqrt{\Nm(\ff_\xi)}$.
+    By \cite[Corollary 4.1]{Mazur}, $c_E$ is a $p$-adic unit.
+    By \cite[Lemma 3.1.2]{CGS}, $\deg(\pi_E)=c_{f_E}$ up to a $p$-adic unit. 
+    By \cite[Lemma 9.5]{skinner2014indivisibility}, \[\frac{\pair{f_E,f_E}}{c_{f_E}}=i(2\pi i)^2\Omega^+_{f_E}\Omega^-_{f_E}.\]
+    These give the equality of the proposition.
+\end{proof}
+
+\subsection{\texorpdfstring{Cyclotomic $p$-adic $L$-function} {Cyclotomic p-adic L-function}} 
+Let $E/\BQ$ be an elliptic curve such that $E$ has good ordinary reduction at $p$.
+Pick generators $\delta^\pm$ of $H_1(E,\mathbb{Z})^\pm$, and define the Néron periods $\Omega_E^\pm$ by
+$$ \Omega_E^\pm = \int_{\delta^\pm} \omega_E,$$
+where $\omega_E$ is a minimal differential on $E$.
+We normalize the $\delta^\pm$ so that $\Omega_E^+ \in \mathbb{R}_{>0}$ and $\Omega_E^- \in i\mathbb{R}_{>0}$.
+
+Let $a_p$ be the Fourier coefficient of the newform $f_E$ associated to $E$,  and $\alpha_p$ be the $p$-adic unit root of $x^2 - a_p x + p$ as before.
+
+\begin{thm}\cite[Theorem 1.1.1]{CGS}
+    There exists an element $\mathcal{L}_p^{\mathrm{MSD}}(E/\mathbb{Q}) \in \Lambda_{\mathbb{Q}}$ such that for any finite order character $\chi$ of $\Gamma_{\mathbb{Q}}$ of conductor $p^r$ with $r>0$, we have
+    $$ \mathcal{L}_p^{\mathrm{MSD}}(E/\mathbb{Q})(\chi) = \frac{p^r}{g(\overline{\chi})\alpha_p^r} \cdot \frac{L(E,\overline{\chi},1)}{\Omega_E^+}, $$
+    where $g(\overline{\chi}) = \sum_{a \bmod p^r} \overline{\chi}(a) e^{2\pi i a/p^r}$ is the Gauss sum, and
+    $$ \mathcal{L}_p^{\mathrm{MSD}}(E/\mathbb{Q})(1) = (1-\alpha_p^{-1})^2 \cdot \frac{L(E,1)}{\Omega_E^+}. $$
+\end{thm}
+
+Let $\mathcal{L}_{p}^{\mathrm{PR}}(E / K)^{+} \in \Lambda_{\mathbb{Q}}$ be the image of $\mathcal{L}_{p}^{\mathrm{PR}}(E / K)$ under the map induced by the projection $\Gamma_{K} \twoheadrightarrow \Gamma_{K}^{+} \simeq \Gamma_{\mathbb{Q}}$.
+
+\begin{prop}\cite[Proposition 1.2.4]{CGS}
+    We have
+    $$
+    \mathcal{L}_{p}^{\mathrm{PR}}(E / K)^{+}=\mathcal{L}_{p}^{\mathrm{MSD}}(E / \mathbb{Q}) \cdot \mathcal{L}_{p}^{\mathrm{MSD}}\left(E^{K} / \mathbb{Q}\right)
+    $$
+    up to a unit in $\Lambda_{\mathbb{Q}}^{\times}$,
+    where $E^{K}$ is the twist of $E$ by the quadratic character corresponding to $K / \mathbb{Q}$.
+\end{prop}
+
+
+
+
+\subsection{\texorpdfstring{Two variable $p$-adic $L$-functions: type II} {Two variable p-adic L-functions: type II}}
+\begin{thm}\cite[Theorem 1.4.1]{CGS}
+    There exists an element $\CL_p^{II}(f/K)\in \Frac \Lambda_K$ such that for every character $\xi$ of $\Gamma_K$ which is crystalline at both $\fp$ and $\bar{\fp}$, and of infinity type $(b,a)$ with $a\leq -1, b\geq 1$, we have
+    \[\CL_p^{II}(f/K)(\xi)=\frac{2^{a-b}i^{b-a-1}\Gamma(b+1)\Gamma(b)N^{a+b+1}}{(2\pi)^{2b+1}\pair{\theta_{\xi_b},\theta_{\xi_b}}}\cdot\frac{\CE(\xi,f,1)}{(1-\xi^{1-\tau}(\bar{\fp}))(1-p^{-1}\xi^{1-\tau}(\bar{\fp}))}\cdot L(f/K,\xi,1),\]
+    where $\theta_{\xi_b}$ is the theta series associated to the Hecke character $\xi_b=\xi|\cdot|^{-b}$, $\tau$ is the complex conjugation, and 
+    \[\CE(\xi,f,1)=(1-p^{-1}\xi(\bar{\fp})\alpha_p)(1-\xi(\bar{\fp})\alpha_p^{-1})(1-p^{-1}\xi^{-1}(\fp)\alpha_p)(1-\xi^{-1}(\fp)\alpha_p^{-1}).\]
+\end{thm}
+
+Let $\Lambda^{\ur}_K:=\Lambda_K\widehat{\otimes}\BZ_p^{\ur}$, where $\BZ_p^{\ur}$ is the completion of the ring of integers of the maximal unramified extension of $\BQ_p$.
+
+\begin{thm}\cite[Chapter 2, Theorem 4.14]{deShalit}
+    There exists an element $\CL_\fp(K)\in\Lambda^{\ur}_K$ such that for every character $\xi$ of $\Gamma_K$ of infinity type $(j,k)$ with $0\leq -j\leq k$, we have
+    \[\CL_\fp(K)(\xi)=\frac{\Omega_p^{k-j}}{\Omega_K^{k-j}}\cdot\Gamma(k)\cdot\left(\frac{\sqrt{D_K}}{2\pi}\right)^j\cdot(1-\xi^{-1}(\fp)p^{-1})(1-\xi(\bar{\fp}))\cdot L(\xi,0),\]
+    where $\Omega_p$ and $\Omega_K$ are  CM periods attached to $K$.
+\end{thm}
+
+\begin{defn}[Greenberg's $p$-adic $L$-function]
+    Let 
+    \[\CL_p^{\Gr}(f/K):=h_K\cdot\CL_\fp(K)'\cdot\CL_p^{II}(f/K),\]
+    where $h_K$ is the class number of $K$, and $\CL_\fp(K)'$ is the image of $\CL_\fp(K)$ under the map $\Lambda_K^\ur\rightarrow \Lambda_K^\ur$ given by $\gamma\mapsto\gamma^{1-\tau}$ for $\gamma\in\Gamma_K$. 
+\end{defn}
+
+\begin{lem}\cite[Lemma 1.4.4]{CGS}
+    The Greenberg's $p$-adic $L$-function $\CL_p^{\Gr}(f/K)$ is integral, i.e., belongs to $\Lambda_K^\ur$.
+\end{lem}
+
+\subsection{\texorpdfstring{BDP $p$-adic $L$-function}{BDP p-adic L-function}}
+Assume that $D_K$ is odd and not equal to $-3$, and the Heegner hypothesis holds.
+% Assume the Heegner hypothesis holds, i.e., 
+% \begin{equation}\tag{Heeg}\label{Heeg}
+%     \text{every prime $\ell|N$ splits in $K$.} 
+% \end{equation}
+Fix an integral ideal $\fn\subset\CO_K$ with $\CO_K/\fn\simeq \BZ/N\BZ$. 
+Let $\Lambda^{\ur,-}_K:=\Lambda^{-}_K\widehat{\otimes}\BZ_p^{\ur}$.
+
+\begin{thm}\cite[Theorem 2.1.1]{CGLS}
+    There exists an element $\CL_p^{\mathrm{BDP}}(f/K)\in \Lambda^{\ur,-}_K$ characterized by the following interpolation property: for every character $\xi$ of $\Gamma^-_K$ crystalline at both $\fp$ and $\bar{\fp}$ and corresponding to a Hecke character of $K$ of infinity type $(n,-n)$ with $n\in\BZ_{>0}$ and $n \equiv 0  \mod p-1$, we have
+    \[\CL_p^{\mathrm{BDP}}(f/K)(\xi)=\frac{\Omega_p^{4n}}{\Omega_K^{4n}}\cdot\frac{\Gamma(n)\Gamma(n+1)\xi(\fn^{-1})}{4(2\pi)^{2n+1}\sqrt{D_K}^{2n-1}}\cdot\left(1-a_p\xi(\bar{\fp})p^{-1} + \xi(\bar{\fp})^2p^{-1}\right)^2\cdot L(f/K, \xi, 1).\]
+\end{thm}
+
+Denote by $\CL_p^{\Gr}(f/K)^-$ the image of $\CL_p^{\Gr}(f/K)$ under the natural projection $\Lambda^{\ur}_K\rightarrow \Lambda^{\ur,-}_K$. 
+We have the following proposition.
+
+\begin{prop}\cite[Proposition 1.4.5]{CGS}\label{comp}
+    $\CL_p^{\Gr}(f/K)^-\cdot\Lambda^{\ur,-}_K=\CL_p^{\mathrm{BDP}}(f/K)\cdot \Lambda^{\ur,-}_K$.
+\end{prop}
+
+\section{Main conjectures}
+
+\subsection{Two variable Iwasawa main conjectures}
+Let $E/\BQ$ be an elliptic curve of conductor $N$, $p>2$ a prime such that $E$ has good ordinary reduction at $p$, $K$ an imaginary quadratic field such that $p=\fp\bar{\fp}$ split in $K$.
+Assume that residue representation $\bar{\rho}_{E}|_{G_K}:G_K\rightarrow\Aut(E[p])$ is irreducible.
+
+The following two variable Iwasawa main conjectures are considered.
+\begin{conj}\label{mainconj1}
+    \begin{enumerate}
+        \item $H^1_{\CF_{\ord}}(K,T_pE\otimes\Lambda_K^\vee)^\vee$ is $\Lambda_K$-torsion and
+        \begin{equation*}
+            \Char_{\Lambda_K}(H^1_{\CF_{\ord}}(K,T_pE\otimes\Lambda_K^\vee)^\vee)=(\CL_p^\mathrm{PR}(E/K)).
+        \end{equation*}
+        \item $H^1_{\CF_{\Gr}}(K,T_pE\otimes\Lambda_K^\vee)^\vee$ is $\Lambda_K$-torsion and
+        \begin{equation*}
+            \Char_{\Lambda_K}(H^1_{\CF_{\Gr}}(K,T_pE\otimes\Lambda_K^\vee)^\vee)\Lambda_K^{\ur}=(\CL_p^{\Gr}(E/K)).
+        \end{equation*}
+    \end{enumerate}
+\end{conj}
+
+Recall the main theorem of this paper as stated below.
+\begin{thm}\label{mainthm1}
+    Suppose that the residue representation $\bar{\rho}_{E}|_{G_K}:G_K\rightarrow \Aut(E[p])$ is absolutely irreducible. 
+    If the Heegner hypothesis holds (in particular, $\sign(E/K)=-1$), then 
+    \begin{enumerate}
+        \item $H^1_{\CF_{\ord}}(K,T_pE\otimes\Lambda_K^\vee)^\vee$ is $\Lambda_K$-torsion and
+        \begin{equation*}
+            \Char_{\Lambda_K}(H^1_{\CF_{\ord}}(K,T_pE\otimes\Lambda_K^\vee)^\vee)\subset(\CL_p^\mathrm{PR}(E/K)).
+        \end{equation*}
+        \item $H^1_{\CF_{\Gr}}(K,T_pE\otimes\Lambda_K^\vee)^\vee$ is $\Lambda_K$-torsion and
+        \begin{equation*}
+            \Char_{\Lambda_K}(H^1_{\CF_{\Gr}}(K,T_pE\otimes\Lambda_K^\vee)^\vee)\Lambda_K^{\ur}\subset(\CL_p^{\Gr}(E/K)).
+        \end{equation*}
+        Moreover, if (\ref{Imag}) holds, the Conjecture \ref{mainconj1} is true.
+    \end{enumerate}
+\end{thm}
+
+We will prove this theorem in the next two subsections.
+
+\subsection{A three variable Iwasawa main conjecture}
+Let $\mathbf{f}$ be an $\BI$-adic ordinary eigenform of tame level $N$ and trivial character as in Section \ref{Hida}.
+Suppose that $L\supset\BQ[\mu_{Np},i,D_K^{1/2}]$, $\BI$  is a normal domain and $\mathbf{f}$ satisfies ($\irred_{\mathbf{f}}$). 
+
+\begin{conj}\cite{skinner2014iwasawa}\label{Hidaconj}
+    Let $\Sigma$ be a finite set of primes containing all those dividing $pND_K$. Then
+    \[\Char_{\BI_K}(\CX^{\Sigma}_\ord(\mathbf{f}/K_\infty))=(\CL^\Sigma_{\mathbf{f},K}).\]
+\end{conj}
+
+\begin{thm}[Skinner-Urban]\label{SU1}
+Under the condition of Conjecture \ref{Hidaconj}, we have that
+    for any height one prime $P$ of $\BI_K=\BI[[\Gamma_K]]$,
+    \[\ord_P\left(\Char_{\BI_K}(\CX^{\Sigma}_\ord(\mathbf{f}/K_\infty))\right)\geq\ord_P(\CL^\Sigma_{\mathbf{f},K}),\]
+    unless $P=P^+\BI[[\Gamma_K]]$ for some  height one prime $P^+$ of $\BI[[\Gamma_K^+]]$.
+\end{thm}
+
+\begin{proof}     
+    Let $\mathbf{D}=(A,\mathbf{f},1,1,\Sigma)$  be a $p$-adic Eisenstein datum defined in \cite{skinner2014iwasawa}, with $A\supset\BZ_p[i,D_K]$ a finite $\BZ_p$-algebra. 
+    Let $\Lambda_{\mathbf{D}}:=\BI[[\Gamma_K]][[\Gamma_K^-]]$ as in \cite{skinner2014iwasawa}. 
+    The proof is essentially in section 7.4 of \cite{skinner2014iwasawa} except that we do not consider the prime $P= P^+\Lambda_{\mathbf{D}}$ for some height one prime $P^+$ of $\BI[[\Gamma_K^+]]$. 
+    By \cite[Proposition 13.6(1)]{skinner2014iwasawa}, assume $\Sigma$ is large enough, then there is a $p$-adic Eisenstein series $\mathbf{E}_{\mathbf{D}}$ with coefficients(associated to formally $q$-expansion) belong to $\Lambda_{\mathbf{D}}$, and that there exists a set $\CC_\mathbf{D}$ of some coefficients of $\mathbf{E}_{\mathbf{D}}$ satisfying that for any height one prime $P$ of $\Lambda_{\mathbf{D}}$, if $P\supset\CC_\mathbf{D}$, then $P= P^+\Lambda_{\mathbf{D}}$ for some height one prime $P^+$ of $\BI[[\Gamma_K^+]]$. 
+    Now we apply \cite[Theorem 7.7]{skinner2014iwasawa}. 
+    Consider two $p$-adic $L$-functions $\CL_1^\Sigma$ and $\CL_{\mathbf{f},K,1}^\Sigma:=\CL_{\mathbf{f},K}^\Sigma$ in \cite[Theorem 7.7]{skinner2014iwasawa}. Since $\CL_1^\Sigma\in\BI[[\Gamma_K^+]]$ by definition, we have that
+    $$\ord_P\left(\Char_{\BI_K}(\CX^{\Sigma}_\ord(\mathbf{f}/K_\infty))\right)\geq\ord_P(\CL^\Sigma_{\mathbf{f},K})$$
+    for any height one prime $P$ of $\Lambda_{\mathbf{D}}$ such that $P$ is not of the form $ P^+\Lambda_{\mathbf{D}}$ for some height one prime $P^+$ of $\BI[[\Gamma_K^+]]$.
+    Now it is easy to see that our conclusion comes from above. 
+    
+\end{proof}
+
+\begin{remark}
+    Since we do not consider the prime $P= P^+\Lambda_{\mathbf{D}}$ for some height one prime $P^+$ of $\BI[[\Gamma_K^+]]$, we don't need Proposition 13.6 (2) in \cite{skinner2014iwasawa}. 
+    Therefore, we do not need the hypotheses on $N$ and $\bar{\rho}_\mathbf{f}|_{I_\ell}$ for $\ell|N$.
+    Here, $\bar{\rho}_\mathbf{f}:=\rho_\mathbf{f} \mod \fm_\BI$, and $\fm_\BI$ is the maximal ideal of $\BI$. 
+    See also the remark after Theorem 3.26 in \cite{skinner2014iwasawa}.
+\end{remark}
+
+\begin{cor}\label{BDP1}
+    There exists a nontrivial multiplicative set $ S\subset \Lambda_K^+\subset\Lambda_K$ such that
+    \[S^{-1}\Char_{\Lambda_K}(\CX_{\CF_\ord}(E/K_\infty))\subset(\CL_p^\mathrm{PR}(E/K))\]
+    holds in $S^{-1}\Lambda_K$. 
+     
+\end{cor}
+
+\begin{proof}
+    By \cite{rohrlich1984functions}, the $p$-adic $L$-function $\CL^\Sigma_{\mathbf{f},K}$ doesn't belong to $fp_{\phi}\BI_K$. 
+    Let $P_1,\dots,P_n$ be height one primes of $\BI_K$ such that $\ord_{P_i}\CL^\Sigma_{\mathbf{f},K}>0$, then $P_i=P_i^+\BI_K$ for some height one prime $P_i^+$ of $\BI[[\Gamma_K^+]]$. 
+    We have $P_i\not\subset \fp_{\phi}\BI_K$. Choose $h_i\in P_i\backslash\fp_{\phi}\BI_K$, and let $T$ be the multiplicative set generated by $\{h_i:i=1\dots,n\}$, and $S=\phi(T)$. 
+    Then by Theorem \ref{SU1}, \cite[Corollary 3.8]{skinner2014iwasawa}, Corollary \ref{Hida_des}, Corollary \ref{impr} and Proposition \ref{imp0}, we complete the proof.
+\end{proof}
+
+
+
+\subsection{Proof of  Theorem \ref{mainthm1}}\label{proof}
+% \begin{lem}
+%     $S_\ord(E/K_\infty)$ is a torsion $\Lambda_K$-module.
+% \end{lem}
+% \begin{proof}
+%     Let 
+%     \[M=T_pE\otimes\Lambda_K,\,   N=T_pE\otimes\Lambda_K^+,\]
+%     and for $\fq|p$,
+%     \[M^-=T_p\tilde{E}_{/\BF_\fq}\otimes\Lambda_K,\,N^-=T_p\tilde{E}_{/\BF_\fq}\otimes\Lambda_K^+.\]
+%      Let $P=\Im(H^1(G_{K,\Sigma},M)\rightarrow\prod_{\fq|p}H^1(K_\fq,M^-))$. 
+%     By the natural short exact sequence ($\star$)
+%     \[0\rightarrow\Lambda_K\xrightarrow{\times (\gamma^--1)}\Lambda_K\rightarrow\Lambda_K^+\rightarrow 0\]
+%     and the definition of compact Selmer groups, we have the following commutative diagram
+%    \[ \begin{tikzcd}
+%         {{P[\gamma^--1]}} \arrow[r] & S_\ord(E/K_\infty)/(\gamma^--1) \arrow[r] \arrow[d] & {H^1(G_{K,\Sigma},M)/(\gamma^--1)} \arrow[r] \arrow[d, hook] & {P/(\gamma^--1)} \arrow[d]  \\
+%         0 \arrow[r]                                                       & S_\ord(E/K^+_\infty) \arrow[r]          & {H^1(G_{K,\Sigma},N)} \arrow[r]                & {\prod_{\fq|p}H^1(K_\fq,N^-)}
+%         \end{tikzcd}\]
+%         where all rows are exact sequences. On the other hand, for every $\fq|p$, the sequence ($\star$) also induces surjective maps $H^0(G_{K_\fq},M^-)\twoheadrightarrow H^1(K_\fq,M^-)[\gamma^--1]$. However, it's easy to see that $H^0(G_{K_\fq},M^-)$ is finite, hence $P[\gamma^--1]$ and is also finite, which implies that the map $S_\ord(E/K_\infty)/(\gamma^--1)\rightarrow S_\ord(E/K_\infty^+)$ has finite kernel. Hence we need only to prove that $S_\ord(E/K_\infty^+)$ is $\Lambda_K^+$-torsion.
+
+%          By identify $\Lambda_K^+$ with $\Lambda_\BQ$ naturally and Shapiro's lemma, we have 
+%         \[S_\ord(E/K_\infty^+)\simeq S_\ord(E/\BQ_\infty)\oplus S_\ord(E^K/\BQ_\infty)\]
+%         as $\Lambda_K^+\simeq \Lambda_\BQ$-module. However, by \cite[(17.13.2)]{Kato}, $S_\ord(E/\BQ_\infty)=S_\ord(E^K/\BQ_\infty)=0$, which complete the proof.
+% \end{proof}
+
+Similarly, as \cite[Proposition 9.18]{BSTW} (see also \cite[Proposition 3.2.1]{CGS}), the following theorem holds.
+\begin{thm}\label{2_var}
+    For every nontrivial multiplicative set $ S \subset\Lambda_K$, the following are equivalent
+    \begin{enumerate}
+        \item $S^{-1}\Char_{\Lambda_K}(\CX_{\CF_\ord}(E/K_\infty))\subset(\CL_p^\mathrm{PR}(E/K))$.
+        \item $S^{-1}\Char_{\Lambda_K}(\CX_{\CF_\Gr}(E/K_\infty))\Lambda_K^{\ur}\subset(\CL_p^{\Gr}(E/K))$.
+    \end{enumerate}
+    The same result holds for the opposite divisibilities.
+\end{thm}
+By Theorem \ref{2_var} and Corollary \ref{BDP1}, there exists a nontrivial multiplicative set $S\subset \Lambda_K^+\subset\Lambda_K$ such that
+$$S^{-1}\Char_{\Lambda_K}(\CX_{\CF_\Gr}(E/K_\infty))\Lambda_K^{\ur}\subset(\CL_p^{\Gr}(E/K)).$$
+We may assume that $S$ is generated by prime elements in the unique factorization domain $\Lambda_K$. 
+For height one prime $P\subset \Lambda_K^{\ur}$, if $P\cap S\neq \emptyset$, we have $P=P^+\Lambda_K^{\ur}$ for some $P^+\subset \Lambda_K^{\ur,+}$.
+However, by \cite[Theorem B]{hsieh2014special} and Proposition \ref{comp},
+$$\mu(\CL_p^{\Gr}(E/K)^-)=\mu(\CL_p^{\mathrm{BDP}}(E/K))=0,$$ 
+where $\mu(\cdot)$ denotes the $\mu$-invariant. 
+Hence, 
+\[\ord_{P}(\CL_p^{\Gr}(E/K))=0\]
+if $P\subset \Lambda_K^{\ur}$ is a height one prime of the form $P=P^+\Lambda_K^{\ur}$ for some $P^+\subset \Lambda_K^{\ur,+}$.
+It implies that
+$$\Char_{\Lambda_K}(\CX_{\CF_\Gr}(E/K_\infty))\Lambda_K^{\ur}\subset(\CL_p^{\Gr}(E/K)).$$
+
+Moreover, if (\ref{Imag}) holds, similarly to \cite[Theorem 3.30]{skinner2014iwasawa}, by using \cite[Theorem 17.4]{Kato} and a  commutative algebra lemma (\cite[Lemma 3.2]{skinner2014iwasawa}), we have that Conjecture \ref{mainconj} (2) is true.
+Therefore Conjecture \ref{mainconj} (1) holds.
+Note that in \cite{skinner2014iwasawa}, the condition $\Im(\rho_{E})\supset \SL_2(\BZ_p)$ is used, but it can be replaced by (\ref{Imag}) as discussed in the last paragraph of \cite[page 187]{ski2016}.
+
+\subsection{Mazur's main conjecture}
+Let $E/\BQ$ be an elliptic curve of conductor $N$, $p>2$ a prime such that $E$ has good ordinary reduction at $p$. 
+Suppose that the residue representation $\bar{\rho}_{E}:G_\BQ\rightarrow \Aut(E[p])$ is irreducible.  
+\begin{conj}(Mazur's main conjecture)\label{cyc_main}
+    $\CX_{\CF_\ord}(E/\BQ_\infty)$ is $\Lambda_\BQ$-torsion and
+    \[\Char_{\Lambda_\BQ}(\CX_{\CF_\ord}(E/\BQ_\infty))=(\CL_p^{\mathrm{MSD}}(E/\BQ)).\]
+\end{conj}
+% \begin{lem}
+%     Let $\rho:\Gal_\BQ\ra\GL_2(\BF_p)$ be an odd irreducible representation with $p>2$, then $\rho$ is absolutely irreducible.
+% \end{lem}
+    Choose an imaginary quadratic field $K$ such that $p$ is split in $K$ and $(E,K)$ satisfies the Heegner hypothesis. 
+    Similarly to \cite[Theorem 3.33]{skinner2014iwasawa}, by Theorem \ref{mainthm1} and descent arguments, we have the following theorem.
+    Note that by Serre (\cite[Section 3.3]{Serre}), the condition $\bar{\rho}_{E}$ is irreducible implies that $\bar{\rho}_{E}$ is absolutely irreducible in the case $p>2$.
+\begin{thm}\label{cyc}
+     $\CX_{\CF_\ord}(E/\BQ_\infty)$ is $\Lambda_\BQ$-torsion and
+    \[\Char_{\Lambda_\BQ}(\CX_{\CF_\ord}(E/\BQ_\infty))\otimes\BQ_p=(\CL_p^{\mathrm{MSD}}(E/\BQ))\]
+    in $\Lambda_\BQ\otimes \BQ_p$. 
+    Moreover, if (\ref{Imag}) holds, we have
+    \[\Char_{\Lambda_\BQ}(\CX_{\CF_\ord}(E/\BQ_\infty))=(\CL_p^{\mathrm{MSD}}(E/\BQ))\]
+    in $\Lambda_\BQ$.
+\end{thm}
+
+
+\subsection{Anticyclotomic main conjectures}
+Let $E/\BQ$ be an elliptic curve of conductor $N$, $p>2$ a prime such that $E$ has good ordinary reduction at $p$, $K$ an imaginary quadratic field such that $p=\fp\bar{\fp}$ split in $K$ and $(E,K)$ satisfies the Heegner hypothesis.
+Assume that residue representation $\bar{\rho}_E|_{G_K}:G_K\rightarrow\Aut(E[p])$ is irreducible.
+
+\begin{conj}(BDP main conjecture) 
+     $\CX_{\CF_\Gr}(E/K_\infty^-)$ is $\Lambda_K$-torsion and
+    \[\Char_{\Lambda_K}(\CX_{\CF_\ord}(E/K_\infty^-))\Lambda_K^{\ur}=(\CL_p^{\mathrm{BDP}}(E/K)).\]    
+\end{conj}
+
+Fix a modular parametrization $\pi: X_0(N)\rightarrow E$. In \cite{PR}, Perrin-Riou constructed an element $\kappa\in S_{\ord}(E/K_\infty^-)$ via the Kummer images of Heegner points on $X_0(N)$, which is $\Lambda_K^-$-non-torsion by Cornut-Vatsal \cite{CV}. Then she formulated an anticyclotomic main conjecture as follows.
+
+ \begin{conj}(Heegner point main conjecture)
+    $S_{\ord}(E/K_\infty^-)$ and $\CX_{\ord}(E/K_\infty^-)$ are both $\Lambda_K^-$-rank one, and
+    \[\Char_{\Lambda_K^-}(\CX_{\ord}(E/K_\infty^-)_\tor)=\Char_{\Lambda_K^-}(S_{\ord}(E/K_\infty^-)/\Lambda_K^-\cdot\kappa)^2.\] 
+ \end{conj}
+
+ \begin{thm}\label{ac}
+    \begin{enumerate}
+        \item $\CX_{\CF_\Gr}(E/K_\infty^-)$ is $\Lambda_K$-torsion and
+        \[\Char_{\Lambda_K}(\CX_{\CF_\ord}(E/K_\infty))\Lambda_K^{\ur}\otimes\BQ_p=(\CL_p^{\mathrm{BDP}}(E/K))\]
+        holds in $\Lambda_K\otimes\BQ_p$.
+        Moreover, if (\ref{Imag}) holds, then 
+        \[\Char_{\Lambda_K}(\CX_{\CF_\ord}(E/K_\infty))\Lambda_K^{\ur}=(\CL_p^{\mathrm{BDP}}(E/K)).\]
+
+        \item  $S_{\ord}(E/K_\infty^-)$ and $\CX_{\ord}(E/K_\infty^-)$ are both $\Lambda_K^-$-rank one, and
+        \[\Char_{\Lambda_K^-}(\CX_{\ord}(E/K_\infty^-)_\tor)\otimes\BQ_p=\Char_{\Lambda_K^-}(S_{\ord}(E/K_\infty^-)/\Lambda_K^-\cdot\kappa)^2\otimes\BQ_p\]
+        holds in $\Lambda_K\otimes\BQ_p$.
+        Moreover, if (\ref{Imag}) holds, then 
+         \[\Char_{\Lambda_K^-}(\CX_{\ord}(E/K_\infty^-)_\tor)=\Char_{\Lambda_K^-}(S_{\ord}(E/K_\infty^-)/\Lambda_K^-\cdot\kappa)^2.\]
+    \end{enumerate}
+\end{thm}
+
+We prove this theorem in the remaining part of this subsection. 
+First recall a theorem in \cite{CGS}. 
+\begin{thm}\cite[Theorem 5.5.2]{CGS}\label{HPMC}
+    $S_{\ord}(E/K_\infty^-)$ and $\CX_{\ord}(E/K_\infty^-)$ are both $\Lambda_K^-$-rank one, and
+    \[\Char_{\Lambda_K^-}(\CX_{\ord}(E/K_\infty^-)_\tor)\otimes\BQ_p\supset\Char_{\Lambda_K^-}(S_{\ord}(E/K_\infty^-)/\Lambda_K^-\cdot\kappa)^2\otimes\BQ_p\]
+    holds in $\Lambda_K^-\otimes\BQ_p$. 
+    % If moreover, the $p$-adic Galois representation $\rho_E:G_K\rightarrow\Aut_{\BZ_p}(T_pE)$ associated to $E$ has full imagine, then
+    % \[\Char_{\Lambda_K^-}(\CX_{\ord}(E/K_\infty^-)_\tor)\supset \Char_{\Lambda_K^-}(S_{\ord}(E/K_\infty^-)/\Lambda_K^-\cdot\kappa)^2.\]
+\end{thm}
+
+Similarly to \cite[Theorem 5.2]{BCK}, we have the following theorem. 
+\begin{thm}\label{ant}
+    $\CX_{\CF_\Gr}(E/K_\infty^-)$ is $\Lambda_K$-torsion and for every nontrivial multiplicative set $ S\subset \Lambda_K^-$, the following are equivalent
+    \begin{enumerate}
+        \item $S^{-1}\Char_{\Lambda_K}(\CX_{\CF_\Gr}(E/K_\infty^-))\Lambda_K^{\ur,-}\supset(\CL_p^{\mathrm{BDP}}(E/K))$.
+
+        \item $S^{-1}\Char_{\Lambda_K^-}(\CX_{\ord}(E/K_\infty^-)_\tor)\supset S^{-1}\Char_{\Lambda_K^-}(S_{\ord}(E/K_\infty^-)/\Lambda_K^-\cdot\kappa)^2$.
+    \end{enumerate}
+    The same result holds for the opposite divisibilities.
+\end{thm}
+
+Since $\CL_p^{\mathrm{BDP}}(E/K)$ is nonzero (\cite[Corollary 4.5]{BCK}), by the argument in Section \ref{proof}, there exists a nontrivial multiplicative set $S\subset \Lambda_K^+\subset\Lambda_K$ such that for any $s\in S$, $\gamma^+-1\nmid s$, and 
+$$S^{-1}\Char_{\Lambda_K}(\CX_{\CF_\Gr}(E/K_\infty))\Lambda_K^{\ur}\subset(\CL_p^{\Gr}(E/K)).$$
+By Lemma \ref{bdp_des}, we have
+\[\Char_{\Lambda_K}(\CX_{\CF_\Gr}(E/K_\infty^-))\Lambda_K^{\ur}\otimes\BQ_p\subset(\CL_p^{\mathrm{BDP}}(E/K)).\]
+The other direction divisibility is given by combining Theorem \ref{HPMC} and Theorem \ref{ant}.
+
+Moreover, if (\ref{Imag}) holds, then 
+$$\Char_{\Lambda_K}(\CX_{\CF_\Gr}(E/K_\infty))\Lambda_K^{\ur}\subset(\CL_p^{\Gr}(E/K)).$$
+The remaining part can be deduced from above divisibility and Mazur's main conjecture (Theorem \ref{cyc}). 
+See the proof in \cite[Section 12.2.1]{BSTW} for details.
+
+\subsection{Applications}
+Let $E/\BQ$ be an elliptic curve of conductor $N$, $p>2$ a prime such that $E$ has good ordinary reduction at $p$.
+\begin{thm}
+For an integer $r\leq 1$, the following are equivalent
+        \begin{enumerate}
+            \item $\rank_\BZ E(\BQ)=r$ and $\#\Sha(E/\BQ)<\infty$,
+            \item $\corank_{\BZ_p}\Sel_{p^\infty}(E/\BQ)=r$,
+            \item $\ord_{s=1}L(E/\BQ,s)=r$.
+        \end{enumerate}
+        Under any of the above, if (\ref{Imag}) also holds, then $p$-part BSD formula for $E$ holds, i.e.,
+   \[
+\left| \frac{L^{(r)}(1, E)}{r! \cdot \Omega_{E} R_E} \right|_{p} = \left| \frac{\# \Sha(E)[p^\infty] \cdot \prod_{\ell \mid N} c_\ell(E) }{(\#E(\BQ)_\tor)^2}\right|_{p},
+\]
+where $R_E$ is the regulator of $E(\BQ)$, $\Omega_{E}$  the Néron period, $c_\ell(E)$  the Tamagawa
+number at a prime $\ell$, and $| \cdot |_p$ the p-adic absolute value. 
+\end{thm}
+
+% By \cite{FH}, we can choose an imaginary quadratic field $K$ such that 
+\begin{proof}
+    (1) $\Rightarrow$ (2) is trivial.  
+    (3) $\Rightarrow$ (1) is given by Gross-Zagier (\cite{GZ}) and Kolyvagin (\cite{Kol}). 
+    For (2) $\Rightarrow$ (3), we can choose an imaginary quadratic field $K$ such that 
+    $\ord_{s=1}L(E^{K},s)\leq 1$ and $(E,K)$ satisfies the Heegner hypothesis by \cite{FH}.
+    Similarly to \cite[Theorem 1.9]{Wan}, by applying descent arguments to  (the rational part of)  Theorem \ref{ac} (2) and using Gross-Zagier formula, we have
+    \[\corank_{\BZ_p}\Sel_{p^\infty}(E/K)=1 \text{ implies }\ord_{s=1}L(E/K,s)=1,\]
+    therefore we have  (2) $\Rightarrow$ (3) holds. 
+
+    The rank $0$ $p$-part BSD formula comes from (the integral part of) Theorem \ref{cyc} and descent arguments (see \cite[Section 3.6.1]{skinner2014iwasawa} for details). 
+    Choosing an imaginary quadratic field $K$ as above, the rank $1$ $p$-part BSD formula comes from (the integral part of) Theorem \ref{ac} and descent arguments (see \cite{JSW}  for details).
+\end{proof}
+
+
+\section*{Conflict of interest}
+On behalf of all authors, the corresponding author states that there is no conflict of interest.
+
+
+
+
+\bibliographystyle{amsalpha}
+\bibliography{ref}
+\end{document}

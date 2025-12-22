@@ -6,8 +6,9 @@ for the concrete `WeilTestFunction` test space.
 
 **Status**:
 - The Fourier inversion statement is currently recorded as an `axiom` in `ZetaFourierInversionWeil.lean`.
-- The full det₂ analytic obligation bundle is currently an `axiom` (`zetaDet2AnalyticAssumptions_weil`),
-  to be replaced later by a Mathlib-based proof.
+- The full det₂ analytic obligation bundle is not yet formalized; downstream code should take
+  `ZetaDet2AnalyticAssumptions` as an explicit hypothesis bundle (to be replaced later by a
+  Mathlib-based proof).
 -/
 
 import RiemannRecognitionGeometry.ExplicitFormula.ZetaInstantiation
@@ -118,13 +119,9 @@ theorem summable_norm_vonMangoldt_mul_rpow_neg {c : ℝ} (hc : 1 < c) :
 This package includes the Fourier inversion lemma and the integrability/summability bookkeeping
 needed by the explicit-formula cancellation skeleton.
 
-At the current stage this remains an explicit assumption bundle (an `axiom`),
-to be replaced later by a Mathlib-based proof.
+At the current stage this remains an explicit assumption bundle to be supplied by the user (or
+proved later from Mathlib).
 -/
-axiom zetaDet2AnalyticAssumptions_weil
-    (LC : LagariasContourFramework WeilTestFunction)
-    (hc : 1 < LC.c) :
-    ZetaDet2AnalyticAssumptions (F := WeilTestFunction) (LC := LC) (testValue := fun h x => h.toSchwartz x)
 
 end Weil
 
