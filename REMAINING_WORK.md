@@ -72,17 +72,32 @@
       (the y-derivative analogue; needed to control the full gradient energy `‖∇(conjugate Poisson)‖^2`).
     - `PoissonExtension.poisson_energy_identity_L2` (global weighted energy identity / Plancherel)
     - `PoissonExtension.tail_annulus_decay_bound` (ring decomposition estimate for the tail term)
+  - **New blocker detail (2025-12-22)**: in the vendored Mathlib here, Fourier analysis currently provides
+    **Fourier inversion** (`Mathlib.Analysis.Fourier.Inversion`) and the general “self-adjointness” identity
+    `VectorFourier.integral_fourierIntegral_smul_eq_flip`, but there is **no ready-made Parseval/Plancherel theorem**
+    for the real Fourier integral on `L²(ℝ)` (and no Poisson-kernel Fourier transform API).
+    Concretely, proving `poisson_energy_identity_L2` would require adding (at least) the following new Lean theorems:
+    - `PoissonExtension.plancherel_fourierIntegral_L2` (or a Schwartz-level Parseval lemma plus `L²` density):
+      \(\int_{\mathbb R} |\widehat f(\xi)|^2\,d\xi = \int_{\mathbb R} |f(x)|^2\,dx\).
+    - `PoissonExtension.fourierIntegral_poissonKernel` (Cauchy/Poisson kernel transform):
+      \(\widehat{(x \mapsto \frac{1}{\pi}\frac{y}{x^2+y^2})}(\xi) = e^{-2\pi|\xi|y}\) for \(y>0\).
+    - (Optional, if staying with the conjugate kernel) `PoissonExtension.fourierIntegral_conjugatePoissonKernel`:
+      \(\widehat{(x \mapsto \frac{1}{\pi}\frac{x}{x^2+y^2})}(\xi) = -i\,\mathrm{sgn}(\xi)\,e^{-2\pi|\xi|y}\).
 
 - **(G1) Discharge the RG bottleneck**: prove `RGAssumptions.j_carleson_energy_axiom_statement` (or replace it with a theorem) using a Hardy/Dirichlet/Carleson/CR–Green pipeline.
 - **(G2) Produce an explicit oscillation certificate**: prove `OscillationTarget` for `logAbsXi`.
 - **(G2) Produce an explicit oscillation certificate**: prove `OscillationTarget` for `logAbsXi`.
   - **Status**: **BLOCKED** (no existing lemma path in this repo; this is a genuine analytic theorem about
     `logAbsXi(t)=log|ζ(1/2+it)|` with a numerically small BMO constant).
+  - **Audit note (2025-12-22)**: `OscillationTarget` currently has **no proof entry-point** in Lean: the only
+    available lemma is `FeffermanStein.logAbsXi_mean_oscillation_bound`, which merely projects the bound from an
+    assumed `InBMOWithBound logAbsXi M`. In particular, there is no theorem that produces any `M` (let alone
+    `M ≤ C_tail`) from analytic properties of ζ/ξ in this repo.
   - **What “DONE” would mean in Lean**: a theorem of the form
     `∃ M, InBMOWithBound logAbsXi M ∧ M ≤ C_tail` (with `C_tail = 0.20` from `Basic.lean`), i.e.
     `∀ a<b, meanOscillation logAbsXi a b ≤ M` with explicit `M`.
   - **Smallest missing sub-lemmas to even start** (suggested next targets; live in `RiemannRecognitionGeometry/FeffermanStein.lean`):
-    - `log_singularity_meanOscillation_le`:
+    - `log_singularity_meanOscillation_le` (next smallest *doable* chip):
       `∃ C>0, ∀ γ a b, a<b → meanOscillation (fun t => Real.log |t-γ|) a b ≤ C`.
       (Elementary real analysis; this is a foundational chip used in every classical BMO proof for `log|F|`.)
     - `logAbsXi_hadamard_factorization_on_line` (statement-shape TBD):
@@ -104,11 +119,25 @@
     a real-valued phase lift `theta` of `phaseXi` on Whitney bases, an FTC-valid velocity density `dPhase`
     (`HasDerivAt` + `IntervalIntegrable`), and the pairing bound
     `|∫ dPhase| ≤ sqrt(xiEbox_poisson I) * (C_geom * |I|^{-1/2})`.
+    - **Audit note (2025-12-22)**: inspected `Port/XiCRGreenS2Interfaces.lean` and confirmed the interface is
+      purely “wiring”: it assumes the existence of (i) a differentiable real lift of `phaseXi` on each Whitney base,
+      and (ii) the key pairing inequality. No construction exists in the repo today.
   - **Cofactor side (`Port.CofactorCRGreenS2.Assumptions`)**: defined as
     `∃ h : Port.CofactorOuterLogBranch.CofactorOuterLogBranch, PairingBound (greenTraceIdentity h)`.
     The repo already contains the holistic package `Port.CofactorOuterLogBranch` (lift + FTC velocity + Poisson
     pairing/trace convergence hook), but there is **no theorem** constructing such an `h`, and there is no lemma
     deriving the required `PairingBound` inequality from the Poisson pairing hook plus the energy definition.
+    - **Audit note (2025-12-22)**: the *phase-lift agreement* subfield is not the core blocker: we already have a
+      canonical real representative `rgCofactorPhaseReal ρ t := argXi t + rgBlaschkePhase ρ t` with
+      `rgCofactorPhaseAngle ρ t = (rgCofactorPhaseReal ρ t : Real.Angle)` in `Port/RealPhaseTransfer.lean`.
+      What’s missing is an FTC-valid velocity for this representative (i.e. derivative theory for `argXi` on Whitney
+      bases) and then the actual Cauchy–Schwarz pairing inequality.
+    - ✅ **DONE (2025-12-22)**: `RiemannRecognitionGeometry.hasDerivAt_rgBlaschkePhase`
+      (derivative of the explicit Blaschke arctan term). The remaining derivative obstruction is now isolated to
+      `argXi`.
+    - ✅ **DONE (2025-12-22)**: `RiemannRecognitionGeometry.hasDerivAt_rgBlaschkePhase_simplified` and
+      `RiemannRecognitionGeometry.intervalIntegrable_rgBlaschkePhase_deriv_of_ne` in `Phase.lean`, giving the
+      Blaschke derivative in the clean Poisson-kernel form and its `IntervalIntegrable` proof (under `ρ.re ≠ 1/2`).
   - **Next smallest sub-lemma to attempt**: introduce `RiemannRecognitionGeometry/Port/XiOuterLogBranch.lean`
     (analog of `Port/CofactorOuterLogBranch.lean`) as a *statement-shape* package for the xi-side lift + FTC + Poisson
     pairing, and prove the purely-formal wiring lemma

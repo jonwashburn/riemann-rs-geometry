@@ -265,6 +265,34 @@ def tendstoXi : Prop :=
   TendstoLocallyUniformlyOn F riemannXi atTop strip
 
 /-!
+## Play A: bridge lemma scaffold for `CCM.tendstoXi`
+
+In the genuine CCM argument one naturally compares a “finite-rank / finite cutoff” approximant
+to an intermediate `λ`-level object, and then compares that intermediate object to `Ξ`.
+
+The hard analysis is in producing **uniform error bounds**; the lemma below is the purely
+topological glue:
+
+- if `G n → Ξ` locally uniformly on `strip`, and
+- `F n` is uniformly close to the *varying* `G n` on every compact `K ⊆ strip`,
+
+then `F n → Ξ` locally uniformly on `strip`.
+-/
+
+theorem tendstoXi_of_exists_intermediate
+    (G : ℕ → ℂ → ℂ)
+    (hG : TendstoLocallyUniformlyOn G riemannXi atTop strip)
+    (hclose :
+      ∀ K : Set ℂ, K ⊆ strip → IsCompact K →
+        ConnesConvergenceBundle.TendstoUniformlyCloseOn F G atTop K) :
+    tendstoXi := by
+  -- Reduce to the general “close + limit” glue on the open strip.
+  simpa [tendstoXi] using
+    (ConnesConvergenceBundle.tendstoLocallyUniformlyOn_of_forall_isCompact_tendstoUniformlyCloseOn
+      (α := ℂ) (β := ℂ) (ι := ℕ) (F := F) (G := G) (f := riemannXi) (p := atTop) (s := strip)
+      isOpen_strip hclose hG)
+
+/-!
 ## Item (3): holomorphy on `upperStrip` / `lowerStrip`
 
 For the current toy closed-form `CCM.F`, holomorphy on `upperStrip` and `lowerStrip` is elementary:

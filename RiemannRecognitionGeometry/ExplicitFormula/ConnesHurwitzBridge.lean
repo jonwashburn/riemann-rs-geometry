@@ -22,6 +22,7 @@ replaced later.
 
 import RiemannRecognitionGeometry.ExplicitFormula.HurwitzGate
 import RiemannRecognitionGeometry.ExplicitFormula.Lagarias
+import Mathlib.Data.Nat.Factorial.Basic
 import Mathlib.NumberTheory.LSeries.Nonvanishing
 import Mathlib.NumberTheory.LSeries.HurwitzZetaValues
 import Mathlib.NumberTheory.ZetaValues
@@ -68,7 +69,7 @@ This is standard analytic-number-theory glue, but we keep it as an explicit targ
 
 namespace ConnesHurwitzGlue
 
-open scoped BigOperators
+open scoped BigOperators Nat
 open Real
 
 /-!
@@ -82,7 +83,7 @@ private lemma bernoulli_two_mul_ne_zero (k : ℕ) (hk : k ≠ 0) : bernoulli (2 
   classical
   -- Let `f n = 1 / n^(2k)` (with the convention `1/0 = 0` in `ℝ`).
   let f : ℕ → ℝ := fun n : ℕ => 1 / (n : ℝ) ^ (2 * k)
-  have hsum := (Mathlib.NumberTheory.ZetaValues.hasSum_zeta_nat (k := k) hk)
+  have hsum := (hasSum_zeta_nat (k := k) hk)
   have hsummable : Summable f := by
     -- `HasSum` implies `Summable`.
     simpa [f] using hsum.summable
@@ -130,12 +131,12 @@ if `s = -n` with `n` odd, then `ζ(s) ≠ 0`.
 private lemma riemannZeta_neg_nat_ne_zero_of_odd {n : ℕ} (hn : Odd n) :
     riemannZeta (-(n : ℂ)) ≠ 0 := by
   -- Use the Bernoulli formula for ζ(-n).
-  have hEq := Mathlib.NumberTheory.LSeries.HurwitzZetaValues.riemannZeta_neg_nat_eq_bernoulli (k := n)
+  have hEq := riemannZeta_neg_nat_eq_bernoulli (k := n)
   -- Show the RHS is nonzero by showing `bernoulli (n+1) ≠ 0`.
   have hbernoulli_ne : bernoulli (n + 1) ≠ 0 := by
     -- `n` odd ⇒ `n+1` even ⇒ `n+1 = 2*k` with `k ≠ 0`.
     have hEven : Even (n + 1) := hn.add_one
-    rcases hEven.exists_eq_two_mul with ⟨k, hk⟩
+    rcases hEven with ⟨k, hk⟩
     have hk0 : k ≠ 0 := by
       intro hk0
       -- then `n+1 = 0`, impossible
@@ -145,7 +146,9 @@ private lemma riemannZeta_neg_nat_ne_zero_of_odd {n : ℕ} (hn : Odd n) :
     -- `hk : n+1 = 2*k` so `bernoulli (n+1) = bernoulli (2*k)`.
     -- We use `2*k` as `2*k = 2*k` (and commutativity is not needed).
     -- `bernoulli_two_mul_ne_zero` is stated for `2*k`.
-    simpa [hk, two_mul] using (bernoulli_two_mul_ne_zero (k := k) hk0)
+    have hk' : n + 1 = 2 * k := by simpa [two_mul] using hk
+    -- Rewrite and apply `bernoulli_two_mul_ne_zero`.
+    simpa [hk', two_mul] using (bernoulli_two_mul_ne_zero (k := k) hk0)
   -- Now conclude ζ(-n) ≠ 0.
   -- From `ζ(-n) = (-1)^n * bernoulli(n+1)/(n+1)`, it suffices to show `bernoulli(n+1) ≠ 0`.
   intro hz
@@ -156,23 +159,23 @@ private lemma riemannZeta_neg_nat_ne_zero_of_odd {n : ℕ} (hn : Odd n) :
   have hpow : ((-1 : ℂ) ^ n) ≠ 0 := by
     exact pow_ne_zero n (by norm_num : (-1 : ℂ) ≠ 0)
   have hden : ((n + 1 : ℕ) : ℂ) ≠ 0 := by
-    exact Nat.cast_add_one_ne_zero n
-  -- Multiply both sides by the denominator and divide out the unit `(-1)^n`.
+    exact Nat.cast_ne_zero.2 (Nat.succ_ne_zero n)
+  -- Clear the denominator using `div_eq_zero_iff` and `hden`.
   have : ((-1 : ℂ) ^ n * (bernoulli (n + 1) : ℂ)) = 0 := by
-    -- `a / b = 0` implies `a = 0` when `b ≠ 0`.
-    -- We rewrite `a / b` as `a * b⁻¹` and cancel.
-    -- Use `mul_eq_zero` after multiplying by `b`.
-    have := congrArg (fun z : ℂ => z * (n + 1 : ℂ)) this
-    -- simplify `(a / b) * b = a`
-    simpa [div_eq_mul_inv, mul_assoc, inv_mul_cancel₀ hden] using this
+    have hdiv : ((-1 : ℂ) ^ n * bernoulli (n + 1) / (n + 1) : ℂ) = 0 := this
+    rcases (div_eq_zero_iff).1 hdiv with hnum | hden0
+    · simpa [mul_assoc] using hnum
+    ·
+      -- `hden0` is the simplified form `((n:ℂ)+1)=0`; rewrite it back to `((n+1:ℕ):ℂ)=0`.
+      have hden0' : ((n + 1 : ℕ) : ℂ) = 0 := by
+        simpa using hden0
+      exact (hden hden0').elim
   rcases mul_eq_zero.mp this with hpow0 | hbern0
   · exact False.elim (hpow hpow0)
   · -- `bernoulli (n+1) = 0`, contradiction
-    exact hbernoulli_ne (by
-      -- cast back to ℚ
-      -- if the cast to ℂ is zero, the ℚ number is zero
-      -- `norm_cast` handles this.
-      exact_mod_cast hbern0)
+    have : bernoulli (n + 1) = 0 :=
+      Rat.cast_injective (α := ℂ) (by simpa using hbern0)
+    exact hbernoulli_ne this
 
 /-!
 ### Main glue lemma: Ξ-strip zero-freeness ⇒ Mathlib RH
@@ -215,7 +218,7 @@ theorem riemannHypothesis_of_xi_zeroFree_offRealAxis_inStrip
         -- We already excluded `n=0`, so evenness would contradict `hnot`.
         by_contra hodd
         have hEven : Even n := Nat.not_odd_iff_even.mp hodd
-        rcases hEven.exists_eq_two_mul with ⟨m, hm⟩
+        rcases hEven with ⟨m, hm⟩
         cases m with
         | zero =>
             -- then n = 0, contradiction
@@ -226,12 +229,13 @@ theorem riemannHypothesis_of_xi_zeroFree_offRealAxis_inStrip
             have : ∃ k : ℕ, (-(n : ℂ)) = -2 * (k + 1) := by
               refine ⟨m, ?_⟩
               -- rewrite `n` and simplify
-              -- `hm : n = 2 * (Nat.succ m)`
+              -- `hm : n = (m+1)+(m+1) = 2*(m+1)`
+              have hn2 : n = 2 * (Nat.succ m) := by
+                -- `2*(m+1) = (m+1)+(m+1)`
+                simpa [two_mul, Nat.succ_eq_add_one, add_assoc, add_left_comm, add_comm] using hm
               -- so `-(n:ℂ) = -2 * (m+1)`
-              simpa [hm, Nat.succ_eq_add_one, mul_assoc, mul_left_comm, mul_comm]
+              simpa [hn2, Nat.succ_eq_add_one, mul_assoc, mul_left_comm, mul_comm]
             exact hnot this
-        -- done
-        exact False.elim (by cases hEven)
       -- Now use the Bernoulli formula to contradict `hs0`.
       exact (riemannZeta_neg_nat_ne_zero_of_odd (n := n) hn_odd) (by simpa using hs0)
     · -- Non-integer case: use the ζ functional equation to reflect to `re ≥ 1`, contradiction.
@@ -265,8 +269,27 @@ theorem riemannHypothesis_of_xi_zeroFree_offRealAxis_inStrip
     -- `1/2 + I*t = s`
     have : (1 / 2 : ℂ) + Complex.I * t = s := by
       -- unfold `t` and simplify
-      simp [t, riemannXi, mul_assoc, sub_eq_add_neg, add_assoc, add_left_comm, add_comm]
-    simpa [riemannXi, this]
+      -- `t = -I*(s-1/2)` so `I*t = s-1/2`
+      have : Complex.I * t = s - (1 / 2 : ℂ) := by
+        -- Expand and simplify using `I*I = -1`.
+        -- We do this in two small algebraic steps to avoid simp-associativity issues.
+        have hII : -(Complex.I * (Complex.I * (s - (1 / 2 : ℂ)))) = s - (1 / 2 : ℂ) := by
+          -- `-(I*(I*x)) = x`
+          calc
+            -(Complex.I * (Complex.I * (s - (1 / 2 : ℂ))))
+                = -((Complex.I * Complex.I) * (s - (1 / 2 : ℂ))) := by
+                    -- reassociate `I*(I*x)` to `(I*I)*x`
+                    simpa [mul_assoc] using congrArg (fun z : ℂ => -z) (mul_assoc Complex.I Complex.I _).symm
+            _ = -((-1 : ℂ) * (s - (1 / 2 : ℂ))) := by simp [Complex.I_mul_I]
+            _ = s - (1 / 2 : ℂ) := by ring
+        -- Now `I*t = s-1/2` by unfolding `t` and using `hII`.
+        simpa [t, mul_assoc, sub_eq_add_neg] using hII
+      -- add `1/2` on the left
+      calc
+        (1 / 2 : ℂ) + Complex.I * t = (1 / 2 : ℂ) + (s - (1 / 2 : ℂ)) := by simpa [this]
+        _ = s := by ring
+    -- `riemannXi t = xiLagarias (1/2 + I*t)` and `this : 1/2 + I*t = s`.
+    simpa [riemannXi] using congrArg xiLagarias this
   have hXi0 : riemannXi t = 0 := by
     simpa [hXi_eq] using hxi0
 

@@ -18,7 +18,9 @@ as **assumption bundles / targets**, not global axioms.
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.Algebra.Order.Floor
 import Mathlib.Topology.Algebra.InfiniteSum.Real
-import Mathlib.Analysis.NormedSpace.Basic
+import Mathlib.Topology.Algebra.InfiniteSum.Group
+import Mathlib.Analysis.Normed.Group.InfiniteSum
+import Mathlib.Analysis.Normed.Module.Basic
 import Mathlib.Data.Complex.Basic
 
 noncomputable section
@@ -69,25 +71,72 @@ theorem abs_E_sub_le
     (hSum : Summable (fun n : ℕ => Complex.abs (f ((n + 1 : ℕ) * u) - g ((n + 1 : ℕ) * u)))) :
     Complex.abs (E f u - E g u) ≤
       (Real.sqrt u) * (∑' n : ℕ, Complex.abs (f ((n + 1 : ℕ) * u) - g ((n + 1 : ℕ) * u))) := by
-  -- Expand and apply the triangle inequality for `tsum`.
   classical
-  -- Factor out `sqrt u`.
-  simp [E, mul_sub, sub_mul, Complex.abs.map_mul, Complex.abs_ofReal, Real.sqrt_sq_eq_abs] at *
-  -- The remaining inequality is `‖∑ (a_n)‖ ≤ ∑ ‖a_n‖`.
-  -- Use `norm_tsum_le` on `ℂ` (with `‖z‖ = abs z`).
-  -- Mathlib lemma name is `norm_tsum_le` in `Topology/Algebra/InfiniteSum`.
-  -- We keep this proof lightweight: convert to `‖·‖` and apply `norm_tsum_le`.
-  have h1 :
-      Complex.abs (∑' n : ℕ, (f ((n + 1 : ℕ) * u) - g ((n + 1 : ℕ) * u))) ≤
-        ∑' n : ℕ, Complex.abs (f ((n + 1 : ℕ) * u) - g ((n + 1 : ℕ) * u)) := by
-    simpa [Complex.abs] using
-      (norm_tsum_le (f := fun n : ℕ => (f ((n + 1 : ℕ) * u) - g ((n + 1 : ℕ) * u))) ) hSum
-  -- Reinsert `sqrt u` (as a nonnegative real scalar).
+  -- Abbreviate the shifted sequences.
+  let Fseq : ℕ → ℂ := fun n : ℕ => f ((n + 1 : ℕ) * u)
+  let Gseq : ℕ → ℂ := fun n : ℕ => g ((n + 1 : ℕ) * u)
+  let Hseq : ℕ → ℂ := fun n : ℕ => Fseq n - Gseq n
+
+  -- `Hseq` is summable (since its norm is summable).
+  have hH_norm : Summable (fun n : ℕ => ‖Hseq n‖) := by
+    simpa [Fseq, Gseq, Hseq, Complex.norm_eq_abs] using hSum
+  have hH : Summable Hseq := Summable.of_norm hH_norm
+
+  -- Key estimate: `‖(∑' Fseq) - (∑' Gseq)‖ ≤ ∑' ‖Hseq‖`.
+  have hdiff :
+      ‖(∑' n : ℕ, Fseq n) - (∑' n : ℕ, Gseq n)‖ ≤ ∑' n : ℕ, ‖Hseq n‖ := by
+    by_cases hF : Summable Fseq
+    · -- then `Gseq` is also summable (since `Gseq = Fseq - Hseq`)
+      have hG : Summable Gseq := by
+        have : Gseq = fun n : ℕ => Fseq n - Hseq n := by
+          funext n; simp [Hseq]
+        simpa [this] using hF.sub hH
+      -- rewrite the difference of `tsum`s as `tsum Hseq`
+      have hEq :
+          (∑' n : ℕ, Fseq n) - (∑' n : ℕ, Gseq n) = ∑' n : ℕ, Hseq n := by
+        simpa [Hseq] using (tsum_sub hF hG).symm
+      -- now bound by the sum of norms
+      simpa [hEq] using (norm_tsum_le_tsum_norm hH_norm)
+    · -- if `Fseq` is not summable then neither is `Gseq` (since `Fseq = Gseq + Hseq` and `Hseq` is summable)
+      have hG : ¬ Summable Gseq := by
+        intro hG
+        have : Summable Fseq := by
+          have : Fseq = fun n : ℕ => Gseq n + Hseq n := by
+            funext n; simp [Hseq, sub_eq_add_neg, add_assoc, add_comm, add_left_comm]
+          simpa [this] using hG.add hH
+        exact hF this
+      -- both `tsum`s are `0`, so the LHS norm is `0`.
+      have hnonneg : 0 ≤ ∑' n : ℕ, ‖Hseq n‖ := by
+        -- termwise nonnegativity
+        exact tsum_nonneg fun _n => norm_nonneg _
+      simpa [tsum_eq_zero_of_not_summable hF, tsum_eq_zero_of_not_summable hG] using hnonneg
+
+  -- Multiply the bound by `√u` (coming from `E`), and convert norms back to `Complex.abs`.
   have hsqrt : 0 ≤ Real.sqrt u := Real.sqrt_nonneg u
-  -- `mul_le_mul_of_nonneg_left` on `ℝ`.
-  -- `Complex.abs (E f u - E g u)` has already been simp-rewritten to `Real.sqrt u * abs(tsum ...)` above.
-  -- So we just finish by monotonicity of multiplication by a nonnegative real.
-  exact mul_le_mul_of_nonneg_left h1 hsqrt
+  have hE :
+      ‖E f u - E g u‖ ≤ (Real.sqrt u) * (∑' n : ℕ, ‖Hseq n‖) := by
+    -- unfold `E` and use `mul_sub` + `norm_mul`.
+    -- `E f u - E g u = (√u) * ((∑' Fseq) - (∑' Gseq))`.
+    have :
+        E f u - E g u =
+          ((Real.sqrt u : ℝ) : ℂ) * ((∑' n : ℕ, Fseq n) - (∑' n : ℕ, Gseq n)) := by
+      simp [Connes.E, E, Fseq, Gseq, mul_sub]
+    -- take norms and apply the bound `hdiff`
+    -- `‖((√u):ℂ)‖ = √u`.
+    -- finish
+    -- (convert `‖(∑'F) - (∑'G)‖` using `hdiff`)
+    calc
+      ‖E f u - E g u‖
+          = ‖((Real.sqrt u : ℝ) : ℂ)‖ * ‖(∑' n : ℕ, Fseq n) - (∑' n : ℕ, Gseq n)‖ := by
+              simp [this, norm_mul]
+      _ ≤ ‖((Real.sqrt u : ℝ) : ℂ)‖ * (∑' n : ℕ, ‖Hseq n‖) :=
+            mul_le_mul_of_nonneg_left hdiff (norm_nonneg _)
+      _ = (Real.sqrt u) * (∑' n : ℕ, ‖Hseq n‖) := by
+            -- `‖(r:ℂ)‖ = |r|`, and `|√u| = √u` since `√u ≥ 0`.
+            simp [Complex.norm_eq_abs, abs_of_nonneg hsqrt]
+
+  -- switch `‖·‖` back to `Complex.abs`
+  simpa [Fseq, Gseq, Hseq, Complex.norm_eq_abs] using hE
 
 /-!
 ## “Lemma 7.3 style” decomposition: finite window + tail
@@ -122,7 +171,14 @@ theorem E_eq_sum_range_add_tsum_nat_add
     E f u =
       ((Real.sqrt u : ℝ) : ℂ) *
         ((∑ i in Finset.range N, f ((i + 1 : ℕ) * u)) + ∑' n : ℕ, f ((n + N + 1 : ℕ) * u)) := by
-  simp [E, tsum_succ_mul_eq_sum_range_add_tsum_nat_add (f := f) (u := u) (N := N) hSum]
+  -- avoid `simp` cancelling the scalar factor (which would introduce a spurious disjunction `√u = 0`)
+  simp [E]
+  -- Rewrite the `tsum` using the decomposition lemma (careful: `simp` has already rewritten casts).
+  have h :=
+    tsum_succ_mul_eq_sum_range_add_tsum_nat_add (f := f) (u := u) (N := N) hSum
+  -- After `simp [E]`, the LHS appears as `f ((↑n+1)*u)`; normalize casts and finish.
+  simpa [Nat.cast_add, Nat.cast_one, add_assoc, add_left_comm, add_comm] using congrArg
+    (fun s : ℂ => ((Real.sqrt u : ℝ) : ℂ) * s) h
 
 private lemma mem_Icc_neg_lam_lam_of_mul_le
     {lam u : ℝ} {N : ℕ} (hlam : 0 ≤ lam) (hu : 0 ≤ u) (hNu : (N : ℝ) * u ≤ lam) :
@@ -137,8 +193,11 @@ private lemma mem_Icc_neg_lam_lam_of_mul_le
     exact_mod_cast (Nat.succ_le_of_lt hi)
   have hhigh : ((i + 1 : ℕ) * u) ≤ lam := by
     -- `(i+1)u ≤ Nu ≤ lam`
-    have : ((i + 1 : ℝ) * u) ≤ (N : ℝ) * u := mul_le_mul_of_nonneg_right hi_le hu
-    exact this.trans hNu
+    have hmul' : ((i + 1 : ℝ) * u) ≤ (N : ℝ) * u := mul_le_mul_of_nonneg_right hi_le hu
+    -- rewrite casts so we can chain with `hNu : (N:ℝ)*u ≤ lam`
+    have hmul : ((i + 1 : ℕ) * u) ≤ (N : ℝ) * u := by
+      simpa [Nat.cast_add, Nat.cast_one] using hmul'
+    exact hmul.trans hNu
   exact ⟨hlow, hhigh⟩
 
 /-- Sup bound on `[-λ,λ]` controls the finite “window part” of the E-map difference. -/

@@ -2710,6 +2710,125 @@ as kernels on the coarse interface space $G^{m(\varepsilon)}$ (product heat kern
 This is exactly Proposition~\ref{prop:coarse-doeblin} on the fixed coarse interface state space (noting that $K_{\rm int}^{(\varepsilon)}$ there is the same induced kernel we denote here by $K_{\rm int}^{(a)}$): set $\theta_*:=c_1(\varepsilon)$ and $t_0:=t_0(\varepsilon)$.
 \end{proof}
 
+\subsection*{UCIS closure target (uniform coarse interface smoothing on fixed physical slabs)}
+
+\noindent The coarse-refresh route above records one approach to obtaining a $\beta$--uniform heat--kernel component on a fixed coarse interface. The following theorem packages the \emph{precise} statement that would close the interface minorization bottleneck in a scaling-consistent way (fixed physical thickness, hence a number of lattice ticks $M(a)\simeq 1/a$). We record it as a target closure theorem together with a lemma-by-lemma proof decomposition.
+
+\begin{theorem}[Uniform coarse interface smoothing (UCIS; closure target)]\label{thm:ucis}
+Fix a compact gauge group $G$, a fixed physical slab geometry (e.g. $B_{R_*}$ and maximal tick $a_0>0$ as above), a physical slab thickness $T_{\rm phys}>0$, and a coarse interface resolution $\varepsilon\in(0,\varepsilon_0]$ in physical units, so the coarse interface state space is $G^{m(\varepsilon)}$ (independent of the lattice spacing $a$). Let
+\[
+  M(a)\ :=\ \Big\lceil \frac{T_{\rm phys}}{a}\Big\rceil,\qquad a\in(0,a_0].
+\]
+Let $K_{\rm int}^{(a)}$ denote the induced one--tick interface Markov kernel on the coarse interface space $G^{m(\varepsilon)}$ (as in Lemma~\ref{lem:beta-L-independent-minorization}). Let $P_{t_0}(U,\cdot)$ denote the product heat--kernel Markov kernel on $G^{m(\varepsilon)}$ at time $t_0$, started at $U\in G^{m(\varepsilon)}$.
+
+\smallskip
+\noindent\textbf{Claim.} There exist constants $\theta_*>0$ and $t_0>0$ depending only on the fixed slab geometry and $(G,\varepsilon,T_{\rm phys})$ such that for all $a\in(0,a_0]$, all $\beta\ge 0$, all volumes/boundary conditions, and all $U\in G^{m(\varepsilon)}$,
+\[
+  K_{\rm int}^{(a)\,M(a)}(U,\cdot)\ \ge\ \theta_*\,P_{t_0}(U,\cdot)
+\]
+as kernels on $G^{m(\varepsilon)}$.
+\end{theorem}
+
+\begin{remark}[How UCIS is used]\label{rem:ucis-used}
+UCIS is designed to replace the $\beta$--uniform one--step minorization input used to form the heat--kernel convex split (cf. Corollary~\ref{cor:hk-convex-split-explicit}) by a \emph{physically scaled} $M(a)$--step smoothing statement on a fixed physical slab. Once UCIS holds, the $L^2$ contraction and gap bookkeeping follow from standard functional analysis (e.g. Lemma~\ref{lem:doeblin-L2-gap}) applied to the $M(a)$--step kernel and then converted to a physical-time spectral gap lower bound.
+\end{remark}
+
+\begin{lemma}[UCIS-A: Coarse cell decomposition and disjoint support (target)]\label{lem:ucis-A-cell-decomp}
+Fix $(G,\varepsilon,T_{\rm phys})$. There exists a coarse decomposition of the slab/interface region into finitely many cells (depending only on $\varepsilon$ and $T_{\rm phys}$) and, for each cell, a selection of interior link variables whose plaquette neighborhoods are disjoint across cells, such that each cell’s selected variables influence only that cell’s coarse outgoing interface increment.
+\end{lemma}
+\begin{proof}
+Fix $\varepsilon\in(0,\varepsilon_0]$ and construct the coarse cells by the $\varepsilon$--grid along the reflection hyperplane as in Lemma~\ref{lem:coarse-interface-construction}; this yields finitely many cells intersecting the fixed spatial region (e.g. $B_{R_*}$), hence a finite coarse interface state space $G^{m(\varepsilon)}$.
+
+Fix an integer $m_*\ge 1$ (to be chosen later, e.g. from Lemma~\ref{lem:ball-conv-lower}). For $a$ sufficiently small (depending on $\varepsilon$ and $m_*$), apply Lemma~\ref{lem:cell-disjoint-links} in each coarse cell $C$ to obtain links $\ell_{C,1},\dots,\ell_{C,m_*}$ whose plaquette neighborhoods are disjoint within $C$ and, for distinct cells $C\neq C'$, disjoint across cells.
+
+Finally, by construction of the coarse interface variables (block holonomies/clovers per coarse cell; Lemma~\ref{lem:coarse-interface-construction}), the coarse outgoing increment associated to a cell is a measurable function of link variables inside that cell. Therefore the selected links in $C$ can influence only the coarse increment of $C$, and the family of selected link sets has disjoint plaquette neighborhoods across cells as claimed.
+\end{proof}
+
+\begin{lemma}[UCIS-B: Controlled Jacobian pushforward on a good set (target)]\label{lem:ucis-B-jacobian}
+In the setting of Lemma~\ref{lem:ucis-A-cell-decomp}, for each cell there exists a smooth map from the selected interior link variables to the coarse increment in $G$ whose Jacobian is bounded below on a “good” set of configurations with positive Haar measure, with constants depending only on $(G,\varepsilon,T_{\rm phys})$ (independent of $(a,\beta,L)$ and boundary conditions).
+\end{lemma}
+\begin{proof}[Proof sketch / placement]
+This is a finite-dimensional smooth change-of-variables statement on compact manifolds (after tree gauge). The output is a uniform pushforward lower bound of Haar mass onto a fixed-radius ball in $G$ conditional on the good set.
+\end{proof}
+
+\begin{lemma}[UCIS-C: Single-cell $\beta$-uniform ball minorization (target)]\label{lem:ucis-C-cell-ball}
+For each coarse cell, there exist $r_*>0$ and $p_*>0$ depending only on $(G,\varepsilon,T_{\rm phys})$ such that for all boundary conditions and all $\beta\ge 0$, the conditional law of the cell’s coarse increment admits the measure minorization
+\[
+  K_{\mathrm{cell}}(\cdot)\ \ge\ p_*\,\nu_{r_*}(\cdot),
+\]
+where $\nu_{r_*}$ is normalized Haar restricted to $B_G(\mathbf 1,r_*)$. In particular,
+\(
+  \mathbb P(\Delta_{\mathrm{cell}}\in B_G(\mathbf 1,r_*))\ge p_*.
+\)
+\end{lemma}
+\begin{proof}[Proof sketch / placement]
+This is the analytic core: a $\beta$--uniform lower bound for a fixed-radius small-ball event for a finite-dimensional Wilson conditional law on a cell. One route is via tree gauge, explicit one-link conditional laws of matrix-Fisher type, and a coarse “refresh” mechanism that does not lose mass as $\beta\to\infty$.
+\end{proof}
+
+\begin{lemma}[UCIS-D: Cell factorization $\Rightarrow$ product small-ball component (target)]\label{lem:ucis-D-product-ball}
+Assuming Lemmas~\ref{lem:ucis-A-cell-decomp} and \ref{lem:ucis-C-cell-ball}, the joint conditional law of the coarse outgoing interface increments admits the product minorization
+\[
+  K_{\mathrm{int}}^{(a)}(U,\cdot)\ \ge\ p_*^{\,m(\varepsilon)}\,\nu_{r_*}^{\otimes m(\varepsilon)}(\cdot),
+\]
+uniformly in $(a,\beta,L)$ on fixed slabs. In particular, the joint law has a product small-ball component on $G^{m(\varepsilon)}$ with weight at least $p_*^{\,m(\varepsilon)}$.
+\end{lemma}
+\begin{proof}
+Fix a coarse cell decomposition as in Lemma~\ref{lem:ucis-A-cell-decomp}. For each cell $C$, let $E_C$ denote the set of link variables used to define the cell increment (e.g. the selected links $\{\ell_{C,1},\dots,\ell_{C,m_*}\}$). By Lemma~\ref{lem:ucis-A-cell-decomp} and Lemma~\ref{lem:cell-disjoint-links}, the families $\{E_C\}$ are disjoint and no plaquette contains links from two distinct $E_C$’s. Therefore Lemma~\ref{lem:plaquette-factorization} implies that, conditional on the complement variables, the joint conditional law on $\prod_C E_C$ factorizes across cells.
+
+By Lemma~\ref{lem:ucis-C-cell-ball}, in each cell the conditional law of the coarse increment dominates $p_*\,\nu_{r_*}$. Since factorization is exact and the pushforward under the (cellwise) coarse increment map preserves tensor products, the joint conditional law of the coarse increments dominates the product measure $p_*^{m(\varepsilon)}\,\nu_{r_*}^{\otimes m(\varepsilon)}$. This yields the stated product minorization.
+\end{proof}
+
+\begin{lemma}[UCIS-E: Product small-ball $\Rightarrow$ heat-kernel minorization (target)]\label{lem:ucis-E-ball-to-hk}
+Assume that a Markov kernel $K$ on $G^{m(\varepsilon)}$ satisfies the product small-ball minorization
+\[
+  K(U,\cdot)\ \ge\ \kappa\,\nu_{r_*}^{\otimes m(\varepsilon)}(\cdot)
+\]
+for all $U\in G^{m(\varepsilon)}$, for some $\kappa\in(0,1]$ and some $r_*>0$ below the injectivity radius. Then there exist an integer $m_*\ge 1$, a time $t_0>0$, and a constant $\theta_*>0$ depending only on $(G,m(\varepsilon),r_*)$ such that
+\[
+  K^{m_*}(U,\cdot)\ \ge\ \theta_*\,P_{t_0}(U,\cdot)
+\]
+for all $U\in G^{m(\varepsilon)}$, where $P_{t_0}$ is the product heat-kernel kernel on $G^{m(\varepsilon)}$.
+\end{lemma}
+\begin{proof}
+Let $R$ be the “refresh” kernel on $G^{m(\varepsilon)}$ defined by $R(U,\cdot):=\nu_{r_*}^{\otimes m(\varepsilon)}(\cdot)$ (independent of $U$). The hypothesis is exactly $K\ge \kappa R$ as positive kernels. By positivity and induction, for any $n\ge 1$,
+\[
+  K^{n}\ \ge\ \kappa^{n}\,R^{n}.
+\]
+Because $R$ is convolution by $\nu_{r_*}^{\otimes m(\varepsilon)}$, we have
+\(
+  R^{n}(U,\cdot) = (\nu_{r_*}^{\otimes m(\varepsilon)})^{(*n)}(U^{-1}\cdot)
+ = (\nu_{r_*}^{(*n)})^{\otimes m(\varepsilon)}(U^{-1}\cdot).
+\)
+Apply Lemma~\ref{lem:ball-conv-lower} on $G$ to obtain $m_*=m_*(G)$, $t_0=t_0(G)>0$, and $c_*=c_*(G,r_*)>0$ such that
+\[
+  \nu_{r_*}^{(*m_*)}\ \ge\ c_*\,p_{t_0}
+\]
+as measures on $G$. Tensorizing over $m(\varepsilon)$ coordinates yields
+\[
+  (\nu_{r_*}^{(*m_*)})^{\otimes m(\varepsilon)}\ \ge\ c_*^{\,m(\varepsilon)}\,p_{t_0}^{\otimes m(\varepsilon)},
+\]
+equivalently $R^{m_*}\ge c_*^{m(\varepsilon)} P_{t_0}$. Combining with $K^{m_*}\ge \kappa^{m_*} R^{m_*}$ gives the desired bound with $\theta_*:=\kappa^{m_*}c_*^{m(\varepsilon)}$.
+\end{proof}
+
+\begin{proof}[Proof roadmap for Theorem~\ref{thm:ucis}]
+Assuming Lemmas~\ref{lem:ucis-A-cell-decomp}--\ref{lem:ucis-E-ball-to-hk}, one obtains a uniform product small-ball component for the coarse outgoing interface after a fixed physical thickness $T_{\rm phys}$, hence after $M(a)=\lceil T_{\rm phys}/a\rceil$ lattice ticks. Lemma~\ref{lem:ucis-E-ball-to-hk} upgrades this to a product heat-kernel component with constants independent of $(a,\beta,L)$, yielding the stated minorization $K_{\rm int}^{(a)\,M(a)}\ge \theta_* P_{t_0}$.
+\end{proof}
+
+\begin{corollary}[UCIS $\Rightarrow$ fixed-physical-time $L^2$ contraction (bookkeeping)]\label{cor:ucis-L2-contraction}
+Assume UCIS (Theorem~\ref{thm:ucis}) with constants $(\theta_*,t_0)$ on the coarse interface space $G^{m(\varepsilon)}$. Define
+\[
+  q_{\rm phys}\ :=\ (1-\theta_*)+\theta_* e^{-\lambda_1(G)\,t_0}\ =\ 1-\theta_*\big(1-e^{-\lambda_1(G)\,t_0}\big)\ \in(0,1).
+\]
+Then for every $a\in(0,a_0]$ and every mean-zero $f\in L^2(G^{m(\varepsilon)},\pi^{\otimes m(\varepsilon)})$,
+\[
+  \big\|K_{\rm int}^{(a)\,M(a)} f\big\|_{2}\ \le\ q_{\rm phys}\,\|f\|_{2},
+\]
+uniformly in $(\beta,L)$ on fixed slabs.
+\end{corollary}
+\begin{proof}
+By UCIS, $K_{\rm int}^{(a)\,M(a)}=\theta_* P_{t_0}+(1-\theta_*)\mathcal K$ for some Markov kernel $\mathcal K$ (Nummelin split). On mean-zero functions, $\|P_{t_0}\|=e^{-\lambda_1(G)t_0}$ and $\|\mathcal K\|\le 1$, giving the displayed contraction factor.
+\end{proof}
+
 \begin{lemma}[Density of coarse interface observables as \boldmath $\varepsilon\downarrow 0$]\label{lem:coarse-density}
 Let $\mathcal F_{\rm int}$ be the (microscopic) interface $\sigma$--algebra of Definition~\ref{def:interface-kernel}, and let $\{\mathcal F_{\mathrm{int}}^{(\varepsilon)}\}_{\varepsilon\in(0,\varepsilon_0]}$ be the coarse interface $\sigma$--algebras of Lemma~\ref{lem:coarse-interface-construction}, assumed nested so that $\mathcal F_{\mathrm{int}}^{(\varepsilon')}\subseteq \mathcal F_{\mathrm{int}}^{(\varepsilon)}$ for $\varepsilon'\ge \varepsilon$ and
 \[

@@ -19,6 +19,8 @@ import Mathlib.Analysis.Complex.Basic
 import Mathlib.Analysis.Complex.AbsMax
 import Mathlib.Analysis.Convex.Topology
 import Mathlib.Analysis.Analytic.IsolatedZeros
+import Mathlib.Topology.MetricSpace.Pseudo.Basic
+import Mathlib.Topology.MetricSpace.Bounded
 import Mathlib.Topology.Order.OrderClosed
 
 noncomputable section
@@ -214,18 +216,18 @@ theorem hurwitz_zeroFree_of_tendstoLocallyUniformlyOn
       -- If `z = z0`, then `dist z z0 = 0`, contradicting `r > 0`.
       intro hEq
       have : (0 : ℝ) = r := by simpa [hEq] using this
-      exact (ne_of_gt hrpos) this
+      exact (ne_of_gt hrpos) this.symm
     have hz_in_ball : z ∈ Metric.ball z0 δ := by
       -- `dist z z0 = r < δ`
       have : dist z z0 = r := by simpa [Metric.mem_sphere] using hz
       exact (Metric.mem_ball.2 (this ▸ hr_lt_δ))
     -- Apply the punctured-ball nonvanishing hypothesis.
-    exact hδ hz_in_ball hz_ne
+    exact hδ z hz_in_ball hz_ne
   -- Get a positive lower bound `m` for `|f|` on the boundary sphere.
   have hsphere_compact : IsCompact (Metric.sphere z0 r) := isCompact_sphere z0 r
   have hcont_abs : ContinuousOn (fun z : ℂ => Complex.abs (f z)) (Metric.sphere z0 r) := by
     have hcont_f : ContinuousOn f (Metric.sphere z0 r) := (hf.continuousOn.mono hSphereU)
-    exact continuous_abs.comp_continuousOn hcont_f
+    exact Complex.continuous_abs.comp_continuousOn hcont_f
   have hpos_on_sphere : ∀ z ∈ Metric.sphere z0 r, (0 : ℝ) < Complex.abs (f z) := by
     intro z hz
     exact AbsoluteValue.pos Complex.abs (hf_ne_on_sphere z hz)
@@ -236,24 +238,22 @@ theorem hurwitz_zeroFree_of_tendstoLocallyUniformlyOn
   have hUnif : TendstoUniformlyOn F f atTop (Metric.sphere z0 r) :=
     (tendstoLocallyUniformlyOn_iff_forall_isCompact hUopen).1 hLim (Metric.sphere z0 r) hSphereU hsphere_compact
   have hUnif' : ∀ ε > 0, ∀ᶠ n in atTop, ∀ z ∈ Metric.sphere z0 r, dist (f z) (F n z) < ε := by
-    simpa [tendstoUniformlyOn_iff] using (tendstoUniformlyOn_iff.mp hUnif)
+    simpa using (Metric.tendstoUniformlyOn_iff.1 hUnif)
   have hClose : ∀ᶠ n in atTop, ∀ z ∈ Metric.sphere z0 r, Complex.abs (F n z) ≥ m / 2 := by
     filter_upwards [hUnif' (m / 2) (by nlinarith [hmpos])] with n hn z hz
     have hmf : m ≤ Complex.abs (f z) := hmle z hz
     have hdist : Complex.abs (f z - F n z) < m / 2 := by
       -- `dist (f z) (F n z) = abs (f z - F n z)`
-      simpa [dist_eq, Complex.abs] using (hn z hz)
+      simpa [Complex.dist_eq] using (hn z hz)
     -- `‖F n z‖ ≥ ‖f z‖ - ‖f z - F n z‖`
     have htri : Complex.abs (F n z) ≥ Complex.abs (f z) - Complex.abs (f z - F n z) := by
-      -- from `|‖a‖ - ‖b‖| ≤ ‖a-b‖`
-      have := norm_sub_norm_le (F n z) (f z)
-      -- rearrange to `‖F‖ ≥ ‖f‖ - ‖F-f‖`
-      -- Note `‖F - f‖ = ‖f - F‖`.
-      have : Complex.abs (f z) - Complex.abs (F n z) ≤ Complex.abs (F n z - f z) := by
-        linarith [this]
-      have : Complex.abs (F n z) ≥ Complex.abs (f z) - Complex.abs (F n z - f z) := by linarith
-      -- rewrite `F - f` to `f - F`
-      simpa [sub_eq_add_neg, add_comm, add_left_comm, add_assoc, abs_sub_comm] using this
+      -- Start from `‖f‖ - ‖F‖ ≤ ‖f - F‖` and rearrange.
+      have h := norm_sub_norm_le (f z) (F n z)
+      -- rewrite norms as `Complex.abs`
+      have h' :
+          Complex.abs (f z) - Complex.abs (F n z) ≤ Complex.abs (f z - F n z) := by
+        simpa [Complex.norm_eq_abs] using h
+      linarith
     have htri' : Complex.abs (F n z) ≥ m - (m / 2) := by
       have hdist_le : Complex.abs (f z - F n z) ≤ m / 2 := le_of_lt hdist
       have : Complex.abs (F n z) ≥ m - (m / 2) := by
@@ -276,11 +276,10 @@ theorem hurwitz_zeroFree_of_tendstoLocallyUniformlyOn
       hDiffOn_inv.diffContOnCl_ball (c := z0) (R := r) hclosedU
     have hBoundFrontier :
         ∀ z ∈ frontier (Metric.ball z0 r), ‖(F n z)⁻¹‖ ≤ (2 / m) := by
-      -- frontier of the ball is the sphere (since `r ≠ 0`)
-      have hr0 : r ≠ 0 := ne_of_gt hrpos
       intro z hz
-      have hz' : z ∈ Metric.sphere z0 r := by
-        simpa [Metric.frontier_ball hr0] using hz
+      -- Use `frontier(ball) ⊆ sphere`.
+      have hz' : z ∈ Metric.sphere z0 r :=
+        Metric.frontier_ball_subset_sphere (x := z0) (ε := r) hz
       have hlow : Complex.abs (F n z) ≥ m / 2 := hn z hz'
       have hmne : m ≠ 0 := ne_of_gt hmpos
       -- `‖(F n z)⁻¹‖ = 1 / ‖F n z‖ ≤ 2 / m`
@@ -298,40 +297,41 @@ theorem hurwitz_zeroFree_of_tendstoLocallyUniformlyOn
     have hBoundCenter :
         ‖(F n z0)⁻¹‖ ≤ (2 / m) := by
       have hz0mem : z0 ∈ closure (Metric.ball z0 r) := by
-        -- `z0 ∈ closedBall z0 r = closure (ball z0 r)` since `r>0`
-        have : z0 ∈ Metric.closedBall z0 r := by simpa using (mem_closedBall_self hrpos.le)
-        -- `closedBall ⊆ closure ball`
-        exact (Metric.closedBall_subset_closure_ball) this
-      exact Complex.norm_le_of_forall_mem_frontier_norm_le (hU := isBounded_ball)
+        -- since `r > 0`, we have `z0 ∈ ball z0 r ⊆ closure (ball z0 r)`.
+        have hz0ball : z0 ∈ Metric.ball z0 r := by
+          simpa [Metric.mem_ball, dist_self] using hrpos
+        exact subset_closure hz0ball
+      exact Complex.norm_le_of_forall_mem_frontier_norm_le (hU := Metric.isBounded_ball)
         (hd := hDiffCont) (hC := hBoundFrontier) hz0mem
     -- Turn the bound on `‖(F n z0)⁻¹‖` into a lower bound on `‖F n z0‖`.
     have hmne : m ≠ 0 := ne_of_gt hmpos
     have : Complex.abs (F n z0) ≥ m / 2 := by
       -- If `‖(F n z0)⁻¹‖ ≤ 2/m`, then `‖F n z0‖ ≥ m/2`.
-      -- Use `‖(x)⁻¹‖ = 1/‖x‖`.
       have hInvNorm : ‖(F n z0)⁻¹‖ = (Complex.abs (F n z0))⁻¹ := by simp
       have hInv_le : (Complex.abs (F n z0))⁻¹ ≤ (2 / m) := by simpa [hInvNorm] using hBoundCenter
       -- Invert both sides (all positive).
-      have hpos : 0 < Complex.abs (F n z0) := AbsoluteValue.pos Complex.abs (hZeroFree n z0 hz0)
-      have : (2 / m)⁻¹ ≤ Complex.abs (F n z0) := by
-        -- `inv_le_inv_of_le` with positives.
-        have hmpos' : 0 < (2 / m) := by nlinarith [hmpos]
-        have := inv_le_inv_of_le hmpos'.le hInv_le
-        -- simplify `((abs F)⁻¹)⁻¹ = abs F`
-        simpa using this
-      -- `(2/m)⁻¹ = m/2`
-      have hcalc : (2 / m)⁻¹ = m / 2 := by field_simp [hmne]; ring
-      simpa [hcalc] using this
+      have habs_pos : 0 < Complex.abs (F n z0) :=
+        AbsoluteValue.pos Complex.abs (hZeroFree n z0 hz0)
+      have hinv_pos : 0 < (Complex.abs (F n z0))⁻¹ := inv_pos.mpr habs_pos
+      have hInv_ge : (2 / m)⁻¹ ≤ Complex.abs (F n z0) := by
+        -- `inv_anti₀` (order-reversing on positives)
+        -- first rewrite `abs` as `inv(inv abs)` to match the lemma.
+        rw [← inv_inv (Complex.abs (F n z0))]
+        exact inv_anti₀ hinv_pos hInv_le
+      have hcalc : (2 / m)⁻¹ = m / 2 := by
+        field_simp [hmne]
+      -- rewrite and finish
+      simpa [hcalc] using hInv_ge
     exact this
   -- Take limits at the center: `abs(F n z0) → abs(f z0)`, so `abs(f z0) ≥ m/2`, contradiction.
   have hT0 : Tendsto (fun n : ℕ => F n z0) atTop (𝓝 (f z0)) :=
     hLim.tendsto_at hz0
   have hTabs : Tendsto (fun n : ℕ => Complex.abs (F n z0)) atTop (𝓝 (Complex.abs (f z0))) :=
-    (continuous_abs.tendsto (f z0)).comp hT0
+    (Complex.continuous_abs.tendsto (f z0)).comp hT0
   have habs_ge : m / 2 ≤ Complex.abs (f z0) :=
     ge_of_tendsto hTabs hCenterLower
   -- But `f z0 = 0` by assumption.
-  have : Complex.abs (f z0) = 0 := by simpa [hf0]
+  have : Complex.abs (f z0) = 0 := by simp [hf0]
   have hmhalf_pos : 0 < m / 2 := by nlinarith [hmpos]
   have : False := by
     -- `m/2 ≤ 0` contradicts `0 < m/2`.

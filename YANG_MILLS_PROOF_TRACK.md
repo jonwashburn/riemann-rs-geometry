@@ -144,6 +144,7 @@ This is the minimal “spine” to reach `thm:main-af-free`. We’ll check a box
   - [x] `lem:os-gns-transfer` (YM-0131)
 - **Interface kernel → contraction → lattice gap (fixed slabs)**:
   - [x] `cor:hk-convex-split-explicit` *(audited; TeX constant fixed on 2025-12-20)*
+  - [ ] `thm:ucis` *(UCIS closure target: physically-scaled \(M(a)=\lceil T_{\rm phys}/a\rceil\) step smoothing on the coarse interface; decomposed into `lem:ucis-A-*` … `lem:ucis-E-*` in `Yang-Mills.tex`)*
   - [ ] `lem:beta-L-independent-minorization` *(β- and L-independent one-step minorization after coarse refresh; currently citation-heavy)*
   - [ ] `prop:sandwich`
   - [x] `prop:int-to-transfer` (YM-0040)
@@ -173,7 +174,7 @@ Each checkbox below should end up either:
   - [ ] **(Already largely done)**: existence of the Wilson measure + OS reflection positivity + transfer operator construction (`thm:os`, `lem:os-gns-transfer` and friends) with clean normalization of \(H_{L,a}\) and \(T=e^{-aH}\).
 
 - **L1. β- and \(L\)-uniform *physical* slab gap (fixed physical thickness)**
-  - [ ] **β-uniform interface minorization / smoothing**: a genuine β-uniform lower bound of the interface kernel by a smoothing reference (heat kernel / strong-Feller minorization) on a **fixed-dimension** coarse interface (`lem:beta-L-independent-minorization`, `prop:sandwich`).
+  - [ ] **β-uniform interface minorization / smoothing**: a genuine β-uniform lower bound of the interface kernel by a smoothing reference (heat kernel / strong-Feller minorization) on a **fixed-dimension** coarse interface (`thm:ucis`, `lem:beta-L-independent-minorization`, `prop:sandwich`).
   - [ ] **Odd-cone contraction with correct scaling**: prove that the induced contraction yields a **physical** gap floor \(\gamma_*>0\) that does not degenerate as \(a\downarrow 0\) along the scaling schedule (this is where “per tick” vs “per physical time” constants must be audited).
 
 - **L2. Van Hove / thermodynamic limit at fixed spacing \(a\) with uniformity**
@@ -273,6 +274,7 @@ All of the items below were unlabeled in `Yang-Mills.tex` during the initial inv
 | 16 | `lem:coarse-density` / `cor:odd-to-meanzero` | fixed (rewritten) | — | `lem:coarse-density` was rewritten as the standard martingale/conditional-expectation density statement as $\varepsilon\downarrow 0$ (under an explicit nesting + generation hypothesis). `cor:odd-to-meanzero` was rewritten as a pointer/restatement of `thm:eight-tick-uniform`, so it no longer depends on the coarse-density lemma. |
 | 17 | `prop:sandwich` | external input (proof gap removed; still conditional) | compact-group smoothing/minorization theorems | The original TeX proof used a “drop the middle factor” step that does not follow without additional assumptions on the unsmoothed kernel. It is now explicitly recorded as a proof sketch / external input relying on standard minorization results for strong-Feller kernels on compact groups after smoothing (citations included). |
 | 18 | `thm:uei-fixed-region` / `thm:U1-lsi-uei` | scaling + notation ambiguity (open) | weak-coupling / continuum control (RG) | **Normalization confirmed**: in TeX, \(S_R:=\sum_{p\subset R}\phi(U_p)\) (no extra \(a^4\); weight \(e^{-\beta S_R}\)). **But** elsewhere the manuscript also writes \(e^{-S_R(\cdot)}\) where \(S_R\) already carries an explicit \(\beta\) (e.g. `prop:interface-density-ball-avg`), so conventions can silently swap. Also, the UEI statement “uniform in \(a\) for all \(\beta\ge\beta_{\min}\)” is not credible unless the “scaling window” *implicitly* ties \(\beta=\beta(a)\to\infty\) (or \(\beta_{\min}\) is taken sufficiently large): this needs to be made explicit and/or replaced by a renormalized local energy observable plus a genuine RG-grade estimate. |
+| 19 | `thm:ucis` / `lem:ucis-*` | new closure target (unproved) | `lem:ucis-C-cell-ball` (+ `lem:ucis-A-*`, `lem:ucis-B-*`, `lem:ucis-D-*`, `lem:ucis-E-*`) | Added UCIS theorem + lemma stubs to `Yang-Mills.tex` (2025-12-23) as an operational replacement target for the coarse-refresh/minorization bottleneck (ledger #12–#13). UCIS-A and UCIS-E are now written as concrete reductions to existing coarse-interface geometry and compact-group smoothing (`lem:coarse-interface-construction`, `lem:cell-disjoint-links`, `lem:plaquette-factorization`, `lem:ball-conv-lower`). UCIS-D is a clean reduction via factorization once UCIS-C holds. The main missing analytic step remains a truly β-uniform single-cell refresh/minorization (`lem:ucis-C-cell-ball`). |
 
 ## Proof worksheet template (copy/paste per claim)
 

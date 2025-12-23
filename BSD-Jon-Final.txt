@@ -24,7 +24,7 @@ A route to $\mu=0$ and Cyclotomic IMC Equality via $p$--adic Wedge and IMC Cover
 \noindent
 We give a prime-wise route to Birch--Swinnerton--Dyer for modular elliptic curves over $\mathbb{Q}$: establish the $p$--adic BSD statement BSD$_p$ at every prime $p$ (ordinary/signed/improved as appropriate), then promote the resulting prime-wise valuation equalities to the global BSD leading-term formula (Appendix~G).
 
-The main structural inputs are: an operator identity $\det_\Lambda(I-K(T))\doteq L_p(E,T)$ together with coker$=$Selmer; a $\Lambda$–adic height/positivity package (ordinary and signed) à la Perrin--Riou \cite{PerrinRiou1995} (and Pollack/Kobayashi/Lei--Loeffler--Zerbes \cite{Pollack2003,Kobayashi2003,LeiLoefflerZerbes2012} in the signed setting); a cyclotomic IMC-equality coverage package from the literature with finite-exception closure at Eisenstein/reducible residual primes and small primes (\S\,F.32); and a universal $\mu=0$ input (Appendix~F.pw records a proposed wedge mechanism). With IMC equality and $\mu=0$ in hand, BSD$_p$ follows prime-by-prime (including the Greenberg--Stevens exceptional-zero correction at split multiplicative primes \cite{GreenbergStevens1993}), and Appendix~G promotes these prime-wise equalities to the full BSD formula.
+The main structural inputs are: an operator identity $\det_\Lambda(I-K(T))\doteq L_p(E,T)$ together with coker$=$Selmer; a $\Lambda$–adic height/positivity package (ordinary and signed) à la Perrin--Riou \cite{PerrinRiou1995} (and Pollack/Kobayashi/Lei--Loeffler--Zerbes \cite{Pollack2003,Kobayashi2003,LeiLoefflerZerbes2012} in the signed setting); a cyclotomic IMC-equality coverage package from the literature with finite-exception closure at Eisenstein/reducible residual primes and small primes (\S\,F.32); and a universal $\mu=0$ input (Appendix~F.pmu records a pivot strategy via $p$-adic primitivity/nondivisibility; Appendix~F.pw records a historical boundary-wedge attempt, currently **BLOCKED**). With IMC equality and $\mu=0$ in hand, BSD$_p$ follows prime-by-prime (including the Greenberg--Stevens exceptional-zero correction at split multiplicative primes \cite{GreenbergStevens1993}), and Appendix~G promotes these prime-wise equalities to the full BSD formula.
 \end{abstract}
 \vspace{0.5em}
 
@@ -48,21 +48,21 @@ Fix a set of rational points $P_1,\dots,P_r\in E(\mathbb{Q})$ that project to a 
 \]
 At a separated $p$ one can choose integers $m_i$ with $(m_i,p)=1$ and $m_i\equiv 0\pmod{o_i(p)}$ while $m_i\not\equiv 0\pmod{o_j(p)}$ for $j\neq i$. Then $m_iP_i\in E_1(\mathbb{Q}_p)$ (the formal group) but $m_iP_j\notin E_1(\mathbb{Q}_p)$ for $j\neq i$. Mixed integrality of the Coleman--Gross local height pairing forces strong $p$--divisibility off the diagonal (after a suitable row-wise scaling), providing a simple and auditable \emph{diagnostic} for the local height matrix at many primes.
 
-This diagonalization mechanism is useful for computation and intuition, but it is \emph{not required} for the mainline reduction: the intended route combines a universal $\mu=0$ input (Appendix~F.pw, draft) with cyclotomic IMC \emph{equality} imported from the literature via an explicit coverage-and-closure strategy (\S\,F.32).
+This diagonalization mechanism is useful for computation and intuition, but it is \emph{not required} for the mainline reduction: the intended route combines a universal $\mu=0$ input (Appendix~F.pmu; the older wedge attempt in Appendix~F.pw is **BLOCKED**) with cyclotomic IMC \emph{equality} imported from the literature via an explicit coverage-and-closure strategy (\S\,F.32).
 
 \paragraph{Interfaces with Iwasawa theory.}
 The separation mechanism interfaces with Iwasawa theory through standard $\Lambda$–adic inputs (Appendix F; Perrin--Riou \cite{PerrinRiou1995}; Pollack/Kobayashi/Lei--Loeffler--Zerbes \cite{Pollack2003,Kobayashi2003,LeiLoefflerZerbes2012}; Greenberg--Stevens \cite{GreenbergStevens1993} for multiplicative corrections) and, when desired, known IMC results (Skinner--Urban \cite{SkinnerUrban}; Yan--Zhu \cite{YanZhu2024}; Burungale--Castella--Skinner \cite{BCS2024}; and supersingular refinements \cite{BSTW2024,Castella2025}):
 
 \begin{itemize}
 \item[(I1)] \textbf{$\Lambda$–adic reverse divisibility.} Appendix F (Theorems~\ref{thm:HL-ordinary}, \ref{thm:HL-signed}, Proposition~\ref{prop:Hlambda-to-revdiv}) proves $(L_p)\mid \mathrm{char}_\Lambda X_p$ prime–wise.
-\item[(I2)] \textbf{Universal $\mu=0$ (rigidity on cyclotomic layers).} Appendix~F.pw records a proposed mechanism for universal $\mu=0$ via a boundary wedge on cyclotomic character layers; if completed, it forces positive–proportion nonvanishing at every conductor and hence $\mu_p(E)=0$ for every $p$ (ordinary and signed), via Lemma~\ref{lem:mu-criterion}.
+\item[(I2)] \textbf{Universal $\mu=0$ (rigidity on cyclotomic layers).} Appendix~F.pmu records a pivot strategy toward universal $\mu=0$ via $p$-adic primitivity/nondivisibility certificates; Appendix~F.pw records a boundary-wedge mechanism (currently **BLOCKED**). Either route, if completed, yields $\mu_p(E)=0$ for every $p$ (ordinary and signed), via Lemma~\ref{lem:mu-criterion}.
 \item[(I3)] \textbf{IMC equality at every prime (literature coverage + finite exceptions).} \S\,F.32 records IMC-equality inputs in the ordinary and signed settings (together with the standard improved/small-prime adjustments and Eisenstein-prime closures) and organizes them into a coverage-and-closure checklist; if the coverage closes for the given $E$, it supplies cyclotomic IMC equality prime-by-prime.
 \end{itemize}
 
 Together these valves embody two guiding principles: (i) \emph{no hidden amplifier in the cyclotomic tower} (hence $\mu=0$), and (ii) \emph{no metastable accumulation of locally soluble torsors} (hence finiteness of $\Sha$). They convert \emph{local} height certificates into \emph{global} structural information.
 
 \paragraph{From $\mu=0$ and IMC equality to BSD$_p$ (the mainline reduction).}
-At a fixed prime $p$, cyclotomic IMC equality together with $\mu_p(E)=0$ yields the $T=0$ order identity and the $p$--part of the BSD leading term (with the standard Greenberg--Stevens correction at split multiplicative primes). Appendix~F.pw and \S\,F.32 record candidate mechanisms for supplying these two inputs uniformly in $p$; Appendix~G then promotes the resulting prime-wise valuation equalities to the full BSD formula after archimedean normalization.
+At a fixed prime $p$, cyclotomic IMC equality together with $\mu_p(E)=0$ yields the $T=0$ order identity and the $p$--part of the BSD leading term (with the standard Greenberg--Stevens correction at split multiplicative primes). Appendix~F.pmu (and the historical, blocked wedge attempt Appendix~F.pw) and \S\,F.32 record candidate mechanisms/coverage toward these two inputs uniformly in $p$; Appendix~G then promotes the resulting prime-wise valuation equalities to the full BSD formula after archimedean normalization.
 
 \paragraph{An optional prime-wise algorithm and concrete outputs.}
 Independently of the mainline reduction, we implement an elementary algorithm that, given $(a_1,\dots,a_6)$ and a set of rational points, scans good ordinary primes, computes $\#E(\mathbb{F}_p)$, reduces the points, peels the prime factors of $\#E(\mathbb{F}_p)$ to obtain $o_i(p)$, and flags separated primes. This produces a supply of primes where the local height matrix exhibits strong $p$--divisibility patterns off the diagonal, giving a fast computational diagnostic and sanity check for the local theory.
@@ -75,7 +75,7 @@ We include two case studies to demonstrate density and practicality:
 These outputs are deterministic, portable, and auditable; they serve as concrete numerical sanity checks alongside the mainline route.
 
 \paragraph{Status of the prime-wise route (draft).}
-The manuscript records an operator model and reverse-divisibility package, a proposed universal $\mu=0$ mechanism (Appendix~F.pw), and a literature coverage-and-closure strategy for cyclotomic IMC equality (\S\,F.32). The proof status of these packages is tracked in the companion audit file `BSD_Jon_Final_PROOF_TRACK.md`; until the $\mu=0$ and all-primes IMC-equality coverage components are fully closed, downstream ``unconditional'' conclusions should be read as conditional on those inputs.
+The manuscript records an operator model and reverse-divisibility package, a proposed universal $\mu=0$ mechanism (Appendix~F.pmu; Appendix~F.pw records a blocked alternative), and a literature coverage-and-closure strategy for cyclotomic IMC equality (\S\,F.32). The proof status of these packages is tracked in the companion audit file `BSD_Jon_Final_PROOF_TRACK.md`; until the $\mu=0$ and all-primes IMC-equality coverage components are fully closed, downstream ``unconditional'' conclusions should be read as conditional on those inputs.
 
 \paragraph{IMC equality at every prime.}
 Cyclotomic IMC equality (ordinary and signed) is taken from the literature in the ranges organized in \S\,F.32, with finitely many exceptional primes intended to be handled by explicit Eisenstein/small-prime closure results.
@@ -85,14 +85,14 @@ Cyclotomic IMC equality (ordinary and signed) is taken from the literature in th
 
 2) \emph{$\Lambda$-adic reverse divisibility.} Appendix~F.31: Perrin--Riou/Wach integrality, operator model $K(T)$, and Fredholm determinants give $(L_p)\mid \mathrm{char}_\Lambda X_p$ (ordinary and signed).
 
-3) \emph{Universal $\mu=0$ (new; draft).} Appendix~F.pw records outer normalization on cyclotomic layers, admissible windows, CR--Green pairing, and a Carleson split (operator tail + neutralized zero mass) leading to a boundary wedge; if completed, it implies positive-proportion character nonvanishing at all depths and hence $\mu_p(E)=0$ for every $p$ via Lemma~\ref{lem:mu-criterion}.
+3) \emph{Universal $\mu=0$ (draft).} Appendix~F.pmu records a pivot strategy toward $\mu=0$ via primitivity/nondivisibility certificates; Appendix~F.pw records a boundary-wedge mechanism (currently **BLOCKED**) intended to force positive-proportion $p$-nondivisibility on cyclotomic layers. Either route, if completed, implies $\mu_p(E)=0$ for every $p$ via Lemma~\ref{lem:mu-criterion}.
 
 4) \emph{IMC equality coverage (literature; finite exceptions).} \S\,F.32 records IMC-equality theorems in the ordinary and signed settings (and the standard improved/small-prime adjustments), together with a finite-exception closure strategy (Eisenstein/reducible residual primes; small primes).
 
 5) \emph{From IMC+$\mu=0$ to BSD$_p$ and global BSD.} Poitou--Tate and Greenberg--Stevens corrections give BSD$_p$ at each $p$; Appendix~G promotes the prime-wise valuation equalities to the full BSD formula after archimedean normalization.
 
 \paragraph{Structure of the paper.}
-Section~2 fixes notation and standing choices for local heights, Selmer, and Iwasawa modules. Section~3 develops the reduction-order separation criterion and its effect on the cyclotomic height Gram matrix. Section~4 proves the two structural valves (V1) and (V2). Section~5 presents the prime-wise algorithm with complexity notes and case studies. Appendix~F.31 establishes reverse divisibility; Appendix~F.pw proves universal $\mu=0$; \S\,F.32 records IMC-equality coverage from the literature; Appendix~G promotes BSD$_p$ to global BSD.
+Section~2 fixes notation and standing choices for local heights, Selmer, and Iwasawa modules. Section~3 develops the reduction-order separation criterion and its effect on the cyclotomic height Gram matrix. Section~4 proves the two structural valves (V1) and (V2). Section~5 presents the prime-wise algorithm with complexity notes and case studies. Appendix~F.31 establishes reverse divisibility; Appendix~F.pmu records a pivot strategy for universal $\mu=0$ (and Appendix~F.pw records a historical wedge attempt, currently **BLOCKED**); \S\,F.32 records IMC-equality coverage from the literature; Appendix~G promotes BSD$_p$ to global BSD.
 
 \medskip
 In short: conditional on cyclotomic IMC equality and $\mu=0$ for every prime, the route yields BSD$_p$ prime-by-prime and then promotes the collection of $p$--adic valuation equalities to the full BSD formula after archimedean normalization. Local height computations remain available as modular, checkable diagnostics, but they are not the proof engine.
@@ -333,7 +333,7 @@ We record an explicit, auditable checklist to operationalize the prime--wise pip
 \item[(a)] \emph{Diagonal unit check.} Compute $\log_\omega(P_i)$ (or directly $h_p(P_i,P_i)$) to certify whether each diagonal entry is a $p$--adic unit; cf. Lemma~\ref{lem:diag-units}.
 \item[(b)] \emph{Separation scalings.} If $p$ is separated, construct $m_i$ as in Lemma~\ref{lem:CRT}. Proposition~\ref{prop:triangular} then forces \(h_p(P_i,P_j)\in p\mathbb{Z}_p\) for all \(i\ne j\), i.e. \(H_p\) is diagonal modulo \(p\).
 \item[(c)] \emph{Regulator certification.} If all diagonal entries \(h_p(P_i,P_i)\) are $p$--adic units, conclude \(\mathrm{Reg}_p(E)=\det(H_p)\in\mathbb{Z}_p^\times\) (Corollary~\ref{cor:height-unit}).
-\item[(d)] \emph{Consequences.} A unit regulator implies \(\mu_p(E)=0\) (Proposition~\ref{prop:mu-zero}). Independently, if one has $\mu_p(E)=0$ and cyclotomic IMC equality at $p$ (e.g. via Appendix~F.pw and the literature inputs organized in \S\,F.32), then BSD$_p$ follows prime--by--prime (Corollary~\ref{cor:universal-bsd-p}).
+\item[(d)] \emph{Consequences.} A unit regulator implies \(\mu_p(E)=0\) (Proposition~\ref{prop:mu-zero}). Independently, if one has $\mu_p(E)=0$ and cyclotomic IMC equality at $p$ (e.g. via the pivot $\mu=0$ input in Appendix~F.pmu and the literature inputs organized in \S\,F.32), then BSD$_p$ follows prime--by--prime (Corollary~\ref{cor:universal-bsd-p}).
 \end{itemize}
 
 \paragraph{F.26.3. Supersingular $p\notin S$: signed $\pm$ workflow.}
@@ -341,7 +341,7 @@ We record an explicit, auditable checklist to operationalize the prime--wise pip
 \item[(a)] \emph{Signed logs.} Compute Pollack's $\log^{\pm}(P_i)$ to certify unitness outside finite sets (Lemma~\ref{lem:diag-units-signed}).
 \item[(b)] \emph{Signed Gram--Schmidt.} Build $M_p^{\pm}$ as in Lemma~\ref{lem:triang-signed} for each sign separately.
 \item[(c)] \emph{Signed heights.} Evaluate the signed Gram matrices $(H_p^{\pm})'$, certify diagonal units and $p$--divisible off--diagonals, conclude $\mathrm{Reg}_p^{\pm}\in\mathbb{Z}_p^{\times}$ (Proposition~\ref{prop:cofinite-signed}).
-\item[(d)] \emph{Consequences.} A unit signed regulator implies \(\mu_p^{\pm}(E)=0\) by the signed analogue of Proposition~\ref{prop:mu-zero}. Independently, if one has $\mu_p^{\pm}(E)=0$ and signed IMC equality at $p$ (e.g. via Appendix~F.pw and the literature inputs organized in \S\,F.32), then BSD$_p^{\pm}$ follows prime--by--prime (Corollary~\ref{cor:universal-bsd-p} and signed variants).
+\item[(d)] \emph{Consequences.} A unit signed regulator implies \(\mu_p^{\pm}(E)=0\) by the signed analogue of Proposition~\ref{prop:mu-zero}. Independently, if one has $\mu_p^{\pm}(E)=0$ and signed IMC equality at $p$ (e.g. via the pivot $\mu=0$ input in Appendix~F.pmu and the literature inputs organized in \S\,F.32), then BSD$_p^{\pm}$ follows prime--by--prime (Corollary~\ref{cor:universal-bsd-p} and signed variants).
 \end{itemize}
 
 \paragraph{F.26.4. Resolve the finite residue set $\mathcal{E}$.}
@@ -545,20 +545,29 @@ Let $\mathcal{A}$ denote the finite\,--\,order cyclotomic characters. Define the
 \[
   U(\chi):=v_p\big(\mathscr{D}(\chi)\big)-v_p\big(L_p(\chi)\big),\qquad \chi\in\mathcal{A},
 \]
-after removing the standard atoms (exceptional zero factor at split multiplicative $p$; signed split at supersingular $p$ when used). By Amice\,--\,Mahler interpolation there exists $O(T)\in\Lambda^{\times}$, analytic and zero\,--\,free on the cyclotomic boundary, such that $v_p\big(O(\chi)\big)=U(\chi)$ for all $\chi\in\mathcal{A}$. Define the neutralized ratio
+after removing the standard atoms (exceptional zero factor at split multiplicative $p$; signed split at supersingular $p$ when used).
+
+In the idealized case where \(\mathscr D(T)=u(T)\,L_p(T)\) with \(u(T)\in\Lambda^{\times}\), we have \(U(\chi)=0\) for all \(\chi\). The wedge mechanism below would require a more flexible “outer neutralization”: an analytic, zero--free factor \(O(T)\) in an appropriate coefficient algebra \(\mathscr A\) (containing \(\Lambda\)) such that \(v_p(O(\chi))=U(\chi)\) for all \(\chi\in\mathcal A\). When such an \(O\) exists, define the neutralized ratio
 \[
-  J(T):=\frac{\mathscr{D}(T)}{O(T)\,L_p(T)}\ \in\ \mathrm{Frac}(\Lambda)^{\times}.
+  J(T):=\frac{\mathscr{D}(T)}{O(T)\,L_p(T)}\ \in\ \mathrm{Frac}(\mathscr A)^{\times}.
 \]
 
-\begin{lemma}[Boundary unit\,--\,modulus and zero\,--\,freeness]\label{lem:outer-boundary}
-After neutralization of atoms, $O(T)\in\Lambda^{\times}$ is zero\,--\,free on the cyclotomic boundary and, for every finite\,--\,order character $\chi$,
+\paragraph{Status (BLOCKED; nonstandard analytic input).}
+The existence of an “outer” factor \(O\) with prescribed \emph{valuation} boundary data is not proved in this manuscript and no standard reference is supplied. Note that such an \(O\) cannot, in general, lie in \(\Lambda^{\times}\) unless \(U(\chi)\equiv 0\), since any \(\Lambda^{\times}\) unit specializes to a \(p\)-adic unit at every finite-order character. The wedge package below should therefore be treated as **BLOCKED** until an explicit outer-factor theorem is supplied in a suitable ambient algebra \(\mathscr A\) (see the companion audit file `BSD_Jon_Final_PROOF_TRACK.md`, F.pw dashboard).
+
+\begin{lemma}[Boundary unit\,--\,modulus and zero\,--\,freeness (conditional)]\label{lem:outer-boundary}
+Assume an outer factor $O$ as in \S\,F.31B exists in a coefficient algebra where specialization at finite-order characters is defined, is zero\,--\,free on the cyclotomic character layers, and satisfies $v_p(O(\chi))=U(\chi)$ after neutralization of the stated atoms. Then, for every finite\,--\,order character $\chi$,
 \[
   |J(\chi)|_p=1.
 \]
 The same holds in the signed supersingular setting with $L_p^{\pm}$, and with the improved object $L_p^{\!*}$ at split multiplicative $p$.
 \end{lemma}
 \begin{proof}[Sketch]
-By \S\,F.31A, $\mathscr{D}(\chi)$ and $L_p(\chi)$ agree up to units and bounded errors (finite cokernel, exceptional zero). Choosing $O$ as the Amice transform of the boundary harmonic extension of $U$ gives $v_p(J(\chi))=0$ and hence the claim.
+Assuming the stated properties of $O$, we have
+\[
+v_p(J(\chi))=v_p(\mathscr D(\chi))-v_p(O(\chi))-v_p(L_p(\chi))=0,
+\]
+hence \(|J(\chi)|_p=1\). The signed/improved variants are identical after replacing the objects as indicated.
 \end{proof}
 
 \begin{remark}[Non\,--\,cancellation at zeros]\label{rem:noncancellation}
@@ -573,20 +582,20 @@ For $n\ge 1$, identify $\Gamma_n\simeq (\mathbb{Z}/p^n\mathbb{Z})^{\times}$ as t
 
 Let $U:=\log_p|J|$ on the boundary (well\,--\,defined after neutralization). For a $p$\,-adic box $Q\subset \Gamma$ (product of arcs across levels), define the box energy $\mathcal{E}(U;Q)$ via discrete gradients along generators. Then:
 
-\begin{theorem}[Uniform box\,--\,energy bound]\label{thm:box-energy}
+\begin{theorem}[Uniform box\,--\,energy bound (BLOCKED)]\label{thm:box-energy}
 There exists a constant $C_{\mathrm{box},p}=K_{0,p}+K_{\xi,p}$ such that, for every standard box $Q$ and every admissible window $\varphi\in\mathcal{W}_{\mathrm{adm}}(n;\varepsilon)$,
 \[
   \int_Q |\nabla U|^2\,\mathrm{d}\mu\ \ll\ C_{\mathrm{box},p}\,\mathrm{size}(Q),
 \]
 with $K_{0,p}$ controlled by operator tails (complete continuity and integrality of $\mathrm{Col}_p$ on a saturated Wach lattice; \S\,F.28--F.31A) and $K_{\xi,p}$ controlled by neutralized zero\,--\,mass on character layers, bounded using the minimal Kummer criterion (\S\,F.42) and twist\,--\,averaged $L^2$ control (\S\,F.47).
 \end{theorem}
-\begin{proof}[Idea]
-Decompose $U$ into an operator tail (harmonic) and a neutralized zero contribution. Bound the tail via complete continuity/integrality; control the zero contribution by annular $L^2$\,--\,summability across conductors using F.42/F.47.
+\begin{proof}[Status]
+**BLOCKED.** This statement requires a fully specified analytic/discrete framework on cyclotomic character layers (definitions of boxes $Q$, measure $\mu$, gradient $\nabla$, and Dirichlet energy), and a proved decomposition of $U$ into an operator-tail term and a “neutralized zero-mass” term with quantified bounds. As written, only an idea-level sketch is provided.
 \end{proof}
 
 \subsection*{F.31E. Boundary wedge and $\mu=0$}
 
-\begin{lemma}[Wedge criterion]\label{lem:wedge}
+\begin{lemma}[Wedge criterion (BLOCKED)]\label{lem:wedge}
 For $\varphi\in\mathcal{W}_{\mathrm{adm}}(n;\varepsilon)$ there exist constants $C_{\mathrm{test}},c_0>0$ independent of $n$ such that
 \[
   \int \!\varphi\,\big( -\Delta\,\mathrm{arg}\,J\big)\ \ge\ c_0\cdot (\text{mass of off\,-\,}T{=}0\text{ zeros in the window}),
@@ -597,16 +606,20 @@ and
 \]
 For $n\gg 1$ the boundary phase is confined to a cone on every admissible window, forcing no off\,-\,$T{=}0$ mass.
 \end{lemma}
-\begin{proof}[Sketch]
-Lower bound: $p$\,-adic Blaschke/Poisson shadow of zeros. Upper bound: Cauchy\,--\,Schwarz with Theorem~\ref{thm:box-energy} and uniform test energy. For $n$ large the upper bound is $<\pi/2$.
+\begin{proof}[Status]
+**BLOCKED.** The statement uses \(\arg J\), \(-\Delta\,\arg J\), and a numerical wedge threshold \(\pi/2\), but no canonical $p$-adic phase/argument principle is defined or cited. In addition, the upper bound appeals to `thm:box-energy`, which is itself blocked.
 \end{proof}
 
-\begin{theorem}[Positive proportion at each depth; $\mu=0$]\label{thm:mu0-wedge}
-For all sufficiently large $n$, a positive proportion of primitive characters $\chi$ of conductor $p^n$ satisfy $v_p\big(L_p(E,\chi)\big)=0$ (and similarly for $L_p^{\pm}$). Hence $\mu_p(E)=0$ by Lemma~\ref{lem:mu-criterion} (\S\,F.52).
+\begin{theorem}[Positive proportion at each depth; $\mu=0$ (BLOCKED)]\label{thm:mu0-wedge}
+For all sufficiently large $n$, a positive proportion of primitive characters $\chi$ of conductor $p^n$ satisfy $v_p\big(L_p(E,\chi)\big)<1$ (and similarly for $L_p^{\pm}$). Hence $\mu_p(E)=0$ by Lemma~\ref{lem:mu-criterion} (\S\,F.52).
 \end{theorem}
 \begin{proof}
-Apply Lemma~\ref{lem:wedge} to rule out off\,-\,$T{=}0$ mass on windows at level $p^n$; this yields a positive proportion of nonvanishing specializations. Lemma~\ref{lem:mu-criterion} then forces $\mu=0$.
+**BLOCKED.** This theorem depends on Lemma~\ref{lem:wedge}, which is blocked.
 \end{proof}
+
+\begin{remark}[Normalization of the $\mu=0$ criterion]
+For deep cyclotomic characters one always has $v_p(\chi(\gamma)-1)>0$. In particular, if $\mathrm{ord}_{T=0}L_p(E,T)\ge 1$ and $L_p(E,T)\in\mathbb Z_p\llbracket T\rrbracket$, then $v_p(L_p(E,\chi))$ is never $0$ for such $\chi$. Accordingly, in the cyclotomic $\mu=0$ discussion we use the **non-divisibility threshold** $v_p(L_p(E,\chi))<1$ (equivalently: $p\nmid L_p(E,T)$ in $\Lambda$) rather than the stronger “unit-value” condition.
+\end{remark}
 
 \begin{remark}[Signed and improved variants]
 All statements above admit signed analogues with $L_p^{\pm}$ and with the improved objects at split multiplicative $p$ (replace $L_p$ by $L_p^{\!*}$ and $K$ by $K^{\!*}$; cf. \S\,F.40).
@@ -1339,11 +1352,11 @@ On $\mathcal{U}$, the signed regulator determinant equals $L_p^{\pm}$ integrally
 
 \subsection*{F.57. Universal IMC (synthesis)}
 
-Combining the congruence/patching engine (\S\,F.32A), the regulator/complex engine (\S\,F.31A, \S\,F.39A–F.39B), the finite–slope backbone (\S\,F.56), the IMC-equality coverage of \S\,F.32, the cyclotomic wedge for $\mu=0$ of Appendix~F.pw, and exceptional–zero corrections (\S\,F.40, \S\,F.42B) yields, for every prime $p$ (ordinary and signed at supersingular),
+Combining the congruence/patching engine (\S\,F.32A), the regulator/complex engine (\S\,F.31A, \S\,F.39A–F.39B), the finite–slope backbone (\S\,F.56), the IMC-equality coverage of \S\,F.32, and exceptional–zero corrections (\S\,F.40, \S\,F.42B) yields, for every prime $p$ (ordinary and signed at supersingular),
 \[
   \mathrm{char}_{\Lambda}X_p(E/\mathbb{Q}_\infty)\ =\ (L_p(E,T))\quad\text{up to }\Lambda^{\times},
 \]
-with $L_p$ and $K(T)$ replaced by the improved quantities at split multiplicative $p$. This is consistent with Theorem~\ref{thm:universal-imc}; \S\,F.32 supplies IMC equality coverage and Appendix~F.pw supplies universal $\mu=0$.
+with $L_p$ and $K(T)$ replaced by the improved quantities at split multiplicative $p$. This is consistent with Theorem~\ref{thm:universal-imc}; \S\,F.32 supplies IMC equality coverage. A universal $\mu=0$ input is recorded separately in Appendix~F.pmu (pivot; **BLOCKED**), while the older wedge attempt in Appendix~F.pw remains **BLOCKED**.
 
 \subsection*{F.58. Away-from-$p$ local integrality and determinant neutrality}
 
@@ -1611,21 +1624,21 @@ The diagonal–unit/separation certificates of \S3 and \S F.26 provide additiona
 \end{corollary}
 
 \paragraph{Remark.}
-The remainder of \S F.52–F.pw records a route to universal \(\mu=0\) from character-level nonvanishing (via the boundary wedge). The diagonal–unit density mechanisms (F.27, F.35, F.42, F.47) can be viewed as complementary and computationally convenient certificates, but they are not needed for the mainline reduction.
+The remainder of \S F.52–F.pmu records routes to cyclotomic \(\mu=0\) from character-level $p$-nondivisibility/primitivity certificates; Appendix~F.pw records a historical boundary-wedge attempt (currently **BLOCKED**). The diagonal–unit density mechanisms (F.27, F.35, F.42, F.47) can be viewed as complementary and computationally convenient certificates, but they are not needed for the mainline reduction.
 
-\subsection*{F.52. $\mu=0$ from character-level nonvanishing}
+\subsection*{F.52. $\mu=0$ from character-level $p$-nondivisibility}
 
-We now upgrade $\mu$–control to all primes by showing positive–proportion nonvanishing at all cyclotomic conductors.
+We now upgrade $\mu$–control to all primes by showing positive–proportion $p$-nondivisibility at cyclotomic conductors.
 
 \begin{lemma}[Character–proportion criterion]\label{lem:mu-criterion}
 Let $E/\mathbb{Q}$ and $p\ge 2$. Suppose there exists $C>0$ and infinitely many $n\ge 1$ such that
 \[
-  \#\{\,\chi\ \mathrm{mod}\ p^n :\ \mathrm{ord}_p\,L_p(E,\chi)=0\,\}\ \ge\ C\,\varphi(p^n).
+  \#\{\,\chi\ \mathrm{mod}\ p^n :\ v_p\big(L_p(E,\chi)\big)<1\,\}\ \ge\ C\,\varphi(p^n).
 \]
 Then $\mu_p(E)=0$. The same holds in the signed case replacing $L_p$ by $L_p^{\pm}$.
 \end{lemma}
 \begin{proof}
-By Weierstrass preparation, write $L_p(E,T)=u(T)\,W(T)$ with $u\in\Lambda^{\times}$ and $W\in\mathbb{Z}_p[T]$ distinguished of degree $\lambda$ and $\mu=0$ iff no p–power factor occurs. If $\mu>0$, then $p\mid L_p(E,\chi)$ for all primitive $\chi$ of sufficiently large conductor, contradicting the positive–proportion nonvanishing. The signed case is identical.
+By Weierstrass preparation, write $L_p(E,T)=p^{\mu}\,u(T)\,W(T)$ with $\mu\ge 0$, $u\in\Lambda^{\times}$, and $W\in\mathbb{Z}_p[T]$ distinguished. If $\mu>0$, then $p\mid L_p(E,T)$ in $\Lambda$, hence $v_p(L_p(E,\chi))\ge 1$ for every finite-order cyclotomic character $\chi$, contradicting the hypothesis that a positive proportion have $v_p(L_p(E,\chi))<1$ for infinitely many depths. Therefore $\mu=0$. The signed case is identical.
 \end{proof}
 
 \subsection*{F.53. Character-level Wach detectors and specialization}
@@ -1658,11 +1671,11 @@ For each $n$ sufficiently large, a positive proportion $\ge C>0$ of primitive ch
 By Proposition~\ref{prop:chi-detector}, nonvanishing reduces to $\Lambda_n$ being nonzero on the Frobenius translates across the character family. Large–sieve bounds control the distribution of character values (equivalently, Frobenius classes in the relevant Artin representations) and yield a uniform positive proportion of nonvanishing; see \cite{Kowalski2008,MurtyMurty1987,MurtyMurty1988}.
 \end{proof}
 
-\begin{corollary}[Universal $\mu=0$]\label{cor:universal-mu}
-For every prime $p$, $\mu_p(E)=0$ (ordinary or signed). In particular, together with Theorem~\ref{thm:universal-imc}, BSD$_p$ holds at every prime.
+\begin{corollary}[Universal $\mu=0$ (conditional; BLOCKED)]\label{cor:universal-mu}
+Assume the cyclotomic wedge package of Appendix~F.pw (Theorem~\ref{thm:pw-wedge-mu}). Then for every prime $p$, $\mu_p(E)=0$ (ordinary or signed).
 \end{corollary}
-\begin{proof}
-By Appendix~F.pw (Theorem~\ref{thm:pw-wedge-mu}), for all sufficiently large conductors a positive proportion of characters have $v_p(L_p(E,\chi))=0$ (ordinary and signed). Apply Lemma~\ref{lem:mu-criterion}.
+\begin{proof}[Status]
+**BLOCKED.** This corollary depends on Theorem~\ref{thm:pw-wedge-mu}, which is blocked.
 \end{proof}
 
 \subsection*{F.55. Signed and small–prime adjustments}
@@ -1938,7 +1951,7 @@ We do not attempt to deduce global finiteness solely from the existence of many 
 
 Prime-wise, the mainline is:
 \begin{itemize}
-\item universal \(\mu=0\) from the boundary wedge (Appendix~F.pw; Theorem~\ref{thm:mu0-wedge} / Corollary~\ref{cor:universal-mu}),
+\item a universal \(\mu=0\) input (Appendix~F.pmu; pivot, conditional — Appendix~F.pw records an older wedge attempt, **BLOCKED**),
 \item cyclotomic IMC equality from literature coverage (\S\,F.32; Theorem~\ref{thm:universal-imc}),
 \item BSD$_p$ for every prime \(p\) (Corollary~\ref{cor:universal-bsd-p}, with the standard exceptional-zero and small-prime adjustments recorded in Appendix~F),
 \item global BSD via the valuation-promotion argument in Appendix~G (Theorem~\ref{thm:global-bsd}).
@@ -2626,7 +2639,7 @@ At split multiplicative $p$, one may incorporate the Greenberg–Stevens correct
 
 Each certified height–unit prime \(p\) (i.e. a separated prime with diagonal Coleman heights of valuation \(0\)) yields a concrete local certificate \(\mathrm{Reg}_p(E)\in\mathbb{Z}_p^\times\) (Corollary~\ref{cor:height-unit}), hence \(\mu_p(E)=0\) by Proposition~\ref{prop:mu-zero}. These per-prime certificates are modular and auditable and can be accumulated as computational sanity checks.
 
-For the mainline route, however, we do not need to accumulate primes or invoke any prime-by-prime IMC input \emph{once} one has global inputs providing $\mu_p(E)=0$ and cyclotomic IMC equality prime-by-prime (ordinary/signed/improved as appropriate). Appendix~F.pw and \S\,F.32 record proposed mechanisms/coverage toward these inputs; if completed, they yield BSD$_p$ for all primes (Corollary~\ref{cor:universal-bsd-p}) and then the global BSD formula after archimedean normalization (Appendix~G).
+For the mainline route, however, we do not need to accumulate primes or invoke any prime-by-prime IMC input \emph{once} one has global inputs providing $\mu_p(E)=0$ and cyclotomic IMC equality prime-by-prime (ordinary/signed/improved as appropriate). Appendix~F.pmu and \S\,F.32 record proposed mechanisms/coverage toward these inputs (with Appendix~F.pw kept as a blocked historical alternative); if completed, they yield BSD$_p$ for all primes (Corollary~\ref{cor:universal-bsd-p}) and then the global BSD formula after archimedean normalization (Appendix~G).
 
 \section{Reproducibility and artifacts}
 
@@ -3119,6 +3132,15 @@ F. Cherbonnier and P. Colmez, Th\'eorie d'Iwasawa des repr\'esentations p-adique
 
 \bibitem{Greenberg1989}
 R. Greenberg, Iwasawa theory for p-adic representations, in: Algebraic Number Theory (Iwasawa theory), Adv. Stud. Pure Math. 17 (1989), 97--137.
+
+\bibitem{FerreroWashington79}
+B. Ferrero and L. C. Washington, The Iwasawa invariant $\mu_p$ vanishes for abelian number fields, Ann. of Math. (2) 109 (1979), no. 2, 377--395.
+
+\bibitem{GreenbergVatsal2000}
+R. Greenberg and V. Vatsal, On the Iwasawa invariants of elliptic curves, Invent. Math. 142 (2000). (Preprint `arXiv:math/9906215`.)
+
+\bibitem{OukhabaViguie2013}
+H. Oukhaba and S. Vigui\'e, On the $\mu$-invariant of Katz $p$-adic $L$ functions attached to imaginary quadratic fields and applications, preprint, `arXiv:1311.3565` (2013).
 
 \bibitem{Kato2004}
 K. Kato, P-adic Hodge theory and values of zeta functions of modular forms, Ast\'erisque 295 (2004), ix, 117--290.
@@ -3804,6 +3826,41 @@ Thus the manuscript’s conclusions in \S6 rest on auditable per–prime validat
 
 \bigskip
 
+\subsection*{F.pmu. $p$--adic primitivity certificates on cyclotomic layers: $\mu=0$ (pivot; BLOCKED)}
+
+We record a pivot route to cyclotomic $\mu=0$ that avoids any nonarchimedean phase/argument formalism. The key point is purely $p$-adic:
+\emph{$\mu>0$ is exactly the statement that the relevant $\Lambda$--adic $p$--adic $L$--function is divisible by $p$ in $\Lambda$.}
+Thus, for a \emph{fixed prime} $p$, $\mu_p(E)=0$ follows from a primitivity (non-divisibility) certificate on the analytic side, together with the standard one--sided divisibility from Kato.
+
+\paragraph{Status (BLOCKED).}
+The missing part is not the definition of the certificate, but its \emph{existence for every prime $p$} for a fixed non--CM curve $E/\mathbb{Q}$. Any attempt to reduce to a finite exceptional set across varying $p$ is, in general, an open problem (Greenberg’s $\mu=0$ conjecture) and cannot be used unconditionally here.
+
+\paragraph{Known unconditional base cases (where $\mu=0$ is actually proved).}
+There is substantial unconditional \emph{CM/abelian} coverage of $\mu=0$ in the literature:
+\begin{itemize}
+\item (Abelian) Ferrero--Washington prove $\mu=0$ for cyclotomic $\BZ_p$--extensions of abelian number fields \cite{FerreroWashington79}.
+\item (CM ordinary) In the Katz $p$--adic $L$--function setting for imaginary quadratic fields (good ordinary/split primes), the $\mu$--invariant is $0$ for all $p$ (including $p=2,3$) \cite{OukhabaViguie2013}. This supplies a genuine $\mu=0$ base case in the CM--ordinary world.
+\item (Fixed-$p$ seed) Greenberg--Vatsal prove $\mu^{\an}=\mu^{\alg}=0$ in a rational $p$--isogeny base case \cite[Thm.~(1.3)]{GreenbergVatsal2000}; this is a \emph{single-prime} input used by propagation theorems, not an all-$p$ theorem for a fixed non--CM curve.
+\end{itemize}
+These results do not provide an all-$p$ theorem for general non--CM elliptic curves over $\BQ$, which is why the universal cyclotomic $\mu=0$ goal remains blocked here.
+
+\paragraph{Step 1: a character-level $\mu$ criterion (Fp$\mu$-0).}
+Lemma~\ref{lem:mu-criterion} shows that it suffices to produce cyclotomic characters of arbitrarily large conductor with
+\[
+  v_p\big(L_p(E,\chi)\big)<1
+\]
+(and similarly in the signed case). This is a $p$-nondivisibility condition (not a unit-value condition).
+
+\paragraph{Step 2: transfer primitivity to Selmer (Fp$\mu$-1).}
+Assume the one--sided divisibility (Kato Euler system) in the relevant setting (ordinary/signed/improved):
+\[
+  \mathrm{char}_{\Lambda}X_p(E/\mathbb{Q}_\infty)\ \mid\ (L_p(E,T)).
+\]
+Then $p\nmid L_p(E,T)$ in $\Lambda$ implies $\mu(X_p) \le \mu(L_p) = 0$, so $\mu_p(E)=0$.
+
+\paragraph{Step 3 (where the universal goal blocks).}
+The certificate above is prime-by-prime. To deduce \emph{universal} $\mu_p(E)=0$ for all primes $p$ one would need a theorem producing such a primitivity witness for \emph{each} $p$ (ordinary/signed/improved as appropriate). No such all-$p$ theorem is proved in this manuscript, and the standard propagation results in the literature treat cyclotomic $\mu=0$ as an \emph{input} rather than an output. Hence universal $\mu=0$ remains **BLOCKED** at this point.
+
 \subsection*{F.pw. $p$--adic wedge certificate on cyclotomic layers: $\mu=0$ (draft)}
 
 We record a proposed $p$--adic boundary "wedge" certificate on cyclotomic character layers, intended to force positive–proportion nonvanishing of $L_p(E,\chi)$ at all conductors and hence $\mu_p(E)=0$ by the character–level criterion (Lemma~\ref{lem:mu-criterion}). The argument mirrors our RH wedge route: outer normalization on the boundary, admissible atom–safe tests with uniform energy, a local CR–Green pairing controlled by a Carleson box constant with a structural split into an operator tail and a neutralized zero–mass term, and a quantitative wedge lemma.
@@ -3814,6 +3871,7 @@ Let $K(T)=s\circ \mathrm{Col}_p$ be the Lambert/Fredholm operator on a saturated
   \mathcal J(T)\ :=\ \frac{\det_{\Lambda}(I-K(T))}{\mathcal O(T)\,L_p(E,T)}
 \]
 has $p$--adic unit boundary modulus along the character layers $\{\chi\}$ (i.e. $|\mathcal J(\chi)|_p\equiv 1$). The outer $\mathcal O$ is zero–free on the boundary and $\det_{\Lambda}(I-K)$ is analytic on weight/character discs by complete continuity of $K$; thus $\mathcal J$ is well–defined and analytic on families.
+\emph{Status:} this outer normalization step is **BLOCKED** as stated; see \S\,F.31B and the proof-track dashboard for the missing outer-factor lemma.
 
 \paragraph{Admissible windows (atom–safe).}
 For each level $n\ge 1$, let $\Gamma_n\cong (\mathbb Z/p^n\mathbb Z)^{\times}$ parameterize characters of conductor $p^n$. Define an admissible class $\mathcal W_{\mathrm{adm}}(n;\varepsilon)$ of nonnegative, mass–$1$ windows $\phi$ on $\Gamma_n$ such that: (i) $\phi$ is constant on cosets and allowed to vanish on a union of small neighborhoods of finitely many points ("atoms": exceptional zeros/signs) with total measure $\le \varepsilon$; (ii) the associated Dirichlet test energy of the Poisson extension is bounded uniformly in $n$ (scale–invariant bound).
@@ -3829,16 +3887,23 @@ for any $\phi\in\mathcal W_{\mathrm{adm}}(n;\varepsilon)$ with a level–uniform
 \]
 where $K_{0,p}$ is an operator–tail bound from Wach/Perrin–Riou integrality (completely continuous image of Coleman) and $K_{\xi,p}$ bounds the neutralized zero–mass by annular $L^2$ control on character layers, uniformly in $n$. The latter uses the minimal Kummer criterion and twist–averages (cf. \S\,F.42 and \S\,F.47), exactly as in the RH annular Carleson estimate.
 
-\begin{theorem}[Cyclotomic wedge $\Rightarrow\ \mu=0$]\label{thm:pw-wedge-mu}
+\begin{theorem}[Cyclotomic wedge $\Rightarrow\ \mu=0$ (BLOCKED)]\label{thm:pw-wedge-mu}
 For every prime $p$, there exists $\varepsilon\in(0,1)$ and $n_0\ge 1$ such that for all $n\ge n_0$ and for all $\phi\in\mathcal W_{\mathrm{adm}}(n;\varepsilon)$,
 \[
   \int_{\Gamma_n}\! \phi\,(-\Delta\,\mathrm{arg}\,\mathcal J)\ \le\ C\,p^{-n/2}\ <\ \tfrac{\pi}{2}.
 \]
-Consequently, a quantitative wedge holds on every $\Gamma_n$ (after a unimodular rotation), and a positive proportion of characters of each conductor $p^n$ satisfy $v_p\big(L_p(E,\chi)\big)=0$. By Lemma~\ref{lem:mu-criterion}, $\mu_p(E)=0$ (ordinary and signed) for all $p$.
+Consequently, a quantitative wedge holds on every $\Gamma_n$ (after a unimodular rotation), and a positive proportion of characters of each conductor $p^n$ satisfy $v_p\big(L_p(E,\chi)\big)<1$. By Lemma~\ref{lem:mu-criterion}, $\mu_p(E)=0$ (ordinary and signed) for all $p$.
 \end{theorem}
 
-\begin{proof}[Proof sketch]
-Outer normalization gives $|\mathcal J|_p\equiv 1$ on the boundary; CR–Green and the Carleson split yield the upper bound by $C\,p^{-n/2}$. The wedge lemma (as in the RH boundary argument) then forces the boundary phase into a cone and precludes off–$T=0$ mass. Atom–safe windows remove signed/exceptional atoms. Positive–proportion nonvanishing at all depths implies $\mu_p(E)=0$ by Lemma~\ref{lem:mu-criterion}.
+\begin{proof}[Status]
+**BLOCKED.** A proof would require all of the following to be defined and proved (or supplied by exact literature citations):
+\begin{itemize}
+\item an outer/neutralization theorem producing \(\mathcal O\) (or \(O\)) so that \(|\mathcal J(\chi)|_p=1\) on finite-order character layers (cf. \S\,F.31B, which is currently blocked as stated),
+\item a canonical $p$-adic phase/argument principle making \(\arg(\mathcal J)\) and \(-\Delta\,\arg(\mathcal J)\) well-posed and relating it to “off-\(T=0\)” mass,
+\item a proved box-energy estimate (Theorem~\ref{thm:box-energy}),
+\item the wedge criterion (Lemma~\ref{lem:wedge}).
+\end{itemize}
+Absent these inputs, the cyclotomic wedge route does not currently yield universal \(\mu=0\).
 \end{proof}
 
 \medskip

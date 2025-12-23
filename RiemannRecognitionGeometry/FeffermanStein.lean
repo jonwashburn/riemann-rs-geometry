@@ -691,6 +691,1021 @@ def meanOscillation (f : ℝ → ℝ) (a b : ℝ) : ℝ :=
     (1 / (b - a)) * ∫ t in Set.Icc a b, |f t - intervalAverage f a b|
   else 0
 
+/-! ### First chip toward `log_singularity_meanOscillation_le`
+
+The classical fact `log|t-γ| ∈ BMO` is a major analytic bottleneck. As a first fully-checked step,
+we record a concrete bound on a canonical interval: `meanOscillation log 0 1 ≤ 2`.
+
+This is not yet the full uniform-in-interval result, but it proves that the key absolute-value
+integrals involving `log` can be controlled in Lean using Mathlib’s `integral_log` infrastructure.
+-/
+
+lemma intervalAverage_log_zero_one :
+    intervalAverage (fun t : ℝ => Real.log t) 0 1 = -1 := by
+  unfold intervalAverage
+  have h01 : (0 : ℝ) < 1 := by norm_num
+  simp [h01]
+  -- Convert the set integral on `Icc` to an interval integral.
+  have hIcc :
+      (∫ t in Set.Icc (0 : ℝ) (1 : ℝ), Real.log t) =
+        ∫ t in (0 : ℝ)..(1 : ℝ), Real.log t := by
+    have h1 :
+        (∫ t in Set.Icc (0 : ℝ) (1 : ℝ), Real.log t) =
+          ∫ t in Set.Ioc (0 : ℝ) (1 : ℝ), Real.log t := by
+      exact
+        (MeasureTheory.integral_Icc_eq_integral_Ioc (μ := (volume : Measure ℝ))
+          (f := fun t : ℝ => Real.log t) (x := (0 : ℝ)) (y := (1 : ℝ)))
+    have h2 :
+        (∫ t in Set.Ioc (0 : ℝ) (1 : ℝ), Real.log t) =
+          ∫ t in (0 : ℝ)..(1 : ℝ), Real.log t := by
+      exact
+        (intervalIntegral.integral_of_le (μ := (volume : Measure ℝ))
+          (f := fun t : ℝ => Real.log t) (a := (0 : ℝ)) (b := (1 : ℝ))
+          (h := (le_of_lt h01))).symm
+    simp [h1, h2]
+  -- Evaluate the interval integral.
+  have hlog : (∫ t in (0 : ℝ)..(1 : ℝ), Real.log t) = -1 := by
+    -- `intervalIntegral.integral_log` is `[simp]` in Mathlib.
+    simp
+  simp [hIcc, hlog]
+
+lemma meanOscillation_log_zero_one_le_two :
+    meanOscillation (fun t : ℝ => Real.log t) 0 1 ≤ 2 := by
+  unfold meanOscillation
+  have h01 : (0 : ℝ) < 1 := by norm_num
+  simp [h01]
+  -- Substitute the explicit average on `[0,1]`.
+  have havg : intervalAverage (fun t : ℝ => Real.log t) 0 1 = -1 :=
+    intervalAverage_log_zero_one
+  simp [havg]
+  -- Bound `|log t + 1|` by `|log t| + 1`, then use `log t ≤ 0` on `[0,1]`.
+  have h_pointwise :
+      ∀ t ∈ Set.Icc (0 : ℝ) (1 : ℝ), |Real.log t + 1| ≤ -Real.log t + 1 := by
+    intro t ht
+    have hlog_nonpos : Real.log t ≤ 0 := Real.log_nonpos ht.1 ht.2
+    calc
+      |Real.log t + 1|
+          ≤ |Real.log t| + |(1 : ℝ)| := abs_add (Real.log t) 1
+      _ = |Real.log t| + 1 := by simp
+      _ = -Real.log t + 1 := by simp [abs_of_nonpos hlog_nonpos]
+  -- Integrability for the monotonicity lemma.
+  have hint_log : IntervalIntegrable (fun t : ℝ => Real.log t) volume (0 : ℝ) (1 : ℝ) := by
+    simp
+  have hint_abs :
+      IntegrableOn (fun t : ℝ => |Real.log t + 1|) (Set.Icc (0 : ℝ) (1 : ℝ)) volume := by
+    -- IntervalIntegrable → IntegrableOn on `Icc` (since volume has no atoms).
+    have hIcc_int : IntegrableOn (fun t : ℝ => Real.log t) (Set.Icc (0 : ℝ) (1 : ℝ)) volume := by
+      have : IntervalIntegrable (fun t : ℝ => Real.log t) volume (0 : ℝ) (1 : ℝ) := hint_log
+      -- `intervalIntegrable_iff_integrableOn_Icc_of_le` converts.
+      have hle : (0 : ℝ) ≤ (1 : ℝ) := le_of_lt h01
+      exact (intervalIntegrable_iff_integrableOn_Icc_of_le (μ := (volume : Measure ℝ)) hle).1 this
+    -- Then `|log t + 1|` is integrable as a norm of an integrable function.
+    have hconst : IntegrableOn (fun _t : ℝ => (1 : ℝ)) (Set.Icc (0 : ℝ) (1 : ℝ)) volume := by
+      -- constants are integrable on finite-measure sets
+      rw [integrableOn_const]
+      right
+      simp [Real.volume_Icc]
+    have hsum : IntegrableOn (fun t : ℝ => Real.log t + 1) (Set.Icc (0 : ℝ) (1 : ℝ)) volume :=
+      hIcc_int.add hconst
+    simpa using hsum.abs
+  have hint_rhs :
+      IntegrableOn (fun t : ℝ => -Real.log t + 1) (Set.Icc (0 : ℝ) (1 : ℝ)) volume := by
+    -- `-log + 1` is integrable as a linear combination of an integrable function and a constant.
+    have hIcc_int : IntegrableOn (fun t : ℝ => Real.log t) (Set.Icc (0 : ℝ) (1 : ℝ)) volume := by
+      have : IntervalIntegrable (fun t : ℝ => Real.log t) volume (0 : ℝ) (1 : ℝ) := hint_log
+      have hle : (0 : ℝ) ≤ (1 : ℝ) := le_of_lt h01
+      exact (intervalIntegrable_iff_integrableOn_Icc_of_le (μ := (volume : Measure ℝ)) hle).1 this
+    have hconst : IntegrableOn (fun _t : ℝ => (1 : ℝ)) (Set.Icc (0 : ℝ) (1 : ℝ)) volume := by
+      rw [integrableOn_const]
+      right
+      simp [Real.volume_Icc]
+    exact hIcc_int.neg.add hconst
+  -- Integrate the pointwise bound.
+  have h_integral_le :
+      (∫ t in Set.Icc (0 : ℝ) (1 : ℝ), |Real.log t + 1|) ≤
+        ∫ t in Set.Icc (0 : ℝ) (1 : ℝ), (-Real.log t + 1) := by
+    apply MeasureTheory.setIntegral_mono_on hint_abs hint_rhs measurableSet_Icc
+    intro t ht
+    exact h_pointwise t ht
+  -- Evaluate the RHS integral using interval integrals.
+  have h_rhs_eval : (∫ t in Set.Icc (0 : ℝ) (1 : ℝ), (-Real.log t + 1)) = 2 := by
+    -- Convert the set integral to an interval integral and use linearity + `integral_log`.
+    have hIcc :
+        (∫ t in Set.Icc (0 : ℝ) (1 : ℝ), (-Real.log t + 1)) =
+          ∫ t in (0 : ℝ)..(1 : ℝ), (-Real.log t + 1) := by
+      have h1 :
+          (∫ t in Set.Icc (0 : ℝ) (1 : ℝ), (-Real.log t + 1)) =
+            ∫ t in Set.Ioc (0 : ℝ) (1 : ℝ), (-Real.log t + 1) := by
+        exact
+          (MeasureTheory.integral_Icc_eq_integral_Ioc (μ := (volume : Measure ℝ))
+            (f := fun t : ℝ => (-Real.log t + 1)) (x := (0 : ℝ)) (y := (1 : ℝ)))
+      have h2 :
+          (∫ t in Set.Ioc (0 : ℝ) (1 : ℝ), (-Real.log t + 1)) =
+            ∫ t in (0 : ℝ)..(1 : ℝ), (-Real.log t + 1) := by
+        exact
+          (intervalIntegral.integral_of_le (μ := (volume : Measure ℝ))
+            (f := fun t : ℝ => (-Real.log t + 1)) (a := (0 : ℝ)) (b := (1 : ℝ))
+            (h := (le_of_lt h01))).symm
+      simp [h1, h2]
+    have hint_log' : IntervalIntegrable (fun t : ℝ => Real.log t) volume (0 : ℝ) (1 : ℝ) := hint_log
+    have hint_neglog' : IntervalIntegrable (fun t : ℝ => -Real.log t) volume (0 : ℝ) (1 : ℝ) :=
+      (hint_log'.neg)
+    have hint_one' : IntervalIntegrable (fun _t : ℝ => (1 : ℝ)) volume (0 : ℝ) (1 : ℝ) := by
+      simp
+    have h_interval :
+        (∫ t in (0 : ℝ)..(1 : ℝ), (-Real.log t + 1)) = 2 := by
+      -- ∫(-log + 1) = -∫log + ∫1
+      have h_add :
+          (∫ t in (0 : ℝ)..(1 : ℝ), (-Real.log t + 1)) =
+            (∫ t in (0 : ℝ)..(1 : ℝ), (-Real.log t) ) + (∫ t in (0 : ℝ)..(1 : ℝ), (1 : ℝ)) := by
+        simpa [Pi.add_apply] using
+          (intervalIntegral.integral_add (μ := (volume : Measure ℝ)) (a := (0 : ℝ)) (b := (1 : ℝ))
+            (f := fun t : ℝ => -Real.log t) (g := fun _t : ℝ => (1 : ℝ)) hint_neglog' hint_one')
+      have h_log : (∫ t in (0 : ℝ)..(1 : ℝ), Real.log t) = -1 := by
+        simp
+      have h_neglog : (∫ t in (0 : ℝ)..(1 : ℝ), -Real.log t) = 1 := by
+        -- `∫ -f = -(∫ f)`
+        simp [intervalIntegral.integral_neg, h_log]
+      have h_one : (∫ t in (0 : ℝ)..(1 : ℝ), (1 : ℝ)) = 1 := by
+        -- interval integral of constant: `(b-a)•1 = 1`
+        simp [intervalIntegral.integral_const]
+      -- Combine.
+      calc
+        (∫ t in (0 : ℝ)..(1 : ℝ), (-Real.log t + 1))
+            = (∫ t in (0 : ℝ)..(1 : ℝ), (-Real.log t)) + (∫ t in (0 : ℝ)..(1 : ℝ), (1 : ℝ)) := h_add
+        _ = 2 := by
+          -- purely numeric
+          simp [h_neglog, h_one]
+          norm_num
+    simp [hIcc, h_interval]
+  -- Final: (since `(1 / (1 - 0)) = 1`), it suffices to bound the set integral by 2.
+  have h_main : (∫ t in Set.Icc (0 : ℝ) (1 : ℝ), |Real.log t + 1|) ≤ 2 := by
+    calc
+      (∫ t in Set.Icc (0 : ℝ) (1 : ℝ), |Real.log t + 1|)
+          ≤ ∫ t in Set.Icc (0 : ℝ) (1 : ℝ), (-Real.log t + 1) := h_integral_le
+      _ = 2 := h_rhs_eval
+  -- `meanOscillation` factor is `1/(b-a)`; here it's 1.
+  simp [h_main]
+
+/-! ### Generic oscillation-vs-constant inequality
+
+For an integrable function on `[a,b]`, the mean oscillation (around the mean) is controlled by
+twice the average absolute deviation from any fixed constant `c`.
+
+This is the standard “triangle inequality + Jensen/triangle for the integral” estimate:
+\[
+  \int |f-\bar f| \le 2 \int |f-c|.
+\]
+-/
+
+lemma meanOscillation_le_two_mul_avgAbsSubConst
+    (f : ℝ → ℝ) (a b c : ℝ) (hab : a < b) (hf : IntegrableOn f (Set.Icc a b)) :
+    meanOscillation f a b ≤ (2 / (b - a)) * ∫ t in Set.Icc a b, |f t - c| := by
+  classical
+  -- Expand the definitions.
+  unfold meanOscillation intervalAverage
+  simp [hab]
+  -- Shorthand for the average on `[a,b]`.
+  set avg : ℝ := (1 / (b - a)) * ∫ t in Set.Icc a b, f t
+  have hLpos : 0 < b - a := sub_pos.mpr hab
+  have hLinv_nonneg : 0 ≤ (1 / (b - a)) := le_of_lt (one_div_pos.mpr hLpos)
+
+  -- Work on the restricted measure `μ := volume.restrict (Icc a b)`.
+  let μ : Measure ℝ := volume.restrict (Set.Icc a b)
+  have hfμ : Integrable f μ := by
+    -- `IntegrableOn` is definitional.
+    dsimp [μ]
+    exact hf
+  have hcμ : Integrable (fun _t : ℝ => c) μ := by
+    -- constant is integrable on a finite-measure set
+    have : IntegrableOn (fun _t : ℝ => c) (Set.Icc a b) volume := by
+      rw [integrableOn_const]
+      right
+      have hab_le : a ≤ b := le_of_lt hab
+      simp [Real.volume_Icc, hab_le]
+    dsimp [μ]
+    exact this
+
+  -- Main raw inequality: `∫ |f-avg| ≤ 2 ∫ |f-c|`.
+  have h_raw :
+      (∫ t in Set.Icc a b, |f t - avg|) ≤ 2 * ∫ t in Set.Icc a b, |f t - c| := by
+    -- Pointwise: `|f-avg| ≤ |f-c| + |c-avg|`.
+    have h_pointwise :
+        ∀ t ∈ Set.Icc a b, |f t - avg| ≤ |f t - c| + |c - avg| := by
+      intro t _ht
+      have : f t - avg = (f t - c) + (c - avg) := by ring
+      calc
+        |f t - avg| = |(f t - c) + (c - avg)| := by
+          exact congrArg (fun x : ℝ => |x|) this
+        _ ≤ |f t - c| + |c - avg| := abs_add (f t - c) (c - avg)
+
+    -- Integrate the pointwise bound.
+    have hint_left : IntegrableOn (fun t : ℝ => |f t - avg|) (Set.Icc a b) volume := by
+      -- Work on the restricted measure `μ`.
+      have havgμ : Integrable (fun _t : ℝ => avg) μ := by
+        have : IntegrableOn (fun _t : ℝ => avg) (Set.Icc a b) volume := by
+          rw [integrableOn_const]
+          right
+          have hab_le : a ≤ b := le_of_lt hab
+          simp [Real.volume_Icc, hab_le]
+        dsimp [μ]
+        exact this
+      have hdiff : Integrable (fun t : ℝ => f t - avg) μ := Integrable.sub hfμ havgμ
+      simpa [μ, IntegrableOn] using hdiff.abs
+    have hint_right : IntegrableOn (fun t : ℝ => |f t - c| + |c - avg|) (Set.Icc a b) volume := by
+      have h_abs1 : Integrable (fun t : ℝ => |f t - c|) μ := by
+        have hdiff : Integrable (fun t : ℝ => f t - c) μ := Integrable.sub hfμ hcμ
+        simpa using hdiff.abs
+      have h_abs2 : Integrable (fun _t : ℝ => |c - avg|) μ := by
+        have : IntegrableOn (fun _t : ℝ => |c - avg|) (Set.Icc a b) volume := by
+          rw [integrableOn_const]
+          right
+          have hab_le : a ≤ b := le_of_lt hab
+          simp [Real.volume_Icc, hab_le]
+        dsimp [μ]
+        exact this
+      have hsum : Integrable (fun t : ℝ => |f t - c| + |c - avg|) μ := Integrable.add h_abs1 h_abs2
+      simpa [μ, IntegrableOn, Pi.add_apply] using hsum
+    have h_int_le :
+        (∫ t in Set.Icc a b, |f t - avg|) ≤
+          ∫ t in Set.Icc a b, (|f t - c| + |c - avg|) := by
+      apply MeasureTheory.setIntegral_mono_on hint_left hint_right measurableSet_Icc
+      intro t ht
+      exact h_pointwise t ht
+
+    -- Split the RHS integral on the restricted measure.
+    have h_split :
+        (∫ t in Set.Icc a b, (|f t - c| + |c - avg|)) =
+          (∫ t in Set.Icc a b, |f t - c|) + (∫ _t in Set.Icc a b, |c - avg|) := by
+      have h1 : Integrable (fun t : ℝ => |f t - c|) μ := by
+        have : Integrable (fun t : ℝ => f t - c) μ := by
+          -- `f` and constant integrable on μ
+          simpa [μ] using (hfμ.sub hcμ)
+        simpa using this.abs
+      have h2 : Integrable (fun _t : ℝ => |c - avg|) μ := by
+        -- constant integrable on μ (finite measure)
+        have : IntegrableOn (fun _t : ℝ => |c - avg|) (Set.Icc a b) volume := by
+          rw [integrableOn_const]
+          right
+          have hab_le : a ≤ b := le_of_lt hab
+          simp [Real.volume_Icc, hab_le]
+        dsimp [μ]
+        exact this
+      -- convert to `∫ · ∂μ` and use `integral_add`
+      simpa [μ, Pi.add_apply] using (MeasureTheory.integral_add (μ := μ) (f := fun t : ℝ => |f t - c|)
+        (g := fun _t : ℝ => |c - avg|) h1 h2)
+
+    -- Compute `∫ |c-avg|` explicitly.
+    have h_const :
+        (∫ _t in Set.Icc a b, |c - avg|) = (b - a) * |c - avg| := by
+      have hab_le : a ≤ b := le_of_lt hab
+      simp [MeasureTheory.setIntegral_const, Real.volume_Icc, hab_le, smul_eq_mul]
+
+    -- Bound `|c-avg|` by the average of `|f-c|`.
+    have h_avg_bound :
+        (b - a) * |c - avg| ≤ ∫ t in Set.Icc a b, |f t - c| := by
+      have hab_le : a ≤ b := le_of_lt hab
+      have h_ne : b - a ≠ 0 := ne_of_gt hLpos
+      -- identity: `c - avg = (1/(b-a)) * ∫ (c - f)`
+      have h_id : c - avg = (1 / (b - a)) * ∫ t in Set.Icc a b, (c - f t) := by
+        -- `∫ (c - f) = ∫ c - ∫ f`
+        have h_sub :
+            (∫ t in Set.Icc a b, (c - f t)) =
+              (∫ _t in Set.Icc a b, (c : ℝ)) - ∫ t in Set.Icc a b, f t := by
+          -- on restricted measure, use `integral_sub`
+          have hc' : Integrable (fun _t : ℝ => c) μ := hcμ
+          have hf' : Integrable f μ := hfμ
+          simpa [μ, Pi.sub_apply] using
+            (MeasureTheory.integral_sub (μ := μ) (f := fun _t : ℝ => c) (g := f) hc' hf')
+        have h_int_c : (∫ _t in Set.Icc a b, (c : ℝ)) = (b - a) * c := by
+          simp [MeasureTheory.setIntegral_const, Real.volume_Icc, hab_le, smul_eq_mul]
+        -- Now rearrange.
+        -- `avg = (1/L)*∫ f`
+        have : (∫ t in Set.Icc a b, (c - f t)) = (b - a) * c - ∫ t in Set.Icc a b, f t := by
+          simpa [h_int_c] using h_sub
+        -- Multiply by `1/(b-a)` and simplify.
+        have h_alg :
+            c - avg = (1 / (b - a)) * ((b - a) * c - ∫ t in Set.Icc a b, f t) := by
+          -- unfold the definition of `avg` and clear denominators
+          dsimp [avg]
+          field_simp [h_ne]
+          ring
+        -- rewrite the bracket using `this`
+        calc
+          c - avg = (1 / (b - a)) * ((b - a) * c - ∫ t in Set.Icc a b, f t) := h_alg
+          _ = (1 / (b - a)) * ∫ t in Set.Icc a b, (c - f t) := by
+                rw [← this]
+      -- Apply `abs_integral_le_integral_abs` to bound `|c-avg|`.
+      have habs :
+          |c - avg| ≤ (1 / (b - a)) * ∫ t in Set.Icc a b, |f t - c| := by
+        have h :=
+          (MeasureTheory.abs_integral_le_integral_abs (μ := μ) (f := fun t : ℝ => (c - f t)))
+        have hpos : 0 < (b - a) := hLpos
+        calc
+          |c - avg|
+              = |(1 / (b - a)) * ∫ t in Set.Icc a b, (c - f t)| := by
+                    simp [h_id]
+          _ = (1 / (b - a)) * |∫ t in Set.Icc a b, (c - f t)| := by
+                    -- avoid `simp` on `abs_mul` (it generates side goals); rewrite by hand
+                    set I : ℝ := (∫ t in Set.Icc a b, (c - f t))
+                    have hmul : |(1 / (b - a)) * I| = |(1 / (b - a))| * |I| :=
+                      abs_mul (1 / (b - a)) I
+                    have habs' : |(1 / (b - a))| = (1 / (b - a)) :=
+                      abs_of_pos (one_div_pos.mpr hpos)
+                    calc
+                      |(1 / (b - a)) * I| = |(1 / (b - a))| * |I| := hmul
+                      _ = (1 / (b - a)) * |I| := by rw [habs']
+          _ ≤ (1 / (b - a)) * (∫ t in Set.Icc a b, |c - f t|) := by
+                    -- multiply the triangle inequality by a nonnegative scalar
+                    have h' : |∫ t in Set.Icc a b, (c - f t)| ≤ ∫ t in Set.Icc a b, |c - f t| := by
+                      simpa [μ] using h
+                    exact mul_le_mul_of_nonneg_left h' (le_of_lt (one_div_pos.mpr hpos))
+          _ = (1 / (b - a)) * (∫ t in Set.Icc a b, |f t - c|) := by
+                    simp [abs_sub_comm]
+      -- Multiply by `(b-a)`.
+      have hmul := mul_le_mul_of_nonneg_left habs (le_of_lt hLpos)
+      -- simplify the RHS by cancellation: `(b-a) * (1/(b-a) * X) = X`
+      have hmul' :
+          (b - a) * |c - avg| ≤ ∫ t in Set.Icc a b, |f t - c| := by
+        simpa [mul_assoc, h_ne] using hmul
+      exact hmul'
+
+    -- Combine.
+    calc
+      (∫ t in Set.Icc a b, |f t - avg|)
+          ≤ ∫ t in Set.Icc a b, (|f t - c| + |c - avg|) := h_int_le
+      _ = (∫ t in Set.Icc a b, |f t - c|) + (∫ _t in Set.Icc a b, |c - avg|) := h_split
+      _ = (∫ t in Set.Icc a b, |f t - c|) + (b - a) * |c - avg| := by simp [h_const]
+      _ ≤ (∫ t in Set.Icc a b, |f t - c|) + (∫ t in Set.Icc a b, |f t - c|) := by
+            gcongr
+      _ = 2 * ∫ t in Set.Icc a b, |f t - c| := by ring
+
+  -- Rescale back to the mean-oscillation inequality.
+  have h_scaled :
+      (1 / (b - a)) * (∫ t in Set.Icc a b, |f t - avg|) ≤
+        (2 / (b - a)) * ∫ t in Set.Icc a b, |f t - c| := by
+    have : (1 / (b - a)) * (∫ t in Set.Icc a b, |f t - avg|) ≤
+        (1 / (b - a)) * (2 * ∫ t in Set.Icc a b, |f t - c|) := by
+      exact mul_le_mul_of_nonneg_left h_raw hLinv_nonneg
+    simpa [div_eq_mul_inv, mul_assoc, mul_left_comm, mul_comm] using this
+
+  simpa [avg] using h_scaled
+
+/-! ### Next chip: uniform mean-oscillation bound for `t ↦ log |t-γ|`
+
+The classical “log singularity is BMO” statement is used in the analytic blueprint to argue that each
+zero contributes \(O(1)\) to the mean oscillation of `logAbsXi`.
+
+We prove here a **uniform** bound (with an explicit constant) for the mean oscillation of the
+one-dimensional model `t ↦ Real.log |t-γ|` on any interval. This is unconditional and requires only
+basic real analysis plus change-of-variables for interval integrals.
+-/
+
+lemma setIntegral_Icc_eq_intervalIntegral_of_le (f : ℝ → ℝ) (a b : ℝ) (hab : a ≤ b) :
+    (∫ t in Set.Icc a b, f t) = ∫ t in a..b, f t := by
+  have h1 :
+      (∫ t in Set.Icc a b, f t) = ∫ t in Set.Ioc a b, f t := by
+    exact (MeasureTheory.integral_Icc_eq_integral_Ioc (μ := (volume : Measure ℝ))
+      (f := f) (x := a) (y := b))
+  have h2 :
+      (∫ t in Set.Ioc a b, f t) = ∫ t in a..b, f t := by
+    exact (intervalIntegral.integral_of_le (μ := (volume : Measure ℝ))
+      (f := f) (a := a) (b := b) hab).symm
+  simp [h1, h2]
+
+lemma ae_ne_zero_volume : (∀ᵐ t : ℝ ∂(volume : Measure ℝ), t ≠ 0) := by
+  refine (MeasureTheory.ae_iff).2 ?_
+  -- `{t | ¬ t ≠ 0} = {0}`
+  simp
+
+lemma intervalIntegral_congr_ae_of_ne_zero
+    (a b : ℝ) (f g : ℝ → ℝ)
+    (h : ∀ x, x ∈ Ι a b → x ≠ 0 → f x = g x) :
+    (∀ᵐ x : ℝ ∂(volume : Measure ℝ), x ∈ Ι a b → f x = g x) := by
+  filter_upwards [ae_ne_zero_volume] with x hx_ne
+  intro hxI
+  exact h x hxI hx_ne
+
+lemma avg_abs_log_Icc_le_one (α : ℝ) (hα0 : 0 ≤ α) (hα1 : α < 1) :
+    (1 / (1 - α)) * ∫ t in Set.Icc α (1 : ℝ), |Real.log t| ≤ 1 := by
+  have hle : α ≤ (1 : ℝ) := le_of_lt hα1
+  have hden_pos : 0 < (1 - α) := sub_pos.mpr hα1
+  -- On `[α,1]` with `α ≥ 0`, `log t ≤ 0`, so `|log t| = -log t`.
+  have hEq :
+      Set.EqOn (fun t : ℝ => |Real.log t|) (fun t : ℝ => -Real.log t) (Set.Icc α (1 : ℝ)) := by
+    intro t ht
+    have ht0 : 0 ≤ t := le_trans hα0 ht.1
+    have hlog_nonpos : Real.log t ≤ 0 := Real.log_nonpos ht0 ht.2
+    simp [abs_of_nonpos hlog_nonpos]
+  have hIcc :
+      (∫ t in Set.Icc α (1 : ℝ), |Real.log t|) = ∫ t in Set.Icc α (1 : ℝ), (-Real.log t) := by
+    simpa using
+      (MeasureTheory.setIntegral_congr_fun (μ := (volume : Measure ℝ)) (s := Set.Icc α (1 : ℝ))
+        measurableSet_Icc hEq)
+  have hIcc_to_interval :
+      (∫ t in Set.Icc α (1 : ℝ), (-Real.log t)) = ∫ t in α..(1 : ℝ), (-Real.log t) := by
+    simpa using (setIntegral_Icc_eq_intervalIntegral_of_le (f := fun t : ℝ => -Real.log t) α (1 : ℝ) hle)
+  -- Evaluate the interval integral.
+  have h_log : (∫ t in α..(1 : ℝ), Real.log t) = -α * Real.log α - (1 : ℝ) + α := by
+    -- `integral_log` is the closed form.
+    -- ∫_α^1 log t = 1*log 1 - α*log α - 1 + α = -α*log α - 1 + α.
+    simpa using (integral_log (a := α) (b := (1 : ℝ)))
+  have h_neglog : (∫ t in α..(1 : ℝ), -Real.log t) = (1 : ℝ) + α * Real.log α - α := by
+    calc
+      (∫ t in α..(1 : ℝ), -Real.log t) = - (∫ t in α..(1 : ℝ), Real.log t) := by
+        simpa using
+          (intervalIntegral.integral_neg (μ := (volume : Measure ℝ)) (a := α) (b := (1 : ℝ))
+            (f := fun t : ℝ => Real.log t))
+      _ = -(-α * Real.log α - (1 : ℝ) + α) := by simp [h_log]
+      _ = (1 : ℝ) + α * Real.log α - α := by ring
+  -- Now bound the averaged integral.
+  have hlog_nonpos : Real.log α ≤ 0 := Real.log_nonpos hα0 (le_of_lt hα1)
+  have hαlog_nonpos : α * Real.log α ≤ 0 := mul_nonpos_of_nonneg_of_nonpos hα0 hlog_nonpos
+  have h_num_le : (1 : ℝ) + α * Real.log α - α ≤ (1 : ℝ) - α := by linarith
+  have h_mul :
+      (1 / (1 - α)) * ((1 : ℝ) + α * Real.log α - α) ≤ (1 / (1 - α)) * ((1 : ℝ) - α) :=
+    mul_le_mul_of_nonneg_left h_num_le (le_of_lt (one_div_pos.mpr hden_pos))
+  have h_cancel : (1 / (1 - α)) * ((1 : ℝ) - α) = (1 : ℝ) := by
+    -- (1/(1-α))*(1-α) = 1
+    have hne : (1 - α) ≠ 0 := ne_of_gt hden_pos
+    -- `field_simp` handles the cancellation cleanly.
+    field_simp [hne]
+  -- assemble
+  calc
+    (1 / (1 - α)) * ∫ t in Set.Icc α (1 : ℝ), |Real.log t|
+        = (1 / (1 - α)) * ∫ t in Set.Icc α (1 : ℝ), (-Real.log t) := by simp [hIcc]
+    _ = (1 / (1 - α)) * (∫ t in α..(1 : ℝ), (-Real.log t)) := by simp [hIcc_to_interval]
+    _ = (1 / (1 - α)) * ((1 : ℝ) + α * Real.log α - α) := by simp [h_neglog]
+    _ ≤ (1 / (1 - α)) * ((1 : ℝ) - α) := h_mul
+    _ = 1 := h_cancel
+
+lemma integral_abs_log_Icc_negOne_one :
+    (∫ t in Set.Icc (-1 : ℝ) (1 : ℝ), |Real.log t|) = (2 : ℝ) := by
+  -- On `[-1,1]`, we have `|t| ≤ 1`, hence `log t ≤ 0` (since `log t = log |t|`).
+  have hEq :
+      Set.EqOn (fun t : ℝ => |Real.log t|) (fun t : ℝ => -Real.log t) (Set.Icc (-1 : ℝ) (1 : ℝ)) := by
+    intro t ht
+    have ht_abs_le : |t| ≤ (1 : ℝ) := by
+      -- from `t ∈ [-1,1]`
+      have : -1 ≤ t := ht.1
+      have : t ≤ 1 := ht.2
+      have ht_abs : |t| ≤ 1 := by
+        -- `|t| ≤ max (-t) t` but easiest: `abs_le.2`
+        exact (abs_le.2 ⟨by linarith, by linarith⟩)
+      exact ht_abs
+    have hlog_nonpos : Real.log t ≤ 0 := by
+      -- `log t = log |t|` and `0 ≤ |t| ≤ 1`
+      have : Real.log |t| ≤ 0 := Real.log_nonpos (abs_nonneg t) ht_abs_le
+      simpa [Real.log_abs] using this
+    simp [abs_of_nonpos hlog_nonpos]
+  have hIcc :
+      (∫ t in Set.Icc (-1 : ℝ) (1 : ℝ), |Real.log t|) =
+        ∫ t in Set.Icc (-1 : ℝ) (1 : ℝ), (-Real.log t) := by
+    simpa using
+      (MeasureTheory.setIntegral_congr_fun (μ := (volume : Measure ℝ)) (s := Set.Icc (-1 : ℝ) (1 : ℝ))
+        measurableSet_Icc hEq)
+  have hIcc_to_interval :
+      (∫ t in Set.Icc (-1 : ℝ) (1 : ℝ), (-Real.log t)) = ∫ t in (-1 : ℝ)..(1 : ℝ), (-Real.log t) := by
+    simpa using (setIntegral_Icc_eq_intervalIntegral_of_le (f := fun t : ℝ => -Real.log t) (-1 : ℝ) (1 : ℝ) (by linarith))
+  have h_log : (∫ t in (-1 : ℝ)..(1 : ℝ), Real.log t) = (-2 : ℝ) := by
+    -- closed form: b log b - a log a - b + a, with `a=-1`, `b=1`, and `log (-1)=0=log 1`
+    have h := (integral_log (a := (-1 : ℝ)) (b := (1 : ℝ)))
+    -- `simp` reduces the RHS to `-1 + -1`; finish by arithmetic.
+    have h' : (∫ t in (-1 : ℝ)..(1 : ℝ), Real.log t) = (-1 : ℝ) + (-1 : ℝ) := by
+      simpa using h
+    nlinarith
+  have h_neglog : (∫ t in (-1 : ℝ)..(1 : ℝ), -Real.log t) = (2 : ℝ) := by
+    calc
+      (∫ t in (-1 : ℝ)..(1 : ℝ), -Real.log t) = - (∫ t in (-1 : ℝ)..(1 : ℝ), Real.log t) := by
+        simpa using
+          (intervalIntegral.integral_neg (μ := (volume : Measure ℝ)) (a := (-1 : ℝ)) (b := (1 : ℝ))
+            (f := fun t : ℝ => Real.log t))
+      _ = 2 := by simp [h_log]
+  -- conclude
+  calc
+    (∫ t in Set.Icc (-1 : ℝ) (1 : ℝ), |Real.log t|)
+        = ∫ t in Set.Icc (-1 : ℝ) (1 : ℝ), (-Real.log t) := hIcc
+    _ = ∫ t in (-1 : ℝ)..(1 : ℝ), (-Real.log t) := hIcc_to_interval
+    _ = 2 := h_neglog
+
+
+/-! ### Uniform mean-oscillation bound for `t ↦ Real.log |t-γ|` (unconditional)
+
+The quantitative blueprint needs a uniform bound on the mean oscillation of a single logarithmic
+singularity. The classical statement is that `log|t-γ| ∈ BMO(ℝ)` with a universal constant.
+
+We prove here an explicit bound:
+
+`meanOscillation (fun t => Real.log |t-γ|) a b ≤ 4` for all `a < b`.
+
+The proof is elementary:
+- If `γ ∉ [a,b]`, normalize by the far endpoint and use `avg_abs_log_Icc_le_one`.
+- If `γ ∈ [a,b]`, normalize by `D = max(γ-a, b-γ)` and bound by the canonical integral on `[-1,1]`.
+- In all cases, convert deviation-from-mean to deviation-from-any-constant via
+  `meanOscillation_le_two_mul_avgAbsSubConst`.
+-/
+
+lemma abs_log_abs_mul_sub_log (D u : ℝ) (hD : D ≠ 0) (hu : u ≠ 0) :
+    |Real.log |D * u| - Real.log D| = |Real.log u| := by
+  -- `Real.log` is `log ∘ abs`, but `Real.log_abs` is available as a rewrite lemma.
+  have hmul : Real.log (D * u) = Real.log D + Real.log u := Real.log_mul hD hu
+  -- Avoid `simp` rewriting `abs_mul` in unexpected ways; go through `Real.log_abs`.
+  calc
+    |Real.log |D * u| - Real.log D|
+        = |Real.log (D * u) - Real.log D| := by simp [Real.log_abs]
+    _ = |(Real.log D + Real.log u) - Real.log D| := by simp [hmul]
+    _ = |Real.log u| := by ring
+
+lemma avgAbs_logSub_log_far_right_le_one (γ a b : ℝ) (hγa : γ < a) (hab : a < b) :
+    (1 / (b - a)) * ∫ t in Set.Icc a b, |Real.log |t - γ| - Real.log (b - γ)| ≤ 1 := by
+  -- Put `D := b-γ` and `α := (a-γ)/D`.
+  set D : ℝ := b - γ with hD
+  have hDpos : 0 < D := by
+    -- `γ < a < b` implies `γ < b`, hence `0 < b - γ`.
+    simpa [hD] using (sub_pos.mpr (lt_trans hγa hab))
+  have hDne : D ≠ 0 := ne_of_gt hDpos
+  set α : ℝ := (a - γ) / D with hα
+  have hα0 : 0 ≤ α := by
+    have haγ0 : 0 ≤ a - γ := by linarith [hγa]
+    simpa [hα] using div_nonneg haγ0 (le_of_lt hDpos)
+  have hα1 : α < 1 := by
+    have hlt : a - γ < D := by
+      -- `a-γ < b-γ = D`
+      have : a - γ < b - γ := sub_lt_sub_right hab γ
+      simpa [hD] using this
+    have : (a - γ) / D < 1 := (div_lt_one hDpos).2 hlt
+    simpa [hα] using this
+  have hαpos : 0 < α := by
+    have haγpos : 0 < a - γ := by linarith [hγa]
+    simpa [hα] using div_pos haγpos hDpos
+
+  -- Abbreviate the integrand with the normalized constant.
+  let F : ℝ → ℝ := fun t : ℝ => |Real.log |t - γ| - Real.log D|
+
+  -- (1) Identify `F (D*u + γ)` with `|log u|` on `[[α,1]]`.
+  have hF_congr :
+      (∫ u in α..(1 : ℝ), F (D * u + γ)) = ∫ u in α..(1 : ℝ), |Real.log u| := by
+    apply intervalIntegral.integral_congr
+    intro u hu
+    have hαle : α ≤ (1 : ℝ) := le_of_lt hα1
+    have hu' : u ∈ Set.Icc α (1 : ℝ) := by
+      -- `[[α,1]] = uIcc α 1 = Icc α 1` since `α ≤ 1`.
+      have : u ∈ Set.uIcc α (1 : ℝ) := hu
+      simpa [Set.uIcc_of_le hαle] using this
+    have hu0 : u ≠ 0 := by
+      have : α ≤ u := hu'.1
+      have : 0 < u := lt_of_lt_of_le hαpos this
+      exact ne_of_gt this
+    have h_sub : (D * u + γ) - γ = D * u := by ring
+    -- now simplify
+    have hmul' : |Real.log (D * u) - Real.log D| = |Real.log u| := by
+      simpa [Real.log_abs] using abs_log_abs_mul_sub_log D u hDne hu0
+    simpa [F, h_sub, Real.log_abs] using hmul'
+
+  -- (2) Change of variables `t = D*u + γ` in the interval integral.
+  have hDa : D * α + γ = a := by
+    have : D * α = a - γ := by
+      calc
+        D * α = D * ((a - γ) / D) := by simp [hα]
+        _ = a - γ := by field_simp [hDne]
+    linarith
+  have hDb : D + γ = b := by
+    simp [hD]
+  have h_subst :
+      (∫ u in α..(1 : ℝ), F (D * u + γ)) = D⁻¹ * ∫ t in a..b, F t := by
+    -- `intervalIntegral.integral_comp_mul_add` gives the desired Jacobian factor.
+    have h :=
+      (intervalIntegral.integral_comp_mul_add (f := F) (a := α) (b := (1 : ℝ)) (hc := hDne) (d := γ) (c := D))
+    -- rewrite endpoints and scalar action.
+    simpa [smul_eq_mul, hDa, hDb, mul_one] using h
+
+  have h_interval :
+      (∫ t in a..b, F t) = D * (∫ u in α..(1 : ℝ), |Real.log u|) := by
+    -- Combine (1) and (2): `∫ |log u| = D⁻¹ * ∫ F`, then multiply by `D`.
+    have h1 :
+        ∫ u in α..(1 : ℝ), |Real.log u| = D⁻¹ * ∫ t in a..b, F t := by
+      simpa [hF_congr] using h_subst
+    -- multiply both sides by `D`
+    have := congrArg (fun x : ℝ => D * x) h1
+    -- simplify `D * (D⁻¹ * I) = I`
+    -- and `D * ∫ |log| = D * ∫ |log|`
+    field_simp [hDne] at this
+    simpa [mul_assoc] using this.symm
+
+  -- (3) Convert the set integral to an interval integral and normalize the prefactor.
+  have hIcc_ab :
+      (∫ t in Set.Icc a b, F t) = ∫ t in a..b, F t :=
+    setIntegral_Icc_eq_intervalIntegral_of_le (f := F) a b (le_of_lt hab)
+
+  have hIcc_α :
+      (∫ u in Set.Icc α (1 : ℝ), |Real.log u|) = ∫ u in α..(1 : ℝ), |Real.log u| :=
+    setIntegral_Icc_eq_intervalIntegral_of_le (f := fun u : ℝ => |Real.log u|) α (1 : ℝ) (le_of_lt hα1)
+
+  have h_length : b - a = D * (1 - α) := by
+    have hDα : a - γ = D * α := by
+      have : D * α = a - γ := by
+        calc
+          D * α = D * ((a - γ) / D) := by simp [hα]
+          _ = a - γ := by field_simp [hDne]
+      exact this.symm
+    have hD' : b - γ = D := hD.symm
+    calc
+      b - a = (b - γ) - (a - γ) := by ring
+      _ = D - D * α := by simp [hD', hDα]
+      _ = D * (1 - α) := by ring
+
+  -- Finish by rewriting to the normalized `[α,1]` average and applying `avg_abs_log_Icc_le_one`.
+  have :
+      (1 / (b - a)) * ∫ t in Set.Icc a b, F t =
+        (1 / (1 - α)) * ∫ u in Set.Icc α (1 : ℝ), |Real.log u| := by
+    calc
+      (1 / (b - a)) * ∫ t in Set.Icc a b, F t
+          = (1 / (b - a)) * (∫ t in a..b, F t) := by simp [hIcc_ab]
+      _ = (1 / (b - a)) * (D * (∫ u in α..(1 : ℝ), |Real.log u|)) := by
+            simp [h_interval]
+      _ = (1 / (D * (1 - α))) * (D * (∫ u in α..(1 : ℝ), |Real.log u|)) := by
+            simp [h_length]
+      _ = (1 / (1 - α)) * (∫ u in α..(1 : ℝ), |Real.log u|) := by
+            -- cancel the common factor `D` without unfolding `D`/`α`
+            calc
+              (1 / (D * (1 - α))) * (D * (∫ u in α..(1 : ℝ), |Real.log u|))
+                  = (D * (∫ u in α..(1 : ℝ), |Real.log u|)) / (D * (1 - α)) := by
+                        simp [div_eq_mul_inv, mul_assoc, mul_left_comm, mul_comm]
+              _ = (∫ u in α..(1 : ℝ), |Real.log u|) / (1 - α) := by
+                        -- `D * I / (D * L) = I / L`
+                        simpa [mul_assoc] using
+                          (mul_div_mul_left (∫ u in α..(1 : ℝ), |Real.log u|) (1 - α) hDne)
+              _ = (1 / (1 - α)) * (∫ u in α..(1 : ℝ), |Real.log u|) := by
+                        simp [div_eq_mul_inv, mul_assoc, mul_left_comm, mul_comm]
+      _ = (1 / (1 - α)) * ∫ u in Set.Icc α (1 : ℝ), |Real.log u| := by
+            simp [hIcc_α]
+
+  -- Apply the canonical bound on `[α,1]`.
+  have h_norm : (1 / (1 - α)) * ∫ u in Set.Icc α (1 : ℝ), |Real.log u| ≤ 1 :=
+    avg_abs_log_Icc_le_one α hα0 hα1
+  have h_goal : (1 / (b - a)) * ∫ t in Set.Icc a b, F t ≤ 1 := by
+    calc
+      (1 / (b - a)) * ∫ t in Set.Icc a b, F t
+          = (1 / (1 - α)) * ∫ u in Set.Icc α (1 : ℝ), |Real.log u| := this
+      _ ≤ 1 := h_norm
+  simpa [F, hD] using h_goal
+
+lemma avgAbs_logSub_log_near_le_two_of_mem_Icc (γ a b : ℝ) (hab : a < b) (hγ : γ ∈ Set.Icc a b) :
+    (1 / (b - a)) * ∫ t in Set.Icc a b, |Real.log |t - γ| - Real.log (b - a)| ≤ 2 := by
+  -- Let `L := b-a > 0`.
+  set L : ℝ := b - a with hL
+  have hLpos : 0 < L := by simpa [hL] using (sub_pos.mpr hab)
+  have hLne : L ≠ 0 := ne_of_gt hLpos
+
+  let F : ℝ → ℝ := fun t : ℝ => |Real.log |t - γ| - Real.log L|
+  let G : ℝ → ℝ := fun u : ℝ => |Real.log |u| - Real.log L|
+
+  have hIcc_ab :
+      (∫ t in Set.Icc a b, F t) = ∫ t in a..b, F t :=
+    setIntegral_Icc_eq_intervalIntegral_of_le (f := F) a b (le_of_lt hab)
+
+  -- Shift by `γ`: `t ↦ t-γ`.
+  have h_shift : (∫ t in a..b, F t) = ∫ u in (a - γ)..(b - γ), G u := by
+    have h :=
+      (intervalIntegral.integral_comp_mul_add (f := G) (a := a) (b := b) (c := (1 : ℝ))
+        (hc := one_ne_zero) (d := -γ))
+    -- Simplify `1*x + (-γ) = x-γ` and `1⁻¹• = id`.
+    simpa [F, G, smul_eq_mul, sub_eq_add_neg, add_assoc, add_left_comm, add_comm] using h
+
+  -- Rescale by `L`: `u = L*v`.
+  have h_scale :
+      (∫ u in (a - γ)..(b - γ), G u) =
+        L * (∫ v in ((a - γ) / L)..((b - γ) / L), G (L * v)) := by
+    have h :=
+      (intervalIntegral.integral_comp_mul_add (f := G) (a := (a - γ) / L) (b := (b - γ) / L)
+        (c := L) (hc := hLne) (d := (0 : ℝ)))
+    have hA : L * ((a - γ) / L) = (a - γ) := by
+      field_simp [hLne]
+    have hB : L * ((b - γ) / L) = (b - γ) := by
+      field_simp [hLne]
+    have h' :
+        (∫ v in ((a - γ) / L)..((b - γ) / L), G (L * v)) =
+          L⁻¹ * ∫ u in (a - γ)..(b - γ), G u := by
+      -- rewrite scalar action and simplify the endpoints using `hA`, `hB`
+      simpa [smul_eq_mul, add_zero, zero_add, hA, hB, mul_assoc] using h
+    have hmul_eq := congrArg (fun x : ℝ => L * x) h'
+    -- `L * (L⁻¹ * I) = I` (requires `L ≠ 0`)
+    have : L * (∫ v in ((a - γ) / L)..((b - γ) / L), G (L * v)) =
+        ∫ u in (a - γ)..(b - γ), G u := by
+      simpa [mul_assoc, mul_inv_cancel_left₀ hLne] using hmul_eq
+    simpa [mul_assoc] using this.symm
+
+  -- On `v ≠ 0`, `G(L*v) = |log v|`.
+  have h_congr_ae :
+      (∀ᵐ v : ℝ ∂(volume : Measure ℝ), v ∈ Ι ((a - γ) / L) ((b - γ) / L) → G (L * v) = |Real.log v|) := by
+    -- Use the local helper: equality holds away from `v=0`, which is a null set.
+    refine intervalIntegral_congr_ae_of_ne_zero ((a - γ) / L) ((b - γ) / L) (fun v => G (L * v)) (fun v => |Real.log v|) ?_
+    intro v _hvI hv0
+    have hmul' : |Real.log (L * v) - Real.log L| = |Real.log v| := by
+      simpa [Real.log_abs] using abs_log_abs_mul_sub_log L v hLne hv0
+    -- `G(L*v) = |log |L*v| - log L| = |log (L*v) - log L|`.
+    simpa [G, Real.log_abs] using hmul'
+
+  have h_int_congr :
+      (∫ v in ((a - γ) / L)..((b - γ) / L), G (L * v)) =
+        ∫ v in ((a - γ) / L)..((b - γ) / L), |Real.log v| := by
+    exact intervalIntegral.integral_congr_ae h_congr_ae
+
+  -- Bound the normalized integral by the canonical `[-1,1]` value `2`.
+  have h_sub_le : ∫ v in ((a - γ) / L)..((b - γ) / L), |Real.log v| ≤ 2 := by
+    -- Convert to a set integral on `Icc` to use monotonicity over subsets.
+    have hle : (a - γ) / L ≤ (b - γ) / L := by
+      have : a - γ ≤ b - γ := by linarith [le_of_lt hab]
+      exact (div_le_div_of_nonneg_right this (le_of_lt hLpos))
+    have hIcc_to_interval :
+        (∫ v in Set.Icc ((a - γ) / L) ((b - γ) / L), |Real.log v|) =
+          ∫ v in ((a - γ) / L)..((b - γ) / L), |Real.log v| :=
+      (setIntegral_Icc_eq_intervalIntegral_of_le (f := fun v : ℝ => |Real.log v|)
+        ((a - γ) / L) ((b - γ) / L) hle)
+    -- Show `Icc ((a-γ)/L) ((b-γ)/L) ⊆ Icc (-1) 1`.
+    have hA : (-1 : ℝ) ≤ (a - γ) / L := by
+      -- `a-γ ≥ a-b = -L` since `γ ≤ b`.
+      have hγle : γ ≤ b := hγ.2
+      have : a - b ≤ a - γ := sub_le_sub_left hγle a
+      -- `a - b = -L`
+      have : -L ≤ a - γ := by simpa [hL, sub_eq_add_neg, add_assoc, add_left_comm, add_comm] using this
+      -- divide by `L>0`
+      have : (-L) / L ≤ (a - γ) / L := div_le_div_of_nonneg_right this (le_of_lt hLpos)
+      simpa [div_eq_mul_inv, hLne] using this
+    have hB : (b - γ) / L ≤ (1 : ℝ) := by
+      -- `b-γ ≤ b-a = L` since `a ≤ γ`.
+      have hγge : a ≤ γ := hγ.1
+      have : b - γ ≤ b - a := sub_le_sub_left hγge b
+      have : (b - γ) / L ≤ L / L := div_le_div_of_nonneg_right (by simpa [hL] using this) (le_of_lt hLpos)
+      simpa [div_eq_mul_inv, hLne] using this
+    have hst :
+        Set.Icc ((a - γ) / L) ((b - γ) / L) ≤ᶠ[ae (volume : Measure ℝ)] Set.Icc (-1 : ℝ) (1 : ℝ) := by
+      refine Filter.eventually_of_forall ?_
+      intro x hx
+      refine ⟨le_trans hA hx.1, le_trans hx.2 hB⟩
+    -- Integrability on `[-1,1]`.
+    have hint : IntegrableOn (fun x : ℝ => |Real.log x|) (Set.Icc (-1 : ℝ) (1 : ℝ)) volume := by
+      have hlog : IntervalIntegrable (fun x : ℝ => Real.log x) volume (-1 : ℝ) (1 : ℝ) := by simp
+      have habs : IntervalIntegrable (fun x : ℝ => |Real.log x|) volume (-1 : ℝ) (1 : ℝ) := hlog.abs
+      have hle' : (-1 : ℝ) ≤ (1 : ℝ) := by linarith
+      exact (intervalIntegrable_iff_integrableOn_Icc_of_le (μ := (volume : Measure ℝ)) hle').1 habs
+    have hnonneg : 0 ≤ᶠ[ae ((volume : Measure ℝ).restrict (Set.Icc (-1 : ℝ) (1 : ℝ)))] fun x : ℝ => |Real.log x| := by
+      refine Filter.eventually_of_forall ?_
+      intro x
+      exact abs_nonneg _
+    have hmono :=
+      MeasureTheory.setIntegral_mono_set (μ := (volume : Measure ℝ)) (f := fun x : ℝ => |Real.log x|)
+        (s := Set.Icc ((a - γ) / L) ((b - γ) / L)) (t := Set.Icc (-1 : ℝ) (1 : ℝ))
+        hint hnonneg hst
+    -- Use the exact integral on `[-1,1]`.
+    have htop : (∫ x in Set.Icc (-1 : ℝ) (1 : ℝ), |Real.log x|) = 2 := integral_abs_log_Icc_negOne_one
+    have : (∫ x in Set.Icc ((a - γ) / L) ((b - γ) / L), |Real.log x|) ≤ 2 := by simpa [htop] using hmono
+    -- Convert back to an interval integral.
+    simpa [hIcc_to_interval] using this
+
+  -- Assemble: scale + subset bound + divide by `L`.
+  have h_main : (1 / L) * ∫ t in Set.Icc a b, F t ≤ 2 := by
+    -- `∫_{[a,b]} F = L * ∫_{[(a-γ)/L,(b-γ)/L]} |log|`
+    have h_eq :
+        (∫ t in Set.Icc a b, F t) =
+          L * (∫ v in ((a - γ) / L)..((b - γ) / L), |Real.log v|) := by
+      calc
+        (∫ t in Set.Icc a b, F t)
+            = ∫ t in a..b, F t := by simp [hIcc_ab]
+        _ = ∫ u in (a - γ)..(b - γ), G u := h_shift
+        _ = L * (∫ v in ((a - γ) / L)..((b - γ) / L), G (L * v)) := h_scale
+        _ = L * (∫ v in ((a - γ) / L)..((b - γ) / L), |Real.log v|) := by simp [h_int_congr]
+    -- bound the last integral by `2`
+    have hlast : (∫ v in ((a - γ) / L)..((b - γ) / L), |Real.log v|) ≤ 2 := h_sub_le
+    calc
+      (1 / L) * ∫ t in Set.Icc a b, F t
+          = (1 / L) * (L * (∫ v in ((a - γ) / L)..((b - γ) / L), |Real.log v|)) := by
+                simp [h_eq]
+      _ = (∫ v in ((a - γ) / L)..((b - γ) / L), |Real.log v|) := by
+            -- cancel `L`
+            field_simp [hLne]
+      _ ≤ 2 := hlast
+  -- Rewrite back to the original statement (replace `L` by `b-a`).
+  simpa [hL, F] using h_main
+
+lemma avgAbs_logSub_log_far_left_le_one (γ a b : ℝ) (hbg : b < γ) (hab : a < b) :
+    (1 / (b - a)) * ∫ t in Set.Icc a b, |Real.log |t - γ| - Real.log (γ - a)| ≤ 1 := by
+  -- Put `D := γ-a` and `α := (γ-b)/D`.
+  set D : ℝ := γ - a with hD
+  have hDpos : 0 < D := by
+    -- `a < b < γ` implies `a < γ`, hence `0 < γ - a`.
+    simpa [hD] using (sub_pos.mpr (lt_trans hab hbg))
+  have hDne : D ≠ 0 := ne_of_gt hDpos
+  set α : ℝ := (γ - b) / D with hα
+  have hα0 : 0 ≤ α := by
+    have hnum0 : 0 ≤ γ - b := by linarith [hbg]
+    simpa [hα] using div_nonneg hnum0 (le_of_lt hDpos)
+  have hα1 : α < 1 := by
+    have hlt : γ - b < D := by
+      -- `γ-b < γ-a = D` since `a < b`
+      have : γ - b < γ - a := sub_lt_sub_left hab γ
+      simpa [hD] using this
+    have : (γ - b) / D < 1 := (div_lt_one hDpos).2 hlt
+    simpa [hα] using this
+  have hαpos : 0 < α := by
+    have hnumpos : 0 < γ - b := by linarith [hbg]
+    simpa [hα] using div_pos hnumpos hDpos
+
+  -- Abbreviate the integrand with the normalized constant.
+  let F : ℝ → ℝ := fun t : ℝ => |Real.log |t - γ| - Real.log D|
+
+  -- (1) Identify `F (γ - D*u)` with `|log u|` on `[[α,1]]`.
+  have hF_congr :
+      (∫ u in α..(1 : ℝ), F (-(D * u) + γ)) = ∫ u in α..(1 : ℝ), |Real.log u| := by
+    apply intervalIntegral.integral_congr
+    intro u hu
+    have hαle : α ≤ (1 : ℝ) := le_of_lt hα1
+    have hu' : u ∈ Set.Icc α (1 : ℝ) := by
+      have : u ∈ Set.uIcc α (1 : ℝ) := hu
+      simpa [Set.uIcc_of_le hαle] using this
+    have hu0 : u ≠ 0 := by
+      have : α ≤ u := hu'.1
+      have : 0 < u := lt_of_lt_of_le hαpos this
+      exact ne_of_gt this
+    have h_sub : (-(D * u) + γ) - γ = -(D * u) := by ring
+    have hmul' : |Real.log (D * u) - Real.log D| = |Real.log u| := by
+      simpa [Real.log_abs] using abs_log_abs_mul_sub_log D u hDne hu0
+    -- `|-D*u| = |D*u|`
+    have habs : |-(D * u)| = |D * u| := by
+      simp [abs_mul, abs_neg]
+    -- now simplify
+    -- `F(γ - D*u) = |log |D*u| - log D| = |log u|`
+    -- using `hmul'`.
+    simpa [F, h_sub, habs, Real.log_abs] using hmul'
+
+  -- (2) Change of variables `t = -D*u + γ` in the interval integral.
+  have hDb : -(D * α) + γ = b := by
+    have hDα : D * α = γ - b := by
+      calc
+        D * α = D * ((γ - b) / D) := by simp [hα]
+        _ = γ - b := by field_simp [hDne]
+    -- `-(γ-b) + γ = b`
+    simpa [hDα] using (by ring : -(γ - b) + γ = b)
+  have hDa : -D + γ = a := by
+    -- `γ - D = a` since `D = γ-a`
+    simp [hD]
+
+  have h_subst :
+      (∫ u in α..(1 : ℝ), F (-(D * u) + γ)) = D⁻¹ * ∫ t in a..b, F t := by
+    have h :=
+      (intervalIntegral.integral_comp_mul_add (f := F) (a := α) (b := (1 : ℝ))
+        (hc := (neg_ne_zero.mpr hDne)) (d := γ) (c := -D))
+    -- This yields `(-D)⁻¹ * ∫_{b..a} F`; flip endpoints and simplify.
+    have h' :
+        (∫ u in α..(1 : ℝ), F (-(D * u) + γ)) =
+          (-D)⁻¹ * ∫ t in b..a, F t := by
+      -- `(-D) * u + γ = -(D*u) + γ`, and the endpoints are `b` and `a`.
+      simpa [smul_eq_mul, hDb, hDa, mul_one, neg_mul, mul_assoc] using h
+    -- convert `(-D)⁻¹ * ∫_{b..a}` to `D⁻¹ * ∫_{a..b}`
+    -- using `intervalIntegral.integral_symm` and `inv_neg`.
+    calc
+      (∫ u in α..(1 : ℝ), F (-(D * u) + γ))
+          = (-D)⁻¹ * ∫ t in b..a, F t := h'
+      _ = D⁻¹ * ∫ t in a..b, F t := by
+            -- rewrite `∫_{b..a}` and simplify signs
+            rw [intervalIntegral.integral_symm (μ := (volume : Measure ℝ)) (f := F) a b]
+            simp [inv_neg]
+
+  have h_interval :
+      (∫ t in a..b, F t) = D * (∫ u in α..(1 : ℝ), |Real.log u|) := by
+    have h1 :
+        ∫ u in α..(1 : ℝ), |Real.log u| = D⁻¹ * ∫ t in a..b, F t := by
+      simpa [hF_congr] using h_subst
+    have := congrArg (fun x : ℝ => D * x) h1
+    field_simp [hDne] at this
+    simpa [mul_assoc] using this.symm
+
+  -- (3) Convert the set integral to an interval integral and normalize the prefactor.
+  have hIcc_ab :
+      (∫ t in Set.Icc a b, F t) = ∫ t in a..b, F t :=
+    setIntegral_Icc_eq_intervalIntegral_of_le (f := F) a b (le_of_lt hab)
+
+  have hIcc_α :
+      (∫ u in Set.Icc α (1 : ℝ), |Real.log u|) = ∫ u in α..(1 : ℝ), |Real.log u| :=
+    setIntegral_Icc_eq_intervalIntegral_of_le (f := fun u : ℝ => |Real.log u|) α (1 : ℝ) (le_of_lt hα1)
+
+  have h_length : b - a = D * (1 - α) := by
+    have hDα : γ - b = D * α := by
+      have : D * α = γ - b := by
+        calc
+          D * α = D * ((γ - b) / D) := by simp [hα]
+          _ = γ - b := by field_simp [hDne]
+      exact this.symm
+    have hD' : γ - a = D := by simp [hD]
+    calc
+      b - a = (γ - a) - (γ - b) := by ring
+      _ = D - D * α := by simp [hD', hDα]
+      _ = D * (1 - α) := by ring
+
+  have :
+      (1 / (b - a)) * ∫ t in Set.Icc a b, F t =
+        (1 / (1 - α)) * ∫ u in Set.Icc α (1 : ℝ), |Real.log u| := by
+    calc
+      (1 / (b - a)) * ∫ t in Set.Icc a b, F t
+          = (1 / (b - a)) * (∫ t in a..b, F t) := by simp [hIcc_ab]
+      _ = (1 / (b - a)) * (D * (∫ u in α..(1 : ℝ), |Real.log u|)) := by
+            simp [h_interval]
+      _ = (1 / (D * (1 - α))) * (D * (∫ u in α..(1 : ℝ), |Real.log u|)) := by
+            simp [h_length]
+      _ = (1 / (1 - α)) * (∫ u in α..(1 : ℝ), |Real.log u|) := by
+            calc
+              (1 / (D * (1 - α))) * (D * (∫ u in α..(1 : ℝ), |Real.log u|))
+                  = (D * (∫ u in α..(1 : ℝ), |Real.log u|)) / (D * (1 - α)) := by
+                        simp [div_eq_mul_inv, mul_assoc, mul_left_comm, mul_comm]
+              _ = (∫ u in α..(1 : ℝ), |Real.log u|) / (1 - α) := by
+                        simpa [mul_assoc] using
+                          (mul_div_mul_left (∫ u in α..(1 : ℝ), |Real.log u|) (1 - α) hDne)
+              _ = (1 / (1 - α)) * (∫ u in α..(1 : ℝ), |Real.log u|) := by
+                        simp [div_eq_mul_inv, mul_assoc, mul_left_comm, mul_comm]
+      _ = (1 / (1 - α)) * ∫ u in Set.Icc α (1 : ℝ), |Real.log u| := by
+            simp [hIcc_α]
+
+  have h_norm : (1 / (1 - α)) * ∫ u in Set.Icc α (1 : ℝ), |Real.log u| ≤ 1 :=
+    avg_abs_log_Icc_le_one α hα0 hα1
+  have h_goal : (1 / (b - a)) * ∫ t in Set.Icc a b, F t ≤ 1 := by
+    calc
+      (1 / (b - a)) * ∫ t in Set.Icc a b, F t
+          = (1 / (1 - α)) * ∫ u in Set.Icc α (1 : ℝ), |Real.log u| := this
+      _ ≤ 1 := h_norm
+  simpa [F, hD] using h_goal
+
+theorem log_singularity_meanOscillation_le_four (γ a b : ℝ) (hab : a < b) :
+    meanOscillation (fun t : ℝ => Real.log |t - γ|) a b ≤ 4 := by
+  -- Integrability on compact intervals (via translation of `log|·|`).
+  have hf_int : IntegrableOn (fun t : ℝ => Real.log |t - γ|) (Set.Icc a b) volume := by
+    have h0 : IntervalIntegrable (fun u : ℝ => Real.log |u|) volume (a - γ) (b - γ) := by
+      simp
+    have h1 : IntervalIntegrable (fun t : ℝ => Real.log |t - γ|) volume a b := by
+      simpa [sub_eq_add_neg, add_assoc, add_left_comm, add_comm] using (h0.comp_sub_right γ)
+    have hle : a ≤ b := le_of_lt hab
+    exact (intervalIntegrable_iff_integrableOn_Icc_of_le (μ := (volume : Measure ℝ)) hle).1 h1
+
+  by_cases hγ : γ ∈ Set.Icc a b
+  · -- Near-field case: use the symmetric normalization by the interval length.
+    have hdev :
+        (1 / (b - a)) * ∫ t in Set.Icc a b, |Real.log |t - γ| - Real.log (b - a)| ≤ 2 :=
+      avgAbs_logSub_log_near_le_two_of_mem_Icc γ a b hab hγ
+    have hmo :=
+      meanOscillation_le_two_mul_avgAbsSubConst (f := fun t : ℝ => Real.log |t - γ|)
+        a b (Real.log (b - a)) hab hf_int
+    have hmo' :
+        meanOscillation (fun t : ℝ => Real.log |t - γ|) a b ≤
+          (2 / (b - a)) * ∫ t in Set.Icc a b, |Real.log |t - γ| - Real.log (b - a)| := by
+      simpa [sub_eq_add_neg] using hmo
+    calc
+      meanOscillation (fun t : ℝ => Real.log |t - γ|) a b
+          ≤ (2 / (b - a)) * ∫ t in Set.Icc a b, |Real.log |t - γ| - Real.log (b - a)| := hmo'
+      _ = 2 * ((1 / (b - a)) * ∫ t in Set.Icc a b, |Real.log |t - γ| - Real.log (b - a)|) := by ring
+      _ ≤ 2 * 2 := by gcongr
+      _ = 4 := by norm_num
+  · -- Far-field cases: `γ < a` or `b < γ`.
+    have h_out : γ < a ∨ b < γ := by
+      have : ¬ (a ≤ γ ∧ γ ≤ b) := by
+        simpa [Set.mem_Icc] using hγ
+      rcases not_and_or.mp this with h1 | h2
+      · exact Or.inl (lt_of_not_ge h1)
+      · exact Or.inr (lt_of_not_ge h2)
+    cases h_out with
+    | inl hlt =>
+        have hdev :
+            (1 / (b - a)) * ∫ t in Set.Icc a b, |Real.log |t - γ| - Real.log (b - γ)| ≤ 1 :=
+          avgAbs_logSub_log_far_right_le_one γ a b hlt hab
+        have hmo :=
+          meanOscillation_le_two_mul_avgAbsSubConst (f := fun t : ℝ => Real.log |t - γ|)
+            a b (Real.log (b - γ)) hab hf_int
+        have hmo' :
+            meanOscillation (fun t : ℝ => Real.log |t - γ|) a b ≤
+              (2 / (b - a)) * ∫ t in Set.Icc a b, |Real.log |t - γ| - Real.log (b - γ)| := by
+          simpa [sub_eq_add_neg] using hmo
+        calc
+          meanOscillation (fun t : ℝ => Real.log |t - γ|) a b
+              ≤ (2 / (b - a)) * ∫ t in Set.Icc a b, |Real.log |t - γ| - Real.log (b - γ)| := hmo'
+          _ = 2 * ((1 / (b - a)) * ∫ t in Set.Icc a b, |Real.log |t - γ| - Real.log (b - γ)|) := by ring
+          _ ≤ 2 * 1 := by gcongr
+          _ ≤ 4 := by nlinarith
+    | inr hgt =>
+        have hdev :
+            (1 / (b - a)) * ∫ t in Set.Icc a b, |Real.log |t - γ| - Real.log (γ - a)| ≤ 1 :=
+          avgAbs_logSub_log_far_left_le_one γ a b hgt hab
+        have hmo :=
+          meanOscillation_le_two_mul_avgAbsSubConst (f := fun t : ℝ => Real.log |t - γ|)
+            a b (Real.log (γ - a)) hab hf_int
+        have hmo' :
+            meanOscillation (fun t : ℝ => Real.log |t - γ|) a b ≤
+              (2 / (b - a)) * ∫ t in Set.Icc a b, |Real.log |t - γ| - Real.log (γ - a)| := by
+          simpa [sub_eq_add_neg] using hmo
+        calc
+          meanOscillation (fun t : ℝ => Real.log |t - γ|) a b
+              ≤ (2 / (b - a)) * ∫ t in Set.Icc a b, |Real.log |t - γ| - Real.log (γ - a)| := hmo'
+          _ = 2 * ((1 / (b - a)) * ∫ t in Set.Icc a b, |Real.log |t - γ| - Real.log (γ - a)|) := by ring
+          _ ≤ 2 * 1 := by gcongr
+          _ ≤ 4 := by nlinarith
+
 /-- `InBMOWithBound f M`: a **bounded mean oscillation** certificate with an explicit bound `M`.
 
 This is the data we actually need for quantitative estimates (Carleson energy, phase bounds, etc.).

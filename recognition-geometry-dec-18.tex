@@ -3029,11 +3029,49 @@ In our Lean development this aligns with the Section~7 window+tail reductions in
 \texttt{ConnesSection7.lean}: the remaining analytic work is a uniform tail envelope \(T(\lambda)\) and a
 sup error \(\delta(\lambda)\) tending to \(0\), upgraded to locally uniform convergence in \(z\).
 
+\textbf{What the Lean statement really asks for.}
+Recall that \texttt{TendstoLocallyUniformlyOn CCM.F riemannXi atTop strip} means:
+for every compact \(K\subset \{z:|\Im z|<\tfrac12\}\),
+\[
+  \sup_{z\in K} |F_n(z)-\Xi(z)|\ \longrightarrow\ 0\qquad (n\to\infty).
+\]
+Equivalently, for every such compact \(K\) and every \(\varepsilon>0\), there exists \(N\) such that
+for all \(n\ge N\) and all \(z\in K\), \(|F_n(z)-\Xi(z)|<\varepsilon\).
+
+\textbf{Prose proof plan (high level).}
+This is the real ``non-grind'' crux. A workable route is:
+\begin{itemize}
+  \item \textbf{(Diagonalization)} Package the two-parameter family \(F_{\lambda,N}\) into a single sequence
+  \(F_n := F_{\lambda_n,N_n}\) via a cofinal map \(n\mapsto (\lambda_n,N_n)\).
+  \item \textbf{(Error decomposition)} For each compact \(K\subset\texttt{strip}\), bound
+  \(\sup_{z\in K}|F_{\lambda,N}(z)-\Xi(z)|\) by a sum of two errors:
+  \[
+    \sup_{z\in K}|F_{\lambda,N}(z)-F_{\lambda}(z)|\ +\ \sup_{z\in K}|F_{\lambda}(z)-\Xi(z)|,
+  \]
+  where \(F_{\lambda}(z)\) is the \(N\to\infty\) limit at fixed \(\lambda\) (the ``\(\lambda\)-level'' approximant).
+  \item \textbf{(Fixed \(\lambda\): \(N\to\infty\))} Show the truncation error
+  \(\sup_{z\in K}|F_{\lambda,N}(z)-F_{\lambda}(z)|\to 0\) by:
+  (i) bounding denominators \(|z-a_j|\) uniformly away from \(0\) on \(K\) (all poles \(a_j\) are real),
+  (ii) proving an \(\ell^1\)-type convergence/bound on the coefficient window \(\{\xi_j\}_{|j|\le N}\),
+  and (iii) applying a uniform Weierstrass/M-test to the finite partial-fraction sums.
+  \item \textbf{(Large \(\lambda\): \(\lambda\to\infty\))} Prove the asymptotic step
+  \(\sup_{z\in K}|F_{\lambda}(z)-\Xi(z)|\to 0\), after the CCM phase renormalization \(e^{a+ibs}\).
+  This is where CCM identify genuine missing steps: it requires quantitative control of the ground state
+  \(\xi_\lambda\) and its transform, uniform in \(z\in K\).
+  \item \textbf{(Bridge lemma)} Isolate a deterministic lemma:
+  \emph{if} one has the Section~8 ``simple-even'' uniqueness (M1) and the uniform approximation
+  \(k_\lambda \approx c_\lambda\,\xi_\lambda\) on \([\lambda^{-1},\lambda]\) with \(\varepsilon(\lambda)\to 0\) (M2),
+  \emph{then} the transforms \(\widehat{\xi_\lambda}\) (hence \(F_\lambda\)) converge locally uniformly to \(\Xi\).
+  The repo’s \texttt{ConnesSection7.lean} is designed to make this bridge lemma modular by splitting the
+  relevant infinite sums into a finite window plus a tail controlled by an envelope \(T(\lambda)\).
+\end{itemize}
+
 \textbf{Status (Lean).} \textbf{BLOCKED.}
 
 \textbf{Smallest next step.}
-Prove uniform-on-compact convergence by reducing to explicit bounds on the determinant/Fourier
-kernel and applying dominated convergence / Weierstrass theorems.
+First, write and prove (in prose, then Lean) the \emph{bridge lemma} ``(M1+M2+\(T,\delta\) bounds) \(\Rightarrow\)
+\texttt{CCM.tendstoXi}'', using only standard analytic estimates on a compact \(K\subset\texttt{strip}\).
+This reduces the genuinely hard work to proving M1/M2 and the required tail envelopes unconditionally.
 
 \subsection{\texttt{CCM.gate} and \texttt{CCM.assumptions}}
 

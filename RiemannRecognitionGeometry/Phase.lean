@@ -68,6 +68,68 @@ This is the elementary arctan phase used in the RG argument.
 def rgBlaschkePhase (ρ : ℂ) (t : ℝ) : ℝ :=
   Real.arctan ((t - ρ.im) / (ρ.re - 1/2))
 
+/-! ## Calculus chip: derivative of the explicit Blaschke phase -/
+
+lemma hasDerivAt_rgBlaschkePhase (ρ : ℂ) (t : ℝ) :
+    HasDerivAt (fun u : ℝ => rgBlaschkePhase ρ u)
+      ((1 / (1 + (((t - ρ.im) / (ρ.re - 1/2)) ^ 2))) * ((1 : ℝ) / (ρ.re - 1/2))) t := by
+  -- `rgBlaschkePhase ρ u = arctan(((u-ρ.im)/(ρ.re-1/2)))`
+  unfold rgBlaschkePhase
+  -- Derivative of the inner affine/division map.
+  have h_inner :
+      HasDerivAt (fun u : ℝ => (u - ρ.im) / (ρ.re - 1/2)) ((1 : ℝ) / (ρ.re - 1/2)) t := by
+    simpa using ((hasDerivAt_id t).sub_const (ρ.im)).div_const (ρ.re - 1/2)
+  -- Chain rule with `arctan`.
+  simpa [mul_assoc, mul_left_comm, mul_comm] using h_inner.arctan
+
+lemma hasDerivAt_rgBlaschkePhase_simplified (ρ : ℂ) (t : ℝ) :
+    HasDerivAt (fun u : ℝ => rgBlaschkePhase ρ u)
+      ((ρ.re - 1/2) / (((t - ρ.im) ^ 2) + (ρ.re - 1/2) ^ 2)) t := by
+  -- Start from the unsimplified chain-rule form.
+  have h := hasDerivAt_rgBlaschkePhase (ρ := ρ) (t := t)
+  -- Simplify the derivative expression algebraically.
+  -- `((1/(1+(x/d)^2)) * (1/d)) = d / (x^2 + d^2)` with Lean's `div` conventions.
+  have h_simp :
+      (1 / (1 + (((t - ρ.im) / (ρ.re - 1/2)) ^ 2))) * ((1 : ℝ) / (ρ.re - 1/2)) =
+        (ρ.re - 1/2) / (((t - ρ.im) ^ 2) + (ρ.re - 1/2) ^ 2) := by
+    set d : ℝ := ρ.re - 1/2
+    set x : ℝ := t - ρ.im
+    by_cases hd : d = 0
+    · -- Degenerate case: both sides simplify to 0 (Lean's `/ 0 = 0` convention).
+      simp [d, x, hd]
+    · -- Off-line case: reduce to a clean rational identity in `x,d`.
+      have hd' : d ≠ 0 := hd
+      have : (1 / (1 + ((x / d) ^ 2))) * (1 / d) = d / (x ^ 2 + d ^ 2) := by
+        -- `field_simp` is safe here since `d ≠ 0`.
+        field_simp [hd']
+        ring
+      -- Substitute back.
+      simpa [d, x] using this
+  -- Rewrite the derivative value using the algebraic identity.
+  exact h.congr_deriv h_simp
+
+lemma intervalIntegrable_rgBlaschkePhase_deriv_of_ne (ρ : ℂ) (I : WhitneyInterval) (hρ : ρ.re ≠ 1/2) :
+    IntervalIntegrable
+      (fun t : ℝ => (ρ.re - 1/2) / (((t - ρ.im) ^ 2) + (ρ.re - 1/2) ^ 2))
+      MeasureTheory.volume (I.t0 - I.len) (I.t0 + I.len) := by
+  -- With `ρ.re ≠ 1/2`, the denominator is strictly positive everywhere, hence the integrand is continuous.
+  apply Continuous.intervalIntegrable
+  have hcont_den : Continuous fun t : ℝ => ((t - ρ.im) ^ 2) + (ρ.re - 1/2) ^ 2 := by
+    have h1 : Continuous fun t : ℝ => t - ρ.im := continuous_id.sub continuous_const
+    simpa using (h1.pow 2).add continuous_const
+  have hden_ne : ∀ t : ℝ, ((t - ρ.im) ^ 2) + (ρ.re - 1/2) ^ 2 ≠ 0 := by
+    intro t
+    have hsq1 : 0 ≤ ((t - ρ.im) ^ 2) := sq_nonneg _
+    have hρ' : (ρ.re - 1/2) ≠ 0 := sub_ne_zero.mpr hρ
+    have hsq2_pos : 0 < ((ρ.re - 1/2) ^ 2) := sq_pos_of_ne_zero hρ'
+    -- sum of a nonneg and a positive term is positive
+    have : 0 < ((t - ρ.im) ^ 2) + (ρ.re - 1/2) ^ 2 := by linarith
+    exact ne_of_gt this
+  -- `x / g x` is continuous when `g x ≠ 0`.
+  have hcont : Continuous fun t : ℝ => (ρ.re - 1/2) / (((t - ρ.im) ^ 2) + (ρ.re - 1/2) ^ 2) :=
+    continuous_const.div hcont_den hden_ne
+  simpa using hcont
+
 /-- The Blaschke phase change across a Whitney interval, as a real number.
 
 This matches the `let blaschke := ...` expression in `Conjectures.weierstrass_tail_bound_axiom_statement`.

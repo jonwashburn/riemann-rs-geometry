@@ -62,6 +62,10 @@
     (y-derivative analogue; needed to control the full gradient energy).
   - **Next analytic chip to attempt**: `RiemannRecognitionGeometry.PoissonExtension.poisson_energy_identity_L2`
     (global weighted energy identity / Plancherel for the Poisson/conjugate Poisson extension).
+    - **Reality check (2025-12-22)**: the vendored Mathlib here has Fourier inversion and basic Fourier-integral
+      identities, but does **not** appear to ship a usable Parseval/Plancherel theorem for `Real.fourierIntegral` on
+      `L²(ℝ)` (and there is no Poisson-kernel Fourier-transform API). So this “next chip” is currently blocked on new
+      foundational Fourier-analysis development (see the new blocker detail added under (G0) in `REMAINING_WORK.md`).
 - **Unconditional Port‑S2 reality check (2025-12-22)**: even if the last project-level axiom above is eliminated,
   the active Port‑S2 spine theorem is still **conditional** on:
   - `OscillationTarget` (global-BMO smallness for `logAbsXi`), and
@@ -69,6 +73,10 @@
   There is currently **no theorem** in this repo that produces `OscillationTarget` unconditionally; turning the
   Port‑S2 route into a fully unconditional RH proof therefore requires proving these analytic hypotheses (or
   switching the spine to the renormalized-tail `OscillationTargetTail` interface).
+  - **OscillationTarget audit (2025-12-22)**: `OscillationTarget := ∃ M, InBMOWithBound logAbsXi M ∧ M ≤ C_tail`
+    has no internal proof path today. The only relevant lemma is
+    `FeffermanStein.logAbsXi_mean_oscillation_bound`, which simply unwraps the assumed bound.
+    Next smallest proposed chip: `log_singularity_meanOscillation_le` (mean oscillation bound for `t ↦ log|t-γ|`).
 
 - **Port‑S2 checklist audit (2025-12-22): `XiCRGreenS2.Assumptions` is a pure interface (BLOCKED)**.
   The xi-side S2 bundle is defined as:
@@ -82,6 +90,13 @@
   `|∫ dPhase| ≤ sqrt(xiEbox_poisson I) * (C_geom * |I|^{-1/2})`.
   No construction of such `T` exists in the repo today (this is a substantial complex-analysis / Green–trace
   formalization task), so the item is currently **BLOCKED**.
+  - **Audit detail (2025-12-22)**: `XiCRGreenS2.Assumptions` is literally
+    `∃ T : Port.XiCRGreenS2Interfaces.GreenTraceIdentity, Port.XiCRGreenS2Interfaces.PairingBound T`
+    (`RiemannRecognitionGeometry/Port/XiCRGreenS2.lean`), and there are **no** occurrences in the repo that
+    construct such a witness (only downstream uses of it as a hypothesis).
+  - **Next smallest lemma/package to attempt**: introduce `RiemannRecognitionGeometry/Port/XiOuterLogBranch.lean`
+    (xi analogue of `Port/CofactorOuterLogBranch.lean`) and prove the purely-formal wiring lemma
+    `XiOuterLogBranch → XiCRGreenS2.Assumptions`.
 
 - **Port‑S2 checklist audit (2025-12-22): `CofactorCRGreenS2.Assumptions` is also an interface (BLOCKED)**.
   The cofactor-side S2 bundle is defined as:
@@ -95,6 +110,20 @@
   However, the repo currently provides **no theorem** that constructs such an `h`, and the required `PairingBound`
   inequality (the actual CR/Green Cauchy–Schwarz estimate in energy form) is likewise not derived from the Poisson
   pairing hook. Therefore this checklist item is also **BLOCKED**.
+  - **Audit detail (2025-12-22)**: the *lift agreement* part of S2 is not the main obstacle:
+    `Port/RealPhaseTransfer.lean` already defines a canonical real-valued representative
+    `rgCofactorPhaseReal ρ t := argXi t + rgBlaschkePhase ρ t` and proves
+    `rgCofactorPhaseAngle ρ t = (rgCofactorPhaseReal ρ t : Real.Angle)`.
+    The real blockers are: an FTC-valid velocity for that representative (in particular, a usable derivative theory
+    for `argXi` on Whitney bases), plus the pairing inequality itself.
+  - **Next smallest lemma to attempt**: `hasDerivAt_rgBlaschkePhase` (differentiate the explicit
+    arctan Blaschke phase). This isolates the remaining “hard” derivative content to `argXi`.
+  - **Progress (2025-12-22)**: proved `RiemannRecognitionGeometry.hasDerivAt_rgBlaschkePhase`
+    in `RiemannRecognitionGeometry/Phase.lean` (derivative of the explicit arctan Blaschke phase).
+  - **Progress (2025-12-22)**: added two follow-up “FTC wiring” lemmas in `RiemannRecognitionGeometry/Phase.lean`:
+    - `RiemannRecognitionGeometry.hasDerivAt_rgBlaschkePhase_simplified` (same derivative in the clean Poisson-kernel form)
+    - `RiemannRecognitionGeometry.intervalIntegrable_rgBlaschkePhase_deriv_of_ne` (interval integrability of that derivative
+      under the natural off-line hypothesis `ρ.re ≠ 1/2`).
 - **Note on what “axiom count” means**:
   - This counts literal Lean `axiom` declarations (`^\s*axiom\s+`).
   - It does **not** count “axiom-shaped fields” like `*_axiom_statement` inside assumption bundles such as `ClassicalAnalysisAssumptions` / `RGAssumptions`.

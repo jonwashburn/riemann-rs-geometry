@@ -33,3 +33,5 @@ Thumbs.db
 # Scratch / local experimentation files
 Scratch*.lean
 
+# Temporary files
+tmp/

@@ -135,7 +135,136 @@ We updated `BSD-Jon-Final.txt` so the manuscript itself now points back to this 
   - Appendix **F.fs** (finite-slope disc Schur–pinch / disc IMC) is now **deprecated** in the mainline: the current route imports cyclotomic IMC equality from the **literature coverage** package (\S\,F.32) instead of proving it by a new disc-boundary rigidity argument. The disc engine sections are kept as historical context only.
 - **Engine attack order (unconditional goal)**:
   - **Primary**: lock down the **IMC coverage table** (`cor:disc-imc`, `thm:universal-imc`) with exact theorem numbers/hypotheses for the 2024–2025 citations and the finite-exception closure steps (small primes, exceptional zero, Eisenstein/reducible residual set).
-  - **Parallel (hard / likely-new)**: audit whether the cyclotomic wedge package (Appendix F.pw: `thm:box-energy`, `lem:wedge`, `thm:mu0-wedge`) can be made referee-grade. If not, treat universal \(\mu=0\) as conditional and keep it out of “unconditional” claims.
+  - **Parallel (hard / likely-new)**: audit whether the cyclotomic wedge package (Appendix F.pw: `thm:box-energy`, `lem:wedge`, `thm:mu0-wedge`) can be made referee-grade. If not, treat universal \(\mu=0\) as blocked/conditional and keep it out of “unconditional” claims.
+
+### F.pw — Universal \(\mu=0\) wedge package (DAG + status dashboard)
+
+This is the dedicated audit dashboard for the **cyclotomic boundary wedge** mechanism (Appendix `F.pw` in `BSD-Jon-Final.txt`, plus the supporting wedge package in \S\,F.31B–F.31E). The intent is to deduce **universal \(\mu_p(E)=0\)** (ordinary and signed), but the package is currently **blocked** for structural reasons.
+
+#### DAG nodes (minimal spine)
+
+| Node | Claim | Where (source) | Status | Minimal unblocker |
+|---|---|---|---|---|
+| **Fpw-0** | Character-level criterion: positive proportion of $p$-nondivisible values \(v_p(L_p(E,\chi))<1\) \(\Rightarrow \mu_p(E)=0\) | `BSD-Jon-Final.txt` `lem:mu-criterion` | **done** | — |
+| **Fpw-1** | Outer/neutralization: existence of analytic “outer” \(O\) so that \(|\mathcal J(\chi)|_p=1\) on finite-order character layers | `BSD-Jon-Final.txt` \S\,F.31B; Appendix `F.pw` | **blocked** | `lem:outer-existence-cyclotomic` (below) |
+| **Fpw-2** | Precise model of character layers \(\Gamma_n\), boxes \(Q(n)\), measure \(\mu\), gradients \(\nabla\), Laplacian \(\Delta\), and admissible windows \(\mathcal W_{\mathrm{adm}}(n;\varepsilon)\) | `BSD-Jon-Final.txt` \S\,F.31C–F.31D; Appendix `F.pw` | **blocked** | a complete discrete/rigid potential-theory framework on the cyclotomic character tree |
+| **Fpw-3** | CR–Green pairing inequality linking test integrals of \((-\Delta\,\arg \mathcal J)\) to Dirichlet energy of \(U\) | Appendix `F.pw`; intended support in \S\,F.31D–F.31E | **blocked** | `lem:cr-green-cyclotomic` + a definition of `arg` that is canonical and functorial |
+| **Fpw-4** | Uniform box–energy bound (`thm:box-energy`) | `BSD-Jon-Final.txt` `thm:box-energy` | **blocked** | full definitions + proof of the tail/zero-mass decomposition with quantified constants |
+| **Fpw-5** | Wedge criterion (`lem:wedge`): “phase wedge” \(\Rightarrow\) no off-\(T=0\) mass on windows | `BSD-Jon-Final.txt` `lem:wedge` | **blocked** | a nonarchimedean argument-principle / wedge lemma with explicit hypotheses |
+| **Fpw-6** | Positive proportion at each depth \(\Rightarrow \mu=0\) (`thm:mu0-wedge`) | `BSD-Jon-Final.txt` `thm:mu0-wedge` | **blocked** | Fpw-5 + Fpw-0 |
+| **Fpw-7** | Cyclotomic wedge \(\Rightarrow \mu=0\) for all \(p\) (`thm:pw-wedge-mu`) | `BSD-Jon-Final.txt` `thm:pw-wedge-mu` | **blocked** | Fpw-1..Fpw-5 + signed/improved variants |
+
+#### Minimal blockers (precise)
+
+**Blocker A (outer factorization as stated is internally inconsistent).**  
+In \S\,F.31B the manuscript asserts: “there exists \(O(T)\in\Lambda^{\times}\) such that \(v_p(O(\chi))=U(\chi)\) for all finite-order \(\chi\).” But if \(O\in\Lambda^{\times}\), then \(O(\chi)\in\mathbb Z_p^{\times}\) for every \(\chi\), hence \(v_p(O(\chi))=0\); this forces \(U(\chi)\equiv 0\). Therefore, to even *state* the construction nontrivially, one needs an “outer” \(O\) living in a larger coefficient ring than \(\Lambda^{\times}\) and a proof of existence.
+
+What would suffice to unblock A is a lemma of the following form:
+
+- **Missing lemma `lem:outer-existence-cyclotomic` (sufficient to unblock outer normalization).**  
+  Fix a precise ambient algebra \(\mathscr A\) of analytic functions in which \(L_p(E,T)\) and \(\det_{\Lambda}(I-K(T))\) both live and can be evaluated at all finite-order characters. Given the integer-valued boundary function
+  \[
+  U(\chi):=v_p(\mathscr D(\chi)) - v_p(L_p(\chi))\qquad(\chi\ \text{finite order, after removing stated atoms}),
+  \]
+  prove the existence of an analytic, zero-free \(O(T)\in\mathscr A^{\times}\) (or \(O\in\mathrm{Frac}(\mathscr A)^{\times}\) with explicitly controlled poles) such that \(v_p(O(\chi))=U(\chi)\) for all such \(\chi\), and such that the neutralized ratio \(\mathcal J=\mathscr D/(O\,L_p)\) satisfies \(v_p(\mathcal J(\chi))=0\) for all \(\chi\).
+
+**Blocker B (no canonical p-adic “argument/phase + Laplacian” formalism is supplied).**  
+The wedge package repeatedly uses \(\arg(\mathcal J)\), \(-\Delta\,\arg(\mathcal J)\), and wedge thresholds like \(\pi/2\). There is no canonical notion of “argument” for \(Q_p^{\times}\)-valued functions that is invariant under the allowed normalizations (unit scaling, change of \(\gamma\), signed/improved variants). Without a canonical phase theory, the wedge criterion is not even well-posed.
+
+**Concrete obstruction (topological):** \(Q_p^{\times}\) (and every finite extension) is totally disconnected. Any \emph{continuous} map from a totally disconnected compact set to a connected space (e.g. an interval or \(\mathbb R/2\pi\mathbb Z\)) is locally constant. In particular, there is no nontrivial continuous “phase” map \(\arg:\mathbb Q_p^{\times}\to \mathbb R/2\pi\mathbb Z\) with analytic variation properties, so identities of the form “\(-\Delta\,\arg(\mathcal J)\) measures zero mass” cannot be made canonical in the way required by the wedge argument. Nonarchimedean potential theory instead controls \(\log|\cdot|_p\) on Berkovich spaces (a different formalism than what is written in `F.pw`).
+
+**(Resolved) Former Blocker C (unit-values vs vanishing order at \(T=0\)).**  
+Earlier drafts phrased the wedge chain in terms of “unit values” \(v_p(L_p(E,\chi))=0\), which is too strong whenever \(\mathrm{ord}_{T=0}L_p(E,T)\ge 1\). The manuscript has been corrected to use the **non-divisibility threshold** \(v_p(L_p(E,\chi))<1\) (see `BSD-Jon-Final.txt` `lem:mu-criterion`, `thm:mu0-wedge`, `thm:pw-wedge-mu`). The remaining blockers for `F.pw` are therefore the structural analytic ones: **Blocker A (outer)** and **Blocker B (arg/phase)**.
+
+What would suffice to unblock B is:
+
+- **Missing lemma `lem:arg-principle-nonarch` (sufficient to unblock the wedge criterion).**  
+  Give a canonical definition of `arg` on the range of boundary specializations of \(\mathcal J\) together with a nonarchimedean argument principle identifying \(-\Delta\,\arg(\mathcal J)\) with a positive measure that counts “off-\(T=0\)” mass (precisely defined). Prove a wedge lemma: confinement of the phase to a cone of aperture \(<\pi\) on admissible windows implies zero “off-\(T=0\)” mass.
+
+Until Blockers A and B are resolved (by proofs or exact literature citations), Appendix `F.pw` cannot be upgraded to an unconditional proof of universal \(\mu=0\).
+- 
+---
+
+### Pivot: F.pμ — Universal \(\mu=0\) via primitivity / nondivisibility certificates (CPM-style)
+
+This pivot keeps `F.pw` as a **blocked** historical attempt and replaces the nonarchimedean “phase wedge” certificate by a **canonical \(p\)-adic certificate**:
+
+- **\(\mu>0\)** for a \(\Lambda\)-adic power series \(f(T)\in\mathbb Z_p\llbracket T\rrbracket\) means exactly **\(p\mid f\)** in \(\Lambda\), i.e. every coefficient is divisible by \(p\).  
+- Therefore, to prove \(\mu=0\) it suffices to prove **primitivity** (not divisible by \(p\)) for the relevant analytic \(p\)-adic \(L\)-function (ordinary / signed / improved), and then transfer \(\mu=0\) to Selmer via **Kato’s one-sided divisibility** (\(\mathrm{char}_\Lambda X_p \mid (L_p)\)).
+
+#### Pivot DAG nodes (minimal spine)
+
+| Node | Claim | Dependencies | Status | Minimal unblocker |
+|---|---|---|---|---|
+| **Fpμ-0** | Correct \(\mu\)-criterion: existence of arbitrarily deep cyclotomic \(\chi\) with \(v_p(L_p(E,\chi))<1\) (equivalently \(p\nmid L_p(E,T)\) in \(\Lambda\)) \(\Rightarrow \mu(L_p)=0\). | Weierstrass preparation / distinguished polynomial control | **done** | — |
+| **Fpμ-1** | Kato one-sided divisibility implies \(\mu(X_p)\le \mu(L_p)\) (ordinary; and signed/improved analogues). Hence \(\mu(L_p)=0 \Rightarrow \mu(X_p)=0\). | `B1'` (Kato divisibility) | **done** | — (formal from `B1'` once stated in our normalization). |
+| **Fpμ-2** | **Analytic primitivity input (still the hard part):** prove \(p\nmid L_p(E,T)\) (equivalently \(\mu(L_p)=0\)) for a fixed curve \(E\) and each prime \(p\) (ordinary/signed/improved as appropriate). | — | **blocked** | A theorem producing (for each \(p\)) some cyclotomic \(\chi\) with \(v_p(L_p(E,\chi))<1\), or an equivalent primitivity statement \(L_p(E,T)\not\equiv 0 \pmod p\) in \((\mathbb{Z}/p)\llbracket T\rrbracket\). |
+| **Fpμ-2a** | **Fixed-\(p\) certificate (tautological):** for a given \(p\), \(\mu(L_p)=0\) iff \(p\nmid L_p(E,T)\) in \(\Lambda\) iff \(L_p(E,T)\not\equiv 0 \pmod p\). | WPT / definition of \(\mu\) | **done** | — |
+| **Fpμ-2b** | **“Finite exceptional set” across varying \(p\)** is **not proved** in our current sources; treating \(\{p:\mu_p(E)>0\}\) as finite is essentially Greenberg’s conjecture. | — | **open** | Would require a new theorem (not supplied here) controlling cyclotomic \(\mu_p(E)\) uniformly in \(p\). |
+| **Fpμ-3** | Hence: **universal** \(\mu_p(E)=0\) for all \(p\) remains **blocked** at Fpμ-2. | Fpμ-1, Fpμ-2 | **blocked** | Close Fpμ-2. |
+| **Fpμ-4** | Signed/improved variants: same status. | Fpμ-1, Fpμ-2 | **blocked** | Close Fpμ-2 in those settings. |
+| **Fpμ-5** | Downstream BSD consequences: remain **blocked** until universal \(\mu=0\) is closed. | Fpμ-3/4 | **blocked** | Close Fpμ-2 and then propagate. |
+
+**Interpretation of the “other blocker”.**  
+The fixed-\(p\) **certificate** (Fpμ-2a) is clear, but the missing part is exactly the **existence** of such a certificate for every \(p\) for a fixed non-CM curve \(E\). Any attempt to reduce to a “finite exceptional set across \(p\)” is, at present, essentially **Greenberg’s conjecture** and must be treated as **open/blocked** unless an explicit theorem is imported.
+- **Warning (map-level gap):** Kim–Lee–Ponsinet (`arXiv:1909.01764`, Remark after Theorem `thm:main-theorem`) explicitly note that mod-\(p\) nonvanishing of Kato’s zeta elements is **weaker** than \(\mu=0\) assumptions for \(p\)-adic \(L\)-functions, because it is unknown in general whether the composition “localize at \(p\)” + “Coleman map” preserves mod-\(p\) nonvanishing. So Fpμ-2 really needs primitivity/nondivisibility on the **analytic** \(L_p\)-side (or an argument showing the maps preserve primitivity in our setting).
+
+#### Fpμ-2 — Citation hunt matrix (cyclotomic analytic primitivity / finiteness)
+
+**Execution doc (actionable workplan):** see `MU0_DREAM_THEOREMS_EXECUTION.md` (current working choice \(C(E)=\) Wiles congruence ideal generator; current status: “Missing Lemma A\*” is still the core gap).
+
+**What Fpμ-2 needs (exactly).**
+
+- **Target (ordinary)**: for a fixed modular elliptic curve \(E/\mathbb{Q}\), prove that for all but finitely many good ordinary primes \(p\),
+  \[
+    p\nmid L_p(E,T)\ \text{in }\Lambda=\mathbb{Z}_p\llbracket T\rrbracket,
+  \]
+  i.e. \(\mu^{\mathrm{an}}_p(E)=\mu(L_p(E,T))=0\).
+- **Target (supersingular signed)**: for all but finitely many supersingular \(p\), \(p\nmid L_p^{\pm}(E,T)\) (or an equivalent signed primitivity statement).
+- **Target (improved / multiplicative)**: at split multiplicative \(p\), the same primitivity statement for the improved \(L_p^{\!*}(E,T)\).
+
+**Equivalent formulations (ordinary; similarly signed/improved).**
+
+- \(p\nmid L_p(E,T)\) in \(\Lambda\)  \(\Longleftrightarrow\)  \(\mu(L_p)=0\).
+- \(p\nmid L_p(E,T)\)  \(\Longleftrightarrow\)  \(L_p(E,T)\not\equiv 0\pmod p\) in \((\mathbb{Z}/p)\llbracket T\rrbracket\).
+- By `Fpμ-0` (our Lemma `lem:mu-criterion`), it suffices to produce arbitrarily deep cyclotomic characters \(\chi\) with \(v_p(L_p(E,\chi))<1\).
+
+---
+
+**Citation hunt matrix (GV00 / Vatsal periods / congruence modules).**
+
+| Source | What it actually gives | Exact pointer (numbered) | Hypotheses (as stated there) | Relation to Fpμ-2 |
+|---|---|---|---|---|
+| **Greenberg–Vatsal** (`arXiv:math/9906215`, Invent. Math. **142** (2000)) | Congruence‐propagation of IMC/λ/μ under a **\(\mu=0\) input**; plus a few special \(\mu=0\) base cases (via rational \(p\)-isogenies). | Conjecture **(1.1)** (Mazur), Theorem **(1.2)** (Kato divisibility), Theorem **(1.3)** (special isogeny case: \(\lambda^{\mathrm{alg}}=\lambda^{\mathrm{an}}\), \(\mu^{\mathrm{alg}}=\mu^{\mathrm{an}}=0\)), Theorem **(1.4)** (propagation to congruent \(E_2\) assuming the equalities for \(E_1\)). | Good ordinary \(p\); for (1.4) assume \(E_1[p]\cong E_2[p]\) irreducible; (1.3) assumes a \(\mathbb{Q}\)-isogeny of degree \(p\) with a parity condition on the Galois action on its kernel. | **Does not close Fpμ-2 in general.** It either assumes \(\mu=0\) (propagation engine) or proves \(\mu=0\) only in special isogeny cases (a tiny set of primes/curves). |
+| **Emerton–Pollack–Weston** (`arXiv:math/0404484`, Invent. Math. **163** (2006)) | \(\mu=0\) propagation in Hida families: if \(\mu^{*}(f_0)=0\) for one specialization, then \(\mu^{*}(f)=0\) for all \(f\) in the family (analytic and algebraic). Also records the **status** as conjectural in general. | Theorem **mthm:1** (intro) and its analytic incarnation (Theorem `thm:mu vanishing` in the body). In the introduction immediately after **mthm:1**, they state Greenberg’s conjecture for weight two residually irreducible forms (\(\mu^{\an}=\mu^{\alg}=0\)). | Residual \(\bar\rho\) \(p\)-ordinary and \(p\)-distinguished; requires an **existing** \(\mu=0\) specialization in the family. | **Propagation only.** Like GV00, it does not provide a base-case proof of cyclotomic \(\mu^{\mathrm{an}}=0\) for a given \(E\) at a given \(p\). |
+| **Vatsal** (Duke Math. J. **98** (1999), *Canonical periods and congruence formulae*) | Canonical periods via integral cohomology; congruence formulae between periods and congruence modules (candidate input to control \(p\)-divisibility phenomena). | **To extract**: the specific proposition/theorem relating canonical periods \(\delta_f^{\pm}\) to congruence modules (and its precise hypotheses). | Uses mod-\(p\) multiplicity one + Ihara lemma style inputs; exact hypotheses must be imported. | **Potentially relevant**, but by itself does not (yet) give \(p\nmid L_p(E,T)\) for almost all \(p\) unless combined with a theorem linking these congruence/period objects to **primitivity** of the cyclotomic \(L_p\). |
+| **Vatsal** (Ann. Math. Québec **37** (2013), *Integral periods for modular forms*) | Period assignment beyond newforms; integral period comparison and congruence control (used in congruence-of-zeta-elements arguments). | As cited in Kim–Lee–Ponsinet (`arXiv:1909.01764`): Definition **3.4**, Proposition **3.6**, Proposition **4.5**. | Exact hypotheses (ordinary/distinguished; tame level assumptions; etc.) must be checked in the paper. | **Supports period comparison**, but does not automatically imply cyclotomic \(\mu^{\mathrm{an}}=0\) unless paired with an explicit “period/congruence ⇒ \(p\nmid L_p\)” theorem. |
+| **Diamond** (and Hida/Ohta tradition) | Congruence modules for \(\Lambda\)-adic forms; control of canonical periods/congruence ideals in Hida theory. | Cited inside EPW06 bibliography: Diamond, *On congruence modules associated to \(\Lambda\)-adic forms*. | Depends on ordinarity/Hida–Hecke algebra setup; precise statement needed. | **Candidate** route to express a “finite exceptional set” via a congruence ideal, but we still need an explicit bridge from the congruence ideal to the **\(p\)-divisibility of the cyclotomic \(L_p\)**. |
+| **Maksoud** (`arXiv:2312.16706`) | Proves (at fixed \(p\), in ordinary Hida theory) that a canonical **adjoint \(p\)-adic \(L\)-function** \(L_p(\ad F)\) **generates the congruence module/ideal** of a primitive Hida family \(F\) (integral statement). | Theorem `thm:introduction_main_1` + Proposition `prop:congruence_module_and_p_adic_L_functions` in `tmp/arxiv/2312.16706/adjoint_arxiv_v1.tex`. | \(p\ge 5\), \(p\)-ordinary \(p\)-distinguished residual rep; primitivity/freeness hypotheses as stated there. | **Useful analogy / partial bridge** (“congruence ideal is generated by a \(p\)-adic \(L\)”), but it is for **adjoint/Hida congruence**, not the **cyclotomic \(L_p(E,T)\)** primitivity needed for Fpμ‑2. |
+| **Hida** (Ann. Sci. ENS (4) **19** (1986), 231–273; “Iwasawa modules attached to congruences of cusp forms”) | Develops the weight-variable congruence-Iwasawa module over \(A=\mathbb Z_p[[X]]\) and relates congruence modules to characteristic power series / \(p\)-adic measures in that setting. | Open Numdam scan (local copy): `tmp/numdam/hida1986_ens.pdf`. | Ordinary \(p\ge 5\) setup; weight-variable (Hida) direction. | **Analogy only**: strong congruence-module technology, but not an explicit theorem giving cyclotomic “\(p\mid L_p(E,T)\Rightarrow p\mid C(E)\)”. |
+
+---
+
+**Interim conclusion (honest status of Fpμ-2).**
+
+- The best “standard” sources in our current workspace (**GV00** `arXiv:math/9906215`, **EPW06** `arXiv:math/0404484`) treat cyclotomic \(\mu=0\) primarily as an **input** (to propagate invariants / IMC across congruences or families), not as an output.
+- Therefore, **Fpμ-2 is currently an essentially-open μ-problem for general non-CM curves**, unless we can locate a specific theorem in the canonical-period / congruence-module literature (Vatsal/Diamond/Ohta/Hida) that explicitly implies:
+  \[
+    p\nmid L_p(E,T)\ \text{for all but finitely many }p,
+  \]
+  with fully stated hypotheses and normalization matching our `C0` dictionary.
+- Until such an explicit theorem is imported (or proved internally), the pivot chain remains **BLOCKED at Fpμ-2**.
+
+#### Known unconditional \(\mu=0\) coverage (real base cases)
+
+These are the only **unconditional** \(\mu=0\) theorems we can currently point to that do **not** assume Greenberg’s conjecture (or a prior \(\mu=0\) specialization) and therefore genuinely close \(\mu=0\) in some nontrivial setting.
+
+| Family / setting | What is proved | Exact pointer | Scope | Relation to Fpμ-2 |
+|---|---|---|---|---|
+| **Abelian number fields (Dirichlet/Kubota–Leopoldt world)** | The Iwasawa \(\mu\)-invariant for the cyclotomic \(\BZ_p\)-extension of any abelian number field is \(0\). | Ferrero–Washington, *The Iwasawa invariant \(\mu_p\) vanishes for abelian number fields*, Ann. Math. (2) **109** (1979), 377–395. | all primes \(p\) | Shows that “\(\mu=0\)” is fully proved in the abelian setting; does **not** directly give \(\mu_p(E)=0\) for non-CM elliptic curves. |
+| **Imaginary quadratic fields / Katz \(p\)-adic \(L\)-functions (CM, ordinary/split)** | \(\mu=0\) for Katz \(p\)-adic \(L\)-functions attached to an imaginary quadratic field (in particular extending Gillard/Schneps to include \(p=2,3\)). | Oukhaba–Viguié, `arXiv:1311.3565`, Theorem `theomu` (Introduction; in their split/ordinary setup). | primes \(p\) with **CM ordinary** reduction (i.e. \(p\) split in the CM field) | Gives a genuine \(\mu=0\) base-case in the CM-ordinary world; does not address the non-CM cyclotomic \(\mu=0\) conjecture. |
+| **Rational \(p\)-isogeny base case (fixed \(p\))** | With a \(\BQ\)-isogeny of degree \(p\) (and their stated parity condition), one gets \(\lambda^{\mathrm{alg}}=\lambda^{\mathrm{an}}\) and \(\mu^{\mathrm{alg}}=\mu^{\mathrm{an}}=0\). | Greenberg–Vatsal (`arXiv:math/9906215`, Invent. Math. **142** (2000)), Theorem **(1.3)**. | one prime \(p\) tied to the isogeny | Supplies an explicit \(\mu=0\) “seed” used by propagation results (e.g. EPW06/Hida-family propagation), but is not an all-\(p\) theorem for a fixed non-CM curve. |
+
 - **Resolved (paper repair): height-unit pipeline vs §7.1**: the source has been repaired so §7.1 explicitly records that, under the stated normalization \(t(E_1)\subset p\mathbb{Z}_p\) and \(u_p\in\mathbb{Z}_p^\times\), formal-group points have \(v_p(h_p(X))\ge 2\) and therefore are not diagonal units. The separation-based “height–unit prime” certificate is now formulated correctly: `prop:triangular` uses mixed integrality to force \(h_p(P_i,P_j)\in p\mathbb{Z}_p\) for \(i\ne j\) in the **unscaled** Gram matrix, and diagonal unit checks are performed on the basis points \(P_i\) (typically in \(E(\mathbb{Z}_p)\setminus E_1\)), not on \(m_iP_i\in E_1\).
 - **Confirmed blocker: “diagonal–unit certificate ⇒ \(\mu=0\)” route (rank \(r>1\))**: the source’s congruence \(h_p(R,S)\equiv u_p\,\log_\omega(R)\log_\omega(S)\pmod p\) (from `lem:triang-ord-modp`) is stable under any \(M_p\in\mathrm{GL}_r(\mathbb{Z}_p)\) change of basis. Therefore, if **all** \(\log_\omega(Q_i)\in\mathbb{Z}_p^\times\), then **all** entries of \(H'_p\) are nonzero mod \(p\), so \(H'_p\) cannot be upper triangular mod \(p\) unless \(r=1\). This breaks the intended use of `thm:R-triangular` / `thm:R-triangular-signed` as “μ=0 from triangularization + unit diagonals”.
 - **Confirmed blocker: Appendix C.3 Sha finiteness**: the dimension argument “nondegenerate height ⇒ \(\Sha[p^\infty]\) finite” in Appendix C.3 is invalid as written; it does not follow from the orthogonal decomposition. Anything relying on Appendix C.3 needs a different proof or must treat \(\Sha[p^\infty]\) finiteness as an extra hypothesis.
@@ -188,7 +317,9 @@ This track now uses a **paper-by-paper audit workflow** (adapted from `PAPER_DEE
 #### Standing black boxes (from §2.6)
 
 - **B1**: Cyclotomic Iwasawa Main Conjecture (IMC$_p$). — Source `BSD-Jon-Final.txt` L187
-- **B1'**: One–sided divisibility (Kato). — Source `BSD-Jon-Final.txt` L193
+- **B1'**: One–sided divisibility (Kato). — Source `BSD-Jon-Final.txt` L193.  
+  Minimal citation target: Kato, *$p$-adic Hodge theory and values of zeta functions of modular forms*, Astérisque **295** (2004), Theorem 12.5.(4) (Euler-system divisibility).  
+  Convenient arXiv pointer quoting this: Kim–Lee–Ponsinet, `arXiv:1909.01764`, Theorem `thm:kato-divisibility`.
 - **B2**: Coleman–Gross heights and leading term. — Source `BSD-Jon-Final.txt` L200
   - **Deep-dive note**: `notes/papers/bsd/coleman-gross-heights-notes.md`
   - **Critical**: as currently written, §7.1’s checklist + `lem:unit-log` imply \(v_p(h_p(X))\ge 2\) for \(X\in E_1(\mathbb{Q}_p)\), contradicting repeated “formal-group diagonal unit” claims. Treat any unit-diagonal-in-\(E_1\) pipeline steps as blocked until a normalization correction is specified.
@@ -297,7 +428,7 @@ Each line links to a dedicated section below.
 - **020**. [rem:noncancellation](#rem-noncancellation) — **remark** — Non\,--\,cancellation at zeros — Source L557–L559 — Flags: **—** — Status: **todo**
 - **021**. [thm:box-energy](#thm-box-energy) — **theorem** — Uniform box\,--\,energy bound — Source L569–L575 — Flags: **—** — Status: **blocked**
 - **022**. [lem:wedge](#lem-wedge) — **lemma** — Wedge criterion — Source L582–L592 — Flags: **—** — Status: **blocked**
-- **023**. [thm:mu0-wedge](#thm-mu0-wedge) — **theorem** — Positive proportion at each depth; $\mu=0$ — Source L597–L599 — Flags: **—** — Status: **conditional**
+- **023**. [thm:mu0-wedge](#thm-mu0-wedge) — **theorem** — Positive proportion at each depth; $\mu=0$ — Source L597–L599 — Flags: **—** — Status: **blocked**
 - **024**. [auto-remark-L604](#auto-remark-l604) — **remark** — Signed and improved variants — Source L604–L606 — Flags: **—** — Status: **todo**
 - **025**. [lem:disc-wedge](#lem-disc-wedge) — **lemma** — Boundary wedge on $\partial\mathcal{D}$ — Source L612–L614 — Flags: **—** — Status: **deprecated**
 - **026**. [thm:schur-pinch](#thm-schur-pinch) — **theorem** — Rigid Schur pinch; no extra factor on $\mathcal{D}$ — Source L618–L623 — Flags: **—** — Status: **deprecated**
@@ -454,7 +585,7 @@ Each line links to a dedicated section below.
 - **175**. [thm:R-triangular-signed](#thm-r-triangular-signed) — **theorem** — Signed reverse divisibility at $T=0$ — Source L3702–L3711 — Flags: **—** — Status: **suspect**
 - **176**. [auto-corollary-L3716](#auto-corollary-l3716) — **corollary** — BSD$_p$ in signed IMC ranges — Source L3716–L3718 — Flags: **IMC_MENTION** — Status: **todo**
 - **177**. [auto-corollary-L3724](#auto-corollary-l3724) — **corollary** — Validated closure for \S6 — Source L3724–L3732 — Flags: **IMC_MENTION** — Status: **todo**
-- **178**. [thm:pw-wedge-mu](#thm-pw-wedge-mu) — **theorem** — Cyclotomic wedge $\Rightarrow\ \mu=0$ — Source L3761–L3767 — Flags: **—** — Status: **todo**
+- **178**. [thm:pw-wedge-mu](#thm-pw-wedge-mu) — **theorem** — Cyclotomic wedge $\Rightarrow\ \mu=0$ — Source L3761–L3767 — Flags: **—** — Status: **blocked**
 - **179**. [lem:noncancel](#lem-noncancel) — **lemma** — Non–cancellation at zeros in families — Source L3792–L3794 — Flags: **—** — Status: **deprecated**
 - **180**. [lem:right-edge](#lem-right-edge) — **lemma** — Right–edge normalization on discs — Source L3796–L3798 — Flags: **—** — Status: **deprecated**
 - **181**. [thm:disc-imc](#thm-disc-imc) — **theorem** — Finite–slope IMC equality on $D$ — Source L3800–L3802 — Flags: **IMC_MENTION** — Status: **deprecated**
@@ -1602,17 +1733,17 @@ For $n\gg 1$ the boundary phase is confined to a cone on every admissible window
 ### thm:mu0-wedge — theorem (Positive proportion at each depth; $\mu=0$)
 
 - **Source**: `BSD-Jon-Final.txt` L597–L599
-- **Status**: conditional
+- **Status**: blocked
 - **Auto-flags**: —
 - **Auto-extracted internal refs**: lem:mu-criterion
 - **Conditional on / Blockers (edit)**:
-  - **Conditional on `lem:wedge`**: this theorem is an immediate corollary of the wedge criterion plus the Weierstrass/μ-criterion (`lem:mu-criterion`).
+  - **Blocked on `lem:wedge`**: this theorem is an immediate corollary of the wedge criterion plus the Weierstrass/μ-criterion (`lem:mu-criterion`), but `lem:wedge` is itself blocked (missing a canonical nonarchimedean phase/Laplacian formalism and the required analytic lemmas).
 
 #### Statement (verbatim from source)
 
 ```tex
 \begin{theorem}[Positive proportion at each depth; $\mu=0$]\label{thm:mu0-wedge}
-For all sufficiently large $n$, a positive proportion of primitive characters $\chi$ of conductor $p^n$ satisfy $v_p\big(L_p(E,\chi)\big)=0$ (and similarly for $L_p^{\pm}$). Hence $\mu_p(E)=0$ by Lemma~\ref{lem:mu-criterion} (\S\,F.52).
+For all sufficiently large $n$, a positive proportion of primitive characters $\chi$ of conductor $p^n$ satisfy $v_p\big(L_p(E,\chi)\big)<1$ (and similarly for $L_p^{\pm}$). Hence $\mu_p(E)=0$ by Lemma~\ref{lem:mu-criterion} (\S\,F.52).
 \end{theorem}
 ```
 
@@ -1626,14 +1757,12 @@ For all sufficiently large $n$, a positive proportion of primitive characters $\
 
 #### Proof outline (edit)
 
-- Apply `lem:wedge` to conclude: for all sufficiently large \(n\), a positive proportion of primitive \(\chi\) of conductor \(p^n\) have \(v_p(L_p(E,\chi))=0\).
+- Apply `lem:wedge` to conclude: for all sufficiently large \(n\), a positive proportion of primitive \(\chi\) of conductor \(p^n\) have \(v_p(L_p(E,\chi))<1\).
 - Apply `lem:mu-criterion` to deduce \(\mu_p(E)=0\) (and similarly in signed/improved variants).
 
 #### Full proof (massive detail; edit)
 
-Assume `lem:wedge`. Fix \(p\) and consider the set of primitive characters \(\chi\) of conductor \(p^n\). The wedge criterion asserts that for all sufficiently large \(n\), a positive proportion of these \(\chi\) satisfy \(v_p(L_p(E,\chi))=0\) (and similarly for \(L_p^{\pm}\) in the signed case).
-
-Therefore the hypothesis of `lem:mu-criterion` holds with some constant \(C>0\) and infinitely many \(n\) (indeed all sufficiently large \(n\)). Applying `lem:mu-criterion` gives \(\mu_p(E)=0\). The signed/improved variants follow by replacing \(L_p\) by the signed/improved \(p\)-adic \(L\)-function in the same argument.
+**BLOCKED.** Assuming `lem:wedge`, the proof is immediate by applying `lem:mu-criterion`. Since `lem:wedge` is blocked, this theorem is blocked.
 
 #### Verification checklist (edit)
 
@@ -4781,7 +4910,7 @@ Then $\mu_p(E)=0$. The same holds in the signed case replacing $L_p$ by $L_p^{\p
 #### Proof outline (edit)
 
 - Write \(L_p(E,T)=p^{\mu}u(T)\,P(T)\) with \(u\in\Lambda^{\times}\) and \(P\in\mathbb{Z}_p[T]\) distinguished.
-- If \(\mu>0\), then \(p\mid L_p(E,\chi)\) for every sufficiently deep primitive character \(\chi\) (indeed for all \(\chi\) once \(p^{\mu}\) is factored), contradicting the hypothesis that a positive proportion have \(v_p=0\).
+- If \(\mu>0\), then \(p\mid L_p(E,\chi)\) for every sufficiently deep primitive character \(\chi\) (indeed for all \(\chi\) once \(p^{\mu}\) is factored), contradicting the hypothesis that a positive proportion have \(v_p<1\).
 - Therefore \(\mu=0\). Signed case is identical with \(L_p^{\pm}\).
 
 #### Full proof (massive detail; edit)
@@ -4794,9 +4923,9 @@ L_p(E,T)=p^{\mu}\,u(T)\,P(T),
 \]
 where \(\mu\ge 0\), \(u(T)\in\Lambda^{\times}\) is a unit, and \(P(T)\in\mathbb{Z}_p[T]\) is a distinguished polynomial. By definition, this \(\mu\) is the Iwasawa \(\mu\)-invariant \(\mu_p(E)\).
 
-Assume there exists \(C>0\) and infinitely many \(n\ge 1\) such that at least \(C\varphi(p^n)\) primitive characters \(\chi\) of conductor \(p^n\) satisfy \(v_p(L_p(E,\chi))=0\).
+Assume there exists \(C>0\) and infinitely many \(n\ge 1\) such that at least \(C\varphi(p^n)\) primitive characters \(\chi\) of conductor \(p^n\) satisfy \(v_p(L_p(E,\chi))<1\).
 
-If \(\mu>0\), then \(p\mid L_p(E,T)\) in \(\Lambda\), hence for every \(\chi\) we have \(p\mid L_p(E,\chi)\) and therefore \(v_p(L_p(E,\chi))\ge 1\). This contradicts the existence of even a single \(\chi\) with \(v_p(L_p(E,\chi))=0\), a fortiori a positive proportion at infinitely many depths. Therefore \(\mu=0\), i.e. \(\mu_p(E)=0\).
+If \(\mu>0\), then \(p\mid L_p(E,T)\) in \(\Lambda\), hence for every \(\chi\) we have \(p\mid L_p(E,\chi)\) and therefore \(v_p(L_p(E,\chi))\ge 1\). This contradicts the existence of even a single \(\chi\) with \(v_p(L_p(E,\chi))<1\), a fortiori a positive proportion at infinitely many depths. Therefore \(\mu=0\), i.e. \(\mu_p(E)=0\).
 
 The signed case is identical, replacing \(L_p(E,T)\) by \(L_p^{\pm}(E,T)\).
 
@@ -9030,11 +9159,13 @@ Write the proof here as if for a referee who will check every line.
 ### thm:pw-wedge-mu — theorem (Cyclotomic wedge $\Rightarrow\ \mu=0$)
 
 - **Source**: `BSD-Jon-Final.txt` L3761–L3767
-- **Status**: todo
+- **Status**: blocked
 - **Auto-flags**: —
 - **Auto-extracted internal refs**: lem:mu-criterion
 - **Conditional on / Blockers (edit)**:
-  - 
+  - **Blocked on the core nonarchimedean “phase” formalism**: the statement uses \(\arg(\mathcal J)\), \(-\Delta\,\arg(\mathcal J)\), and a numerical wedge threshold \(\pi/2\). No canonical definition is supplied, and no literature theorem is cited.
+  - **Blocked on outer/neutralization existence**: Appendix `F.pw` assumes the existence of a \(p\)-adic “outer” \(O\) producing \(|\mathcal J(\chi)|_p\equiv 1\). The supporting construction in \S\,F.31B is internally inconsistent as stated (it claims \(O\in\Lambda^\times\) yet prescribes \(v_p(O(\chi))\)).
+  - **Blocked on `thm:box-energy` + `lem:wedge`**: even if \(\arg\) were defined, the package still requires a proved energy inequality (`thm:box-energy`) and an argument-principle/wedge lemma (`lem:wedge`), both currently blocked for missing definitions and missing proofs.
 
 #### Statement (verbatim from source)
 
@@ -9051,17 +9182,23 @@ Consequently, a quantitative wedge holds on every $\Gamma_n$ (after a unimodular
 #### Dependencies (edit + expand)
 
 - **Internal (this document / source labels)**:
-  - 
+  - `lem:mu-criterion` (the final step: positive-proportion unit values \(\Rightarrow \mu=0\))
+  - The entire “outer + energy + wedge” package: \S\,F.31B–F.31E and Appendix `F.pw`
+  - `thm:box-energy`, `lem:wedge`, and `thm:mu0-wedge` (the internal cyclotomic wedge chain)
 - **External (papers/books/theorems)**:
-  - 
+  - None cited in the manuscript for the missing phase/Laplacian/CR–Green theory; this is the main blocker.
 
 #### Proof outline (edit)
 
-- 
+- **Blocked**. A proof would need to:
+  - define the character-layer geometry \(\Gamma_n\), admissible windows \(\mathcal W_{\mathrm{adm}}(n;\varepsilon)\), and the operators \(\nabla,\Delta\),
+  - define a canonical phase map \(\arg\) for \(\mathcal J(\chi)\in\mathbb Q_p^\times\) and prove an argument-principle identifying \(-\Delta\,\arg(\mathcal J)\) with “off-\(T=0\)” mass,
+  - prove the CR–Green pairing bound and the box-energy bound, and then
+  - deduce positive-proportion unit values and apply `lem:mu-criterion`.
 
 #### Full proof (massive detail; edit)
 
-Write the proof here as if for a referee who will check every line.
+**BLOCKED.** See “Conditional on / Blockers” above; the missing inputs are structural (definitions + a nonarchimedean phase/argument principle).
 
 #### Verification checklist (edit)
 

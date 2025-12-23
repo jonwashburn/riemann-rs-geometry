@@ -19,6 +19,7 @@ future work can focus exactly on them.
 import RiemannRecognitionGeometry.ExplicitFormula.ConnesHurwitzBridge
 import RiemannRecognitionGeometry.ExplicitFormula.RealZeros
 import RiemannRecognitionGeometry.ExplicitFormula.ConnesSection7
+import Mathlib.Topology.UniformSpace.UniformConvergence
 import Mathlib.Analysis.Analytic.IsolatedZeros
 import Mathlib.Analysis.Complex.CauchyIntegral
 import Mathlib.Analysis.NormedSpace.Connected
@@ -425,6 +426,59 @@ def toConnesHurwitzAssumptions : ConnesHurwitzAssumptions :=
 
 theorem riemannHypothesis_of_bundle (C : ConnesConvergenceBundle) : RiemannHypothesis :=
   riemannHypothesis_of_connesHurwitz (A := ConnesConvergenceBundle.toConnesHurwitzAssumptions C)
+
+/-!
+## Play A: a bridge lemma scaffold for `tendstoXi`
+
+The Route‑3′ CCM story has a natural **two-stage** approximation:
+
+- a “finite-rank” approximant (depending on `N`) is close to a “λ-level” object,
+- and the λ-level object converges to `riemannXi` as `λ → ∞`.
+
+On the Lean side, the *hard analysis* is in producing quantitative bounds; but the **gluing step**
+from “uniform closeness on compacts” + “locally uniform convergence on the strip” to
+`TendstoLocallyUniformlyOn` is purely topological. We isolate that gluing here.
+-/
+
+section TendstoBridge
+
+open Topology Uniformity Filter Set
+
+variable {α : Type*} {β : Type*} {ι : Type*} [TopologicalSpace α] [UniformSpace β]
+
+/-- `TendstoUniformlyCloseOn F G p s` means: for every entourage `u`, eventually in `p`,
+`F n` is `u`-close to the *varying* target `G n` uniformly on `s`.
+
+This is the right notion when the “intermediate approximant” depends on the same index `n`
+(e.g. `G n = F_{λ_n}` in a diagonal regime). -/
+def TendstoUniformlyCloseOn (F G : ι → α → β) (p : Filter ι) (s : Set α) : Prop :=
+  ∀ u ∈ 𝓤 β, ∀ᶠ n in p, ∀ x : α, x ∈ s → (G n x, F n x) ∈ u
+
+theorem tendstoUniformlyOn_of_tendstoUniformlyCloseOn
+    {F G : ι → α → β} {f : α → β} {p : Filter ι} {s : Set α}
+    (hclose : TendstoUniformlyCloseOn F G p s) (hG : TendstoUniformlyOn G f p s) :
+    TendstoUniformlyOn F f p s := by
+  intro u hu
+  rcases comp_symm_of_uniformity hu with ⟨t, ht, _htsymm, htcomp⟩
+  filter_upwards [hG t ht, hclose t ht] with n hnG hnclose x hx
+  have : (f x, F n x) ∈ t ○ t :=
+    mem_compRel.2 ⟨G n x, hnG x hx, hnclose x hx⟩
+  exact htcomp this
+
+theorem tendstoLocallyUniformlyOn_of_forall_isCompact_tendstoUniformlyCloseOn
+    {F G : ι → α → β} {f : α → β} {p : Filter ι} {s : Set α} [LocallyCompactSpace α]
+    (hs : IsOpen s)
+    (hclose : ∀ K : Set α, K ⊆ s → IsCompact K → TendstoUniformlyCloseOn F G p K)
+    (hG : TendstoLocallyUniformlyOn G f p s) :
+    TendstoLocallyUniformlyOn F f p s := by
+  -- Reduce to compact subsets of `s`.
+  rw [tendstoLocallyUniformlyOn_iff_forall_isCompact hs]
+  intro K hKs hK
+  have hG_K : TendstoUniformlyOn G f p K :=
+    (tendstoLocallyUniformlyOn_iff_forall_isCompact hs).1 hG K hKs hK
+  exact tendstoUniformlyOn_of_tendstoUniformlyCloseOn (hclose K hKs hK) hG_K
+
+end TendstoBridge
 
 end ConnesConvergenceBundle
 
