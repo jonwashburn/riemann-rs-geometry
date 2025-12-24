@@ -14,6 +14,7 @@ These are the classical “Davis–Kahan / min–max” style steps needed to at
 import Mathlib.Analysis.NormedSpace.OperatorNorm.Basic
 import Mathlib.Analysis.InnerProductSpace.Adjoint
 import Mathlib.Analysis.InnerProductSpace.Projection
+import Mathlib.Analysis.InnerProductSpace.Spectrum
 import Mathlib.Data.Complex.Abs
 
 noncomputable section
@@ -22,6 +23,7 @@ namespace RiemannRecognitionGeometry
 namespace ExplicitFormula
 
 open scoped Real InnerProductSpace
+open Module.End
 
 namespace SpectralPerturbation
 
@@ -155,168 +157,122 @@ theorem groundGap_orthogonal_component_sq_le
       exact this
     -- conclude
     linarith [hEq, hRe_ge]
-  -- Use the gap inequality for `A` on the orthogonal component `w`.
+  -- Use the gap inequality for `A` on the orthogonal component `w`, and expand `v = (⟪u,v⟫)u + w`.
   have hAv_ge : Complex.re ⟪A v, v⟫_ℂ ≥ lam + g * ‖w‖ ^ 2 := by
-    -- Work with the orthogonal projection onto `ℂ ∙ u` and its complement.
-    let U : Submodule ℂ H := (ℂ ∙ u)
-    have hproj_eq : (orthogonalProjection U v : H) = (⟪u, v⟫_ℂ) • u := by
-      -- Projection formula for a unit vector.
-      simpa [U] using (orthogonalProjection_unit_singleton (𝕜 := ℂ) (v := u) hGap.norm_u v)
-    -- Define the orthogonal component via projection.
-    have hw_eq : w = v - (orthogonalProjection U v : H) := by
-      -- `w = v - ⟪u,v⟫u` and `proj = ⟪u,v⟫u`.
-      simp [w, hproj_eq]
-    have hw_orth : w ∈ Uᗮ := by
-      -- by definition of orthogonal projection
-      -- `v - proj_U v ∈ Uᗮ`
-      simpa [hw_eq] using (sub_orthogonalProjection_mem_orthogonal (K := U) v)
-    have huw' : ⟪u, w⟫_ℂ = 0 := by
-      -- `w ∈ (ℂ ∙ u)ᗮ` iff `⟪u, w⟫ = 0`.
-      -- (`U = ℂ ∙ u` by definition.)
-      simpa [U] using (Submodule.mem_orthogonal_singleton_iff_inner_right (𝕜 := ℂ) (u := u) (v := w)).1 hw_orth
-    -- A is symmetric (since it is self-adjoint), so cross terms vanish in the orthogonal decomposition.
     have hAsymm : (A : H →ₗ[ℂ] H).IsSymmetric :=
       (IsSelfAdjoint.isSymmetric (A := A) hGap.selfAdjoint)
-    -- First compute the energy of the projection piece using the eigenvector property.
-    have hA_proj :
-        Complex.re ⟪A ((⟪u, v⟫_ℂ) • u), ((⟪u, v⟫_ℂ) • u)⟫_ℂ =
-          lam * ‖(⟪u, v⟫_ℂ) • u‖ ^ 2 := by
-      -- `A (c•u) = c•A u = c•(λ•u)`
-      calc
-        Complex.re ⟪A ((⟪u, v⟫_ℂ) • u), ((⟪u, v⟫_ℂ) • u)⟫_ℂ
-            = Complex.re ⟪((⟪u, v⟫_ℂ) • ((lam : ℂ) • u)), ((⟪u, v⟫_ℂ) • u)⟫_ℂ := by
-                -- linearity of `A` and eigen relation
-                simp [hGap.eigen, mul_smul, smul_smul]
-        _ = Complex.re (((lam : ℂ) * ‖(⟪u, v⟫_ℂ) • u‖ ^ 2 : ℝ) : ℂ) := by
-                -- inner of `((lam:ℂ)•x)` with `x` is `conj lam * ⟪x,x⟫`, but `lam` is real so `conj lam = lam`.
-                -- We do this via `inner_smul_left` and `inner_self_eq_norm_sq_to_K`.
-                have hlam : conj (lam : ℂ) = (lam : ℂ) := by simp
-                -- simplify the inner product
-                simp [inner_smul_left, hlam, inner_self_eq_norm_sq_to_K]
-        _ = lam * ‖(⟪u, v⟫_ℂ) • u‖ ^ 2 := by
-                -- `re ((lam:ℝ) : ℂ) = lam`
-                simp [Complex.ofReal_re]
-    -- Cross terms vanish: `⟪A w, proj⟫ = 0` and `⟪A proj, w⟫ = 0`.
-    have hcross1 : ⟪A w, (⟪u, v⟫_ℂ) • u⟫_ℂ = 0 := by
-      -- Use symmetry: ⟪A w, proj⟫ = ⟪w, A proj⟫ and `A proj ∈ span u`, while `w ⟂ u`.
-      have hAu : A u = (lam : ℂ) • u := hGap.eigen
-      have hAproj_mem : A ((⟪u, v⟫_ℂ) • u) ∈ (ℂ ∙ u) := by
-        -- `A((c)u) = c(λu)` is in the span
-        refine Submodule.smul_mem (Submodule.mem_span_singleton_self u) ?_
-        -- show scalar exists: `((⟪u,v⟫)*(λ))`
-        simp [hAu, smul_smul, mul_smul]
-      -- Now `w ∈ (ℂ∙u)ᗮ` gives `⟪w, A proj⟫ = 0`.
-      have hwAproj : ⟪w, A ((⟪u, v⟫_ℂ) • u)⟫_ℂ = 0 := by
-        -- membership in orthogonal complement to the span
-        -- use `Submodule.mem_orthogonal_singleton_iff_inner_right`
-        have hw' : w ∈ (ℂ ∙ u)ᗮ := by
-          -- `w = v - proj` is orthogonal part
-          simpa [U] using hw_orth
-        -- convert `A proj` into a scalar multiple of `u`
-        rcases (Submodule.mem_span_singleton).1 hAproj_mem with ⟨c, hc⟩
-        -- `⟪w, c•u⟫ = 0` since `w ⟂ u`
-        -- first get `⟪w,u⟫ = 0` from `w ∈ (ℂ∙u)ᗮ`
-        have hwu : ⟪w, u⟫_ℂ = 0 := by
-          have : ⟪w, u⟫_ℂ = 0 := by
-            -- unfold mem_orthogonal via singleton
-            simpa [Submodule.mem_orthogonal_singleton_iff_inner_right] using hw' u (Submodule.mem_span_singleton_self u)
-          exact this
-        -- now apply `inner_smul_right`
-        simpa [hc, inner_smul_right, hwu]
-      -- Now symmetry.
-      have := congrArg (fun z : ℂ => z) (hAsymm.apply_clm w ((⟪u, v⟫_ℂ) • u))
-      -- `hAsymm` gives `⟪A w, proj⟫ = ⟪w, A proj⟫`.
-      simpa [LinearMap.IsSymmetric, hAsymm.apply_clm] using (by
-        -- directly:
-        simpa using (by
-          -- `apply_clm` already states the equality
-          exact (LinearMap.IsSymmetric.apply_clm (T := A) hAsymm w ((⟪u, v⟫_ℂ) • u)).trans hwAproj))
-    have hcross2 : ⟪A ((⟪u, v⟫_ℂ) • u), w⟫_ℂ = 0 := by
-      -- Use symmetry again and `hcross1`.
-      -- From symmetry: ⟪A proj, w⟫ = ⟪proj, A w⟫, and since `hcross1` is ⟪A w, proj⟫ = 0,
-      -- we can flip via conjugate symmetry.
-      have hsymm := (LinearMap.IsSymmetric.apply_clm (T := A) hAsymm ((⟪u, v⟫_ℂ) • u) w)
-      -- `hsymm : ⟪A proj, w⟫ = ⟪proj, A w⟫`
-      -- But `⟪proj, A w⟫ = conj ⟪A w, proj⟫ = 0`.
-      have : ⟪(⟪u, v⟫_ℂ) • u, A w⟫_ℂ = 0 := by
-        -- Use conjugate symmetry: `⟪proj, A w⟫ = conj ⟪A w, proj⟫`.
-        have := congrArg conj hcross1
-        -- `conj 0 = 0`
-        simpa [inner_conj_symm] using this
-      exact by simpa [hsymm] using this
-    -- Now expand ⟪A v,v⟫ with `v = proj + w`.
     have hv_decomp : v = (⟪u, v⟫_ℂ) • u + w := by
       simp [w, add_comm, add_left_comm, add_assoc, sub_eq_add_neg]
-    -- Compute the real part using bilinearity and the vanished cross terms.
+    have hw_mem : w ∈ (ℂ ∙ u)ᗮ := by
+      -- `w ⟂ u` implies `w ∈ (ℂ ∙ u)ᗮ`.
+      exact (Submodule.mem_orthogonal_singleton_iff_inner_right (𝕜 := ℂ) (u := u) (v := w)).2 huw
+    have hAw_mem : A w ∈ (ℂ ∙ u)ᗮ := by
+      -- Show `⟪u, A w⟫ = 0` using symmetry of `A` and the eigen relation `A u = lam • u`.
+      have hsymm_uw : ⟪A u, w⟫_ℂ = ⟪u, A w⟫_ℂ :=
+        LinearMap.IsSymmetric.apply_clm (T := A) hAsymm u w
+      have : ⟪u, A w⟫_ℂ = 0 := by
+        -- `⟪u, A w⟫ = ⟪A u, w⟫` by symmetry, and `A u = lam • u`, so this is `lam† * ⟪u,w⟫ = 0`.
+        have h1 : ⟪u, A w⟫_ℂ = ⟪A u, w⟫_ℂ := by
+          -- from `⟪A u, w⟫ = ⟪u, A w⟫`
+          simpa [hsymm_uw] using hsymm_uw.symm
+        have h2 : ⟪A u, w⟫_ℂ = ⟪(lam : ℂ) • u, w⟫_ℂ := by
+          -- rewrite `A u` using the eigen relation
+          simpa [hGap.eigen]
+        calc
+          ⟪u, A w⟫_ℂ = ⟪(lam : ℂ) • u, w⟫_ℂ := by simpa [h1] using h2
+          _ = (star (lam : ℂ)) * ⟪u, w⟫_ℂ := by
+                -- use the general `inner_smul_left` formula over `ℂ`
+                -- (avoid the `ℝ`-specialized lemma that `simp` sometimes prefers)
+                simpa using (inner_smul_left (𝕜 := ℂ) (x := u) (y := w) (r := (lam : ℂ)))
+          _ = (star (lam : ℂ)) * 0 := by simpa [huw]
+          _ = 0 := by simp
+      exact (Submodule.mem_orthogonal_singleton_iff_inner_right (𝕜 := ℂ) (u := u) (v := A w)).2 this
+    -- Now cross terms vanish because `A w ∈ (ℂ ∙ u)ᗮ`.
+    have hcross : ⟪(⟪u, v⟫_ℂ) • u, A w⟫_ℂ = 0 := by
+      -- `(ℂ ∙ u)` is orthogonal to `(ℂ ∙ u)ᗮ`
+      have hu_mem : ((⟪u, v⟫_ℂ) • u) ∈ (ℂ ∙ u) := by
+        exact (Submodule.mem_span_singleton).2 ⟨⟪u, v⟫_ℂ, by simp⟩
+      exact Submodule.inner_right_of_mem_orthogonal hu_mem hAw_mem
+    have hcross' : ⟪A ((⟪u, v⟫_ℂ) • u), w⟫_ℂ = 0 := by
+      -- `A ((⟪u,v⟫)u)` is in the span, and `w ∈ (ℂ ∙ u)ᗮ`.
+      have hu_mem : A ((⟪u, v⟫_ℂ) • u) ∈ (ℂ ∙ u) := by
+        -- `A (c•u) = (c*lam)•u`
+        refine (Submodule.mem_span_singleton).2 ?_
+        refine ⟨(⟪u, v⟫_ℂ) * (lam : ℂ), ?_⟩
+        simp [hGap.eigen, smul_smul, mul_smul, mul_assoc]
+      exact Submodule.inner_right_of_mem_orthogonal hu_mem hw_mem
+    -- Expand `re ⟪A v, v⟫` using `v = proj + w` and cancel cross terms.
     have hRe :
         Complex.re ⟪A v, v⟫_ℂ =
-          Complex.re ⟪A ((⟪u, v⟫_ℂ) • u), ((⟪u, v⟫_ℂ) • u)⟫_ℂ
-            + Complex.re ⟪A w, w⟫_ℂ := by
-      -- Expand using `hv_decomp`.
-      -- We'll work in ℂ and then take `Complex.re`.
-      -- Use `simp` to expand inner products and kill cross terms.
+          Complex.re ⟪A ((⟪u, v⟫_ℂ) • u), ((⟪u, v⟫_ℂ) • u)⟫_ℂ + Complex.re ⟪A w, w⟫_ℂ := by
+      -- expand using `hv_decomp`, without a simp explosion
+      let proj : H := (⟪u, v⟫_ℂ) • u
       have : ⟪A v, v⟫_ℂ =
-          ⟪A ((⟪u, v⟫_ℂ) • u), ((⟪u, v⟫_ℂ) • u)⟫_ℂ
-            + ⟪A ((⟪u, v⟫_ℂ) • u), w⟫_ℂ
-            + ⟪A w, ((⟪u, v⟫_ℂ) • u)⟫_ℂ
+          ⟪A proj, proj⟫_ℂ
+            + ⟪A proj, w⟫_ℂ
+            + ⟪A w, proj⟫_ℂ
             + ⟪A w, w⟫_ℂ := by
-        -- direct expansion
-        simp [hv_decomp, map_add, inner_add_left, inner_add_right, add_assoc, add_left_comm, add_comm]
-      -- take real parts and cancel the zero cross terms
-      -- `Complex.re` is additive.
-      -- (Use `simp` for `map_add` and the cross-term zeros.)
-      -- We'll rewrite and simp.
-      have : Complex.re ⟪A v, v⟫_ℂ =
-          Complex.re ⟪A ((⟪u, v⟫_ℂ) • u), ((⟪u, v⟫_ℂ) • u)⟫_ℂ
-            + Complex.re ⟪A w, w⟫_ℂ := by
-        -- start from the expanded equality
-        -- `simp` should turn cross terms into 0 and combine.
-        -- Use the previous `this` and apply `congrArg Complex.re`.
-        have := congrArg Complex.re this
-        -- simplify re of sums and the cross term zeros
-        -- `Complex.re` is a ring hom, so `simp` will use `map_add`.
-        simpa [hcross1, hcross2, add_assoc, add_left_comm, add_comm] using this
-      exact this
-    -- Now plug the gap bound for `w` and the eigen computation for the projection part.
-    have hAw_ge : Complex.re ⟪A w, w⟫_ℂ ≥ (lam + g) * ‖w‖ ^ 2 := hGap.gap w huw'
-    -- The projection part equals `λ * ‖proj‖^2`.
-    -- Combine:
-    -- `re⟪A v,v⟫ = re⟪A proj,proj⟫ + re⟪A w,w⟫ ≥ λ‖proj‖^2 + (λ+g)‖w‖^2
-    --   = λ(‖proj‖^2+‖w‖^2) + g‖w‖^2 = λ‖v‖^2 + g‖w‖^2 = λ + g‖w‖^2`.
-    have hproj_sq :
-        Complex.re ⟪A ((⟪u, v⟫_ℂ) • u), ((⟪u, v⟫_ℂ) • u)⟫_ℂ = lam * ‖(⟪u, v⟫_ℂ) • u‖ ^ 2 :=
-      hA_proj
-    have hnorm_v_sq : ‖v‖ ^ 2 = (‖(⟪u, v⟫_ℂ) • u‖ ^ 2 + ‖w‖ ^ 2) := by
-      -- Pythagoras: `v = proj + w` with orthogonality.
+        -- `v = proj + w`
+        -- `A v = A proj + A w`
+        -- then use `inner_add_add_self`
+        have hv' : v = proj + w := by simpa [proj] using hv_decomp
+        have hAv : A v = A proj + A w := by
+          calc
+            A v = A (proj + w) := by simpa [hv']
+            _ = A proj + A w := by simpa using (map_add A proj w)
+        -- now expand the inner product of a sum
+        calc
+          ⟪A v, v⟫_ℂ = ⟪A proj + A w, proj + w⟫_ℂ := by
+              simpa [hv', hAv]
+          _ = ⟪A proj, proj⟫_ℂ
+                + ⟪A proj, w⟫_ℂ
+                + ⟪A w, proj⟫_ℂ
+                + ⟪A w, w⟫_ℂ := by
+              -- bilinearity in each argument
+              simp [inner_add_left, inner_add_right, add_assoc, add_left_comm, add_comm]
+      -- take real parts and use the cross-term zeros (and symmetry for the other cross term)
+      have h0 : ⟪A w, (⟪u, v⟫_ℂ) • u⟫_ℂ = 0 := by
+        -- symmetry: ⟪A w, proj⟫ = ⟪w, A proj⟫, and `A proj ∈ span`, while `w ∈ spanᗮ`
+        have := LinearMap.IsSymmetric.apply_clm (T := A) hAsymm w ((⟪u, v⟫_ℂ) • u)
+        -- `this : ⟪A w, proj⟫ = ⟪w, A proj⟫`
+        -- and `⟪w, A proj⟫ = 0` by orthogonality
+        have hwAproj : ⟪w, A ((⟪u, v⟫_ℂ) • u)⟫_ℂ = 0 := by
+          have hu_mem : A ((⟪u, v⟫_ℂ) • u) ∈ (ℂ ∙ u) := by
+            refine (Submodule.mem_span_singleton).2 ?_
+            refine ⟨(⟪u, v⟫_ℂ) * (lam : ℂ), ?_⟩
+            simp [hGap.eigen, smul_smul, mul_smul, mul_assoc]
+          exact Submodule.inner_left_of_mem_orthogonal hu_mem hw_mem
+        exact by simpa [this] using hwAproj
+      have := congrArg Complex.re this
+      -- simplify using the cross-term zeros
+      simpa [hcross', h0, add_assoc, add_left_comm, add_comm] using this
+    -- Lower bound the `w` energy by the gap, and the `u`-component energy by `lam * ‖proj‖^2`.
+    have hAw_ge : Complex.re ⟪A w, w⟫_ℂ ≥ (lam + g) * ‖w‖ ^ 2 := hGap.gap w huw
+    -- `A (c•u) = (lam)•(c•u)` implies `re ⟪A (c•u), (c•u)⟫ = lam * ‖c•u‖^2`.
+    have hAu_ge :
+        Complex.re ⟪A ((⟪u, v⟫_ℂ) • u), ((⟪u, v⟫_ℂ) • u)⟫_ℂ = lam * ‖(⟪u, v⟫_ℂ) • u‖ ^ 2 := by
+      -- rewrite `A (c•u)` using eigen relation and simplify.
+      simp [hGap.eigen, inner_smul_left, inner_smul_right, inner_self_eq_norm_sq_to_K,
+        Complex.ofReal_re, mul_assoc, mul_left_comm, mul_comm]
+    -- Use Pythagoras: `‖v‖^2 = ‖proj‖^2 + ‖w‖^2`.
+    have hnorm_v_sq : ‖v‖ ^ 2 = ‖(⟪u, v⟫_ℂ) • u‖ ^ 2 + ‖w‖ ^ 2 := by
       have hw_proj0 : ⟪(⟪u, v⟫_ℂ) • u, w⟫_ℂ = 0 := by
-        -- from `huw'` and `inner_smul_left`
-        -- `⟪c•u, w⟫ = conj c * ⟪u,w⟫ = 0`.
-        simp [inner_smul_left, huw']
+        -- from `huw` and `inner_smul_left`
+        simp [inner_smul_left, huw]
       have hpyth :=
         norm_add_sq_eq_norm_sq_add_norm_sq_of_inner_eq_zero ((⟪u, v⟫_ℂ) • u) w hw_proj0
-      -- rewrite `v = proj + w` and convert `‖x‖*‖x‖` to `‖x‖^2`.
-      -- `norm_add_sq_eq_norm_sq_add_norm_sq_of_inner_eq_zero` gives `‖proj+w‖*‖proj+w‖ = ...`.
-      -- We want `‖v‖^2 = ...`, so use `pow_two` and the equality.
-      -- `‖x‖^2 = ‖x‖*‖x‖`.
-      have : ‖(⟪u, v⟫_ℂ) • u + w‖ ^ 2 = ‖(⟪u, v⟫_ℂ) • u‖ ^ 2 + ‖w‖ ^ 2 := by
-        -- from multiplicative form to `pow_two`.
-        -- `‖x‖^2 = ‖x‖*‖x‖`
-        -- So rewrite both sides.
-        -- `hpyth : ‖proj+w‖*‖proj+w‖ = ‖proj‖*‖proj‖ + ‖w‖*‖w‖`
-        -- Convert.
-        simpa [pow_two] using hpyth
-      -- now rewrite `v` using `hv_decomp`
-      simpa [hv_decomp] using this
-    -- Finally assemble.
+      -- convert multiplicative form to `pow_two` and rewrite `v`.
+      simpa [pow_two, hv_decomp] using hpyth
+    -- Assemble the inequality.
     have : Complex.re ⟪A v, v⟫_ℂ ≥ lam + g * ‖w‖ ^ 2 := by
       calc
         Complex.re ⟪A v, v⟫_ℂ
-            = Complex.re ⟪A ((⟪u, v⟫_ℂ) • u), ((⟪u, v⟫_ℂ) • u)⟫_ℂ
-                + Complex.re ⟪A w, w⟫_ℂ := hRe
+            = (lam * ‖(⟪u, v⟫_ℂ) • u‖ ^ 2) + Complex.re ⟪A w, w⟫_ℂ := by
+                -- use `hRe` and `hAu_ge`
+                simpa [hAu_ge, add_comm, add_left_comm, add_assoc] using hRe
         _ ≥ (lam * ‖(⟪u, v⟫_ℂ) • u‖ ^ 2) + ((lam + g) * ‖w‖ ^ 2) := by
               gcongr
-              · exact le_of_eq hproj_sq
-              · exact hAw_ge
+              exact hAw_ge
         _ = lam * (‖(⟪u, v⟫_ℂ) • u‖ ^ 2 + ‖w‖ ^ 2) + g * ‖w‖ ^ 2 := by ring
         _ = lam * ‖v‖ ^ 2 + g * ‖w‖ ^ 2 := by simpa [hnorm_v_sq] using rfl
         _ = lam + g * ‖w‖ ^ 2 := by simp [hnormv, pow_two]

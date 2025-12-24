@@ -13,6 +13,10 @@
 
 This is the *single place* to (1) enumerate every theorem-like claim in `Yang-Mills.tex`, (2) track proof confidence for each one, and (3) record blockers/conditionals so we can close gaps across multiple sessions without losing context.
 
+For a short start-of-session playbook and “submission readiness” checklist, see `YANG_MILLS_SUBMISSION_CHECKLIST.md`.
+
+**Current single highest-impact blocker (as of 2025-12-24):** closing the fixed-region continuum inputs (U1 tightness + OS1 + NRC uniqueness) beyond a conditional roadmap; Track‑J is the most “finite-dimensional classical” path, but still needs theorem-number-grade citations and any remaining uniformity checks.
+
 ## Millennium alignment (Clay YM: unconditional target)
 
 The Clay problem requires an **unconditional** proof of:
@@ -40,9 +44,9 @@ These are the steps that actually construct the continuum OS/Wightman theory and
 
 ### Current open bottlenecks (what blocks an unconditional Clay-level proof *in this manuscript*)
 
-- **β-uniform, scaling-compatible refresh/minorization on fixed slabs**:
-  - Targeted claims: `lem:beta-L-independent-minorization` (YM-0123), `lem:coarse-refresh` (YM-0119), `prop:sandwich` (YM-0100), `prop:coarse-doeblin` (YM-0122).
-  - Current status: we have made the geometry and “refresh ⇒ convolution” steps explicit, but the clean in-text one-link measure minorization (`lem:one-link-ball-minorization`) is **β-explicit** (decays like \(e^{-2\beta N}\)). A truly **β-uniform** mechanism is still missing; see ledger #12.
+- **Interface smoothing / minorization on fixed slabs (gap mechanism)**:
+  - **Active closure (conditional)**: scaling-window UCIS\(_{\rm SW}\) (`thm:ucis-sw` under `eq:ucis-sw-window`) is wired into the main “interface → odd → slab gap” chain (see ledger #21–#23).
+  - **Unconditional β-uniform route**: a truly β-uniform, schedule-free one-step minorization remains blocked (legacy coarse-refresh/Doeblin route: ledger #12–#13; full UCIS closure target blocked at `lem:ucis-C-cell-ball`, ledger #20).
 - **Existence of the 4D continuum scaling limit at weak coupling**:
   - Any claim asserting a fully constructed global continuum measure/Schwinger functions on \(\mathbb R^4\) (and not just on fixed \(a\) / fixed slabs) is a Clay-level bottleneck unless proved from first principles (typically via a nonperturbative RG/constructive-QFT program).
 
@@ -55,7 +59,7 @@ Legend for the “Type” column:
 
 | Claim (label; ID) | Role in the Clay target | What it would actually require | Type | Notes (what to look for in the TeX) |
 |---|---|---|:--:|---|
-| `thm:uei-fixed-region` (YM-0178) | Tightness / moment control on fixed regions | Nonperturbative control of the weak-coupling regime along \(\beta(a)\to\infty\): uniform exponential (or high-moment) bounds for local observables | **RG** | Any argument claiming “tree gauge + compactness ⇒ UEI” must supply a uniform-in-\(a\), uniform-in-\(\beta(a)\) inequality (LSI/Herbst/cluster) that is not currently standard in 4D YM |
+| `thm:uei-fixed-region` (YM-0178) | Tightness / moment control on fixed regions | Nonperturbative control of the weak-coupling regime along \(\beta(a)\to\infty\): uniform exponential (or high-moment) bounds for local observables | **RG** | Now explicitly split into two closure routes (raw small-field vs Track‑J smoothing/universality). Track‑J is designed to reduce the hard “dimension \(m(R,a)\asymp a^{-4}\)” obstruction to a named single-site compact-group input (positive-time heat-kernel LSI) plus a smoothing/limit-commutation step. |
 | `lem:os0-explicit-constants` (YM-0258) | OS0 (temperedness) in the limit | Usually follows from UEI/tightness + uniform local polynomial bounds | **STD** | “Standard” conditional on having UEI-type estimates; otherwise as hard as UEI |
 | `prop:os0os2-closure` (YM-0181) | Pass OS0/OS2 from lattice to limits | Weak convergence + uniform integrability; reflection positivity preserved under limits | **STD** | Check: the topology used for convergence, and that OS2 positivity is stable under that convergence mode |
 | `lem:os2-limit` (YM-0259) | OS2 preserved under limits (global) | Same as above; mostly bookkeeping once the limit measure exists | **STD** | Should reduce to “limits of PSD forms are PSD” on a dense test algebra |
@@ -86,8 +90,8 @@ These checklists are meant to be *worked*: each checkbox is a concrete subclaim 
 - [x] **Uniform control of \(\mathbb E S_R\) (RG/LEAP)**: made explicit as a named RG-grade assumption in `Yang-Mills.tex` (`assump:uei-mean`, also labeled `lem:U1-C-mean`), so the centering-removal step is no longer a hidden divergence. This mean bound is **optional for tightness** if the Track-J smoothing/universality closure is used; it is only needed for the stronger uncentered action-moment bound \(\mathbb E e^{\eta S_R}\).
 - [ ] **U1-B (small-field concentration; core labeled target)**: `lem:U1-B-smallfield` (intended to imply U1-C and U1-D, and to feed U1-E via standard compact-manifold arguments once the measure concentrates near $\mathbf 1$).
 - [ ] **Track J (creative bypass; labeled targets)**:
-  - [ ] **U1-J1 (heat-smoothing ⇒ dimension-free LSI/Herbst)**: `lem:U1-J1-smoothed-lsi`
-  - [ ] **U1-J2 (smoothing-limit commutation / universality)**: `lem:U1-J2-universality`
+  - [ ] **U1-J1 (heat-smoothing ⇒ dimension-free LSI/Herbst)**: `lem:U1-J1-smoothed-lsi` (now reduced to a named single-site input `lem:heatkernel-lsi-compactG` + tensorization/entropy chain rule; remaining work is to make the citation fully theorem-number-grade and check any hidden uniformities)
+  - [x] **U1-J2 (smoothing-limit commutation / universality)**: `lem:U1-J2-universality` (proved in TeX for bounded continuous cylinder observables via \( \mathbb E_{\mu^{(t)}}[F]=\mathbb E_{\mu}[P_tF]\) and \(\|P_tF-F\|_\infty\to 0\))
 - [ ] **Boundary-condition robustness (STD)**: show the constants do not depend on the exterior configuration outside \(R\).
 
 **Audit notes (2025-12-21; decision point).**
@@ -161,11 +165,11 @@ This is the minimal “spine” to reach `thm:main-af-free`. We’ll check a box
   - [ ] `thm:gap` / `thm:thermo` (infinite-volume step)
 - **Continuum existence + OS axioms (AF-free path)**:
   - [ ] `thm:uei-fixed-region` (UEI/tightness on fixed regions)
-  - [ ] `prop:os0os2-closure` (OS0/OS2 pass to limits)
+  - [x] `prop:os0os2-closure` (OS0/OS2 pass to limits)
   - [ ] `thm:os1-unconditional` (OS1 on fixed regions)
 - **AF-free NRC + gap persistence**:
   - [ ] `thm:U2-nrc-unique` (operator-norm NRC + uniqueness)
-  - [ ] `thm:gap-persist-cont` (gap persistence to continuum)
+  - [x] `thm:gap-persist-cont` (gap persistence to continuum)
 - **OS → Wightman export**:
   - [ ] `thm:os-to-wightman` (and global variants)
 - **Main theorem**:
@@ -875,7 +879,7 @@ Each row starts **S0/C0** by default; we will update as we audit proofs.
 | YM-0092 | corollary | `cor:scheme-independence` | Scheme independence up to unitary equivalence | Core Continuum Chain (AF--free NRC Main Path) / Interface kernel: rigorous definition and Doeblin proof (expanded) / Scheme Independence (Embeddings, Anisotropy, van Hove) | 2067-2069 | S0 | C0 |  |
 | YM-0093 | theorem | `thm:gap-to-clustering` | Spectral gap $\Rightarrow$ exponential clustering | Core Continuum Chain (AF--free NRC Main Path) / Continuum chain | 2076-2081 | S0 | C0 |  |
 | YM-0094 | theorem | `thm:clustering-to-gap` | Exponential clustering $\Rightarrow$ spectral gap | Core Continuum Chain (AF--free NRC Main Path) / Continuum chain | 2086-2092 | S0 | C0 |  |
-| YM-0095 | theorem | `thm:gap-persist-cont` | Spectral gap persistence (AF--free, non – circular) | Core Continuum Chain (AF--free NRC Main Path) / Continuum chain | 2097-2111 | S0 | C0 |  |
+| YM-0095 | theorem | `thm:gap-persist-cont` | Spectral gap persistence (AF--free, non – circular) | Core Continuum Chain (AF--free NRC Main Path) / Continuum chain | 2097-2111 | S3 | C4 | full proof via Riesz projections under operator-norm convergence of transfers (rank stability + contraction on $\Omega^\perp$) |
 | YM-0096 | corollary | `cor:gap-persist-generator` | Generator formulation | Core Continuum Chain (AF--free NRC Main Path) / Continuum chain | 2138-2143 | S0 | C0 |  |
 | YM-0097 | lemma | `lem:interface-smoothing` | Interface smoothing yields strictly positive continuous density | Core Continuum Chain (AF--free NRC Main Path) / Interface Smoothing and Uniform Sandwich / Notation for Interface Smoothing | 2152-2154 | S2 | C2 | proof sketch added in TeX; uniform lower bounds remain nontrivial (treat as external unless proved) |
 | YM-0098 | lemma | `lem:ball-to-hk` | Small-ball convolution lower bounds the heat kernel | Core Continuum Chain (AF--free NRC Main Path) / Interface Smoothing and Uniform Sandwich / Notation for Interface Smoothing | 2156-2162 | S0 | C0 |  |
@@ -951,7 +955,7 @@ Each row starts **S0/C0** by default; we will update as we audit proofs.
 | YM-0148 | lemma | `lem:rp-stability-projective` | Reflection positivity stability under directed cylinder limits | Global continuum construction on $\mathbb R^4$ and OS axioms / Global OS Axioms on $\mathbb R^4$ | 2991-2997 | S0 | C0 |  |
 | YM-0149 | lemma | `lem:separable` | Separable global OS/GNS Hilbert space | Global continuum construction on $\mathbb R^4$ and OS axioms / Global OS Axioms on $\mathbb R^4$ | 3002-3004 | S0 | C0 |  |
 | YM-0150 | proposition | `prop:haag-kastler` | Haag--Kastler net on $\mathbb R^4$ | Global continuum construction on $\mathbb R^4$ and OS axioms / Global OS Axioms on $\mathbb R^4$ | 3009-3016 | S0 | C0 |  |
-| YM-0151 | theorem | `thm:global-OS` | Global OS0--OS5 (unconditional, AF--free) | Global continuum construction on $\mathbb R^4$ and OS axioms / Global OS Axioms on $\mathbb R^4$ | 3021-3031 | S0 | C0 |  |
+| YM-0151 | theorem | `thm:global-OS` | Global OS0--OS5 (conditional on fixed-region U1/OS1 inputs; AF--free NRC) | Global continuum construction on $\mathbb R^4$ and OS axioms / Global OS Axioms on $\mathbb R^4$ | 3021-3031 | S0 | C0 |  |
 | YM-0152 | lemma | `lem:unique-vacuum` | Unique vacuum from global clustering and reflection positivity | Global continuum construction on $\mathbb R^4$ and OS axioms / Global OS Axioms on $\mathbb R^4$ | 3032-3038 | S0 | C0 |  |
 | YM-0153 | lemma | `lem:group-avg` | Compact-group averaging preserves OS axioms and gap | Global continuum construction on $\mathbb R^4$ and OS axioms / Global OS Axioms on $\mathbb R^4$ | 3042-3044 | S0 | C0 |  |
 | YM-0154 | theorem | `thm:os-to-wightman-global` | OS reconstruction and Poincar\'e invariance (conditional on OS0--OS5; any compact simple $G$) | Global continuum construction on $\mathbb R^4$ and OS axioms / OS $\to$ Wightman and Global Mass Gap | 3050-3052 | S0 | C0 |  |
@@ -993,16 +997,16 @@ Each row starts **S0/C0** by default; we will update as we audit proofs.
 
 | ID | Type | Label | Title | Where (sec/subsec) | TeX lines | Status | Conf | Notes |
 |---:|:-----|:------|:------|:------------------|:----------|:------:|:----:|:------|
-| YM-0178 | theorem | `thm:uei-fixed-region` | Uniform Exponential Integrability on fixed regions | Appendix: Tree--Gauge UEI (Uniform Exponential Integrability) | 3418-3423 | S0 | C0 |  |
-| YM-0179 | corollary | `cor:uei-af-uniform` | Uniform UEI along AF scaling | Appendix: Tree--Gauge UEI (Uniform Exponential Integrability) | 3424-3426 | S0 | C0 |  |
+| YM-0178 | theorem | `thm:uei-fixed-region` | U1 on fixed regions: tightness/UEI (two closure routes; target) | Appendix: Tree--Gauge UEI (Uniform Exponential Integrability) | 3418-3423 | S0 | C0 |  |
+| YM-0179 | corollary | `cor:uei-af-uniform` | Uniform UEI/tightness along AF scaling (conditional) | Appendix: Tree--Gauge UEI (Uniform Exponential Integrability) | 3424-3426 | S0 | C0 |  |
 | YM-0180 | lemma | `lem:hessian-lower-chords` | Explicit Hessian lower bound on chords | Appendix: Tree--Gauge UEI (Uniform Exponential Integrability) | 3447-3457 | S0 | C0 |  |
-| YM-0181 | proposition | `prop:os0os2-closure` | OS0/OS2 closure under limits | Appendix: Tree--Gauge UEI (Uniform Exponential Integrability) | 3495-3501 | S0 | C0 |  |
+| YM-0181 | proposition | `prop:os0os2-closure` | OS0/OS2 closure under limits | Appendix: Tree--Gauge UEI (Uniform Exponential Integrability) | 3495-3501 | S3 | C3 | proof tightened; OS2 stability under cylinder weak convergence made explicit; OS0 transfer explicitly conditional on uniform OS0 polynomial bounds |
 | YM-0182 | corollary | `cor:os2-pass` | OS2 passes to the continuum under AF/Mosco | Appendix: Tree--Gauge UEI (Uniform Exponential Integrability) | 3507-3509 | S0 | C0 |  |
 | YM-0183 | proposition | `prop:os35-limit` | OS3/OS5 in the continuum limit | Appendix: Tree--Gauge UEI (Uniform Exponential Integrability) | 3511-3517 | S0 | C0 |  |
 | YM-0184 | theorem | `thm:emergent-sym` | Symmetry emerges from uniform $O(a^2)$ commutator control | Appendix: Tree--Gauge UEI (Uniform Exponential Integrability) / Calibrator -- free isotropy via approximate symmetry and NRC | 3532-3547 | S0 | C0 |  |
 | YM-0185 | lemma | `lem:local-commutator-Oa2` | Local $O(a^2)$ E(4) -- commutator bound on fixed regions | Appendix: Tree--Gauge UEI (Uniform Exponential Integrability) / Calibrator -- free isotropy via approximate symmetry and NRC | 3564-3570 | S0 | C0 |  |
 | YM-0186 | proposition | `prop:resolvent-from-commutator` | Resolvent conjugation from semigroup commutators | Appendix: Tree--Gauge UEI (Uniform Exponential Integrability) / Calibrator -- free isotropy via approximate symmetry and NRC | 3585-3591 | S0 | C0 |  |
-| YM-0187 | theorem | `thm:os1-unconditional` | OS1 on fixed regions, unconditional | Appendix: Tree--Gauge UEI (Uniform Exponential Integrability) / Calibrator -- free isotropy via approximate symmetry and NRC | 3596-3606 | S0 | C0 |  |
+| YM-0187 | theorem | `thm:os1-unconditional` | OS1 on fixed regions (conditional; calibrator route) | Appendix: Tree--Gauge UEI (Uniform Exponential Integrability) / Calibrator -- free isotropy via approximate symmetry and NRC | 3596-3606 | S0 | C0 |  |
 | YM-0188 | proposition | `prop:hk-calibrators-constructed` | Hypercubic – equivariant isotropic calibrators; construction | Appendix: Tree--Gauge UEI (Uniform Exponential Integrability) / Calibrator -- free isotropy via approximate symmetry and NRC | 3612-3618 | S0 | C0 |  |
 | YM-0189 | theorem | `thm:os1-calibrator-route` | OS1 via calibrated equicontinuity (constructed) | Appendix: Tree--Gauge UEI (Uniform Exponential Integrability) / Calibrator -- free isotropy via approximate symmetry and NRC | 3623-3629 | S0 | C0 |  |
 
@@ -1043,7 +1047,7 @@ Each row starts **S0/C0** by default; we will update as we audit proofs.
 
 | ID | Type | Label | Title | Where (sec/subsec) | TeX lines | Status | Conf | Notes |
 |---:|:-----|:------|:------|:------------------|:----------|:------:|:----:|:------|
-| YM-0208 | theorem | `thm:main-af-free` | Continuum YM on $\mathbb R^4$ with OS0--OS5 and positive mass gap (AF--free; unconditional) | Main Theorem (Continuum YM with Mass Gap; AF--free NRC with UEI/OS1 Inputs (RG-grade)) / Proof Strategy | 4019-4025 | S0 | C0 |  |
+| YM-0208 | theorem | `thm:main-af-free` | Continuum YM on $\mathbb R^4$ with OS0--OS5 and positive mass gap (conditional on U1/OS1/NRC inputs) | Main Theorem (Continuum YM with Mass Gap; AF--free NRC with UEI/OS1 Inputs (RG-grade)) / Proof Strategy | 4019-4025 | S0 | C0 |  |
 | YM-0209 | corollary | `cor:nonGaussian-main` | Non-Gaussianity of the continuum local fields | Main Theorem (Continuum YM with Mass Gap; AF--free NRC with UEI/OS1 Inputs (RG-grade)) / Proof Strategy | 4039-4045 | S0 | C0 |  |
 | YM-0210 | theorem | `thm:global-os-clay` | Clay–critical Global OS pack on $\mathbb R^4$ (OS0--OS5, explicit constants) | Main Theorem (Continuum YM with Mass Gap; AF--free NRC with UEI/OS1 Inputs (RG-grade)) / Proof Strategy | 4058-4076 | S0 | C0 |  |
 | YM-0211 | theorem | `thm:global-nrc-clay` | Uniform global NRC with explicit constants; spectral projectors | Main Theorem (Continuum YM with Mass Gap; AF--free NRC with UEI/OS1 Inputs (RG-grade)) / Proof Strategy | 4078-4090 | S0 | C0 |  |
@@ -1129,9 +1133,9 @@ Each row starts **S0/C0** by default; we will update as we audit proofs.
 
 | ID | Type | Label | Title | Where (sec/subsec) | TeX lines | Status | Conf | Notes |
 |---:|:-----|:------|:------|:------------------|:----------|:------:|:----:|:------|
-| YM-0259 | lemma | `lem:os2-limit` | OS2 preserved under limits | Appendix: OS2 and OS3/OS5 preserved in the limit (C1b) | 5202-5208 | S0 | C0 |  |
-| YM-0260 | lemma | `lem:os3-limit` | OS3: clustering in the limit | Appendix: OS2 and OS3/OS5 preserved in the limit (C1b) | 5239-5244 | S0 | C0 |  |
-| YM-0261 | lemma | `lem:os5-limit` | OS5: unique vacuum in the limit | Appendix: OS2 and OS3/OS5 preserved in the limit (C1b) | 5257-5262 | S0 | C0 |  |
+| YM-0259 | lemma | `lem:os2-limit` | OS2 preserved under limits | Appendix: OS2 and OS3/OS5 preserved in the limit (C1b) | 5202-5208 | S3 | C4 | proof reduced to: OS2 positivity on each lattice + cylinder weak convergence ⇒ OS2 in the limit (no undefined approximants) |
+| YM-0260 | lemma | `lem:os3-limit` | OS3: clustering in the limit | Appendix: OS2 and OS3/OS5 preserved in the limit (C1b) | 5239-5244 | S3 | C3 | proof tightened: pass covariance bound to the limit at fixed translation; no limit-interchange handwave |
+| YM-0261 | lemma | `lem:os5-limit` | OS5: unique vacuum in the limit | Appendix: OS2 and OS3/OS5 preserved in the limit (C1b) | 5257-5262 | S2 | C2 | refactored to cite gap persistence (`thm:gap-persist-cont`) + projector-rank stability under NRC/norm-resolvent convergence; could be expanded with a Kato theorem-number citation for projector stability |
 
 ### Appendix: Embeddings, norm--resolvent convergence, and continuum gap (C1c)
 
@@ -1174,7 +1178,7 @@ Each row starts **S0/C0** by default; we will update as we audit proofs.
 | YM-0276 | proposition | `prop:U11-os4` | OS4: permutation symmetry | Appendix U: AF--free inputs and continuum limit (hypotheses U1--U4) / U11. OS4 (permutation symmetry) explicit | 5589-5591 | S0 | C0 |  |
 | YM-0277 | theorem | `thm:U12-exp-cluster` | Exponential clustering | Appendix U: AF--free inputs and continuum limit (hypotheses U1--U4) / U12. Exponential clustering in the continuum | 5596-5602 | S0 | C0 |  |
 | YM-0278 | definition | `def:U0-schedule` | Scaling schedule and volumes | Appendix U: AF--free inputs and continuum limit (hypotheses U1--U4) / U0. Concrete scaling schedule and van Hove volumes | 5608-5614 | S0 | C0 | definition (no proof) |
-| YM-0279 | remark | `unlabeled@L5615` | The unconditional inputs below (U1–U4) are uniform in $a\in(0,a_0]$ and do not require $\beta(a)\to\infty$. The schedule | Appendix U: AF--free inputs and continuum limit (hypotheses U1--U4) / U0. Concrete scaling schedule and van Hove volumes | 5615-5617 | S0 | C0 | remark (scan for hidden claims) |
+| YM-0279 | remark | `unlabeled@L5615` | Scope note: U2 geometric inputs aim to be uniform in $(a,L)$, while U1 is RG-grade and only claimed along weak-coupling schedules | Appendix U: AF--free inputs and continuum limit (hypotheses U1--U4) / U0. Concrete scaling schedule and van Hove volumes | 5615-5617 | S0 | C0 | remark (scan for hidden claims) |
 | YM-0280 | theorem | `thm:U1-lsi-uei` | Local LSI/UEI on fixed regions | Appendix U: AF--free inputs and continuum limit (hypotheses U1--U4) / U1. Local LSI/UEI on fixed regions (sources: Holley--Stroock, Bakry--\'Emery, Wang) | 5620-5638 | S0 | C0 |  |
 | YM-0281 | remark | `rem:uei-explicit-downstream` | Explicit constants for downstream bounds | Appendix U: AF--free inputs and continuum limit (hypotheses U1--U4) / U1. Local LSI/UEI on fixed regions (sources: Holley--Stroock, Bakry--\'Emery, Wang) | 5639-5650 | S0 | C0 | remark (scan for hidden claims) |
 | YM-0282 | lemma | `lem:su2-heat-lsi` | LSI for single--site heat kernel on $\mathrm{SU}(2)$ | Appendix U: AF--free inputs and continuum limit (hypotheses U1--U4) / Positive-time heat-smoothing: uniform LSI and RG stability (SU(2)) | 5663-5669 | S0 | C0 |  |
@@ -1188,7 +1192,7 @@ Each row starts **S0/C0** by default; we will update as we audit proofs.
 | YM-0290 | corollary | `cor:U1-uei` | Explicit UEI constants | Appendix U: AF--free inputs and continuum limit (hypotheses U1--U4) / Finite-region classical control (plaquette$\to F^2$, $O(a^2)$) | 5762-5768 | S0 | C0 |  |
 | YM-0291 | lemma | `lem:U2-embeddings` | OS/GNS embeddings are genuine isometries | Appendix U: AF--free inputs and continuum limit (hypotheses U1--U4) / U2a. Embeddings and comparison identity | 5770-5772 | S0 | C0 |  |
 | YM-0292 | theorem | `NRC:form-thm` | Norm--resolvent convergence from form approximation | Appendix U: AF--free inputs and continuum limit (hypotheses U1--U4) / NRC via form approximation (abstract, quantified; Kato resolvent calculus) | 5786-5792 | S0 | C0 |  |
-| YM-0293 | lemma | `lem:U2-comparison` | Explicit resolvent comparison identity | Appendix U: AF--free inputs and continuum limit (hypotheses U1--U4) / NRC via form approximation (abstract, quantified; Kato resolvent calculus) | 5806-5814 | S0 | C0 |  |
+| YM-0293 | lemma | `lem:U2-comparison` | Explicit resolvent comparison identity | Appendix U: AF--free inputs and continuum limit (hypotheses U1--U4) / NRC via form approximation (abstract, quantified; Kato resolvent calculus) | 5806-5814 | S3 | C4 | proved as a direct algebraic identity: decompose $R(z)=R(z)(I-P)+R(z)P$ and use $(H-z)I-I(H_a-z)=D$ on the common core, then multiply by resolvents |
 | YM-0294 | theorem | `thm:U2-nrc-unique` | AF–free uniqueness of the continuum generator | Appendix U: AF--free inputs and continuum limit (hypotheses U1--U4) / NRC via form approximation (abstract, quantified; Kato resolvent calculus) | 5815-5827 | S0 | C0 |  |
 | YM-0295 | proposition | `prop:one-point-resolvent` | One–point resolvent estimate at a nonreal $z_0$ | Appendix U: AF--free inputs and continuum limit (hypotheses U1--U4) / NRC via form approximation (abstract, quantified; Kato resolvent calculus) | 5832-5844 | S0 | C0 |  |
 | YM-0296 | lemma | `lem:U2-defect-core` | Defect identity and common core | Appendix U: AF--free inputs and continuum limit (hypotheses U1--U4) / NRC via form approximation (abstract, quantified; Kato resolvent calculus) | 5853-5863 | S0 | C0 |  |

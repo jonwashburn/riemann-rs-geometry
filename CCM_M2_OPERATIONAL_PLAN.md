@@ -167,3 +167,4 @@ Compared to PSC/KXI, the CCM route has a decisive advantage:
 - This aligns with the existing Lean scaffolding (`ConnesSection7` + Play A bridge), and gives a crisp kill‑switch via \(\delta/g\).
 
 
+

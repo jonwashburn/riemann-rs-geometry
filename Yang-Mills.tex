@@ -4228,16 +4228,31 @@ This $C_R$ depends only on $(R,N,a_0,\beta_{\min})$. The bound holds uniformly i
 \end{proof}
 \medskip
 \begin{proposition}[OS0/OS2 closure under limits]\label{prop:os0os2-closure}
-Let $\{\mu_{a,L}\}$ be Wilson lattice measures with fixed link reflection and spacing $a\in(0,a_0]$, volumes $L a$ large, and assume Theorem~\ref{thm:uei-fixed-region} holds uniformly on every bounded physical region $R\subset\mathbb R^4$. Along any van Hove scaling sequence $(a_k,L_k)$ with $a_k\downarrow 0$ and $L_k a_k\to\infty$, there exists a subsequence (not relabeled) such that $\mu_{a_k,L_k}$ converges weakly on cylinder sets to a continuum probability measure $\mu$. The limit Schwinger functions satisfy:
+Let $\{\mu_{a,L}\}$ be Wilson lattice measures with a fixed Osterwalder--Seiler link reflection and spacing $a\in(0,a_0]$, with volumes $L a$ large. Assume:
 \begin{itemize}
-  \item OS0 (temperedness on loop/local fields) on each fixed region $R$;
-  \item OS2 (reflection positivity) for the fixed link reflection.
+  \item[(i)] \textbf{(Fixed-region U1 / tightness)} The fixed-region U1 conclusions of Theorem~\ref{thm:uei-fixed-region} hold uniformly on every bounded physical region $R\Subset\mathbb R^4$ (so cylinder laws on $R$ are tight along van Hove scaling sequences).
+  \item[(ii)] \textbf{(Uniform OS0 bounds)} Along the same scaling sequence, the lattice Schwinger functions satisfy OS0-type polynomial bounds with constants uniform in $(a,L)$ (e.g. via Proposition~\ref{prop:OS0-poly} once uniform clustering is granted).
+\end{itemize}
+\noindent
+Then along any van Hove scaling sequence $(a_k,L_k)$ with $a_k\downarrow 0$ and $L_k a_k\to\infty$, there exists a subsequence (not relabeled) such that $\mu_{a_k,L_k}$ converges weakly on cylinder sets to a continuum probability measure $\mu$. The limit Schwinger functions satisfy:
+\begin{itemize}
+  \item OS2 (reflection positivity) for the fixed link reflection;
+  \item OS0 (temperedness / polynomial bounds) on each fixed region $R$.
 \end{itemize}
 \end{proposition}
+\begin{proof}
+\emph{Subsequence extraction on cylinders.} Fix a bounded physical region $R\Subset\mathbb R^4$. By (i), the induced family of cylinder laws on $R$ is tight along $(a_k,L_k)$. Since cylinder observables supported in $R$ are determined by their finite-link coordinate projections, Prokhorov compactness yields a subsequence (depending on $R$) along which expectations of bounded continuous cylinder functions converge. A diagonal argument over a countable exhaustion of regions and a countable separating class of cylinder test functions produces a single subsequence (not relabeled) and a limiting cylinder law $\mu$.
 
-\noindent\emph{Cylinder-set approximation for OS2 (explicit).} Fix a time-zero cylinder polynomial $F$ supported in a bounded region $R$. For each $a$, choose a local polynomial $F_a$ depending only on finitely many links in $R$ such that $\|F_a-F\|_{L^2(\mu_{a,L})}\to 0$ and $\|F\|_{L^2(\mu_{a_k,L_k})}$ remains uniformly bounded by UEI. Reflection positivity holds on each lattice: $\langle F_a,\Theta F_a\rangle_{\mu_{a,L}}\ge 0$. Along a van Hove subsequence with weak convergence on cylinders, $\langle F_a,\Theta F_a\rangle_{\mu_{a_k,L_k}}\to \langle F,\Theta F\rangle_{\mu}$ by dominated convergence and cylinder weak convergence. Hence $\langle F,\Theta F\rangle_{\mu}\ge 0$, proving OS2 for cylinder sets. Density of cylinder polynomials in the local field algebra (with the UEI bounds) extends OS2 to the stated class.
+\medskip
+\emph{OS2 (reflection positivity) passes to the limit.} Let $P$ be a bounded cylinder polynomial supported in the positive time half-space. Then $\Theta P\,\overline{P}$ is also a bounded cylinder function, so by weak convergence on cylinders,
+\[
+  \langle \Theta P\,\overline{P}\rangle_{\mu}\ =\ \lim_{k\to\infty}\ \langle \Theta P\,\overline{P}\rangle_{\mu_{a_k,L_k}}.
+\]
+Each lattice measure satisfies OS2 (Theorem~\ref{thm:os}), hence the right-hand side is a limit of nonnegative numbers; therefore $\langle \Theta P\,\overline{P}\rangle_{\mu}\ge 0$.
 
-\noindent\emph{OS0 tightness transfer (one line).} The uniform exponential integrability on fixed regions (Theorem~\ref{thm:uei-fixed-region}) yields tightness of cylinder laws; Prokhorov compactness and the Daniell--Kolmogorov extension then pass OS0 to the limit on each fixed region $R$.
+\medskip
+\emph{OS0 (temperedness / polynomial bounds) passes to the limit.} By (ii), for each fixed $n$ there are OS0 polynomial bounds for the lattice $n$-point functions with constants uniform in $(a,L)$ (and hence along the chosen subsequence). Passing to the limit on cylinder configurations preserves these bounds, so the limiting Schwinger functions inherit the same OS0 control on each fixed region $R$ and therefore define tempered distributions (OS0).
+\end{proof}
 
 \begin{corollary}[OS2 passes to the continuum under AF/Mosco]\label{cor:os2-pass}
 Under Assumption~\ref{assump:AF-Mosco} (Appendix~\ref{app:af-mosco}) and Corollary~\ref{cor:uei-af-uniform}, reflection positivity for time-zero cylinders is preserved in the limit; hence OS2 holds for the continuum Schwinger functions.
@@ -4262,15 +4277,7 @@ By semigroup submultiplicativity, for $t\ge 0$ write $t=n\tau_{\rm phys}+s$ with
 \]
 Since $\tau_{\rm phys}\le T_{\rm phys}+a_0$, the rate $m:=(-\log q_{\rm phys})/(T_{\rm phys}+a_0)>0$ is uniform in $a$ and $L$ along the scaling sequence. This implies exponential clustering of connected correlations for time-separated local observables with the same rate $m$, uniformly in $(a,L)$ (standard transfer-to-clustering argument on OS/GNS spaces). Gap persistence under Theorem~\ref{thm:gap-persist-cont} transports the gap to the limit generator $H$, yielding OS3 and OS5.
 \end{proof}
-\begin{proof}
-\emph{Tightness.} On each fixed region $R$, Theorem~\ref{thm:uei-fixed-region} provides $\eta_R>0$ and $C_R<\infty$ with uniform exponential moment bounds. By Prokhorov's theorem, the family $\{\mu_{a,L}\}$ is tight on cylinders generated by loops/local fields supported in $R$, hence along a subsequence $\mu_{a_k,L_k}$ converges weakly to a probability measure $\mu_R$ on that cylinder $\sigma$-algebra. A diagonal argument over an exhausting sequence of regions identifies a unique limiting measure $\mu$ on cylinder sets.
-\emph{OS2.} For a polynomial $P$ in loop/local fields supported in $t\ge 0$, reflection positivity on the lattice gives $\langle \Theta P_k\,\overline{P_k}\rangle_{\mu_{a_k,L_k}}\ge 0$. By weak convergence and boundedness of $\Theta P_k\,\overline{P_k}$ on cylinders, $\langle \Theta P\,\overline{P}\rangle_{\mu}=\lim_k \langle \Theta P_k\,\overline{P_k}\rangle_{\mu_{a_k,L_k}}\ge 0$.
-
-\emph{OS0.} UEI yields uniform Laplace bounds for local curvature functionals, which by Kolmogorov--Chentsov imply Hölder control and, together with locality and standard tree-graph bounds (cf. Proposition~\ref{prop:OS0-poly}), polynomial moment bounds for $n$-point functions with exponents independent of $(a,L)$. Passing to the limit preserves these bounds, hence the Schwinger functions of $\mu$ are tempered distributions.
-\end{proof}
-
-\medskip
-
+\subsection*{Calibrator\,--\,free isotropy via approximate symmetry and NRC}
 \subsection*{Calibrator\,--\,free isotropy via approximate symmetry and NRC}
 
 \begin{theorem}[Symmetry emerges from uniform $O(a^2)$ commutator control]\label{thm:emergent-sym}
@@ -4764,8 +4771,16 @@ For the continuum step, by Thms.~\ref{thm:U1-lsi-uei}, \ref{thm:os1-unconditiona
 
 \noindent\emph{Notes (blockers vs main chain).} The uniform block--Doeblin minorization against $\mu_\partial$ is replaced in the main chain by the heat--kernel sandwich with explicit $(\theta_*,t_0)$, which is slab--uniform and implies the $L^2$ contraction directly. Uniform $L^\infty$ comparability of boundary laws is not required for the $L^2$ comparison since reweighting via $U_{a,L}$ furnishes a fixed reference space $L^2(\nu_\Lambda)$ where contraction is measured.
 
-\begin{theorem}[Continuum YM on $\mathbb R^4$ with OS0--OS5 and positive mass gap (AF--free; unconditional)]\label{thm:main-af-free}
-For a compact simple gauge group $G$ (default $\mathrm{SU}(N)$, $N\ge 2$), there exists a nontrivial Euclidean quantum Yang--Mills theory on $\mathbb R^4$ whose Schwinger functions satisfy OS0--OS5, with local gauge-invariant fields. Let $H\ge 0$ be the corresponding Euclidean generator. There exists a constant $\gamma_*>0$, depending only on $(R_*,a_0,G)$ and on the heat--kernel spectral gap $\lambda_1(G)$, such that
+\begin{theorem}[Continuum YM on $\mathbb R^4$ with OS0--OS5 and positive mass gap (conditional on U1/OS1/NRC inputs)]\label{thm:main-af-free}
+Fix a compact simple gauge group $G$ (default $\mathrm{SU}(N)$, $N\ge 2$) and a weak--coupling scaling window $a\downarrow 0$ with a schedule $\beta=\beta(a)$ and van Hove volumes.
+Assume the following fixed-region/continuum inputs (RG-grade in $d=4$):
+\begin{itemize}
+  \item \textbf{(U1)} fixed-region tightness/UEI along the scaling window (Theorem~\ref{thm:uei-fixed-region});
+  \item \textbf{(OS1)} Euclidean invariance on fixed regions in the limit (Theorem~\ref{thm:os1-unconditional});
+  \item \textbf{(U2/NRC)} AF--free NRC uniqueness/identification of the continuum generator (Theorem~\ref{thm:U2-nrc-unique}, with the quantitative defect/projector inputs it invokes);
+  \item \textbf{(Interface smoothing)} scaling-window interface smoothing on fixed slabs via UCIS$_{\rm SW}$ (Theorem~\ref{thm:ucis-sw} under \eqref{eq:ucis-sw-window}).
+\end{itemize}
+Then there exists a nontrivial Euclidean quantum Yang--Mills theory on $\mathbb R^4$ whose Schwinger functions satisfy OS0--OS5, with local gauge-invariant fields. Let $H\ge 0$ be the corresponding Euclidean generator. There exists a constant $\gamma_*>0$, depending only on $(R_*,a_0,G)$ and on the heat--kernel spectral gap $\lambda_1(G)$, such that
 \[
   \operatorname{spec}(H)\subset\{0\}\cup[\gamma_*,\infty)\,.
 \]
@@ -5180,8 +5195,7 @@ Finally, by Lemma~\ref{lem:local-fields-tempered} and Corollary~\ref{cor:unique-
 We summarize the constant schema and dependencies used throughout. Fix a physical slab radius $R_*>0$, a maximal tick $a_0>0$, and the gauge group $G$.
 \begin{itemize}
   \item \textbf{Group data.} $\lambda_1(G)$: spectral gap of the Laplace--Beltrami operator on the compact simple gauge group $G$.
-  \item \textbf{Interface/Doeblin constants.} From Proposition~\ref{prop:doeblin-full} and Lemma~\ref{lem:beta-L-independent-minorization}:
-  $t_0=t_0(G)>0$, $\theta_*:=\kappa_0(R_*,a_0,G)\in(0,1]$, independent of $(\beta,L)$. The lower bound arises from: (i) a boundary-uniform refresh mass $\alpha_{\rm ref}(R_*,a_0,G)>0$ on the slab (Lemma~\ref{lem:refresh-prob}); (ii) convolution lower bounds by heat kernel at time $t_0(G)$ (Lemma~\ref{lem:ball-conv-lower}); and (iii) a geometry factor $c_{\rm geo}(R_*,a_0)\in(0,1]$ from cell factorization. No step uses the value of $\beta$ other than $\beta\ge 0$.
+  \item \textbf{Interface smoothing constants (active route).} Along weak--coupling scaling schedules satisfying the scaling window \eqref{eq:ucis-sw-window}, UCIS$_{\rm SW}$ (Theorem~\ref{thm:ucis-sw}) supplies a fixed--physical--time heat--kernel minorization/contraction on the coarse interface with constants depending only on $(R_*,a_0,G)$ and the chosen physical time window (and \emph{not} on $(\beta,L)$ within the window). A fully $\beta$--uniform, schedule--free one--step Doeblin minorization remains a separate (currently blocked) target; see the discussion around `thm:ucis` / `lem:ucis-C-cell-ball`.
   \item \textbf{Cut contraction.} $c_{\rm cut}(a)=-(1/a)\log(1-\theta_*(1-e^{-\lambda_1(G) t_0}))$; physical $c_{\rm cut,phys}=-\log(1-\theta_*(1-e^{-\lambda_1(G) t_0}))$ (group dependence only via $\lambda_1(G)$).
   \item \textbf{Odd-cone contraction constants.} From Proposition~\ref{prop:int-to-transfer} and Corollary~\ref{cor:odd-contraction-from-Kint}:
   $\theta_*\in(0,1]$, $t_0>0$ depend only on $(R_*,a_0,G)$; on $L^2_0$,
@@ -5191,8 +5205,8 @@ We summarize the constant schema and dependencies used throughout. Fix a physica
   \item \textbf{NRC/embedding constants.} From Theorems~\ref{thm:nrc-embeddings}, \ref{thm:nrc-quant} together with Thm.~\ref{thm:quant-calibrated-af-free-nrc}(D) and Lemma~\ref{lem:low-energy-proj}: defect bound $C_{\rm gd}$, low-energy projector control $C_\Lambda$, and resolvent rate $C(z_0,\Lambda)$.
 \end{itemize}
 
-\paragraph{OS0/OS2 under limits (closure by UEI).}
-The UEI bound yields tightness of gauge--invariant cylinders on $R$ (Prokhorov). Reflection positivity (OS2) is closed under weak limits of cylinder measures (bounded, continuous functional $F\mapsto \Theta F\,\overline{F}$). Temperedness/equicontinuity (OS0) follows from uniform Laplace bounds and the Kolmogorov--Chentsov criterion on loop holonomies (as in Proposition "OS0 (temperedness) with explicit constants"). Thus OS0 and OS2 persist along any scaling sequence.
+\paragraph{OS0/OS2 under limits (closure).}
+Reflection positivity (OS2) is closed under weak limits on cylinders (Lemma~\ref{lem:os2-limit}). Temperedness (OS0) is passed to limits once the required uniform OS0 polynomial bounds are available along the sequence (cf. Lemma~\ref{lem:os0-explicit-constants}). We record these limit-passages in Proposition~\ref{prop:os0os2-closure}.
 
 \begin{lemma}[Cylinder measurability and projective limit]\label{lem:cylinder-projective}
 Let $\{(a,L)\}$ be a directed net of lattices with spacings $a\in(0,a_0]$ and torus sizes $La\to\infty$. For a fixed bounded region $R\Subset\mathbb R^4$, let $\mathcal C_R$ denote the finite family of gauge--invariant loop variables and clover smearings supported in $R$ obtained from polygonal embeddings at mesh $\le a$. Then:
@@ -5948,69 +5962,61 @@ Apply the Brydges tree-graph bound to write $S_{n,\varepsilon}$ in terms of trun
 We continue under the scaling window and assumptions of C1a, and additionally assume exponential clustering for $\mu_\varepsilon$ with constants $(C,c)$ independent of $\varepsilon$.
 
 \begin{lemma}[OS2 preserved under limits]\label{lem:os2-limit}
-Let $\{\mu_{\varepsilon_k}\}$ be a sequence of OS-positive measures (for a fixed link reflection) whose loop $n$-point functions converge along embeddings to Schwinger functions $\{S_n\}$. Then for any finite family $\{F_i\}$ of loop observables supported in $t\ge 0$ and coefficients $\{a_i\}$, one has
+Let $\{\mu_k\}$ be a sequence of OS-positive measures for a fixed link reflection (OS2 holds at each $k$). Assume $\mu_k\Rightarrow\mu$ weakly on cylinder sets, i.e. $\mathbb E_{\mu_k}[F]\to\mathbb E_{\mu}[F]$ for every bounded cylinder observable $F$. Then $\mu$ satisfies OS2: for every bounded cylinder polynomial $P$ supported in the positive time half-space,
 \[
-  \sum_{i,j} \overline{a_i}\, a_j\, S_2\bigl(\Theta F_i, F_j\bigr)\;\ge\;0.
+  \mathbb E_{\mu}\big[\Theta P\,\overline{P}\big]\ \ge\ 0.
 \]
-Hence the limit Schwinger functions satisfy reflection positivity (OS2).
 \end{lemma}
 
-\begin{proof}[Proof]
-Fix a finite family $\{F_i\}_{i=1}^m\subset\mathcal A_+$ and coefficients $a\in\mathbb C^m$. For each $\varepsilon$, choose approximants $F_{i,\varepsilon}\in\mathcal A_{\varepsilon,+}$ with $\|F_{i,\varepsilon}-F_i\|_{\mathrm{loc}}\le C\,d_H(\mathrm{supp}(F_{i,\varepsilon}),\mathrm{supp}(F_i))$ and $d_H\to 0$ along the directed embeddings; this is possible by locality and the directed-embedding construction. Define $G_{\varepsilon}:=\sum_i a_i F_{i,\varepsilon}$. By OS positivity at scale $\varepsilon_k$ (fixed link reflection),
+\begin{proof}
+Let $P$ be any bounded cylinder polynomial supported in $t\ge 0$. Since $\Theta P\,\overline{P}$ is again a bounded cylinder observable, the assumed cylinder weak convergence gives
 \[
-  \mathbb E_{\mu_{\varepsilon_k}}\bigl[\Theta G_{\varepsilon_k}\,\overline{G_{\varepsilon_k}}\bigr]\ \ge\ 0.
+  \mathbb E_{\mu}\big[\Theta P\,\overline{P}\big]\ =\ \lim_{k\to\infty}\ \mathbb E_{\mu_k}\big[\Theta P\,\overline{P}\big].
 \]
-Expand the left side using bilinearity:
-\[
-  \sum_{i,j} \overline{a_i} a_j\, \mathbb E_{\mu_{\varepsilon_k}}\bigl[\Theta F_{i,\varepsilon_k}\,\overline{F_{j,\varepsilon_k}}\bigr].
-\]
-By tightness and convergence (C1a) and equicontinuity of the approximants, for each fixed $(i,j)$,
-\[
-  \lim_{k\to\infty}\,\mathbb E_{\mu_{\varepsilon_k}}\bigl[\Theta F_{i,\varepsilon_k}\,\overline{F_{j,\varepsilon_k}}\bigr]
-   \ =\ S_2\bigl(\Theta F_i, F_j\bigr).
-\]
-Dominated convergence (uniform moment bounds) justifies passing the limit through the finite sum, yielding
-\[
-  \lim_{k\to\infty}\,\mathbb E_{\mu_{\varepsilon_k}}\bigl[\Theta G_{\varepsilon_k}\,\overline{G_{\varepsilon_k}}\bigr]
-   \ =\ \sum_{i,j} \overline{a_i} a_j\, S_2\bigl(\Theta F_i, F_j\bigr).
-\]
-Since each term on the left is $\ge 0$ and the limit of nonnegative numbers is nonnegative, the right-hand side is $\ge 0$. This proves OS2 for the limit.
+Each term in the limit is $\ge 0$ by OS2 for $\mu_k$, hence the limit is $\ge 0$.
 \end{proof}
-
-\paragraph{Lean artifact.}
-The interface lemma for OS2 preservation under limits is exported as
-\texttt{YM.OSPosWilson.reflection\_positivity\_preserved} in the file
 \texttt{ym/os\_pos\_wilson/ReflectionPositivity.lean}, bundling the fixed link
 reflection, lattice OS2, and convergence of Schwinger functions along
 equivariant embeddings.
 
 \begin{lemma}[OS3: clustering in the limit]\label{lem:os3-limit}
-Assume exponential clustering holds uniformly on fixed slabs: there exist $C,c>0$ independent of $\varepsilon$ such that for any bounded, gauge--invariant local observables $A,B$ supported in a fixed region $R\subset\mathbb R^4$ and any separation vector with $\|\mathbf R\|\ge R$, one has $|\operatorname{Cov}_{\mu_\varepsilon}(A,\tau_{\mathbf R}B)|\le C e^{-cR}$. Then the limit Schwinger functions $\{S_n\}$ satisfy clustering: for translated observables,
+Let $\{\mu_k\}$ be a sequence of measures on the loop/cylinder algebra on $\mathbb R^4$ that converges weakly on cylinder sets to a limit $\mu$ (i.e. $\mathbb E_{\mu_k}[F]\to\mathbb E_\mu[F]$ for every bounded cylinder observable $F$). Assume a uniform exponential clustering bound: there exist $C,c>0$ such that for every pair of bounded (gauge--invariant) cylinder observables $A,B$ supported in a fixed bounded region and every translation vector $\mathbf R$,
 \[
-  \lim_{R\to\infty} S_2(A,B_R)\;=\;S_1(A)\,S_1(B).
+  \big|\operatorname{Cov}_{\mu_k}\big(A,\tau_{\mathbf R}B\big)\big|\ \le\ C\,e^{-c\|\mathbf R\|}\qquad(\forall k).
+\]
+Then the limit Schwinger functions satisfy clustering: for translated observables $B_{\mathbf R}:=\tau_{\mathbf R}B$,
+\[
+  \lim_{\|\mathbf R\|\to\infty}\ S_2(A,B_{\mathbf R})\ =\ S_1(A)\,S_1(B).
 \]
 \end{lemma}
 
 \begin{proof}
-The uniform bound passes to the limit along the convergent subsequence. Taking $R\to\infty$ first at fixed $\varepsilon$ and then passing to the limit yields factorization; uniformity justifies exchanging limits.
+Fix $\mathbf R$. Since $A$, $B_{\mathbf R}$, and $A\,B_{\mathbf R}$ are bounded cylinder observables, cylinder weak convergence gives
+\[
+  \operatorname{Cov}_{\mu}(A,B_{\mathbf R})
+  \ =\ \lim_{k\to\infty}\operatorname{Cov}_{\mu_k}(A,B_{\mathbf R}).
+\]
+Taking absolute values and using the uniform bound yields
+\[
+  \big|\operatorname{Cov}_{\mu}(A,B_{\mathbf R})\big|\ \le\ C\,e^{-c\|\mathbf R\|}.
+\]
+Letting $\|\mathbf R\|\to\infty$ gives $\operatorname{Cov}_{\mu}(A,B_{\mathbf R})\to 0$, i.e. $S_2(A,B_{\mathbf R})\to S_1(A)S_1(B)$.
 \end{proof}
 
-\paragraph{Lean artifacts.}
-OS3 is exported as \texttt{YM.OSPositivity.clustering\_in\_limit} in
-\texttt{ym/OSPositivity/ClusterUnique.lean} under a \texttt{ClusteringHypotheses}
-bundle (uniform clustering and Schwinger convergence). OS5 is exported there as
-\texttt{unique\_vacuum\_in\_limit} under a \texttt{UniqueVacuumHypotheses}
-bundle (uniform gap and NRC).
-
 \begin{lemma}[OS5: unique vacuum in the limit]\label{lem:os5-limit}
-Suppose the transfer operators $T_{\varepsilon}$ (constructed via OS at each $\varepsilon$) have a uniform spectral gap on the mean-zero sector: $r_0(T_{\varepsilon})\le e^{-\gamma_0}$ with $\gamma_0>0$ independent of $\varepsilon$, and norm--resolvent convergence holds for the generators (C1c). Then the limit theory reconstructed from $\{S_n\}$ has a unique vacuum and
+Let $\{\mu_k\}$ be OS-positive lattice measures with transfer operators $T_k=e^{-H_k}$ (OS/GNS) and assume:
+\begin{itemize}
+  \item[(i)] each $H_k\ge 0$ has a one-dimensional vacuum space and a uniform gap: $\operatorname{spec}(H_k)\subset\{0\}\cup[\gamma_0,\infty)$ for some $\gamma_0>0$ independent of $k$;
+  \item[(ii)] the continuum generator $H\ge 0$ exists and the gap persists to the limit (e.g. by Theorem~\ref{thm:gap-persist-cont} under the stated NRC hypotheses).
+\end{itemize}
+Then the limit theory has a unique vacuum and
 \[
-  \operatorname{spec}(H)\subset\{0\}\cup[\gamma_0,\infty),\qquad \text{hence }\gamma_{\mathrm{phys}}\ge \gamma_0>0.
+  \operatorname{spec}(H)\subset\{0\}\cup[\gamma_0,\infty).
 \]
 \end{lemma}
 
 \begin{proof}
-For each $\varepsilon$, OS reconstruction gives a positive self-adjoint $H_{\varepsilon}\ge 0$ with $T_{\varepsilon}=e^{-H_{\varepsilon}}$ and $\operatorname{spec}(H_{\varepsilon})\subset\{0\}\cup[\gamma_0,\infty)$. By C1c, $(H-z)^{-1}-I_{\varepsilon}(H_{\varepsilon}-z)^{-1}I_{\varepsilon}^*$ converges to $0$ for all nonreal $z$. Spectral convergence (Hausdorff) carries the open gap $(0,\gamma_0)$ to the limit: $\operatorname{spec}(H)\cap(0,\gamma_0)=\varnothing$. Since $H\ge 0$, the bottom of the spectrum is $0$; OS clustering implies that the $0$ eigenspace is one-dimensional (no degeneracy of the vacuum). Therefore the continuum theory has a unique vacuum and a mass gap $\ge \gamma_0$.
+The spectral inclusion is exactly the gap-persistence conclusion (ii). Vacuum uniqueness follows because the vacuum space is the $0$-eigenspace of $H$ and the spectral projection onto $\{0\}$ is isolated by the gap; under norm-resolvent convergence, the corresponding Riesz projector is stable, so the rank of the vacuum projector cannot change in the limit (hence remains one-dimensional).
 \end{proof}
 
 \section{Appendix: Embeddings, norm--resolvent convergence, and continuum gap (C1c)}
@@ -6555,12 +6561,35 @@ Let $H\ge 0$ and $H_{a,L}\ge 0$ be the Euclidean generators on $\mathcal H$ and 
 \]
 where $D_{a,L}:=H I_{a,L}-I_{a,L}H_{a,L}$ is the graph-defect map on a common core.
 \end{lemma}
+\begin{proof}
+Write $R(z):=(H-z)^{-1}$ and $R_{a,L}(z):=(H_{a,L}-z)^{-1}$, and note $P_{a,L}=I_{a,L}I_{a,L}^*$. Decompose
+\[
+  R(z)\xi\ =\ R(z)(I-P_{a,L})\xi\ +\ R(z)P_{a,L}\xi
+  \ =\ R(z)(I-P_{a,L})\xi\ +\ R(z)I_{a,L}I_{a,L}^*\xi.
+\]
+It remains to compare $R(z)I_{a,L}$ with $I_{a,L}R_{a,L}(z)$. On the common core where $D_{a,L}$ is defined,
+\[
+  (H-z)I_{a,L}\ -\ I_{a,L}(H_{a,L}-z)\ =\ HI_{a,L}-I_{a,L}H_{a,L}\ =\ D_{a,L}.
+\]
+Left-multiply by $R(z)$ and right-multiply by $R_{a,L}(z)$ to obtain (on that core)
+\[
+  R(z)I_{a,L}\ -\ I_{a,L}R_{a,L}(z)\ =\ -\,R(z)\,D_{a,L}\,R_{a,L}(z).
+\]
+Apply this identity to $I_{a,L}^*\xi$ and substitute into the decomposition above:
+\[
+  R(z)I_{a,L}I_{a,L}^*\xi\ =\ I_{a,L}R_{a,L}(z)I_{a,L}^*\xi\ -\ R(z)D_{a,L}R_{a,L}(z)I_{a,L}^*\xi.
+\]
+Combining the two displays yields the claimed resolvent comparison identity.
+\end{proof}
 \begin{theorem}[AF–free uniqueness of the continuum generator]\label{thm:U2-nrc-unique}
 Let $(H_{a,L})$ be Euclidean generators on lattice OS/GNS spaces and $H$ a candidate continuum generator on a fixed region. Suppose:
 \begin{itemize}
   \item embeddings $I_{a,L}$ are partial isometries intertwining time translations on local cylinders;
   \item the graph defect satisfies $\|D_{a,L}(H_{a,L}+1)^{-1/2}\|\le C a$ on a common core;
-  \item for some $z_0\in\mathbb C\setminus\mathbb R$, $\|(H-z_0)^{-1}-(I_{a,L}(H_{a,L}-z_0)^{-1}I_{a,L}^*\|$ is uniformly bounded in $L$ and $a\downarrow 0$.
+  \item for some $z_0\in\mathbb C\setminus\mathbb R$, there is a function $\varepsilon(a)\downarrow 0$ such that along van Hove scaling pairs $(a,L)$ one has the one--point operator--norm resolvent estimate
+  \[
+    \big\|(H-z_0)^{-1}-I_{a,L}(H_{a,L}-z_0)^{-1}I_{a,L}^*\big\|\ \le\ \varepsilon(a).
+  \]
 \end{itemize}
 Then for every compact $K\subset\mathbb C\setminus\mathbb R$,
 \[
@@ -6569,7 +6598,63 @@ Then for every compact $K\subset\mathbb C\setminus\mathbb R$,
 and $H$ is unique (no subsequences) as the resolvent limit. In particular, $e^{-tH}$ is the operator–norm limit of $I_{a,L} e^{-tH_{a,L}} I_{a,L}^*$ for each fixed $t\ge 0$.
 \end{theorem}
 \begin{proof}
-Use Lemma~\ref{lem:U2-comparison} and the graph–defect bound to transfer a one–point estimate at $z_0$ to any compact $K$ via the resolvent identity and uniform boundedness of $\|(H_{a,L}-z)^{-1}(H_{a,L}+1)^{1/2}\|$ and $\|(H-z)^{-1}(H+1)^{1/2}\|$ on $K$. The uniqueness and semigroup convergence follow from analytic functional calculus and Laplace inversion.
+For each $(a,L)$ define the embedded resolvent family on $\mathcal H$
+\[
+  R_{a,L}(z)\ :=\ I_{a,L}(H_{a,L}-z)^{-1}I_{a,L}^*,\qquad z\in\mathbb C\setminus\mathbb R.
+\]
+Since $I_{a,L}$ is an isometry ($I_{a,L}^*I_{a,L}=\mathrm{id}$ on $\mathcal H_{a,L}$), the usual resolvent identity on $\mathcal H_{a,L}$ implies the same identity for the embedded family: for all $z,w\in\mathbb C\setminus\mathbb R$,
+\[
+  R_{a,L}(z)-R_{a,L}(w)\ =\ (w-z)\,R_{a,L}(z)\,R_{a,L}(w).
+\]
+The continuum resolvent $R(z):=(H-z)^{-1}$ satisfies the same identity.
+
+\medskip
+\emph{Uniform convergence on compact $K$ from one-point convergence.} Fix $z\in K$ and set $\delta:=z-z_0$. The resolvent identity with $w=z_0$ yields
+\[
+  R(z)\,\big(I+\delta\,R(z_0)\big)\ =\ R(z_0),\qquad
+  R_{a,L}(z)\,\big(I+\delta\,R_{a,L}(z_0)\big)\ =\ R_{a,L}(z_0).
+\]
+Hence
+\[
+  R(z)\ =\ R(z_0)\,\big(I+\delta\,R(z_0)\big)^{-1},\qquad
+  R_{a,L}(z)\ =\ R_{a,L}(z_0)\,\big(I+\delta\,R_{a,L}(z_0)\big)^{-1}.
+\]
+Both inverses exist, and on $K$ their norms are uniformly bounded: using the commutativity of resolvents one has
+\[
+  \big(I+\delta\,R(z_0)\big)^{-1}\ =\ I+(z_0-z)\,R(z),\qquad
+  \big(I+\delta\,R_{a,L}(z_0)\big)^{-1}\ =\ I+(z_0-z)\,R_{a,L}(z),
+\]
+so
+\[
+  \big\|\big(I+\delta\,R(z_0)\big)^{-1}\big\|\ \le\ 1+|z-z_0|\,\|R(z)\|,\qquad
+  \big\|\big(I+\delta\,R_{a,L}(z_0)\big)^{-1}\big\|\ \le\ 1+|z-z_0|\,\|R_{a,L}(z)\|.
+\]
+Since $H$ and each $H_{a,L}$ are self-adjoint, $\|R(z)\|\le \mathrm{dist}(z,\mathbb R)^{-1}$ and $\|R_{a,L}(z)\|\le \mathrm{dist}(z,\mathbb R)^{-1}$, so these bounds are uniform on compact $K\subset\mathbb C\setminus\mathbb R$ and in $(a,L)$.
+
+Now write
+\[
+  R(z)-R_{a,L}(z)
+  \ =\ \big(R(z_0)-R_{a,L}(z_0)\big)\big(I+\delta\,R(z_0)\big)^{-1}
+  \ +\ R_{a,L}(z_0)\Big(\big(I+\delta\,R(z_0)\big)^{-1}-\big(I+\delta\,R_{a,L}(z_0)\big)^{-1}\Big).
+\]
+Use the inverse-difference identity $B^{-1}-C^{-1}=B^{-1}(C-B)C^{-1}$ with $B=I+\delta R(z_0)$ and $C=I+\delta R_{a,L}(z_0)$ to obtain
+\[
+  \big\|R(z)-R_{a,L}(z)\big\|\ \le\ C_K\,\big\|R(z_0)-R_{a,L}(z_0)\big\|
+\]
+for a constant $C_K<\infty$ depending only on $K$ and $z_0$. Taking the supremum over $z\in K$ and applying the one-point estimate at $z_0$ yields
+\[
+  \sup_{z\in K}\big\|R(z)-R_{a,L}(z)\big\|\ \le\ C_K\,\varepsilon(a)\ \xrightarrow[a\downarrow 0]{}\ 0.
+\]
+
+\medskip
+\emph{Uniqueness (no subsequences).} The bound above shows that any van Hove scaling sequence has at most one operator-norm resolvent limit on $K$, namely $R(z)=(H-z)^{-1}$; hence $H$ is unique as the resolvent limit.
+
+\medskip
+\emph{Semigroup convergence.} Operator-norm resolvent convergence on $\mathbb C\setminus\mathbb R$ implies operator-norm convergence of bounded holomorphic functional calculus on the common resolvent set; in particular, for each fixed $t>0$,
+\[
+  \big\|\,e^{-tH}\ -\ I_{a,L}\,e^{-tH_{a,L}}\,I_{a,L}^*\,\big\|\ \to\ 0.
+\]
+One may prove this by approximating $e^{-t\cdot}$ uniformly on $\sigma(H)\cup\sigma(H_{a,L})\subset[0,\infty)$ by rational functions with poles off $\mathbb R$ and using the already established uniform resolvent convergence on compact subsets of $\mathbb C\setminus\mathbb R$.
 \end{proof}
 
 \begin{proposition}[One–point resolvent estimate at a nonreal $z_0$]\label{prop:one-point-resolvent}
