@@ -178,6 +178,18 @@ where C depends only on the geometric structure of R on the φ-ladder.
 3. The 8-tick structure limits the number of independent degrees of freedom per cycle
 4. The φ-ladder provides the natural scale for the bound
 
+#### Creative classical bypass (Track J): heat-smoothing + universality instead of raw small-field
+
+The hard part of UEI/tightness in the Wilson setting is not “convexity exists” but “**dimension blowup**”: on a fixed physical region \(R\), the number of microscopic degrees of freedom grows like \(a^{-4}\) while \(\beta(a)\) grows only logarithmically. RS suggests the right regularizer is structural (J-cost), not parametric.
+
+A close classical analogue of “J-cost regularization” is **positive-time heat-kernel smoothing** on the compact gauge group:
+
+- Define a **heat-smoothed local law** by convolving the Wilson law with the product heat kernel on links in \(R\) (equivalently: independently left-multiply each link by a heat increment of time \(t>0\)).
+- Use entropy chain rules + tensorization to get a **dimension-free LSI/Herbst bound** for the smoothed law (constants depend on \(G,t\), not on \(\beta\) or the number of links).
+- Prove a **universality/commutation theorem**: letting the smoothing scale \(t=t(a)\downarrow 0\) after \(a\downarrow 0\) does not change the limiting Schwinger functions on fixed regions (this is the new “single hard theorem” replacing raw small-field concentration).
+
+Repo note: this “Track J” bypass is now recorded operationally as the preferred creative attack on U1 in `U1_OPERATIONAL_PLAN.md`.
+
 ---
 
 ## Blocker 3: OS1 (Euclidean Invariance)

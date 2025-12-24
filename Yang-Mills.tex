@@ -2364,8 +2364,8 @@ Write the one-step convex split $K=\theta_* P_{t_0}+(1-\theta_*)\mathcal K$ with
 \]
 Using Lemma~\ref{lem:hk-lower-explicit} at $t_0$ shows $P_{t_0}\ge c_*(N,r_*)^{m} \Pi_{B_{r_*}}$ (projection to densities supported in $B_{r_*}^m$). Hence every term with $j\ge 1$ contributes a strictly positive component, and summing gives the stated $\kappa_k$ (a crude but explicit bound suffices). The $L^2_0$-norm bound follows by functional calculus: on the orthogonal complement of constants, $\|P_{t_0}\|=e^{-\lambda_1(G) t_0}$ and $\|\mathcal K\|\le 1$, so $\|K\|\le 1-\theta_*(1-e^{-\lambda_1(G) t_0})$ and $\|K^k\|\le (1-\theta_*(1-e^{-\lambda_1(G) t_0}))^{k}$.
 \end{proof}
-\begin{corollary}[UEI with explicit constants]\label{cor:uei-explicit-constants}
-In the setting of Theorem~\ref{thm:uei-fixed-region}, let $M_R$ be as in Assumption~\ref{assump:uei-mean} and fix any $a\in(0,a_0]$ with $\beta=\beta(a)\ge \beta_{\min}(R,N)>0$. Let
+\begin{corollary}[UEI with explicit constants (raw route A)]\label{cor:uei-explicit-constants}
+In the raw small-field closure route A of Theorem~\ref{thm:uei-fixed-region}, let $M_R$ be as in Assumption~\ref{assump:uei-mean} and fix any $a\in(0,a_0]$ with $\beta=\beta(a)\ge \beta_{\min}(R,N)>0$. Let
 \[
   \rho_{\min}(R,N)\ :=\ c_2(R,N)\,\beta_{\min}(R,N),\qquad
   G_R(R,N,a_0)\ :=\ C_1(R,N)\,a_0^4,
@@ -3564,7 +3564,7 @@ We do \emph{not} require perturbative AF identities; the role of $\beta(a)$ is s
 Let $R\Subset\mathbb R^4$ be fixed. Along any van Hove scaling net $(a,L(a))$ with $\beta=\beta(a)$ from Definition~\ref{def:beta-schedule}, the family of time-zero local Schwinger functions $\{S_{n,a,L}\}_{a,L}$ restricted to observables supported in $R$ is tight and precompact in the product topology over loop/cylinder functionals. All subsequential limits coincide, hence $S_{n,a,L}\to S_n$ pointwise on $R$.
 \end{theorem}
 \begin{proof}
-Uniform Exponential Integrability on fixed regions (Theorem~\ref{thm:uei-fixed-region} and Corollary~\ref{cor:uei-explicit-constants}) gives subgaussian Laplace bounds with constants $\eta_R,C_R$ independent of $a$ and $L$. Proposition~\ref{prop:OS0-poly} yields polynomial OS0 bounds uniform in $(a,L)$. The equicontinuity modulus Lemma~\ref{lem:eqc-modulus} applies uniformly on $R$. By Prokhorov/Arzel\`a--Ascoli for cylinder functionals, tightness and precompactness follow. Embedding-independence (Proposition~\ref{prop:embedding-independence}) and the AF-free uniqueness criterion (Proposition~\ref{prop:af-free-uniqueness}) identify all subsequential limits, giving convergence.
+Fixed-region U1 (Theorem~\ref{thm:uei-fixed-region}) supplies the needed tightness/UEI input on $R$; under the raw small-field route A one may use Corollary~\ref{cor:uei-explicit-constants} for explicit action-moment constants, while under Track-J one instead uses Lemmas~\ref{lem:U1-J1-smoothed-lsi} and \ref{lem:U1-J2-universality} to obtain tightness via smoothing/universality. Proposition~\ref{prop:OS0-poly} yields polynomial OS0 bounds uniform in $(a,L)$. The equicontinuity modulus Lemma~\ref{lem:eqc-modulus} applies uniformly on $R$. By Prokhorov/Arzel\`a--Ascoli for cylinder functionals, tightness and precompactness follow. Embedding-independence (Proposition~\ref{prop:embedding-independence}) and the AF-free uniqueness criterion (Proposition~\ref{prop:af-free-uniqueness}) identify all subsequential limits, giving convergence.
 \end{proof}
 
 \begin{corollary}[Convergence on $\mathbb R^4$]\label{cor:global-convergence}
@@ -3630,8 +3630,8 @@ For each bounded $O\Subset\mathbb R^4$, let $\mathcal A(O)$ be the von Neumann a
 Isotony is by construction. Locality follows from Corollary~\ref{cor:microcausality}. Covariance follows from OS1 (Theorem~\ref{thm:os1-unconditional}) and analytic continuation to the Wightman representation.
 \end{proof}
 
-\begin{theorem}[Global OS0--OS5 (unconditional, AF--free)]\label{thm:global-OS}
-Let $\{\mu_{a,L}\}$ be Wilson lattice measures along a van Hove window. Uniform UEI/OS0 on fixed regions (Theorem~\ref{thm:uei-fixed-region}, Corollary~\ref{cor:uei-explicit-constants}) and AF--free NRC on fixed regions (Theorems~\ref{thm:nrc-embeddings}, \ref{thm:nrc-operator-norm}), together with the proved Cauchy/defect/projection inputs (Lemmas~\ref{lem:af-free-cauchy}, Thm.~\ref{thm:quant-calibrated-af-free-nrc}(D), \ref{lem:low-energy-proj}), imply that the continuum limit $\mu_{\mathrm{YM}}$ exists on cylinder sets and its Schwinger functions $\{S_n\}$ satisfy OS0--OS5 globally on $\mathbb R^4$:
+\begin{theorem}[Global OS0--OS5 (conditional on fixed-region U1/OS1 inputs; AF--free NRC)]\label{thm:global-OS}
+Let $\{\mu_{a,L}\}$ be Wilson lattice measures along a van Hove window. Fixed-region U1 tightness/UEI on $R$ (Theorem~\ref{thm:uei-fixed-region}; with explicit action-moment constants available under the raw route A via Corollary~\ref{cor:uei-explicit-constants}) and AF--free NRC on fixed regions (Theorems~\ref{thm:nrc-embeddings}, \ref{thm:nrc-operator-norm}), together with the proved Cauchy/defect/projection inputs (Lemmas~\ref{lem:af-free-cauchy}, Thm.~\ref{thm:quant-calibrated-af-free-nrc}(D), \ref{lem:low-energy-proj}), imply that the continuum limit $\mu_{\mathrm{YM}}$ exists on cylinder sets and its Schwinger functions $\{S_n\}$ satisfy OS0--OS5 globally on $\mathbb R^4$:
 \begin{itemize}
   \item OS0 (temperedness): Uniform polynomial bounds (Proposition~\ref{prop:OS0-poly}) pass to the limit by consistency on overlaps (Proposition~\ref{prop:consistency-overlaps}).
   \item OS2 (reflection positivity): For any polynomial $P$ supported in $t\ge 0$, $\langle\Theta P\,\overline{P}\rangle_{\mu}=\lim_{a,L}\langle\Theta P\,\overline{P}\rangle_{\mu_{a,L}}\ge 0$.
@@ -4050,8 +4050,74 @@ Along the scaling window, after tree gauge on $R$ the induced chord Gibbs measur
 \end{lemma}
 
 \begin{remark}[U1 roadmap (how the pieces fit)]\label{rem:U1-roadmap}
-Lemma~\ref{lem:U1-B-smallfield} is the core RG-grade payload: it is designed to force $S_R$ to be $O(1)$ on fixed regions and to supply the small-field regime needed for (i) the mean bound (U1-C), (ii) the Lipschitz bounds used in Herbst (U1-D), and (iii) a usable LSI/concentration inequality (U1-E) via standard compact-manifold tools once the measure is sufficiently concentrated near $\mathbf 1$.
+There are two viable closure routes for U1 as currently organized in this manuscript:
+\begin{itemize}
+  \item \textbf{Raw small-field route (U1-B).} Prove Lemma~\ref{lem:U1-B-smallfield} (small-field concentration for the \emph{unsmoothed} Wilson law on fixed regions) and then deduce the mean bound (U1-C), Lipschitz bounds (U1-D), and a usable LSI/concentration inequality (U1-E) by standard compact-manifold arguments once the law is sufficiently concentrated near $\mathbf 1$.
+  \item \textbf{Track J (smoothing/universality route).} Prove a dimension-free LSI/Herbst bound for \emph{heat-smoothed} local laws (Lemma~\ref{lem:U1-J1-smoothed-lsi}) and a smoothing-limit commutation/universality statement (Lemma~\ref{lem:U1-J2-universality}) to transfer tightness back to the intended continuum limit as the smoothing scale goes to $0$.
+\end{itemize}
+The Track-J route is designed to avoid making “raw small-field for the Wilson law” the only analytic bottleneck.
 \end{remark}
+
+\begin{mdframed}[linewidth=0.5pt, linecolor=blue!35, backgroundcolor=blue!3, roundcorner=2pt, innertopmargin=8pt, innerbottommargin=8pt, skipabove=10pt, skipbelow=10pt]
+\noindent\textbf{Remark (RS-guided bypass for U1; J-cost / smoothing route).}
+Recognition Science (RS) highlights a unique convex cost $J(x)=\tfrac12(x+1/x)-1$ (T5) and an 8-tick “structural regularization” viewpoint (T6). A classical correspondence that may bypass proving raw small-field concentration for the unsmoothed Wilson law is to work with a \emph{heat-smoothed} (or “J-cost regularized”) local law at positive time, which can satisfy dimension-free LSI/Herbst bounds by entropy chain rules and tensorization, and then prove a \emph{universality/commutation} statement showing that letting the smoothing scale go to $0$ after $a\downarrow 0$ recovers the same continuum Schwinger functions. This reframes the hard U1-B payload as a single “universality under smoothing” theorem; see `U1_OPERATIONAL_PLAN.md` for the operational decomposition (Track J).
+\end{mdframed}
+
+\begin{lemma}[U1-J1: Heat-smoothing $\Rightarrow$ dimension-free LSI/Herbst (target)]\label{lem:U1-J1-smoothed-lsi}
+Fix a bounded region $R\Subset\mathbb R^4$ and a compact gauge group $G=\SU(N)$. Let $\mu_{a,L}$ be the Wilson law on the links intersecting $R$ (with arbitrary exterior boundary configuration), and for $t>0$ define the \emph{heat-smoothed} law $\mu^{(t)}_{a,L}$ by independently left-multiplying each link variable in $R$ by a $G$-heat increment of time $t$ (equivalently: convolving $\mu_{a,L}$ with the product heat kernel on $G^{E(R,a)}$).
+
+Then for each fixed $t>0$, $\mu^{(t)}_{a,L}$ satisfies a logarithmic Sobolev inequality (and hence a centered Herbst subgaussian Laplace bound) with constants depending only on $(G,t)$ and the fixed region geometry, \emph{independent of}:
+\[
+  a,\quad L,\quad \beta,\quad \text{and}\quad |E(R,a)|\asymp a^{-4}.
+\]
+\end{lemma}
+\begin{lemma}[Single-site heat-kernel LSI on compact $G$ (input)]\label{lem:heatkernel-lsi-compactG}
+Let $G$ be a compact connected Lie group equipped with a bi-invariant Riemannian metric, and let $\pi$ be Haar probability. Let $p_t$ be the heat-kernel density at time $t>0$ (generator the Laplace--Beltrami operator). Then for each $t>0$ and each $g\in G$, the probability measure
+\[
+  \nu_{t,g}(dU)\ :=\ p_t(g^{-1}U)\,\pi(dU)
+\]
+satisfies a logarithmic Sobolev inequality
+\[
+  \Ent_{\nu_{t,g}}(f^2)\ \le\ 2\,\mathcal C_G(t)\int \|\nabla f\|_G^2\,d\nu_{t,g},
+\]
+with $\mathcal C_G(t)<\infty$ depending only on $(G,t)$ and \emph{uniform} in $g$.
+\end{lemma}
+\begin{proof}[Proof sketch (with citation)]
+Since $G$ is compact, Haar $\pi$ satisfies an LSI with some constant depending only on $G$ (e.g. via Bakry--\'Emery hypercontractivity for the heat semigroup; see \cite{BakryEmery1985,Gross1975}). For fixed $t>0$, the heat kernel $p_t$ is smooth, strictly positive, and bounded above/below on $G$, so $V:=-\log p_t(g^{-1}\cdot)$ has bounded oscillation $\osc(V)<\infty$. The Holley--Stroock bounded-perturbation lemma for LSI \cite{HolleyStroock1987} then upgrades the LSI from $\pi$ to $\nu_{t,g}$ with a constant multiplied by $e^{\osc(V)}$. Left translation preserves the Riemannian gradient and Haar measure, so the bound is uniform in $g$.
+\end{proof}
+\begin{proof}[Proof sketch]
+Let $K_t(U,dV)=\prod_{e\in E(R,a)} p_t(U_e^{-1}V_e)\,\pi(dV_e)$ be the product heat kernel on $G^{E(R,a)}$. Then $\mu^{(t)}_{a,L}=\mu_{a,L}K_t$.
+By Lemma~\ref{lem:heatkernel-lsi-compactG}, for each fixed $t>0$ the single-site heat kernel measure $p_t\,\pi$ satisfies an LSI with constant $\mathcal C_G(t)$ depending only on $(G,t)$ and uniform in the starting point. By tensorization, for each fixed $U$ the conditional law $K_t(U,\cdot)$ satisfies the same LSI constant $\mathcal C_G(t)$ on the product space, independent of $|E(R,a)|$.
+
+Let $f$ be smooth on $G^{E(R,a)}$ and apply the entropy chain rule for the joint law $(U,V)$ with $U\sim\mu_{a,L}$ and $V\sim K_t(U,\cdot)$:
+\[
+  \Ent_{\mu^{(t)}_{a,L}}(f^2)
+  \ =\ \Ent_{(U,V)}(f(V)^2)
+  \ =\ \mathbb E_{U}\!\big[\Ent_{K_t(U,\cdot)}(f^2)\big]\ +\ \Ent_{\mu_{a,L}}\!\big(\mathbb E_{K_t(U,\cdot)}[f^2]\big).
+\]
+Drop the second (nonnegative) term and apply the conditional LSI, then average over $U$. This yields an LSI for $\mu^{(t)}_{a,L}$ with constant $\mathcal C_G(t)$, hence centered Herbst subgaussian bounds with the same constant. None of these constants depend on $\mu_{a,L}$ (hence not on $\beta$) or on $|E(R,a)|$.
+\end{proof}
+
+\begin{lemma}[U1-J2: Smoothing-limit commutation / universality on fixed regions (target)]\label{lem:U1-J2-universality}
+Fix a bounded region $R\Subset\mathbb R^4$ and let $F$ be a bounded continuous time-zero local cylinder observable supported in $R$ (i.e. $F$ depends on only finitely many link variables in $R$). Let $\mu_{a,L}$ be any family of lattice measures and let $\mu^{(t)}_{a,L}$ be the heat-smoothed laws from Lemma~\ref{lem:U1-J1-smoothed-lsi}. Then
+\[
+  \sup_{a,L}\ \big|\ \mathbb E_{\mu^{(t)}_{a,L}}[F]\ -\ \mathbb E_{\mu_{a,L}}[F]\ \big|\ \xrightarrow[t\downarrow 0]{}\ 0.
+\]
+Consequently, any subsequential limit on cylinders obtained from $\{\mu_{a,L}\}$ can be recovered as the $t\downarrow 0$ limit of subsequential limits of $\{\mu^{(t)}_{a,L}\}$, so tightness/limit constructions may be carried out using the smoothed laws and then transferred back to the unsmoothed limits by letting $t\downarrow 0$.
+\end{lemma}
+\begin{proof}
+Let $P_t$ be the (finite-link) product heat semigroup acting on the finitely many link variables on which $F$ depends. By definition of heat-smoothing,
+\[
+  \mathbb E_{\mu^{(t)}_{a,L}}[F]\ =\ \mathbb E_{\mu_{a,L}}[P_t F].
+\]
+Therefore
+\[
+  \big|\mathbb E_{\mu^{(t)}_{a,L}}[F]-\mathbb E_{\mu_{a,L}}[F]\big|
+  \ =\ \big|\mathbb E_{\mu_{a,L}}[P_tF-F]\big|
+  \ \le\ \|P_tF-F\|_\infty.
+\]
+Since the configuration space for these finitely many links is compact and $F$ is continuous, $P_tF\to F$ uniformly as $t\downarrow 0$, hence $\|P_tF-F\|_\infty\to 0$.
+\end{proof}
 
 \begin{assumption}[U1-C: Fixed--region action mean bound (UEI input; RG--grade)]\label{assump:uei-mean}\label{lem:U1-C-mean}
 Fix a bounded physical region $R\Subset\mathbb R^4$ and define
@@ -4064,16 +4130,33 @@ Along the weak--coupling scaling schedule $a\mapsto\beta(a)$ and van Hove volume
 \]
 \end{assumption}
 
-\begin{theorem}[Uniform Exponential Integrability on fixed regions (conditional UEI target)]\label{thm:uei-fixed-region}
-Fix a bounded physical region $R\subset\mathbb{R}^4$ and let $\mathcal{P}_R$ be the set of plaquettes in $R$ at spacing $a$. Fix a weak-coupling scaling schedule $a\mapsto \beta(a)$ with $\beta(a)\ge \beta_{\min}(R,N)>0$ for $a\in(0,a_0]$ and $\beta(a)\to\infty$ as $a\downarrow 0$. Assume the mean bound of Assumption~\ref{assump:uei-mean}. Then there exist constants $\eta_R>0$ and $C_R<\infty$, depending only on $(R,a_0,N,\beta_{\min})$, such that for all $(L,a)$ in the scaling window (with coupling $\beta=\beta(a)$) and any boundary configuration outside $R$,
+\begin{theorem}[U1 on fixed regions: tightness/UEI (two closure routes; target)]\label{thm:uei-fixed-region}
+Fix a bounded physical region $R\Subset\mathbb{R}^4$ and a weak-coupling scaling schedule $a\mapsto \beta(a)$ with $\beta(a)\ge \beta_{\min}(R,N)>0$ for $a\in(0,a_0]$ and $\beta(a)\to\infty$ as $a\downarrow 0$.
+
+\medskip
+\noindent\emph{Closure route A (raw small-field).} Assume the raw small-field route on $R$: Lemmas~\ref{lem:U1-B-smallfield}, \ref{lem:U1-D-lipschitz}, \ref{lem:U1-E-lsi-chords} hold, together with the mean bound Assumption~\ref{assump:uei-mean}.
+
+\smallskip
+\noindent\emph{Closure route J (smoothing/universality).} Alternatively, assume the Track-J route on $R$: Lemmas~\ref{lem:U1-J1-smoothed-lsi} and \ref{lem:U1-J2-universality} hold.
+
+\medskip
+\noindent\emph{Conclusion (tightness).} Under either closure route, the family of cylinder laws on $R$ is tight along van Hove scaling sequences (hence OS0/OS2 closure on fixed regions reduces to standard compactness arguments).
+
+\medskip
+\noindent\emph{Additional conclusion (strong UEI for the action; route A only).} Under closure route A, writing $S_R(U):=\sum_{p\subset R}\phi(U_p)$ with $\phi(U)=1-\tfrac1N\Re\Tr(U)$, there exist constants $\eta_R>0$ and $C_R<\infty$, depending only on $(R,a_0,N,\beta_{\min})$, such that for all $(L,a)$ in the scaling window (with coupling $\beta=\beta(a)$) and any boundary configuration outside $R$,
 \[
   \mathbb{E}_{\mu_{L,a}}\big[e^{\eta_R S_R(U)}\big]\ \le\ C_R.
 \]
 \end{theorem}
-\begin{corollary}[Uniform UEI along AF scaling (conditional)]\label{cor:uei-af-uniform}
-Under Assumption~\ref{assump:AF-Mosco} and Assumption~\ref{assump:uei-mean}, for each fixed bounded region $R\Subset\mathbb R^4$ there exist $\eta_R>0$ and $C_R<\infty$, depending only on $(R,N)$ and the AF trajectory parameters, such that the UEI bound of Theorem~\ref{thm:uei-fixed-region} holds uniformly along the scaling window. In particular, the Laplace transforms of all time-zero local observables supported in $R$ are uniformly bounded in $a$ and $L$.
+\begin{corollary}[Uniform UEI/tightness along AF scaling (conditional)]\label{cor:uei-af-uniform}
+Under Assumption~\ref{assump:AF-Mosco}, for each fixed bounded region $R\Subset\mathbb R^4$ the fixed-region U1 conclusions of Theorem~\ref{thm:uei-fixed-region} hold along the AF scaling window provided one of its closure routes (raw small-field route A, or Track-J route) is verified. In particular, tightness on fixed regions follows; and under route A one also obtains the explicit action UEI bound $\mathbb E[e^{\eta_R S_R}]\le C_R$.
 \end{corollary}
 \begin{proof}
+\emph{Track-J route (tightness).} If Lemmas~\ref{lem:U1-J1-smoothed-lsi} and \ref{lem:U1-J2-universality} hold, tightness on fixed regions can be proved by working first with the heat-smoothed laws (which satisfy dimension-free functional inequalities by Lemma~\ref{lem:U1-J1-smoothed-lsi}) and then transferring limits back to the unsmoothed cylinder laws as the smoothing scale $t\downarrow 0$ using Lemma~\ref{lem:U1-J2-universality}.
+
+\smallskip
+\emph{Raw route A (strong UEI for $S_R$; proof sketch).} Under closure route A, the remaining proof sketch provides one pathway to the uncentered action UEI bound $\mathbb E[e^{\eta_R S_R}]\le C_R$, using the centered Herbst bound plus the mean-removal step supplied by Assumption~\ref{assump:uei-mean}.
+
 \emph{Scope note (weak-coupling scaling).} The uniform-in-$a$ claim for the extensive quantity $S_R=\sum_{p\subset R}\phi(U_p)$ is only plausible in the intended continuum regime where $\beta=\beta(a)\to\infty$ as $a\downarrow 0$ (so plaquette holonomies concentrate near $\mathbf 1$ and $\phi(U_p)\sim a^4\|F\|^2$). At fixed $\beta$ independent of $a$, $|\mathcal P_R|\asymp a^{-4}$ and one expects $\mathbb E S_R$ to grow proportionally to $|\mathcal P_R|$, so $\sup_a\mathbb E e^{\eta S_R}$ cannot remain bounded for any fixed $\eta>0$.
 
 \emph{Idea.} Gauge-fix on a tree so only finitely many chords remain; the Wilson energy is uniformly strictly convex along chords on fixed regions, giving a local log–Sobolev inequality. A Lipschitz bound for the local action then yields subgaussian Laplace tails (Herbst), giving uniform exponential integrability.
@@ -4266,7 +4349,7 @@ Apply the constructed-calibrator route (Theorem~\ref{thm:os1-calibrator-route}),
 
 \begin{mdframed}[linewidth=0.5pt, linecolor=gray!40, backgroundcolor=gray!6, roundcorner=2pt, innertopmargin=8pt, innerbottommargin=8pt, skipabove=10pt, skipbelow=10pt]
 \noindent\textbf{Remark (Optional commutator route).}
-An alternative proof proceeds by resolvent conjugation from local semigroup commutator bounds: `lem:local-commutator-Oa2` \(\Rightarrow\) `prop:resolvent-from-commutator` \(\Rightarrow\) `thm:emergent-sym`. This route currently invokes the outline-only input `TS:sandwich_main`; it is kept as a cross-check rather than the mainline OS1 closure.
+An alternative proof proceeds by resolvent conjugation from local semigroup commutator bounds: `lem:local-commutator-Oa2` \(\Rightarrow\) `prop:resolvent-from-commutator` \(\Rightarrow\) `thm:emergent-sym`. This route currently invokes the outline-only input `TS:sandwich_main`; it is kept as a cross-check rather than the mainline OS1 closure. From an RS viewpoint (T6/T7), OS1 is expected to emerge from averaging/projection onto invariants of a finite “cube symmetry” shadow (e.g. the hyperoctahedral group $B_3$ of order $48$), which aligns naturally with the calibrator/averaging construction.
 \end{mdframed}
 
 \paragraph{Alternative (cross\,–\,check): isotropic heat\,–\,kernel calibrators, constructed.}
@@ -5131,7 +5214,7 @@ At fixed spacing, the infinite-volume OS state exists by standard compactness ar
 \section{Clay compliance checklist}
 \subsection*{Clay compliance map (requirements \textrightarrow{} labels)}
 \begin{itemize}
-  \item \textbf{OS0 (temperedness)}: Prop.~\ref{prop:OS0-poly}, Cor.~\ref{cor:os0-explicit-4d}; UEI on fixed regions with $\beta\ge \beta_{\min}(R,N)$: Thm.~\ref{thm:uei-fixed-region}, Cor.~\ref{cor:uei-explicit-constants}; closure: Prop.~\ref{prop:os0os2-closure}.
+  \item \textbf{OS0 (temperedness)}: Prop.~\ref{prop:OS0-poly}, Cor.~\ref{cor:os0-explicit-4d}; fixed-region U1 tightness/UEI: Thm.~\ref{thm:uei-fixed-region} (either raw route A or Track-J; Cor.~\ref{cor:uei-explicit-constants} gives explicit constants for the stronger action-moment bound under route A); closure: Prop.~\ref{prop:os0os2-closure}.
   \item \textbf{OS1 (Euclidean invariance)}: Thm.~\ref{thm:os1-unconditional}; supporting route: Prop.~\ref{prop:hk-calibrators-constructed} and Thm.~\ref{thm:os1-calibrator-route} (commutator route is an optional cross-check via Lem.~\ref{lem:local-commutator-Oa2}); additional bookkeeping: \ref{lem:isotropy-restore}, \ref{lem:os1-embedding}, Cor.~\ref{cor:os1-rotations}.
   \item \textbf{OS2 (reflection positivity)}: Thm.~\ref{thm:os} (Wilson link reflection); closure to limit: Cor.~\ref{cor:os2-pass} (from Prop.~\ref{prop:os0os2-closure}).
   \item \textbf{OS3/OS5 (clustering, unique vacuum)}: Lattice: Thm.~\ref{thm:thermo}, Thm.~\ref{thm:thermo-strong}; Continuum: Prop.~\ref{prop:os35-limit}; Gap\,$\Rightarrow$\,clustering: Prop.~\ref{prop:gap-to-cluster}; converse: Prop.~\ref{prop:cluster-to-gap}.

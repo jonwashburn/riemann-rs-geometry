@@ -84,6 +84,63 @@ This is the precise missing “tightness engine” in the continuum spine.
 
 ---
 
+## RS-guided “creative bypass” for U1-B: J-cost / heat-kernel smoothing route (Track J)
+
+RS (T5) singles out a unique convex cost
+\[
+  J(x)=\tfrac12(x+1/x)-1,
+\]
+and RS (T6/T7) treats smoothing/regularization as structural rather than parameter-driven. A classical correspondence that **may bypass** the hardest “prove small-field for the raw Wilson measure” step is:
+
+- **Replace “small-field of the unsmoothed Wilson law” by “dimension-free regularity of a J-cost–regularized (heat-smoothed) law”**, then prove that this regularization does not change the continuum limit (universality).
+
+Concretely:
+
+### U1-J1 — Dimension-free LSI after positive-time group heat smoothing (analysis on compact groups)
+
+Define a heat-smoothed measure on link configurations by pushing the Wilson law forward under independent left-multiplication by a heat increment of time \(t>0\) on each link (equivalently: convolve the lattice law with the product heat kernel on \(G^{E(R,a)}\)).
+
+Target: show the smoothed law satisfies an LSI (and hence Herbst subgaussian bounds) with a constant depending only on \((G,t)\), **independent of**:
+- the original interaction (Wilson plaquette potential),
+- \(\beta\),
+- and the dimension \(|E(R,a)|\) (tensorization).
+
+This is the key “dimension-free functional inequality” lever: it would give U1-E without any small-field theorem for the raw Wilson law.
+
+### U1-J2 — Universality/commutation: smoothing does not change the continuum limit
+
+Target: prove that for each fixed bounded region \(R\), applying the heat-smoothing (or the equivalent “J-cost regularization” operator on observables) at a scale \(t=t(a)\downarrow 0\) does **not** change the limiting Schwinger functions as \(a\downarrow 0\).
+
+In other words, show that “take the continuum limit” and “apply the smoothing calibrator” commute on the cylinder algebra, so one may:
+\[
+  \lim_{a\downarrow 0}\ \mu_{a,L}(F)\ =\ \lim_{t\downarrow 0}\ \lim_{a\downarrow 0}\ \mu^{(t)}_{a,L}(F)
+\]
+for the relevant local observables \(F\) (loops + renormalized local fields).
+
+### U1-J3 — Use the smoothed LSI/Herbst bounds to get tightness
+
+Once U1-J1 and U1-J2 are in place, tightness/OS0 closure can be proved using uniform subgaussian bounds under the smoothed measures, plus the \(t\downarrow 0\) commutation to transfer bounds back to the intended continuum theory.
+
+**Net effect:** U1-B (raw small-field) and U1-C (raw mean bound) are replaced by a single “universality under smoothing” theorem plus a dimension-free LSI statement for the smoothed law. This is a genuine “zoom-out” reparameterization of the bottleneck consistent with the RS bridge document’s J-cost regularization idea.
+
+---
+
+## Quick reality check: attack both routes, compare difficulty
+
+### Route 1 — Raw small-field (U1-B → U1-C/U1-D/U1-E)
+
+- **What you must really prove**: a high-probability small-field regime on a fixed physical region with \(|\mathcal P_R|\asymp a^{-4}\) plaquettes, strong enough to control \(\mathbb E S_R\) and the Lipschitz constants used in Herbst.
+- **Why it looks hard**: existing “finite stencil” estimates in the manuscript (e.g. `TS:ball_weight`) typically give only polynomial tails like \(O(a^2)\) for a *fixed* stencil, which is far too weak to control an extensive sum over \(a^{-4}\) plaquettes. Closing this route appears to require a genuine RG-grade mechanism (constructive control of weak coupling).
+
+### Route 2 — Track J (U1-J1 + U1-J2)
+
+- **What you must prove**:
+  - **U1-J1**: dimension-free LSI/Herbst for the heat-smoothed local laws (this is close to standard entropy-chain/tensorization once single-site heat-kernel LSI is cited).
+  - **U1-J2**: smoothing-limit commutation/universality on cylinder observables (often a uniform sup-norm approximation argument on compact groups).
+- **Why it looks more promising**: U1-J2 is essentially measure-independent for bounded continuous cylinder observables, and U1-J1 can be reduced to classical compact-group functional inequalities plus an entropy chain rule. The remaining “hard theorem” becomes a universality statement for passing \(t\downarrow 0\) after \(a\downarrow 0\) for the specific unbounded field observables (if needed), rather than proving raw small-field concentration for the full Wilson law.
+
+---
+
 ## Repo integration checklist (operational)
 
 - [ ] Add a named theorem block in `Yang-Mills.tex` that replaces `assump:uei-mean` (or proves it under explicit hypotheses).

@@ -57,6 +57,19 @@ Operationally, the manuscript implements this via commutation of the continuum g
 - **Mainline closure**: calibrator route (avoids `TS:sandwich_main`).
 - **Cross-check**: commutator route (requires upgrading `TS:sandwich_main` and auditing the finite-stencil Taylor controls it invokes).
 
+### RS correspondence (why the calibrator route is “the right shape”)
+
+RS highlights two structural ingredients that map cleanly to the calibrator approach:
+
+- **8-tick / Q₃ coverage (T6/T7)**: dynamics are organized in blocks of length 8 (a Gray-code walk on the cube), and the 8-step aggregate acts like a *projection onto invariant content* of the cycle.
+- **Hyperoctahedral symmetry (B₃, order 48)**: the discrete symmetry of the 3-cube (axis permutations + reflections) is the “finite shadow” of rotational invariance.
+
+Classically, the calibrator route is exactly “project by averaging + let the approximation scale go to 0”:
+
+- **Heat-kernel smoothing** supplies isotropic, class-function regularization on \(G\),
+- **Hypercubic averaging** enforces the discrete symmetry at each \(a\),
+- and the \(\epsilon\downarrow 0\) limit promotes discrete invariance to full \(SO(4)\) invariance on fixed regions, provided U1 tightness/equicontinuity is real.
+
 ### OS1-C (Commutator route) — Local semigroup commutator \(O(a^2 t)\) (RG/LEAP)
 
 Goal: prove a bound of the form
