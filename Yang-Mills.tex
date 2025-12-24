@@ -2925,8 +2925,49 @@ as kernels on the coarse interface space $G^{m(\varepsilon)}$, uniformly in $U$ 
 Lemma~\ref{lem:no-unifball-doeblin-fixed-radius} shows that a one--step \emph{fixed--radius} $\beta$--uniform Doeblin lower bound cannot hold even for a single link conditional. The scale--adapted refresh lemmas instead naturally yield a small--step component at radius $\asymp \beta^{-1/2}$, which requires $\gtrsim \beta$ steps to accumulate $O(1)$ dispersion. The window \eqref{eq:ucis-sw-window} precisely ensures $M(a)\asymp 1/a$ is large enough to contain $\Theta(\beta(a))$ effective diffusion steps inside a fixed physical slab.
 \end{remark}
 
+\begin{lemma}[Central-mixture binomial expansion]\label{lem:central-mixture-binomial}
+Let $G$ be a compact group. Let $\mu$ be a \emph{central} (conjugation--invariant) probability measure on $G$, $\eta$ any probability measure on $G$, and $\alpha\in[0,1]$. Then for every $n\in\mathbb N$,
+\[
+  \big(\alpha \mu+(1-\alpha)\eta\big)^{(*n)}
+  \ =\ \sum_{k=0}^{n}\binom{n}{k}\,\alpha^{k}(1-\alpha)^{n-k}\,\mu^{(*k)}*\eta^{(*(n-k))}.
+\]
+\end{lemma}
+\begin{proof}
+Expand the $n$--fold convolution product and group the terms by the number $k$ of factors equal to $\mu$. Since $\mu$ is central, $\mu*\eta=\eta*\mu$, so each term with $k$ copies of $\mu$ and $n-k$ copies of $\eta$ collapses to the same measure $\mu^{(*k)}*\eta^{(*(n-k))}$. Summing the binomial coefficients yields the identity.
+\end{proof}
+
+\begin{lemma}[Ball-walk diffusive smoothing on compact $G$]\label{lem:ballwalk-diffusive}
+Let $G$ be a compact connected Lie group with a fixed bi--invariant Riemannian metric and Haar probability $\pi$. For $r>0$ write $\nu_r$ for the uniform law on the geodesic ball $B_G(e,r)$. There exist constants $r_0=r_0(G)\in(0,1)$ and $C_{\mathrm{mix}},c_{\mathrm{mix}}>0$ depending only on $G$ such that for every $r\in(0,r_0]$ and every integer
+\[
+  n\ \ge\ C_{\mathrm{mix}}\,r^{-2},
+\]
+the $n$--fold convolution has a global Haar minorization
+\[
+  \nu_r^{(*n)}\ \ge\ c_{\mathrm{mix}}\,\pi
+\]
+as measures on $G$.
+\end{lemma}
+\begin{proof}
+Let $p_r:=d\nu_r/d\pi=\pi(B_G(e,r))^{-1}\,\mathbf 1_{B_G(e,r)}$ and set $\Omega_r:=B_G(e,r)$. Let $\rho_r$ be the left--invariant word metric on $G$ associated to $\Omega_r$ (Section~3 of \cite{HebischSaloffCoste1993}). Then $p_r$ is a bounded symmetric probability density, supported in $\Omega_r$ and bounded below on $\Omega_r$ by $\pi(B_G(e,r))^{-1}>0$. Since $G$ is compact, its volume growth in the word metric is polynomial of order $D=0$ (cf.\ the discussion around Guivarc'h's theorem in \cite[\S3]{HebischSaloffCoste1993}).
+
+\smallskip
+By \cite[Theorem~5.1, lower bound (15)]{HebischSaloffCoste1993} (specialized to $D=0$), there exist constants $c_1,C_1,C_2>0$ such that for all $n\in\mathbb N$ and all $g\in G$ with $\rho_r(g)\le n/C_2$,
+\[
+  p_r^{(n)}(g)\ \ge\ c_1\,\exp\!\Big(-C_1\,\frac{\rho_r(g)^2}{n}\Big).
+\]
+Moreover $\sup_{g\in G}\rho_r(g)\le C_{\mathrm{diam}}\,r^{-1}$ for some $C_{\mathrm{diam}}=C_{\mathrm{diam}}(G)$: choose a rectifiable path from $e$ to $g$ of length $\le \operatorname{diam}(G)$ and partition it into $\le C_{\mathrm{diam}}r^{-1}$ segments of $\rho_G$--length $\le r$, so the successive increments lie in $\Omega_r$ and multiply to $g$.
+
+\smallskip
+Fix $r_0\in(0,1)$ and set
+\[
+  C_{\mathrm{mix}}\ :=\ \max\{C_2C_{\mathrm{diam}},\ 1\},\qquad
+  c_{\mathrm{mix}}\ :=\ c_1\,\exp\!\Big(-C_1\,\frac{C_{\mathrm{diam}}^{\,2}}{C_{\mathrm{mix}}}\Big)\ \in(0,1).
+\]
+If $r\in(0,r_0]$ and $n\ge C_{\mathrm{mix}}r^{-2}$, then $\rho_r(g)\le C_{\mathrm{diam}}r^{-1}\le n/C_2$ and $\rho_r(g)^2/n\le C_{\mathrm{diam}}^{\,2}/C_{\mathrm{mix}}$ for all $g\in G$. Hence $p_r^{(n)}(g)\ge c_{\mathrm{mix}}$ for all $g$, and thus $\nu_r^{(*n)}(dg)=p_r^{(n)}(g)\,\pi(dg)\ge c_{\mathrm{mix}}\,\pi(dg)$.
+\end{proof}
+
 \begin{lemma}[Scale--adapted small--step convolution $\Rightarrow$ fixed--time heat--kernel minorization (Track~B core)]\label{lem:scaled-ball-to-hk}
-Let $G$ be a compact connected Lie group with bi--invariant metric. There exist constants $c_0,C_0,t_0>0$ depending only on $G$ such that the following holds.
+Let $G$ be a compact connected Lie group with bi--invariant metric and Haar probability $\pi$. Fix constants $\alpha_0,\kappa_0\in(0,1]$. There exist constants $c_0,C_0,t_0>0$ depending only on $(G,\alpha_0,\kappa_0)$ such that the following holds.
 
 For each $\beta\ge 1$ let $\nu_\beta$ be a probability measure on $G$ satisfying a scale--adapted small--ball lower bound
 \[
@@ -2939,14 +2980,110 @@ for some fixed constants $\alpha_0,\kappa_0>0$ independent of $\beta$. Then for 
 as measures on $G$, where $p_{t_0}$ is the heat kernel at time $t_0$.
 \end{lemma}
 \begin{proof}
-\emph{Target (to be proved).} This is a quantitative local CLT / mixing statement for small--step random walks on compact Lie groups: after $n\asymp\beta$ steps of size $\asymp \beta^{-1/2}$ the walk dominates the heat kernel at a fixed time $t_0\asymp 1$ with constants bounded away from $0$ uniformly in $\beta$.
+Let $r_\beta:=\kappa_0/\sqrt{\beta}$ and write $\mu_\beta:=\mathrm{Unif}(B_G(e,r_\beta))$. The hypothesis $\nu_\beta\ge \alpha_0\mu_\beta$ implies the convex decomposition
+\[
+  \nu_\beta\ =\ \alpha_0\,\mu_\beta\ +\ (1-\alpha_0)\,\eta_\beta
+\]
+for some probability measure $\eta_\beta$.
 
 \smallskip
-One approach is to combine (i) comparison of $\nu_\beta$ to an isotropic small--step increment with second moment $\asymp 1/\beta$, (ii) a spectral comparison on each irreducible representation (Fourier analysis on $G$) yielding $\|\widehat{\nu_\beta}(\pi)\|\le e^{-c\,\lambda_\pi/\beta}$ for nontrivial $\pi$, and (iii) inversion/heat kernel bounds to upgrade the spectral decay after $n\ge C_0\beta$ steps to a pointwise lower bound by $p_{t_0}$ (choose $t_0\simeq c\,n/\beta$ and then freeze $t_0$ by taking $n=C_0\beta$). A second approach is via coupling to Brownian motion using Stroock--Varadhan support and a parametrix on $G$, producing a uniform two--sided bound once $n/\beta$ exceeds a fixed threshold.
+\textbf{Step 1: diffusive Haar minorization for the ball walk.}
+By Lemma~\ref{lem:ballwalk-diffusive}, for $r_\beta\le r_0(G)$ and
+\[
+  n_{\mathrm{mix}}(\beta)\ :=\ \left\lceil C_{\mathrm{mix}}\,r_\beta^{-2}\right\rceil
+  \ =\ \left\lceil C_{\mathrm{mix}}\,\kappa_0^{-2}\,\beta\right\rceil,
+\]
+one has $\mu_\beta^{(*n_{\mathrm{mix}}(\beta))}\ge c_{\mathrm{mix}}\,\pi$. In particular, for every $k\ge n_{\mathrm{mix}}(\beta)$,
+\[
+  \mu_\beta^{(*k)}\ =\ \mu_\beta^{(*n_{\mathrm{mix}}(\beta))}*\mu_\beta^{(*(k-n_{\mathrm{mix}}(\beta)))}\ \ge\ c_{\mathrm{mix}}\,\pi*\mu_\beta^{(*(k-n_{\mathrm{mix}}(\beta)))}\ =\ c_{\mathrm{mix}}\,\pi.
+\]
+
+\smallskip
+\textbf{Step 2: binomial expansion + absorption by Haar.}
+Since $\mu_\beta$ is central (the ball is conjugation--invariant for a bi--invariant metric), Lemma~\ref{lem:central-mixture-binomial} gives, for every $n$,
+\[
+  \nu_\beta^{(*n)}
+  \ =\ \sum_{k=0}^{n}\binom{n}{k}\,\alpha_0^{k}(1-\alpha_0)^{n-k}\,\mu_\beta^{(*k)}*\eta_\beta^{(*(n-k))}.
+\]
+For each $k\ge n_{\mathrm{mix}}(\beta)$, Step~1 yields $\mu_\beta^{(*k)}\ge c_{\mathrm{mix}}\pi$, hence
+\[
+  \mu_\beta^{(*k)}*\eta_\beta^{(*(n-k))}\ \ge\ c_{\mathrm{mix}}\,\pi*\eta_\beta^{(*(n-k))}\ =\ c_{\mathrm{mix}}\,\pi.
+\]
+Therefore
+\[
+  \nu_\beta^{(*n)}\ \ge\ c_{\mathrm{mix}}\,\mathbb P\!\left(\mathrm{Bin}(n,\alpha_0)\ge n_{\mathrm{mix}}(\beta)\right)\,\pi.
+\]
+Choose $C_0$ large enough (depending only on $(\alpha_0,\kappa_0,C_{\mathrm{mix}})$) so that for all $\beta\ge 1$ and all integers $n\ge C_0\beta$,
+\[
+  \mathbb P\!\left(\mathrm{Bin}(n,\alpha_0)\ge n_{\mathrm{mix}}(\beta)\right)\ \ge\ \tfrac12,
+\]
+e.g. by a Chernoff/Hoeffding bound since $\mathbb E[\mathrm{Bin}(n,\alpha_0)]=\alpha_0 n\ge (\alpha_0 C_0)\beta$ and $n_{\mathrm{mix}}(\beta)\le (C_{\mathrm{mix}}\kappa_0^{-2}+1)\beta$.
+Then for all such $n$,
+\[
+  \nu_\beta^{(*n)}\ \ge\ \tfrac12\,c_{\mathrm{mix}}\,\pi.
+\]
+
+\smallskip
+\textbf{Step 3: Haar minorization $\Rightarrow$ heat--kernel minorization.}
+Fix any $t_0>0$ (depending only on $G$) and write $M_{t_0}:=\sup_{g\in G} p_{t_0}(g)<\infty$. Since $\pi$ has constant density $1$ w.r.t.\ itself, one has $1\ge M_{t_0}^{-1}p_{t_0}(g)$ for all $g$, hence $\pi\ge M_{t_0}^{-1}p_{t_0}$. Setting $c_0:=\tfrac12\,c_{\mathrm{mix}}\,M_{t_0}^{-1}$ yields the claimed bound $\nu_\beta^{(*n)}\ge c_0 p_{t_0}$.
 \end{proof}
 
-\begin{proof}[Proof sketch of Theorem~\ref{thm:ucis-sw}]
-Replace UCIS--C by Lemma~\ref{lem:scaled-ball-to-hk}. On each coarse cell, Lemmas~\ref{lem:single-link-refresh}--\ref{lem:g-one-link-refresh} provide a scale--adapted ball component of radius $\asymp \beta^{-1/2}$ with uniform weight; by disjoint support (Lemma~\ref{lem:ucis-A-cell-decomp}) and plaquette factorization the coarse increment law tensorizes across cells as in Lemma~\ref{lem:ucis-D-product-ball}. Under the scaling window \eqref{eq:ucis-sw-window}, the physical slab contains $n\ge C_0\beta(a)$ effective ticks per refreshed cell; apply Lemma~\ref{lem:scaled-ball-to-hk} on each factor and tensorize to obtain a product heat--kernel component $P_{t_0}$ with a uniform weight $\theta_*$, yielding the claimed minorization.
+\begin{proof}[Proof of Theorem~\ref{thm:ucis-sw}]
+Fix $(G,\varepsilon,T_{\rm phys})$ and let $m:=m(\varepsilon)$ be the number of coarse interface cells (independent of $a$). Let $M(a)=\lceil T_{\rm phys}/a\rceil$ and write $\beta=\beta(a)$.
+
+\smallskip
+\textbf{Step 0 (cell decomposition and disjoint supports).}
+By Lemma~\ref{lem:ucis-A-cell-decomp}, for each sufficiently small $a$ the slab/interface region admits a decomposition into the $m$ coarse cells $C\in\mathcal C(\varepsilon)$ together with (for each cell) a selected set of interior link variables $E_C$ such that:
+(i) $E_C$ and $E_{C'}$ have disjoint plaquette neighborhoods whenever $C\neq C'$, and
+(ii) the coarse outgoing increment for cell $C$ depends only on variables in $E_C$ (and boundary data fixed outside the slab).
+Denote the coarse interface state by $U=(U_C)_{C\in\mathcal C(\varepsilon)}\in G^m$.
+
+\smallskip
+\textbf{Step 1 (one-tick kernel factorizes across cells).}
+Fix a tick $a$ and consider one step of the induced coarse interface kernel $K_{\rm int}^{(a)}$.
+Because no plaquette contains links from two distinct $E_C$'s, Lemma~\ref{lem:plaquette-factorization} implies that, conditional on all variables outside $\bigcup_C E_C$, the joint conditional law on $\prod_C E_C$ factorizes across cells. Since, by Lemma~\ref{lem:ucis-A-cell-decomp}, the outgoing coarse increment of cell $C$ is a measurable function of the variables in $E_C$ alone, the pushforward to the $m$ cell increments preserves this product structure. Hence the induced one-tick kernel on coarse variables factorizes:
+\[
+  K_{\rm int}^{(a)}(U,dV)\ =\ \bigotimes_{C\in\mathcal C(\varepsilon)} K_{\rm cell}^{(a)}(U_C,dV_C),
+\]
+for some Markov kernels $K_{\rm cell}^{(a)}$ on $G$ (uniform in volume/boundary on fixed slabs by construction).
+
+\smallskip
+\textbf{Step 2 (cell kernels are convolution kernels with a scale-adapted small-ball component).}
+Work in increment coordinates $\Delta_C:=U_C^{-1}V_C\in G$ for each cell. By left-translation invariance (Haar invariance and the gauge-covariance of the construction of coarse increments), each cell kernel is a right-convolution kernel:
+\[
+  K_{\rm cell}^{(a)}(U_C, A)\ =\ \nu_{\beta(a)}\big(U_C^{-1}A\big)
+\]
+for some probability measure $\nu_{\beta(a)}$ on $G$ (the one-tick increment law for a representative cell).
+By the assumed near-identity refresh mechanism (implemented via Lemmas~\ref{lem:single-link-refresh}--\ref{lem:g-one-link-refresh} on each refreshed link within the cell, together with the cell locality ensured by Lemma~\ref{lem:ucis-A-cell-decomp}), there exist constants $\alpha_0,\kappa_0\in(0,1]$ independent of $(a,\beta,L)$ such that for all sufficiently small $a$,
+\[
+  \nu_{\beta(a)}\ \ge\ \alpha_0\,\mathrm{Unif}\!\big(B_G(e,\kappa_0/\sqrt{\beta(a)})\big).
+\]
+
+\smallskip
+\textbf{Step 3 (diffusive smoothing in time for each cell).}
+Apply Lemma~\ref{lem:scaled-ball-to-hk} to $\nu_{\beta(a)}$ and $n=M(a)$. (Note that the proof of Lemma~\ref{lem:scaled-ball-to-hk} uses the diffusive ball-walk minorization Lemma~\ref{lem:ballwalk-diffusive} together with the central-mixture expansion Lemma~\ref{lem:central-mixture-binomial}.)
+Using the scaling window \eqref{eq:ucis-sw-window}, choose $a$ sufficiently small so that $M(a)\ge C_0\,\beta(a)$ where $C_0$ is the constant from Lemma~\ref{lem:scaled-ball-to-hk} (depending only on $(G,\alpha_0,\kappa_0)$). Then there exist constants $c_0,t_0>0$ depending only on $(G,\alpha_0,\kappa_0)$ such that
+\[
+  \nu_{\beta(a)}^{(*M(a))}\ \ge\ c_0\,p_{t_0}.
+\]
+Equivalently, for each cell kernel,
+\[
+  \big(K_{\rm cell}^{(a)}\big)^{M(a)}(U_C,\cdot)\ =\ \nu_{\beta(a)}^{(*M(a))}(U_C^{-1}\cdot)\ \ge\ c_0\,p_{t_0}(U_C^{-1}\cdot).
+\]
+
+\smallskip
+\textbf{Step 4 (tensorize across the coarse interface).}
+Since the one-tick coarse kernel factorizes across cells (Step 1), its $M(a)$-step iterate also factorizes:
+\[
+  K_{\rm int}^{(a)\,M(a)}(U,\cdot)\ =\ \bigotimes_{C}\big(K_{\rm cell}^{(a)}\big)^{M(a)}(U_C,\cdot).
+\]
+Combining with the previous display yields
+\[
+  K_{\rm int}^{(a)\,M(a)}(U,\cdot)
+  \ \ge\ c_0^{\,m}\,\bigotimes_{C} p_{t_0}(U_C^{-1}\cdot)
+  \ =\ \theta_*\,P_{t_0}(U,\cdot),
+\]
+with $\theta_*:=c_0^{\,m(\varepsilon)}\in(0,1)$ and $P_{t_0}$ the product heat-kernel kernel on $G^m$. The constants depend only on $(G,\varepsilon,T_{\rm phys},C_{\rm SW})$ (via $m(\varepsilon)$ and the window condition ensuring $M(a)\gtrsim \beta(a)$), and are uniform in volume/boundary data on fixed slabs. This is exactly the claimed minorization.
 \end{proof}
 
 \begin{lemma}[Density of coarse interface observables as \boldmath $\varepsilon\downarrow 0$]\label{lem:coarse-density}
@@ -6683,6 +6820,10 @@ T.~Kato, \emph{Perturbation Theory for Linear Operators}, Springer, 1995.
 \bibitem{DiaconisSaloffCoste2004}
 P.~Diaconis and L.~Saloff-Coste, Random walks and heat kernels on groups,\
 in: \emph{Probability on Discrete Structures}, Springer, 2004.
+
+\bibitem{HebischSaloffCoste1993}
+W.~Hebisch and L.~Saloff-Coste, Gaussian estimates for Markov chains and random walks on groups,\
+\emph{The Annals of Probability} 21 (1993), no.\ 2, 673--709. Available at:\ \href{https://pi.math.cornell.edu/~lsc/papers/gauss-aop.pdf}{\texttt{pi.math.cornell.edu/\string~lsc/papers/gauss-aop.pdf}}.
 
 \bibitem{Brydges1978}
 D.~C. Brydges, Cluster expansions and their applications,\

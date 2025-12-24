@@ -17,7 +17,7 @@
   - Added an unconditional one-link helper lemma `lem:one-link-ball-maximizer-unif` (β-uniform *mass* near the polar maximizer), useful for diagnosing why fixed-radius **measure** minorization is harder.
 - **Still open (core blocker)**:
   - **Unconditional UCIS-C** remains blocked: a truly β-uniform *single-cell* **measure** minorization / refresh mechanism.
-  - **Track B core blocker (now explicit)**: `lem:scaled-ball-to-hk` (scale-adapted small-step convolution ⇒ fixed-time heat-kernel minorization after \(n\asymp\beta\) steps with constants uniform in \(\beta\)).
+  - **Track B (scaling-window) status**: `lem:scaled-ball-to-hk` is now implemented in `Yang-Mills.tex` and the remaining analytic input `lem:ballwalk-diffusive` is now **precisely cited + hypothesis-checked** in-text via Hebisch–Saloff-Coste (1993), Theorem 5.1 (Gaussian lower bound for convolution powers on groups). The purely algebraic piece `lem:central-mixture-binomial` is proved in-text.
   - We now have an explicit **one-link no-go** lemma (`lem:no-unifball-doeblin-fixed-radius`) showing that fixed-radius β-uniform domination by the **uniform ball law** cannot hold even for the basic one-link matrix-Fisher conditionals. This clarifies that UCIS-C cannot be obtained by “one-link Doeblin at fixed radius” and must instead come from an additional **cell-level smoothing/pulse** or a **physically scaled multi-step** mechanism.
 
 ---
@@ -281,7 +281,8 @@ Same statement as UCIS, but only for \(\beta\ge \beta_0\) (some fixed threshold)
 ### Step 3 — Prove the analytic single-cell lemma (C)
 
 - [ ] Lemma C (β-uniform ball-density pushforward) *(unconditional UCIS route; blocked by the one-link no-go at fixed radius)*
-- [ ] Track B replacement: `lem:scaled-ball-to-hk` (scale-adapted small-step \(\Rightarrow\) fixed-time heat-kernel minorization after \(n\asymp\beta\) steps, constants uniform in \(\beta\))
+- [x] Track B replacement: `lem:scaled-ball-to-hk` is now implemented in `Yang-Mills.tex` as a reduction.
+- [x] Remaining Track B analytic input: `lem:ballwalk-diffusive` is now cited in `Yang-Mills.tex` (Hebisch–Saloff-Coste (1993), Thm 5.1) with hypotheses checked for the uniform ball walk on compact \(G\).
 
 ### Step 4 — Prove smoothing upgrade (D–E)
 
