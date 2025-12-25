@@ -1,0 +1,148 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=black,citecolor=black,urlcolor=black}
+
+\title{Lean Status Memo: \texttt{riemann-geometry-rs}}
+\author{Internal memo for the RH / Recognition Geometry team}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section*{Executive summary}
+\begin{itemize}
+  \item The repository contains a large Lean development that formally verifies the \emph{logical structure} of a Recognition Geometry (RG) zero-free argument and (separately) imports a BRF/Schur/Herglotz infrastructure.
+  \item \textbf{Lean is currently conditional:} the top-level RH theorem in Lean depends on a short list of \emph{project axioms} that stand in for deep analytic inputs not yet available in Mathlib.
+  \item \textbf{The written proof path \emph{claims} unconditionality:} the manuscript \texttt{Riemann-Christmas.tex} explicitly states (Abstract) that ``All load-bearing steps are unconditional; diagnostic numerics are gated and do not enter the inequalities that close (P+) and the globalization.''\footnote{See \texttt{Riemann-Christmas.tex}, lines 97--99 in this repo.}
+  \item Practical interpretation: today we have a machine-checked reduction of RH to explicit analytic statements, plus extensive formal bookkeeping; the remaining gap is to \emph{discharge the analytic axioms in Lean/Mathlib} (or to keep them as imported theorems with citations, if the goal is a conditional formalization).
+\end{itemize}
+
+\section*{What Lean currently proves (and how to reproduce)}
+\subsection*{Toolchain}
+This repo is pinned to Lean:
+\begin{center}
+\texttt{leanprover/lean4:v4.16.0} \quad (see \texttt{lean-toolchain})
+\end{center}
+
+\subsection*{Build}
+From the repository root:
+\begin{verbatim}
+lake build RiemannRecognitionGeometry
+\end{verbatim}
+
+\subsection*{Top-level RH theorem in Lean}
+We added a closure module:
+\begin{center}
+\texttt{RiemannRecognitionGeometry/LiteratureBounds.lean}
+\end{center}
+which proves theorems (in Lean):
+\begin{itemize}
+  \item \texttt{RiemannRecognitionGeometry.RiemannHypothesis}:
+  \[
+    \forall \rho\in\mathbb{C},\ \mathrm{completedRiemannZeta}(\rho)=0 \ \Rightarrow\ \Re(\rho)=\tfrac12.
+  \]
+  \item \texttt{RiemannRecognitionGeometry.RiemannHypothesis\_classical\_form}:
+  the corresponding statement for zeros of $\zeta(s)$ in $0<\Re(s)<1$.
+\end{itemize}
+
+\subsection*{Axiom audit (what makes it ``conditional'' in Lean)}
+We included a small helper file:
+\begin{center}
+\texttt{CheckAxioms.lean}
+\end{center}
+Run:
+\begin{verbatim}
+lake env lean CheckAxioms.lean
+\end{verbatim}
+Current output (as of this memo) is:
+\begin{verbatim}
+'RiemannRecognitionGeometry.RiemannHypothesis' depends on axioms:
+  [identity_principle_eta_zeta_lt_one_axiom,
+   propext,
+   Classical.choice,
+   Quot.sound,
+   RiemannRecognitionGeometry.carneiro_chandee_milinovich_bound,
+   RiemannRecognitionGeometry.cofactor_green_identity_standard,
+   RiemannRecognitionGeometry.green_identity_standard,
+   RiemannRecognitionGeometry.j_carleson_energy_bound]
+\end{verbatim}
+
+\paragraph{Interpretation.}
+\begin{itemize}
+  \item \texttt{propext}, \texttt{Classical.choice}, \texttt{Quot.sound} are standard foundational/classical axioms (normal for Mathlib developments).
+  \item The remaining five are \emph{mathematical axioms} currently assumed in-repo. These are classical results in analysis/number theory \emph{as mathematics}, but are not yet derived from Mathlib in our current formalization.
+\end{itemize}
+
+\section*{The ``math axioms'': what they correspond to}
+The RH closure in Lean currently assumes (in various files):
+\begin{enumerate}
+  \item \textbf{CCM BMO bound (literature):}\\
+  \texttt{RiemannRecognitionGeometry.carneiro\_chandee\_milinovich\_bound}\\
+  This stands for an explicit bounded-mean-oscillation bound for the boundary datum \texttt{logAbsXi}. In Lean we package this as an \texttt{InBMOWithBound} certificate.
+
+  \item \textbf{Green/CR phase bounds (standard harmonic analysis):}\\
+  \texttt{RiemannRecognitionGeometry.green\_identity\_standard}\\
+  \texttt{RiemannRecognitionGeometry.cofactor\_green\_identity\_standard}\\
+  These encapsulate the Cauchy--Riemann/Green pairing that controls boundary phase-change by a Carleson-box energy bound.
+
+  \item \textbf{Fefferman--Stein / Carleson energy bound (standard but deep):}\\
+  \texttt{RiemannRecognitionGeometry.j\_carleson\_energy\_bound}\\
+  This is the analytic bridge from BMO control of the boundary function to a Carleson control of the Poisson extension energy on Whitney/Carleson boxes (the quantitative constant in the current RG interface is \texttt{K\_tail M = C\_FS M\^{}2}).
+
+  \item \textbf{Identity principle used in the $\eta$--$\zeta$ relation:}\\
+  \texttt{identity\_principle\_eta\_zeta\_lt\_one\_axiom} (in \texttt{RiemannRecognitionGeometry/DirichletEta.lean}).\\
+  This is used to extend an equality from a region of convergence to $(0,1)$.
+\end{enumerate}
+
+\section*{What Mathlib already has vs what is missing}
+\subsection*{Identity theorem / analytic continuation uniqueness}
+\textbf{Available in Mathlib.} For analytic functions, Mathlib contains an identity theorem and related uniqueness results (e.g.\ in \texttt{Mathlib/Analysis/Analytic/IsolatedZeros.lean}). In principle, this suggests the $\eta$--$\zeta$ ``identity principle'' axiom is a candidate to discharge by reworking the development so the relevant functions are proved analytic in the appropriate domain and then applying Mathlib's identity theorem.
+
+\subsection*{Green/Stokes/divergence and integration-by-parts}
+\textbf{Partially available.} Mathlib includes divergence-type theorems and integration-by-parts infrastructure (e.g.\ \texttt{Mathlib/Analysis/BoxIntegral/DivergenceTheorem.lean}, \texttt{Mathlib/Analysis/Calculus/LineDeriv/IntegrationByParts.lean}). However, the precise harmonic-analysis packaging we need (Poisson extension + CR bookkeeping + boundary phase-change estimate on Whitney/Carleson boxes) is not currently present as a ready-made theorem.
+
+\subsection*{BMO / Carleson / Fefferman--Stein}
+\textbf{Not available as a standard theory stack.} In our current Mathlib checkout, there is no general BMO/Carleson measure framework and no Fefferman--Stein BMO$\to$Carleson embedding theorem in the form required by the project. This is the main reason the Lean development remains conditional.
+
+\subsection*{CCM bound}
+\textbf{Not available.} The explicit numerical BMO bound for $\log|\zeta|$ (and the corresponding bound for our boundary datum) is not part of Mathlib.
+
+\section*{Relationship to the written proof}
+\subsection*{Written proof claim}
+The manuscript \texttt{Riemann-Christmas.tex} in this repo states in the Abstract:
+\begin{quote}
+``All load-bearing steps are unconditional; diagnostic numerics are gated and do not enter the inequalities that close (P+) and the globalization.''
+\end{quote}
+This means the \emph{intended} written argument is an unconditional proof in standard mathematics (i.e.\ it does not assume RH or other open hypotheses), relying only on classical analysis and explicit estimates.
+
+\subsection*{Why Lean is still conditional even if the paper is ``unconditional''}
+Even if the written proof is fully unconditional as mathematics, Lean may still be conditional because:
+\begin{itemize}
+  \item Mathlib does not (yet) contain the required harmonic-analysis infrastructure (BMO/Carleson/Fefferman--Stein) in the specific quantitative forms needed here.
+  \item Some deep number-theory inequalities (e.g.\ explicit BMO bounds) are not formalized in Mathlib.
+\end{itemize}
+So ``unconditional in the paper'' and ``unconditional in Lean/Mathlib'' are different milestones.
+
+\section*{Recommended sharing posture}
+\begin{itemize}
+  \item \textbf{Safe to share now:} ``Lean-verified reduction / proof skeleton'' + explicit axiom audit + alignment with the written manuscript that claims unconditionality.
+  \item \textbf{Not safe to claim now:} ``Lean has proved RH unconditionally,'' because the current Lean closure depends on explicit project axioms beyond Mathlib.
+\end{itemize}
+
+\section*{Next steps (if we want ``unconditional in Lean/Mathlib'')}
+In increasing order of scope:
+\begin{enumerate}
+  \item Discharge \texttt{identity\_principle\_eta\_zeta\_lt\_one\_axiom} by recasting the $\eta$--$\zeta$ argument to use Mathlib's analytic identity theorem.
+  \item Build (or upstream) a harmonic-analysis layer in Mathlib sufficient to prove the Green/CR phase-change bound used by the RG chain.
+  \item Build (or upstream) BMO/Carleson measure theory and the Fefferman--Stein embedding theorem in the needed quantitative form.
+  \item Formalize (or import as an external theorem) the CCM-type explicit bound, and verify it matches our Lean definitions of boundary data (regularization at zeros, completed vs uncompleted zeta choices, constants).
+\end{enumerate}
+
+\end{document}
+
+
