@@ -3614,7 +3614,7 @@ Temperedness and permutation symmetry are preserved by dominated convergence. Re
 \subsection{\texorpdfstring{OS$\to$Wightman and Global Mass Gap}{OS-to-Wightman and Global Mass Gap}}
 
 \begin{theorem}[OS reconstruction and Poincar\'e invariance (conditional on OS0--OS5; any compact simple $G$)]\label{thm:os-to-wightman-global}
-From $\{S_n\}$ as in Theorem~\ref{thm:global-OS}, the Osterwalder--Schrader reconstruction yields a Wightman QFT on Minkowski space with unitary positive-energy representation of the Poincar\'e group and local gauge-invariant Wightman fields. The Hamiltonian has spectrum $\{0\}\cup[\gamma_*,\infty)$ with $\gamma_*>0$.
+From $\{S_n\}$ as in Theorem~\ref{thm:global-OS}, the Osterwalder--Schrader reconstruction yields a Wightman QFT on Minkowski space with unitary positive-energy representation of the Poincar\'e group and local gauge-invariant Wightman fields (see Osterwalder--Schrader~\cite{Osterwalder1975}, Sec.~IV.1 (Theorem $E'\Rightarrow R'$) and Sec.~V). The Hamiltonian has spectrum $\{0\}\cup[\gamma_*,\infty)$ with $\gamma_*>0$.
 \end{theorem}
 \begin{lemma}[Finite upper gap $m<\infty$]\label{lem:finite-upper-gap}
 Let $\mathcal H$ be the Wightman Hilbert space with Hamiltonian $H\ge 0$ and unique vacuum $\Omega$. If there exists a local observable $\mathcal O$ with $\langle \Omega,\mathcal O\,\Omega\rangle=0$ and $\langle \Omega,\mathcal O^*\mathcal O\,\Omega\rangle>0$, then the spectral measure of $H$ in the state $\mathcal O\Omega$ puts positive mass in $(0,\infty)$; in particular, the supremum $m:=\sup\{\Delta>0:\ (0,\Delta)\cap \operatorname{spec}(H)=\varnothing\}$ is finite.
@@ -3623,7 +3623,7 @@ Let $\mathcal H$ be the Wightman Hilbert space with Hamiltonian $H\ge 0$ and uni
 By the spectral theorem, $\langle \Omega,\mathcal O^* e^{-tH} \mathcal O\,\Omega\rangle=\int_{[0,\infty)}e^{-tE}\,d\mu_{\mathcal O}(E)$ with a nonzero finite measure $\mu_{\mathcal O}$. If $\mu_{\mathcal O}$ were supported at $\{0\}$, then $\mathcal O\Omega$ would lie in the vacuum subspace, contradicting $\langle \Omega,\mathcal O\,\Omega\rangle=0$ and uniqueness of the vacuum. Hence $\mu_{\mathcal O}((0,\infty))>0$, so $\operatorname{spec}(H)$ contains some $E_1>0$, and therefore $m\le E_1<\infty$.
 \end{proof}
 \noindent See also Corollaries~\ref{cor:microcausality} (microcausality), \ref{cor:wightman-local-gap} (Wightman local fields and gap), and \ref{cor:minkowski-massgap} (physical Minkowski mass gap).
-\begin{proof}
+\begin{proof}[Proof of Theorem~\ref{thm:os-to-wightman-global}]
 Apply the classical OS reconstruction to $\mu_{\mathrm{YM}}$ using reflection positivity, temperedness, symmetry, and Euclidean invariance. Exponential clustering and OS5 give a unique vacuum and spectrum condition. The uniform slab contraction/gap (Theorem~\ref{thm:gap-persist-cont}) transfers to the global generator by the core/inductive-limit argument in the proof of Theorem~\ref{thm:global-OS}. The resulting Wightman theory inherits Poincar\'e covariance from Euclidean invariance by analytic continuation.
 \end{proof}
 
@@ -3638,7 +3638,7 @@ Let $\mu_{\mathrm{YM}}$ be the global Euclidean measure of Theorem~\ref{thm:kolm
 \end{itemize}
 \end{theorem}
 \begin{proof}
-OS0 implies temperedness of Schwinger functions; analytic continuation yields tempered Wightman distributions. OS1 (via equicontinuity and isotropy restoration on fixed regions; see Lemma~\ref{lem:isotropy-restore}) provides full Euclidean invariance and hence Poincar\'e covariance after continuation. OS2 gives a positive-definite inner product leading to the GNS construction. OS3 and OS5 imply uniqueness of the vacuum and exponential clustering, which yields the spectral condition together with the nonzero mass gap from Theorem~\ref{thm:os-to-wightman-global}. Locality follows from the standard OS\,$\to$\,Wightman locality theorem applied to local gauge-invariant smeared fields (Corollary~\ref{cor:os-local-fields}).
+This is the standard Osterwalder--Schrader reconstruction theorem: see Osterwalder--Schrader~\cite{Osterwalder1975}, Sec.~IV.1 (Theorem $E'\Rightarrow R'$) for the OS$\to$Wightman construction and Sec.~V for the analytic continuation. In our setting, OS0 gives temperedness, OS1 gives Euclidean invariance and hence Poincar\'e covariance after continuation, and OS2 gives the positive inner product for the GNS construction. OS3 and OS5 imply uniqueness of the vacuum and (via the OS/GNS Hamiltonian $H$) the spectral condition; the gap bound is supplied by Theorem~\ref{thm:os-to-wightman-global}. Locality follows from the OS$\to$Wightman locality theorem applied to the gauge-invariant smeared fields (Corollary~\ref{cor:os-local-fields}).
 \end{proof}
 
 \begin{corollary}[Microcausality for gauge\,--\,invariant local fields]\label{cor:microcausality}
@@ -4927,10 +4927,15 @@ Let $\mu$ be a continuum Euclidean measure obtained as a limit of Wilson lattice
   \boxed{\sigma(H_{\text{Mink}})\subset \{0\}\cup[\gamma_*,\infty)}
 \end{equation}
 \end{theorem}
-\noindent\emph{Remark (constant propagation).} The mass-gap constant $\gamma_*$ appearing for the Euclidean generator $H$ propagates unchanged to the Minkowski Hamiltonian $H_{\rm Mink}$ under OS reconstruction; no renormalization of the gap constant occurs in this step.
+\noindent\emph{Remark (constant propagation).} Under OS reconstruction (Osterwalder--Schrader~\cite{Osterwalder1975}, Sec.~IV--V), Minkowski time translations are implemented by a unitary group on the same reconstructed Hilbert space whose generator is the same self\,--\,adjoint operator $H$ appearing in the Euclidean semigroup. Thus the mass-gap constant $\gamma_*$ propagates unchanged to the Minkowski Hamiltonian $H_{\rm Mink}$; no renormalization of the gap constant occurs in this step.
 \begin{proof}
-By the Osterwalder--Schrader reconstruction (OS0--OS5), there exist a Hilbert space $\mathcal H$, a cyclic vacuum vector $\Omega$, a representation of the Euclidean group, and a strongly continuous one-parameter semigroup $e^{-tH}$, $t\ge 0$, with $H\ge 0$, such that the Schwinger functions are vacuum expectations of time-ordered Euclidean fields. Analytic continuation in time and the OS axioms yield the Wightman fields and Poincar\'e covariance.
-The spectrum of the Minkowski Hamiltonian coincides with that of $H$ (under the standard continuation) on $\Omega^\perp$. Since $\operatorname{spec}(H)\cap(0,\gamma_*)=\varnothing$ under the stated hypotheses, the same open gap persists in the Minkowski theory, establishing a positive mass gap $\ge \gamma_*$. Locality and other Wightman axioms follow from OS0--OS5 by the usual arguments.
+This is the standard OS reconstruction theorem: see Osterwalder--Schrader~\cite{Osterwalder1975}, Sec.~IV.1 (Theorem $E'\Rightarrow R'$) and Sec.~V. In particular, the reconstruction produces a Hilbert space $\mathcal H$, a cyclic vacuum vector $\Omega$, and a strongly continuous Euclidean time-translation semigroup $e^{-tH}$, $t\ge 0$, with $H\ge 0$, such that the Schwinger functions are vacuum expectations of time-ordered Euclidean fields.
+
+Analytic continuation of the Euclidean time-translation semigroup yields a strongly continuous unitary group of Minkowski time translations on the \emph{same} Hilbert space, given by
+\[
+  U_{\rm Mink}(t)\ :=\ e^{itH},
+\]
+so the Minkowski Hamiltonian is $H_{\rm Mink}=H$. Hence $\sigma(H_{\rm Mink})=\sigma(H)$, and the assumed Euclidean spectral gap $\operatorname{spec}(H)\subset\{0\}\cup[\gamma_*,\infty)$ propagates unchanged to Minkowski space.
 \end{proof}
 
 \vspace{12pt}
